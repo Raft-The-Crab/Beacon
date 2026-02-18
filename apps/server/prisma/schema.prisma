@@ -337,3 +337,65 @@ enum FriendshipStatus {
   ACCEPTED
   BLOCKED
 }
+
+// ── Beacoin Economy ──────────────────────────────────────────────────────────
+
+model BeacoinWallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Int      @default(0)
+  lifetime  Int      @default(0) // total ever earned (used for premium tier checks)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions BeacoinTransaction[]
+}
+
+model BeacoinTransaction {
+  id       String              @id @default(cuid())
+  walletId String
+  wallet   BeacoinWallet       @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type     BeacoinTxType
+  amount   Int                 // positive = earn, negative = spend
+  reason   String              // "daily_login", "message_sent", "poll_created", "voice_minute", "invite_accepted", "premium_purchase", etc.
+  meta     Json?               // optional extra context
+
+  createdAt DateTime @default(now())
+}
+
+enum BeacoinTxType {
+  EARN
+  SPEND
+  ADJUST // admin-only corrections
+}
+
+// ── Premium ──────────────────────────────────────────────────────────────────
+
+model UserPremium {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  tier      PremiumTier @default(NONE)
+  expiresAt DateTime? // null = lifetime; otherwise monthly renewal date
+  autoRenew Boolean   @default(true)
+
+  purchasedWith Int // Beacoin spent to activate
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PremiumPerk {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String
+  tier        PremiumTier
+  // e.g. "animated_banner", "premium_badge", "hd_upload", "custom_theme", "larger_upload_limit"
+  value       Json?       // perk-specific config (e.g. { "maxUploadMb": 500 })
+
+  createdAt DateTime @default(now())
+}
+
+enum PremiumTier {
+  NONE
+  PREMIUM
+}

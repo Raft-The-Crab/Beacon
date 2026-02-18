@@ -3,6 +3,7 @@ import { Hash, Bell, Pin, Users, Search, HelpCircle, Phone, Video, Inbox, Chevro
 import { useMessageStore } from '../../stores/useMessageStore'
 import { useVoiceStore } from '../../stores/useVoiceStore'
 import { useServerStore } from '../../stores/useServerStore'
+import { useUIStore } from '../../stores/useUIStore'
 import { MessageInput } from '../features/MessageInput'
 import { MessageItem } from '../features/MessageItem'
 import { type UploadedFile } from '../../services/fileUpload'
@@ -33,6 +34,9 @@ export function ChatArea({ channelId }: ChatAreaProps) {
 
   const currentServer = useServerStore(state => state.currentServer);
   const currentChannel = currentServer?.channels?.find((channel: any) => channel.id === channelId)
+
+  const toggleMemberList = useUIStore(state => state.toggleMemberList)
+  const showMemberList = useUIStore(state => state.showMemberList)
 
   const { toasts, show } = useToast()
   const { pinMessage, unpinMessage, getPinnedMessages } = usePinnedMessagesStore()
@@ -225,7 +229,13 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         <div className={styles.headerRight}>
           <button className={styles.headerButton} title="Notifications" onClick={() => show('Notifications toggled', 'info')}><Bell size={20} /></button>
           <button className={styles.headerButton} title="Pinned Messages" onClick={handleOpenPinned}><Pin size={20} /></button>
-          <button className={styles.headerButton} title="Member List" onClick={handleOpenMembers}><Users size={20} /></button>
+          <button
+            className={`${styles.headerButton} ${showMemberList ? styles.headerButtonActive : ''}`}
+            title="Member List"
+            onClick={toggleMemberList}
+          >
+            <Users size={20} />
+          </button>
           <div className={styles.searchBar}>
             <input type="text" placeholder="Search" />
             <Search size={16} />

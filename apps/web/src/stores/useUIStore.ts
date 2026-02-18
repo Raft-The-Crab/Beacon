@@ -33,6 +33,9 @@ interface UIState {
   // Pinned messages panel (inline, not full modal)
   pinnedMessagesPanelOpen: boolean
 
+  // Member list panel
+  showMemberList: boolean
+
   setCurrentChannel: (channelId: string | null) => void
   toggleSidebar: () => void
   setTheme: (theme: 'classic' | 'glass' | 'light' | 'auto') => void
@@ -61,6 +64,8 @@ interface UIState {
   setShowAuditLog: (show: boolean, guildId?: string) => void
   setShowPinnedMessages: (show: boolean, channelId?: string) => void
   setPinnedMessagesPanelOpen: (open: boolean) => void
+  toggleMemberList: () => void
+  setShowMemberList: (show: boolean) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -94,6 +99,7 @@ export const useUIStore = create<UIState>((set) => ({
   showPinnedMessages: false,
   pinnedMessagesChannelId: null,
   pinnedMessagesPanelOpen: false,
+  showMemberList: true,
 
   setCurrentChannel: (channelId) =>
     set({ currentChannelId: channelId }),
@@ -171,6 +177,8 @@ export const useUIStore = create<UIState>((set) => ({
   setShowPinnedMessages: (show, channelId) =>
     set({ showPinnedMessages: show, pinnedMessagesChannelId: channelId ?? null }),
   setPinnedMessagesPanelOpen: (open) => set({ pinnedMessagesPanelOpen: open }),
+  toggleMemberList: () => set((state) => ({ showMemberList: !state.showMemberList })),
+  setShowMemberList: (show) => set({ showMemberList: show }),
 
   syncTheme: () => {},
 }))

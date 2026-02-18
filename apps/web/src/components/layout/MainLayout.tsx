@@ -5,31 +5,31 @@ import { useServerStore } from '../../stores/useServerStore'
 import { ServerList } from './ServerList'
 import { Sidebar } from './Sidebar'
 import { ChatArea } from '../chat/ChatArea'
-import { ServerSettings } from '../../pages/ServerSettings'
+import { MemberList } from './MemberList'
 import { Menu } from 'lucide-react'
 import styles from './MainLayout.module.css'
 
 export function MainLayout() {
   const { serverId, channelId } = useParams<{ serverId: string; channelId: string }>()
-  
-  // Use individual selectors for stability
-  const setCurrentChannel = useUIStore(state => state.setCurrentChannel);
-  const storeCurrentChannelId = useUIStore(state => state.currentChannelId);
-  
-  const setCurrentServer = useServerStore(state => state.setCurrentServer);
-  const servers = useServerStore(state => state.servers);
-  const storeCurrentServer = useServerStore(state => state.currentServer);
+
+  const setCurrentChannel = useUIStore(state => state.setCurrentChannel)
+  const storeCurrentChannelId = useUIStore(state => state.currentChannelId)
+  const showMemberList = useUIStore(state => state.showMemberList)
+
+  const setCurrentServer = useServerStore(state => state.setCurrentServer)
+  const servers = useServerStore(state => state.servers)
+  const storeCurrentServer = useServerStore(state => state.currentServer)
 
   useEffect(() => {
     if (serverId && storeCurrentServer?.id !== serverId) {
-      setCurrentServer(serverId);
+      setCurrentServer(serverId)
     }
 
     if (storeCurrentServer && serverId === storeCurrentServer.id) {
       if (channelId && storeCurrentChannelId !== channelId) {
-        setCurrentChannel(channelId);
+        setCurrentChannel(channelId)
       } else if (!channelId && storeCurrentServer.channels && storeCurrentServer.channels.length > 0 && storeCurrentChannelId !== storeCurrentServer.channels[0].id) {
-        setCurrentChannel(storeCurrentServer.channels[0].id);
+        setCurrentChannel(storeCurrentServer.channels[0].id)
       }
     }
   }, [
@@ -40,9 +40,9 @@ export function MainLayout() {
     setCurrentChannel,
     storeCurrentServer,
     storeCurrentChannelId,
-  ]);
+  ])
 
-  const targetServer = servers.find(s => s.id === serverId) || null;
+  const targetServer = servers.find(s => s.id === serverId) || null
 
   if (serverId && servers.length === 0) {
     return (
@@ -78,7 +78,7 @@ export function MainLayout() {
       <ServerList />
       <Sidebar />
       <ChatArea channelId={channelId || (targetServer?.channels?.[0]?.id) || ''} />
-      <ServerSettings />
+      {showMemberList && <MemberList />}
     </div>
   )
 }

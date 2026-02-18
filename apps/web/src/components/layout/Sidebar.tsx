@@ -1,4 +1,9 @@
-import { Hash, Volume2, Settings, Plus, Rocket, Book, Smile, ChevronDown, ChevronRight, Bell, BellOff, Link, Trash2, Edit2 } from 'lucide-react'
+import {
+  Hash, Volume2, Settings, Plus, Rocket, Book, Smile,
+  ChevronDown, ChevronRight, Bell, BellOff, Link, Trash2, Edit2,
+  Megaphone, Mic, MessageSquare, ShieldAlert, GitBranch, Radio,
+  Users, ChevronDown as ChevronDownSmall
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useServerStore } from '../../stores/useServerStore'
@@ -9,12 +14,30 @@ import { isAndroid } from '../../utils/platform'
 import { useContextMenuTrigger } from '../ui/ContextMenu'
 import styles from './Sidebar.module.css'
 
-// Channel button with context menu
-function ChannelButton({ channel, isActive, onClick, type }: {
+// ── Channel type → icon mapping ──────────────────────────────────
+function getChannelIcon(channel: any, size = 18) {
+  const t = String(channel.type).toLowerCase()
+  if (t === 'announcement' || channel.type === 5) return <Megaphone size={size} />
+  if (t === 'stage' || channel.type === 13) return <Radio size={size} />
+  if (t === 'forum' || channel.type === 15) return <MessageSquare size={size} />
+  if (t === 'thread' || channel.type === 11 || channel.type === 12) return <GitBranch size={size} />
+  if (t === 'voice' || channel.type === 2) return <Volume2 size={size} />
+  if (t === 'group_dm' || channel.type === 3) return <Users size={size} />
+  if (channel.nsfw) return <ShieldAlert size={size} />
+  // Default: text (#)
+  return <Hash size={size} />
+}
+
+function isVoiceLike(channel: any) {
+  const t = String(channel.type).toLowerCase()
+  return t === 'voice' || channel.type === 2 || t === 'stage' || channel.type === 13
+}
+
+// ── Channel button with context menu ──────────────────────────────
+function ChannelButton({ channel, isActive, onClick }: {
   channel: any
   isActive: boolean
   onClick: () => void
-  type: 'text' | 'voice'
 }) {
   const [muted, setMuted] = useState(false)
   const ctxMenu = useContextMenuTrigger([
@@ -52,56 +75,41 @@ function ChannelButton({ channel, isActive, onClick, type }: {
       className={`${styles.channel} ${isActive ? styles.activeChannel : ''} ${muted ? styles.mutedChannel : ''}`}
       onClick={onClick}
     >
-      {type === 'text' ? (
-        <Hash size={18} className={styles.channelIcon} />
-      ) : (
-        <Volume2 size={18} className={styles.channelIcon} />
-      )}
+      <span className={styles.channelIcon}>
+        {getChannelIcon(channel)}
+      </span>
       <span className={styles.channelName}>{channel.name}</span>
       {muted && <BellOff size={13} className={styles.mutedIcon} />}
     </button>
   )
 }
 
+// ── Main Sidebar ──────────────────────────────────────────────────
 export function Sidebar() {
   const navigate = useNavigate()
-  const currentServer = useServerStore(state => state.currentServer);
-  const currentChannelId = useUIStore(state => state.currentChannelId);
-  const setShowServerSettings = useUIStore(state => state.setShowServerSettings);
-  const setShowUserSettings = useUIStore(state => state.setShowUserSettings);
-  const setShowCustomStatus = useUIStore(state => state.setShowCustomStatus);
-  const user = useAuthStore(state => state.user);
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const currentServer = useServerStore(state => state.currentServer)
+  const currentChannelId = useUIStore(state => state.currentChannelId)
+  const setShowServerSettings = useUIStore(state => state.setShowServerSettings)
+  const setShowUserSettings = useUIStore(state => state.setShowUserSettings)
+  const setShowCustomStatus = useUIStore(state => state.setShowCustomStatus)
+  const user = useAuthStore(state => state.user)
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
+  const [showServerMenu, setShowServerMenu] = useState(false)
 
-  // Group channels by categories
-  const allChannels = currentServer?.channels || [];
-
-  // Separate categories and regular channels (case-insensitive)
+  const allChannels = currentServer?.channels || []
   const categories = allChannels.filter((ch: any) => {
-    const type = String(ch.type).toLowerCase();
-    return ch.type === 4 || type === 'category';
-  });
-  
+    const type = String(ch.type).toLowerCase()
+    return ch.type === 4 || type === 'category'
+  })
   const channelsWithoutParent = allChannels.filter((ch: any) => {
-    const type = String(ch.type).toLowerCase();
-    return !ch.parentId && ch.type !== 4 && type !== 'category';
-  });
-  
-  // Function to get channels under a category
-  const getChannelsInCategory = (categoryId: string) => {
-    return allChannels.filter((ch: any) => ch.parentId === categoryId);
-  };
-  
-  // Separate text and voice channels (for channels without categories)
-  const textChannels = channelsWithoutParent.filter((channel: any) => {
-    const t = String(channel.type).toLowerCase();
-    return channel.type === 0 || t === 'text';
-  });
-  
-  const voiceChannels = channelsWithoutParent.filter((channel: any) => {
-    const t = String(channel.type).toLowerCase();
-    return channel.type === 1 || t === 'voice';
-  });
+    const type = String(ch.type).toLowerCase()
+    return !ch.parentId && ch.type !== 4 && type !== 'category'
+  })
+  const getChannelsInCategory = (categoryId: string) =>
+    allChannels.filter((ch: any) => ch.parentId === categoryId)
+
+  const textLike = channelsWithoutParent.filter((ch: any) => !isVoiceLike(ch))
+  const voiceLike = channelsWithoutParent.filter((ch: any) => isVoiceLike(ch))
 
   const toggleCategory = (catId: string) => {
     setCollapsedCategories(prev => {
@@ -113,30 +121,60 @@ export function Sidebar() {
   }
 
   const handleChannelClick = (channelId: string) => {
-    if (currentServer) {
-      navigate(`/channels/${currentServer.id}/${channelId}`)
-    }
+    if (currentServer) navigate(`/channels/${currentServer.id}/${channelId}`)
   }
 
   const userAvatar = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}`
   const username = user?.username || 'User'
   const discriminator = user?.discriminator || '0000'
+  const memberCount = currentServer?.members?.length || 0
 
   return (
     <div className={styles.sidebar}>
-      <div className={styles.header}>
-        <h1 className={styles.guildName}>{currentServer?.name || 'Beacon'}</h1>
+      {/* ── Server banner/header ── */}
+      <div
+        className={styles.header}
+        style={currentServer?.banner ? {
+          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), var(--bg-secondary)), url(${currentServer.banner})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        } : {}}
+        onClick={() => setShowServerMenu(s => !s)}
+      >
+        <div className={styles.headerContent}>
+          <h1 className={styles.guildName}>{currentServer?.name || 'Beacon'}</h1>
+          {memberCount > 0 && (
+            <span className={styles.memberCount}>
+              <span className={styles.onlineDot} />
+              {memberCount} member{memberCount !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
         {currentServer && (
-          <button
-            className={styles.settingsBtn}
-            onClick={() => setShowServerSettings(true)}
-            title="Server Settings"
-          >
-            <Settings size={18} />
-          </button>
+          <ChevronDownSmall
+            size={18}
+            className={`${styles.chevron} ${showServerMenu ? styles.chevronOpen : ''}`}
+          />
         )}
       </div>
 
+      {/* Quick server actions dropdown */}
+      {showServerMenu && currentServer && (
+        <div className={styles.serverMenu}>
+          <button className={styles.serverMenuItem} onClick={() => { setShowServerSettings(true); setShowServerMenu(false) }}>
+            <Settings size={15} /> Server Settings
+          </button>
+          <button className={styles.serverMenuItem} onClick={() => { openCreateChannelModal(); setShowServerMenu(false) }}>
+            <Plus size={15} /> Create Channel
+          </button>
+          <div className={styles.serverMenuDivider} />
+          <button className={styles.serverMenuItem} onClick={() => { navigator.clipboard.writeText(currentServer.id); setShowServerMenu(false) }}>
+            <Link size={15} /> Copy Server ID
+          </button>
+        </div>
+      )}
+
+      {/* ── Channel list ── */}
       <div className={styles.channels}>
         {!currentServer ? (
           <div className={styles.emptyState}>
@@ -144,19 +182,10 @@ export function Sidebar() {
           </div>
         ) : (
           <>
-            {/* Render categories with their children */}
+            {/* Categories with children */}
             {categories.map((category: any) => {
-              const categoryChannels = getChannelsInCategory(category.id);
-              const categoryTextChannels = categoryChannels.filter((ch: any) => {
-                const t = ch.type as any;
-                return t === 0 || t === 'text' || t === 'TEXT';
-              });
-              const categoryVoiceChannels = categoryChannels.filter((ch: any) => {
-                const t = ch.type as any;
-                return t === 1 || t === 'voice' || t === 'VOICE';
-              });
-              const isCollapsed = collapsedCategories.has(category.id);
-              
+              const catChannels = getChannelsInCategory(category.id)
+              const isCollapsed = collapsedCategories.has(category.id)
               return (
                 <div key={category.id} className={styles.category}>
                   <div
@@ -178,20 +207,22 @@ export function Sidebar() {
                   </div>
                   {!isCollapsed && (
                     <div className={styles.channelList}>
-                      {categoryTextChannels.map((channel: any) => (
-                        <ChannelButton key={channel.id} channel={channel} isActive={currentChannelId === channel.id} onClick={() => handleChannelClick(channel.id)} type="text" />
-                      ))}
-                      {categoryVoiceChannels.map((channel: any) => (
-                        <ChannelButton key={channel.id} channel={channel} isActive={currentChannelId === channel.id} onClick={() => handleChannelClick(channel.id)} type="voice" />
+                      {catChannels.map((channel: any) => (
+                        <ChannelButton
+                          key={channel.id}
+                          channel={channel}
+                          isActive={currentChannelId === channel.id}
+                          onClick={() => handleChannelClick(channel.id)}
+                        />
                       ))}
                     </div>
                   )}
                 </div>
-              );
+              )
             })}
-            
-            {/* Channels without categories */}
-            {textChannels.length > 0 && (
+
+            {/* Text-like channels without categories */}
+            {textLike.length > 0 && (
               <div className={styles.category}>
                 <div
                   className={styles.categoryHeader}
@@ -202,24 +233,27 @@ export function Sidebar() {
                     {collapsedCategories.has('__text__') ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
                     <span>TEXT CHANNELS</span>
                   </div>
-                  <button
-                    className={styles.addChannelBtn}
-                    onClick={(e) => { e.stopPropagation(); openCreateChannelModal() }}
-                  >
+                  <button className={styles.addChannelBtn} onClick={(e) => { e.stopPropagation(); openCreateChannelModal() }}>
                     <Plus size={14} />
                   </button>
                 </div>
                 {!collapsedCategories.has('__text__') && (
                   <div className={styles.channelList}>
-                    {textChannels.map((channel: any) => (
-                      <ChannelButton key={channel.id} channel={channel} isActive={currentChannelId === channel.id} onClick={() => handleChannelClick(channel.id)} type="text" />
+                    {textLike.map((channel: any) => (
+                      <ChannelButton
+                        key={channel.id}
+                        channel={channel}
+                        isActive={currentChannelId === channel.id}
+                        onClick={() => handleChannelClick(channel.id)}
+                      />
                     ))}
                   </div>
                 )}
               </div>
             )}
 
-            {voiceChannels.length > 0 && (
+            {/* Voice-like channels without categories */}
+            {voiceLike.length > 0 && (
               <div className={styles.category}>
                 <div
                   className={styles.categoryHeader}
@@ -230,17 +264,19 @@ export function Sidebar() {
                     {collapsedCategories.has('__voice__') ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
                     <span>VOICE CHANNELS</span>
                   </div>
-                  <button
-                    className={styles.addChannelBtn}
-                    onClick={(e) => { e.stopPropagation(); openCreateChannelModal() }}
-                  >
+                  <button className={styles.addChannelBtn} onClick={(e) => { e.stopPropagation(); openCreateChannelModal() }}>
                     <Plus size={14} />
                   </button>
                 </div>
                 {!collapsedCategories.has('__voice__') && (
                   <div className={styles.channelList}>
-                    {voiceChannels.map((channel: any) => (
-                      <ChannelButton key={channel.id} channel={channel} isActive={currentChannelId === channel.id} onClick={() => handleChannelClick(channel.id)} type="voice" />
+                    {voiceLike.map((channel: any) => (
+                      <ChannelButton
+                        key={channel.id}
+                        channel={channel}
+                        isActive={currentChannelId === channel.id}
+                        onClick={() => handleChannelClick(channel.id)}
+                      />
                     ))}
                   </div>
                 )}
@@ -256,11 +292,11 @@ export function Sidebar() {
             </div>
             <div className={styles.channelList}>
               <button className={styles.channel} onClick={() => navigate('/developer')}>
-                <Rocket size={18} className={styles.channelIcon} />
+                <span className={styles.channelIcon}><Rocket size={18} /></span>
                 <span className={styles.channelName}>Developer Portal</span>
               </button>
               <button className={styles.channel} onClick={() => navigate('/docs')}>
-                <Book size={18} className={styles.channelIcon} />
+                <span className={styles.channelIcon}><Book size={18} /></span>
                 <span className={styles.channelName}>Documentation</span>
               </button>
             </div>
@@ -268,6 +304,7 @@ export function Sidebar() {
         )}
       </div>
 
+      {/* ── User area ── */}
       <div className={styles.userArea}>
         <div className={styles.userPanel}>
           <div className={styles.avatar}>

@@ -4,8 +4,8 @@
   width: 100vw;
   overflow: hidden;
   background: transparent;
-  padding: 24px;
-  gap: 20px;
+  padding: 10px;
+  gap: 8px;
   position: relative;
 }
 
@@ -31,11 +31,36 @@
 }
 
 @keyframes beacon-spin {
-  to {
-    transform: rotate(360deg);
+  to { transform: rotate(360deg); }
+}
+
+.mobileMenuBtn {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    padding: 0;
+    gap: 0;
+  }
+  .mobileMenuBtn {
+    display: flex;
   }
 }
 
-.layout>* {
+.layout > * {
   min-height: 0;
 }

@@ -88,6 +88,12 @@
   color: var(--text-primary);
 }
 
+.headerButtonActive {
+  color: var(--beacon-brand) !important;
+  background: var(--beacon-brand-muted);
+  border-radius: 8px;
+}
+
 .searchBar {
   position: relative;
   display: flex;

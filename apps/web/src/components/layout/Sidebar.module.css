@@ -21,6 +21,117 @@
   justify-content: space-between;
   border-bottom: 1px solid var(--glass-border);
   flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  transition: all var(--transition-fast);
+}
+
+.header:hover {
+  background-color: rgba(255,255,255,0.03);
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.memberCount {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.onlineDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #23a559;
+  flex-shrink: 0;
+}
+
+.chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+  color: var(--text-primary);
+}
+
+/* ── Server drop menu ── */
+.serverMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 8px;
+  right: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 6px;
+  z-index: 100;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  backdrop-filter: blur(40px);
+  animation: menuSlideIn 0.15s var(--ease-out);
+}
+
+@keyframes menuSlideIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.serverMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.serverMenuItem:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.serverMenuItem.danger {
+  color: var(--status-error);
+}
+
+.serverMenuItem.danger:hover {
+  background: rgba(237, 66, 69, 0.12);
+  color: var(--status-error);
+}
+
+.serverMenuDivider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 6px 0;
+}
+
+/* ── Banner overlay ── */
+.bannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(14,15,17,0.95) 100%);
+  pointer-events: none;
 }
 
 .guildName {
