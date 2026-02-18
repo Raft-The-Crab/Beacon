@@ -91,7 +91,19 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  cursor: default;
+  user-select: none;
+  border-radius: 8px;
+  transition: color var(--transition-fast);
+}
+
+.categoryHeader:hover {
+  color: var(--text-secondary);
+}
+
+.categoryLeft {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .addChannelBtn {
@@ -99,6 +111,14 @@
   cursor: pointer;
   opacity: 0;
   transition: opacity var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
 }
 
 .categoryHeader:hover .addChannelBtn {
@@ -107,6 +127,7 @@
 
 .addChannelBtn:hover {
   color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .channelList {
@@ -128,6 +149,8 @@
   border: 1px solid transparent;
   position: relative;
   overflow: hidden;
+  background: transparent;
+  cursor: pointer;
 }
 
 .channel::before {
@@ -172,17 +195,35 @@
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;
 }
 
+/* ── Muted channel ── */
+.mutedChannel {
+  opacity: 0.45;
+}
+
+.mutedChannel:hover {
+  opacity: 0.75;
+}
+
+.mutedIcon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* ── User area ── */
 .userArea {
-  padding: 16px;
+  padding: 12px 16px;
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(30px) saturate(160%);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 72px;
+  min-height: 68px;
   margin-top: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -202,6 +243,34 @@
 .userPanel:hover {
   background: var(--bg-hover);
 }
+
+.avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.statusIndicator {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-secondary);
+}
+
+.online { background: var(--status-success); }
+.idle { background: var(--status-warning); }
+.dnd { background: var(--status-error); }
+.invisible,
+.offline { background: var(--text-muted); }
 
 .userInfo {
   display: flex;

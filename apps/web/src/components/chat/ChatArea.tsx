@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Hash, Bell, Pin, Users, Search, HelpCircle, Phone, Video, Inbox } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Hash, Bell, Pin, Users, Search, HelpCircle, Phone, Video, Inbox, ChevronDown } from 'lucide-react'
 import { useMessageStore } from '../../stores/useMessageStore'
 import { useVoiceStore } from '../../stores/useVoiceStore'
 import { useServerStore } from '../../stores/useServerStore'
@@ -44,6 +44,29 @@ export function ChatArea({ channelId }: ChatAreaProps) {
   const [editChannelName, setEditChannelName] = useState(currentChannel?.name || '')
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editingMessageContent, setEditingMessageContent] = useState('')
+  const [showScrollBtn, setShowScrollBtn] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = useCallback((smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant' })
+  }, [])
+
+  // Auto-scroll on new messages if near bottom
+  useEffect(() => {
+    const container = messagesContainerRef.current
+    if (!container) return
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120
+    if (isNearBottom) scrollToBottom(false)
+  }, [messages.length, scrollToBottom])
+
+  // Show scroll-to-bottom button when scrolled up
+  const handleMessagesScroll = useCallback(() => {
+    const container = messagesContainerRef.current
+    if (!container) return
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+    setShowScrollBtn(distanceFromBottom > 200)
+  }, [])
 
   const handleSendMessage = (content: string, gifUrl?: string, attachments?: UploadedFile[]) => {
     if ((!content.trim() && !gifUrl && !attachments?.length) || !channelId) return
@@ -212,7 +235,11 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         </div>
       </div>
 
-      <div className={styles.messages}>
+      <div
+        className={styles.messages}
+        ref={messagesContainerRef}
+        onScroll={handleMessagesScroll}
+      >
         {messages.length === 0 ? (
           <div className={styles.welcome}>
             <div className={styles.welcomeIcon}>
@@ -229,75 +256,90 @@ export function ChatArea({ channelId }: ChatAreaProps) {
             const isRecent = prevMsg && (new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime() < 5 * 60 * 1000)
             const isContinuing = isSameUser && isRecent
 
+            // Date separator logic
+            const msgDate = new Date(msg.createdAt)
+            const prevDate = prevMsg ? new Date(prevMsg.createdAt) : null
+            const showDateSep = !prevDate || msgDate.toDateString() !== prevDate.toDateString()
+            const today = new Date()
+            const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)
+            let dateLabel = msgDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+            if (msgDate.toDateString() === today.toDateString()) dateLabel = 'Today'
+            else if (msgDate.toDateString() === yesterday.toDateString()) dateLabel = 'Yesterday'
+
             return (
-              <MessageItem
-                key={msg.id}
-                id={msg.id}
-                authorName={msg.authorId === 'current-user' ? 'You' : msg.authorId}
-                authorAvatar={`https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.authorId}`}
-                content={msg.content}
-                timestamp={new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                attachments={msg.attachments}
-                edited={!!msg.editedAt}
-                isPinned={getPinnedMessages(channelId).some((p: any) => p.id === msg.id)}
-                showActions={true}
-                isContinuing={isContinuing}
-                canDelete={msg.authorId === 'current-user'}
-                canEdit={msg.authorId === 'current-user'}
-                onDelete={() => handleDeleteMessage(msg.id)}
-                onEdit={() => handleStartEditingMessage(msg.id, msg.content)}
-                onPin={() => handleTogglePin(msg)}
-                onReaction={(emoji) => {
-                  // optimistic reaction update (client-side shape)
-                  const channelMessages = messages
-                  const target = channelMessages.find((m: any) => m.id === msg.id)
-                  if (!target) return
-                  const existingReactions = target.reactions || []
-
-                  const reactionExistsForUser = (r: any) => {
-                    if (r.users && Array.isArray(r.users)) return !!(user && r.users.includes(user.id))
-                    return !!r.userReacted
-                  }
-
-                  const found = existingReactions.find((r: any) => {
-                    const name = r.emoji?.name || r.emoji
-                    return name === emoji
-                  })
-
-                  let newReactions
-                  if (found) {
-                    // toggle user's reaction in client shape
-                    newReactions = existingReactions.map((r: any) => {
-                      const name = r.emoji?.name || r.emoji
-                      if (name !== emoji) return r
-                      const userReacted = !reactionExistsForUser(r)
-                      const count = userReacted ? (r.count || (r.users ? r.users.length : 0)) + 1 : Math.max(0, (r.count || (r.users ? r.users.length : 1)) - 1)
-                      return { ...r, emoji: emoji, userReacted, count }
-                    })
-                  } else {
-                    newReactions = [...existingReactions, { emoji, count: 1, userReacted: true }]
-                  }
-
-                  handleMessageUpdate(channelId, msg.id, { reactions: newReactions })
-
-                  // persist reaction via websocket (preferred) with REST fallback
-                  try {
-                    const existed = !!found && reactionExistsForUser(found)
-                    if (wsClient.isConnected()) {
-                      wsClient.reactMessage(channelId, msg.id, emoji, existed)
-                    } else {
-                      if (existed) apiClient.removeReaction(channelId, msg.id, emoji)
-                      else apiClient.addReaction(channelId, msg.id, emoji)
+              <div key={msg.id}>
+                {showDateSep && (
+                  <div className={styles.dateSeparator}>
+                    <div className={styles.dateLine} />
+                    <span className={styles.dateLabel}>{dateLabel}</span>
+                    <div className={styles.dateLine} />
+                  </div>
+                )}
+                <MessageItem
+                  id={msg.id}
+                  authorName={msg.authorId === 'current-user' ? 'You' : msg.authorId}
+                  authorAvatar={`https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.authorId}`}
+                  content={msg.content}
+                  timestamp={new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  attachments={msg.attachments}
+                  edited={!!msg.editedAt}
+                  isPinned={getPinnedMessages(channelId).some((p: any) => p.id === msg.id)}
+                  showActions={true}
+                  isContinuing={isContinuing}
+                  canDelete={msg.authorId === 'current-user'}
+                  canEdit={msg.authorId === 'current-user'}
+                  onDelete={() => handleDeleteMessage(msg.id)}
+                  onEdit={() => handleStartEditingMessage(msg.id, msg.content)}
+                  onPin={() => handleTogglePin(msg)}
+                  onReaction={(emoji) => {
+                    const target = messages.find((m: any) => m.id === msg.id)
+                    if (!target) return
+                    const existingReactions = target.reactions || []
+                    const reactionExistsForUser = (r: any) => {
+                      if (r.users && Array.isArray(r.users)) return !!(user && r.users.includes(user.id))
+                      return !!r.userReacted
                     }
-                  } catch (err) {
-                    console.warn('Persist reaction failed', err)
-                  }
-                }}
-              />
+                    const found = existingReactions.find((r: any) => {
+                      const name = r.emoji?.name || r.emoji
+                      return name === emoji
+                    })
+                    let newReactions
+                    if (found) {
+                      newReactions = existingReactions.map((r: any) => {
+                        const name = r.emoji?.name || r.emoji
+                        if (name !== emoji) return r
+                        const userReacted = !reactionExistsForUser(r)
+                        const count = userReacted ? (r.count || (r.users ? r.users.length : 0)) + 1 : Math.max(0, (r.count || (r.users ? r.users.length : 1)) - 1)
+                        return { ...r, emoji: emoji, userReacted, count }
+                      })
+                    } else {
+                      newReactions = [...existingReactions, { emoji, count: 1, userReacted: true }]
+                    }
+                    handleMessageUpdate(channelId, msg.id, { reactions: newReactions })
+                    try {
+                      const existed = !!found && reactionExistsForUser(found)
+                      if (wsClient.isConnected()) wsClient.reactMessage(channelId, msg.id, emoji, existed)
+                      else { if (existed) apiClient.removeReaction(channelId, msg.id, emoji); else apiClient.addReaction(channelId, msg.id, emoji) }
+                    } catch (err) { console.warn('Persist reaction failed', err) }
+                  }}
+                />
+              </div>
             )
           })
         )}
+        <div ref={messagesEndRef} />
       </div>
+
+      {/* Scroll to bottom button */}
+      {showScrollBtn && (
+        <button
+          className={styles.scrollToBottom}
+          onClick={() => scrollToBottom(true)}
+          title="Scroll to bottom"
+        >
+          <ChevronDown size={20} />
+        </button>
+      )}
 
       <MessageInput
         placeholder={`Message #${currentChannel?.name || 'general'}...`}

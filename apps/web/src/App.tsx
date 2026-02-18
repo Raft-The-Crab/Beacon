@@ -30,8 +30,9 @@ import { GatewayDocs } from './pages/docs/GatewayDocs'
 import { Mission } from './pages/docs/Mission'
 import { ModalManager } from './components/modals'
 import { isAndroid } from './utils/platform'
-import { ThemeProvider } from './components/ThemeToggle/ThemeContext'; // Import ThemeProvider
-import { ThemeSynchronizer } from './components/ThemeToggle/ThemeSynchronizer'; // Import ThemeSynchronizer
+import { ThemeProvider } from './components/ThemeToggle/ThemeContext'
+import { ThemeSynchronizer } from './components/ThemeToggle/ThemeSynchronizer'
+import { ContextMenuProvider } from './components/ui/ContextMenu'
 import './styles/globals.css'
 
 function App() {
@@ -110,54 +111,55 @@ function App() {
   return (
     <BrowserRouter>
       <HelmetProvider>
-        <ModalManager>
-          {/* Wrap the entire application with ThemeProvider */}
-          <ThemeProvider>
-            <ThemeSynchronizer /> {/* Place ThemeSynchronizer here */}
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="/login" element={<Login />} />
+        <ContextMenuProvider>
+          <ModalManager>
+            <ThemeProvider>
+              <ThemeSynchronizer />
+              <Routes>
+                {/* Entry: always go to login first */}
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="/login" element={<Login />} />
 
-              {/* Legal & About (Windows or Non-Android only) */}
-              {!isMobilePlatform && (
-                <>
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/safety" element={<TOS />} />
-                  <Route path="/about" element={<AboutUs />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/docs" element={<DocsHome />} />
-                  <Route path="/docs/getting-started" element={<GettingStarted />} />
-                  <Route path="/docs/mission" element={<Mission />} />
-                  <Route path="/docs/sdk-tutorial" element={<SDKTutorial />} />
-                  <Route path="/docs/api-reference" element={<APIReference />} />
-                  <Route path="/docs/gateway-events" element={<GatewayDocs />} />
-                </>
-              )}
+                {/* Legal & About (Windows or Non-Android only) */}
+                {!isMobilePlatform && (
+                  <>
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/safety" element={<TOS />} />
+                    <Route path="/about" element={<AboutUs />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/docs" element={<DocsHome />} />
+                    <Route path="/docs/getting-started" element={<GettingStarted />} />
+                    <Route path="/docs/mission" element={<Mission />} />
+                    <Route path="/docs/sdk-tutorial" element={<SDKTutorial />} />
+                    <Route path="/docs/api-reference" element={<APIReference />} />
+                    <Route path="/docs/gateway-events" element={<GatewayDocs />} />
+                  </>
+                )}
 
-              {/* Main App Routes (Universal) */}
-              <Route path="/channels" element={<Navigate to="/channels/@me" replace />} />
-              <Route path="/channels/@me" element={<MessagingHome />} />
-              <Route path="/channels/:serverId" element={<MainLayout />} />
-              <Route path="/channels/:serverId/:channelId" element={<MainLayout />} />
+                {/* Main App Routes (Universal) */}
+                <Route path="/channels" element={<Navigate to="/channels/@me" replace />} />
+                <Route path="/channels/@me" element={<MessagingHome />} />
+                <Route path="/channels/:serverId" element={<MainLayout />} />
+                <Route path="/channels/:serverId/:channelId" element={<MainLayout />} />
 
-              {/* Developer Features (Windows Only) */}
-              {!isMobilePlatform && (
-                <Route path="/developer" element={<DeveloperPortal />} />
-              )}
+                {/* Developer Features (Windows Only) */}
+                {!isMobilePlatform && (
+                  <Route path="/developer" element={<DeveloperPortal />} />
+                )}
 
-              {/* Universal Sub-routes */}
-              <Route path="/user/:userId" element={<UserProfile />} />
-              <Route path="/server/:serverId/settings" element={<ServerSettings />} />
-              <Route path="/voice" element={<VoiceChannel />} />
+                {/* Universal Sub-routes */}
+                <Route path="/user/:userId" element={<UserProfile />} />
+                <Route path="/server/:serverId/settings" element={<ServerSettings />} />
+                <Route path="/voice" element={<VoiceChannel />} />
 
-              {/* Redirect everything else to Home/Messaging */}
-              <Route path="*" element={<Navigate to="/channels/@me" replace />} />
-            </Routes>
-          </ThemeProvider> {/* End ThemeProvider */}
-          <ToastContainer toasts={toasts} onRemove={remove} />
-        </ModalManager>
+                {/* Redirect everything else to Messaging Home */}
+                <Route path="*" element={<Navigate to="/channels/@me" replace />} />
+              </Routes>
+            </ThemeProvider>
+            <ToastContainer toasts={toasts} onRemove={remove} />
+          </ModalManager>
+        </ContextMenuProvider>
       </HelmetProvider>
     </BrowserRouter>
   )

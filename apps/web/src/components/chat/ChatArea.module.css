@@ -179,3 +179,82 @@
 .editChannelBtn:hover {
   text-decoration: underline;
 }
+
+/* ── Date separator ── */
+.dateSeparator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 8px;
+  user-select: none;
+}
+
+.dateLine {
+  flex: 1;
+  height: 1px;
+  background: var(--glass-border);
+}
+
+.dateLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+  padding: 2px 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Scroll to bottom button ── */
+.scrollToBottom {
+  position: absolute;
+  bottom: 90px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-panel);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 20;
+  backdrop-filter: blur(20px);
+  animation: fadeInUp 0.2s ease;
+}
+
+.scrollToBottom:hover {
+  background: var(--beacon-brand);
+  border-color: var(--beacon-brand);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(114, 137, 218, 0.4);
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Messages scrollbar ── */
+.messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: var(--bg-hover);
+  border-radius: 3px;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+  background: var(--border-color);
+}
