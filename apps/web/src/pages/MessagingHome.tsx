@@ -7,7 +7,6 @@ import {
   Compass,
   Mic,
   Headphones,
-  Inbox,
   HelpCircle,
   UserPlus,
   Search,
@@ -21,6 +20,8 @@ import { Avatar } from "../components/ui"
 import { ChatArea } from "../components/chat/ChatArea"
 import { useToast } from "../components/ui"
 import { api } from "../lib/api"
+import { NotificationBell } from "../components/features/NotificationInbox"
+import { BeacoinWalletButton } from "../components/features/BeacoinWallet"
 import styles from "./MessagingHome.module.css"
 
 type FriendTab = "online" | "all" | "pending" | "blocked" | "add"
@@ -285,13 +286,8 @@ export function MessagingHome() {
                   <MessageSquare size={20} />
                 </button>
                 <div className={styles.divider} />
-                <button
-                  className={styles.userControlButton}
-                  title="Inbox"
-                  onClick={() => show("Inbox (placeholder)", "info")}
-                >
-                  <Inbox size={20} />
-                </button>
+                <BeacoinWalletButton />
+                <NotificationBell />
                 <button
                   className={styles.userControlButton}
                   title="Help & Documentation"

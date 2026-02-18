@@ -359,3 +359,355 @@
     opacity: 1;
   }
 }
+
+/* ── New styles for extra tabs ── */
+.sidebarSub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.navItem {
+  gap: 10px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.tabIntro {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  padding: 13px 18px;
+  border-radius: 14px;
+  color: var(--text-primary);
+  font-size: 16px;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--beacon-brand);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.infoItem {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.infoValue {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.avatarHintBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.avatarHintTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.avatarHint {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: fit-content;
+}
+
+.uploadBtn:hover {
+  background: var(--bg-active);
+  color: var(--text-primary);
+}
+
+.uploadingSpinner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-hover);
+}
+
+.emptyIcon {
+  opacity: 0.25;
+}
+
+.emptyHint {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* Member list */
+.memberList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  transition: background var(--transition-fast);
+}
+
+.memberRow:hover { background: var(--bg-secondary); }
+
+.memberAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.memberInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.memberName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.memberRole {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.memberActions {
+  display: flex;
+  gap: 6px;
+}
+
+.memberBtn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.memberBtn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.memberBtnDanger { color: var(--status-error); border-color: rgba(237,66,69,0.3); }
+.memberBtnDanger:hover { background: rgba(237,66,69,0.12); }
+
+/* Moderation */
+.settingGroup {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settingGroupTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 4px;
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.settingRow:last-child { border-bottom: none; }
+
+.settingLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.settingDesc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.comingSoonBadge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+
+/* Invites */
+.inviteCreate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+
+.inviteInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.inviteCode {
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  display: inline-block;
+}
+
+.copyBtn {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: none;
+  background: var(--beacon-brand);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.copyBtn:hover { opacity: 0.85; }
+
+/* Insights */
+.insightGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.insightCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.insightValue {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.insightLabel {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Content header icon */
+.contentHeader h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

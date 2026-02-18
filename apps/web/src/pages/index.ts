@@ -1,6 +1,4 @@
 export { Login } from './Login';
-export { LoginPage } from './LoginPage';
-export { LandingPage } from './LandingPage';
 export { MessagingHome } from './MessagingHome';
 export { DeveloperPortal } from './DeveloperPortal';
 export { UserProfile } from './UserProfile';

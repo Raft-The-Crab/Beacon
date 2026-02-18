@@ -10,90 +10,191 @@ export function SDKTutorial() {
             </Helmet>
 
             <article className={`${styles.article} animate-fadeIn`}>
-                <h1 className="accent-text">Bot Framework SDK v2.5.0 Tutorial</h1>
+                <h1 className="accent-text">Building Bots with the Beacon SDK</h1>
                 <p className={styles.lead}>
-                    Learn how to build powerful, multi-platform bots using the Beacon Bot SDK.
-                    This guide covers authentication, event handling, and advanced command patterns.
+                    The <code>@beacon/sdk</code> package makes it easy to build fully-featured bots.
+                    This guide walks through setup, slash commands, interactive components, and more.
                 </p>
 
                 <section>
-                    <h2>Overview</h2>
-                    <p>
-                        The Beacon Bot SDK (<code>@beacon/sdk</code>) is designed for high performance
-                        and ease of use. Version 2.5.0 introduces enhanced WebSocket stability and
-                        improved type safety for complex event payloads.
-                    </p>
-                </section>
-
-                <section>
-                    <h2>1. Setup and Initialization</h2>
-                    <p>
-                        Beacon SDK is a standard Node.js library. You can use it in any JavaScript
-                        or TypeScript project. First, install the SDK:
-                    </p>
+                    <h2>1. Install and initialize</h2>
+                    <p>Install the SDK:</p>
                     <pre className={styles.code}>
-                        <code>npm install @beacon/sdk@2.5.0</code>
+                        <code>npm install @beacon/sdk</code>
                     </pre>
-                    <p>Initialize your client (works in both <code>require</code> and <code>import</code>):</p>
+                    <p>Create your client:</p>
                     <pre className={styles.code}>
-                        <code>{`// For Node.js (CommonJS)
-const { BeaconClient } = require('@beacon/sdk');
-
-// For Modern Node.js (ESM)
-// import { BeaconClient } from '@beacon/sdk';
+                        <code>{`import { BeaconClient } from '@beacon/sdk';
 
 const client = new BeaconClient({
-    token: 'YOUR_BOT_TOKEN'
+    token: process.env.BOT_TOKEN,
+    intents: ['GUILDS', 'GUILD_MESSAGES', 'DIRECT_MESSAGES']
 });
-`}</code>
+
+client.on('ready', () => {
+    console.log(\`Online as \${client.user.username}!\`);
+});
+
+client.login();`}</code>
                     </pre>
+                    <div className={styles.infoBox}>
+                        Store your token in a <code>.env</code> file and use <code>dotenv</code> to load it. Never commit tokens to version control.
+                    </div>
                 </section>
 
                 <section>
-                    <h2>2. Handling Messages</h2>
-                    <p>Respond to user messages using the <code>messageCreate</code> event:</p>
+                    <h2>2. Responding to messages</h2>
+                    <p>The simplest bot listens for messages and replies:</p>
                     <pre className={styles.code}>
                         <code>{`client.on('messageCreate', async (message) => {
-    if (message.author.bot) return;
+    if (message.author.bot) return; // Ignore bots
 
-    if (message.content === '!hello') {
-        await message.reply('Hello from Beacon SDK v2.5.0! 🚀');
+    if (message.content === '!ping') {
+        await message.reply('Pong! 🏓');
+    }
+
+    if (message.content.startsWith('!echo ')) {
+        const text = message.content.slice(6);
+        await message.channel.send(text);
     }
 });`}</code>
                     </pre>
                 </section>
 
                 <section>
-                    <h2>3. Advanced Command Framework</h2>
-                    <p>Use the built-in <code>BotFramework</code> for structured command management:</p>
+                    <h2>3. Slash commands with BotFramework</h2>
+                    <p>
+                        The built-in <code>BotFramework</code> makes slash commands easy to define and manage:
+                    </p>
                     <pre className={styles.code}>
-                        <code>{`import { BotFramework } from '@beacon/sdk';
+                        <code>{`import { BeaconClient, BotFramework } from '@beacon/sdk';
 
+const client = new BeaconClient({ token: process.env.BOT_TOKEN });
 const bot = new BotFramework(client);
 
 bot.command({
     name: 'ping',
-    description: 'Check bot latency',
+    description: 'Check the bot latency',
     execute: async (ctx) => {
         const latency = client.ws.ping;
-        await ctx.reply(\`Pong! Latency: \${latency}ms\`);
+        await ctx.reply(\`🏓 Pong! Latency: \${latency}ms\`);
+    }
+});
+
+bot.command({
+    name: 'say',
+    description: 'Repeat something',
+    options: [
+        { name: 'text', type: 'STRING', description: 'What to say', required: true }
+    ],
+    execute: async (ctx) => {
+        const text = ctx.options.getString('text');
+        await ctx.reply(text);
+    }
+});
+
+client.login();`}</code>
+                    </pre>
+                </section>
+
+                <section>
+                    <h2>4. Button components</h2>
+                    <p>Add interactive buttons to your bot messages:</p>
+                    <pre className={styles.code}>
+                        <code>{`import { ButtonBuilder, ActionRowBuilder } from '@beacon/sdk';
+
+bot.command({
+    name: 'vote',
+    description: 'Cast a quick vote',
+    execute: async (ctx) => {
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('vote_yes')
+                .setLabel('👍 Yes')
+                .setStyle('Success'),
+            new ButtonBuilder()
+                .setCustomId('vote_no')
+                .setLabel('👎 No')
+                .setStyle('Danger')
+        );
+
+        await ctx.reply({ content: 'What do you think?', components: [row] });
+    }
+});
+
+// Handle button clicks
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isButton()) return;
+
+    if (interaction.customId === 'vote_yes') {
+        await interaction.reply({ content: 'You voted yes!', ephemeral: true });
+    }
+    if (interaction.customId === 'vote_no') {
+        await interaction.reply({ content: 'You voted no!', ephemeral: true });
     }
 });`}</code>
                     </pre>
                 </section>
 
                 <section>
-                    <h2>4. Multi-Platform Considerations</h2>
-                    <p>
-                        Beacon bots can be controlled via the Desktop app or Mobile interface.
-                        Ensure your bot handles interactive elements like buttons and modals which
-                        render beautifully across all v2.3.0+ clients.
-                    </p>
+                    <h2>5. Embeds</h2>
+                    <p>Send rich embed messages with titles, descriptions, colors, and more:</p>
+                    <pre className={styles.code}>
+                        <code>{`import { EmbedBuilder } from '@beacon/sdk';
+
+bot.command({
+    name: 'info',
+    description: 'Server info',
+    execute: async (ctx) => {
+        const guild = ctx.guild;
+        const embed = new EmbedBuilder()
+            .setTitle(guild.name)
+            .setDescription('Here is some info about this server.')
+            .setColor('#7c3aed')
+            .addFields(
+                { name: 'Members', value: \`\${guild.memberCount}\`, inline: true },
+                { name: 'Created', value: guild.createdAt.toDateString(), inline: true }
+            )
+            .setThumbnail(guild.iconURL());
+
+        await ctx.reply({ embeds: [embed] });
+    }
+});`}</code>
+                    </pre>
+                </section>
+
+                <section>
+                    <h2>6. Permissions and errors</h2>
+                    <p>Always check permissions before performing actions, and handle errors gracefully:</p>
+                    <pre className={styles.code}>
+                        <code>{`bot.command({
+    name: 'kick',
+    description: 'Kick a member',
+    options: [{ name: 'user', type: 'USER', description: 'Who to kick', required: true }],
+    execute: async (ctx) => {
+        if (!ctx.member.permissions.has('KICK_MEMBERS')) {
+            return ctx.reply({ content: "You don't have permission to kick members.", ephemeral: true });
+        }
+
+        const target = ctx.options.getUser('user');
+        const member = ctx.guild.members.cache.get(target.id);
+
+        if (!member) return ctx.reply({ content: 'Member not found.', ephemeral: true });
+
+        try {
+            await member.kick();
+            await ctx.reply(\`Kicked \${target.username}.\`);
+        } catch {
+            await ctx.reply({ content: "Couldn't kick that member.", ephemeral: true });
+        }
+    }
+});`}</code>
+                    </pre>
                 </section>
 
                 <div className={styles.infoBox}>
-                    <strong>Tip:</strong> Check out the <a href="/docs/api-reference">API Reference</a>
-                    for a full list of available events and methods.
+                    <strong>More to explore:</strong> Check the <a href="/docs/api-reference">API Reference</a> for all available methods,
+                    or the <a href="/docs/gateway-events">Gateway docs</a> for every event you can listen to.
                 </div>
             </article>
         </DocsLayout>

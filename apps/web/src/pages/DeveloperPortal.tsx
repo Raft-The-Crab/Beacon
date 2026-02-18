@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Plus, Book, Rocket, Shield, Terminal, MoreVertical, Key } from 'lucide-react'
+import { Plus, Book, Rocket, Shield, Terminal, MoreVertical, Key, Activity, Code, ExternalLink } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
@@ -44,8 +44,8 @@ export function DeveloperPortal() {
       } else {
         showToast(data.error || 'Failed to fetch applications', 'error')
       }
-    } catch (err) {
-      showToast('API Connection error', 'error')
+    } catch {
+      showToast('Could not connect to the API. Is the server running?', 'error')
     } finally {
       setLoading(false)
     }
@@ -75,15 +75,14 @@ export function DeveloperPortal() {
         setApps([...apps, data])
         setNewAppName('')
         setIsModalOpen(false)
-        showToast(`${newAppName} has been created successfully`, 'success')
+        showToast(`${newAppName} created!`, 'success')
       } else {
         showToast(data.error || 'Failed to create application', 'error')
       }
-    } catch (err) {
+    } catch {
       showToast('Failed to create application', 'error')
     }
   }
-
 
   return (
     <div className={styles.container}>
@@ -91,83 +90,85 @@ export function DeveloperPortal() {
         <title>Developer Portal - Beacon</title>
       </Helmet>
 
-      {/* High-end Cinematic Atmosphere */}
       <div className={styles.atmosGlow} />
 
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.headerText}>
             <h1>Developer Portal</h1>
-            <p>Assemble the next generation of communication protocols on the Beacon neural core.</p>
+            <p>Build bots, integrations, and apps on Beacon. Create an application to get started.</p>
           </div>
           <div className={styles.headerActions}>
             <div className={styles.statusIndicator}>
               <div className={styles.statusDot} />
-              <span className={styles.statusText}>Neural Gateway: Online</span>
+              <span className={styles.statusText}>API: Online</span>
             </div>
             <Button variant="primary" size="lg" onClick={() => setIsModalOpen(true)}>
               <Plus size={20} />
-              Create Neural Node
+              New Application
             </Button>
           </div>
         </div>
       </header>
 
       <main className={styles.main}>
-        {/* Dashboard Metrics */}
+        {/* Stats */}
         <section className={styles.metricsGrid}>
           <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>Total Instances</span>
+            <span className={styles.metricLabel}>My Apps</span>
             <div className={styles.metricValue}>
-              {apps.length}
-              <span className={styles.metricUnit}>active units</span>
+              {loading ? '—' : apps.length}
+              <span className={styles.metricUnit}>total</span>
             </div>
           </div>
           <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>Network Compute</span>
+            <span className={styles.metricLabel}>Active Bots</span>
             <div className={styles.metricValue}>
-              12.4
-              <span className={styles.metricUnit}>TFLOP/s</span>
+              {loading ? '—' : apps.filter(a => a.bot).length}
+              <span className={styles.metricUnit}>online</span>
             </div>
           </div>
           <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>Memory Index</span>
-            <div className={styles.metricValue}>
-              842
-              <span className={styles.metricUnit}>GB/sec</span>
+            <span className={styles.metricLabel}>API Status</span>
+            <div className={styles.metricValue} style={{ color: 'var(--status-online)', fontSize: 18 }}>
+              <Activity size={18} style={{ display: 'inline', marginRight: 6 }} />
+              Operational
             </div>
           </div>
         </section>
 
-        {/* Resource Links */}
+        {/* Quick Links */}
         <section className={styles.resourceGrid}>
           <ResourceCard
             icon={<Book size={24} />}
-            title="Sovereign Docs"
+            title="Documentation"
+            description="Guides, API reference, and examples"
             href="/docs"
+          />
+          <ResourceCard
+            icon={<Code size={24} />}
+            title="API Reference"
+            description="Every endpoint, object, and event"
+            href="/docs/api-reference"
           />
           <ResourceCard
             icon={<Shield size={24} />}
-            title="Privacy Protocols"
-            href="/safety"
-          />
-          <ResourceCard
-            icon={<Terminal size={24} />}
-            title="Neural API Status"
-            href="/docs"
+            title="Bot Policies"
+            description="What bots can and can't do"
+            href="/terms"
           />
         </section>
 
-        {/* Applications List */}
+        {/* Applications */}
         <section className={styles.appsSection}>
           <div className={styles.sectionHeader}>
             <h2>My Applications</h2>
-            <span>{apps.length} Total</span>
+            <span>{apps.length} total</span>
           </div>
 
           <div className={styles.appsGrid}>
             {loading ? (
-              <div className={styles.loading}>Loading applications...</div>
+              <div className={styles.loading}>Loading your applications…</div>
             ) : (
               <>
                 {apps.map(app => (
@@ -177,43 +178,77 @@ export function DeveloperPortal() {
                     </div>
                     <div className={styles.appInfo}>
                       <h3>{app.name}</h3>
-                      <p>ID: {app.id}</p>
+                      <p className={styles.appId}>ID: {app.id}</p>
+                      {app.bot && (
+                        <span style={{ fontSize: 12, color: 'var(--status-online)', fontWeight: 600 }}>
+                          ● Bot enabled
+                        </span>
+                      )}
                     </div>
                     <div className={styles.appActions}>
                       <button
                         className={styles.botBtn}
-                        onClick={() => { setSelectedApp(app); setIsBotModalOpen(true); }}
+                        onClick={() => { setSelectedApp(app); setIsBotModalOpen(true) }}
                         title="Manage Bot"
                       >
                         <Key size={18} />
                       </button>
-                      <button className={styles.moreBtn}>
+                      <button className={styles.moreBtn} title="More options">
                         <MoreVertical size={18} />
                       </button>
                     </div>
                   </div>
                 ))}
 
-                <button className={styles.addAppCard} onClick={() => setIsModalOpen(true)}>
-                  <Plus size={24} />
-                  <span>New App</span>
-                </button>
+                {apps.length === 0 && (
+                  <div style={{
+                    gridColumn: '1 / -1',
+                    padding: '48px 24px',
+                    textAlign: 'center',
+                    color: 'var(--text-muted)',
+                    background: 'var(--bg-secondary)',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px dashed var(--glass-border)',
+                  }}>
+                    <Rocket size={48} style={{ marginBottom: 16, opacity: 0.4 }} />
+                    <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>
+                      No apps yet
+                    </p>
+                    <p style={{ fontSize: 14, marginBottom: 20 }}>
+                      Create your first application to get a bot token and start building.
+                    </p>
+                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                      <Plus size={16} /> Create Application
+                    </Button>
+                  </div>
+                )}
+
+                {apps.length > 0 && (
+                  <button className={styles.addAppCard} onClick={() => setIsModalOpen(true)}>
+                    <Plus size={24} />
+                    <span>New App</span>
+                  </button>
+                )}
               </>
             )}
           </div>
         </section>
 
-        {/* Getting Started Guide */}
+        {/* Quick Start */}
         <section className={styles.bottomSection}>
           <div className={styles.bottomCard}>
             <div className={styles.atmosGlow} />
             <Terminal size={32} className={styles.bottomIcon} />
             <div className={styles.bottomText}>
-              <h3>Quick Start Guide</h3>
-              <p>Learn how to authenticate and start sending real-time messages using our SDK.</p>
+              <h3>Ready to build?</h3>
+              <p>Check out the getting started guide to have a working bot in under 5 minutes.</p>
               <div className={styles.bottomActions}>
-                <Button variant="secondary" size="sm">Read Guide</Button>
-                <Button variant="ghost" size="sm">API Reference</Button>
+                <Button variant="secondary" size="sm" onClick={() => window.open('/docs/getting-started', '_blank')}>
+                  <ExternalLink size={14} /> Getting Started
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => window.open('/docs/api-reference', '_blank')}>
+                  API Reference
+                </Button>
               </div>
             </div>
           </div>
@@ -226,40 +261,42 @@ export function DeveloperPortal() {
           <div className={styles.footerLinks}>
             <a href="/terms">Terms</a>
             <a href="/privacy">Privacy</a>
-            <a href="/about">Support</a>
+            <a href="/contact">Support</a>
           </div>
         </div>
       </footer>
 
+      {/* Create App Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Create Application"
       >
         <div className={styles.modalContent}>
-          <p>Applications allow you to interact with the Beacon API. You can manage bots and OAuth2 settings here.</p>
+          <p>Give your app a name. You can always change it later.</p>
           <Input
             label="Application Name"
             value={newAppName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewAppName(e.currentTarget.value)}
-            placeholder="Name your application"
+            onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && handleCreateApp()}
+            placeholder="My Awesome Bot"
             autoFocus
           />
           <div className={styles.modalActions}>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleCreateApp}>Create</Button>
+            <Button variant="primary" onClick={handleCreateApp} disabled={!newAppName.trim()}>Create</Button>
           </div>
         </div>
       </Modal>
 
+      {/* Bot Management Modal */}
       <Modal
         isOpen={isBotModalOpen}
         onClose={() => setIsBotModalOpen(false)}
-        title={`Manage ${selectedApp?.name} Bot`}
+        title={selectedApp ? `${selectedApp.name} — Bot Settings` : 'Bot Settings'}
       >
         <div className={styles.modalContent} style={{ padding: 0 }}>
           {selectedApp && <BotConsole applicationId={selectedApp.id} />}
-
           <div className={styles.modalActions} style={{ padding: '16px' }}>
             <Button variant="secondary" onClick={() => setIsBotModalOpen(false)}>Close</Button>
           </div>
@@ -269,11 +306,14 @@ export function DeveloperPortal() {
   )
 }
 
-function ResourceCard({ icon, title, href }: { icon: React.ReactNode, title: string, href: string }) {
+function ResourceCard({ icon, title, description, href }: { icon: React.ReactNode, title: string, description: string, href: string }) {
   return (
     <a href={href} className={styles.resourceCard}>
       <div className={styles.resourceIcon}>{icon}</div>
-      <span>{title}</span>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', marginBottom: 2 }}>{title}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{description}</div>
+      </div>
     </a>
   )
 }

@@ -12,44 +12,45 @@ export function GettingStarted() {
             <article className={`${styles.article} animate-fadeIn`}>
                 <h1 className="accent-text">Getting Started</h1>
                 <p className={styles.lead}>
-                    Welcome to the Beacon developer platform. This guide will help you set up your environment
-                    and start building on Beacon.
+                    Welcome! This guide will get you from zero to a working bot in about 5 minutes.
+                    No prior experience with Beacon's API needed.
                 </p>
 
                 <section>
-                    <h2>Prerequisites</h2>
-                    <p>To follow this guide, you will need:</p>
+                    <h2>What you'll need</h2>
                     <ul>
-                        <li>A Beacon account</li>
-                        <li>Node.js 18.x or later installed</li>
-                        <li>Basic knowledge of JavaScript or TypeScript</li>
+                        <li>A <strong>Beacon account</strong> — <a href="/login">create one free</a></li>
+                        <li><strong>Node.js 18+</strong> installed on your machine</li>
+                        <li>Basic JavaScript or TypeScript knowledge</li>
                     </ul>
                 </section>
 
                 <section>
-                    <h2>1. Create an Application</h2>
+                    <h2>Step 1 — Create an Application</h2>
                     <p>
-                        Head over to the <a href="/developer">Developer Portal</a> and click on
-                        "New Application". This will generate your <strong>Client ID</strong> and
-                        <strong>Client Secret</strong>.
+                        Head to the <a href="/developer">Developer Portal</a> and click <strong>"New App"</strong>.
+                        Give it a name, then open the app to find your <strong>Client ID</strong> and <strong>Bot Token</strong>.
                     </p>
                     <div className={styles.infoBox}>
-                        Never share your Client Secret with anyone. If leaked, you can regenerate it
-                        in the Developer Portal settings.
+                        🔒 <strong>Keep your bot token secret.</strong> Anyone who has it can control your bot. If it leaks, regenerate it immediately from the Developer Portal.
                     </div>
                 </section>
 
                 <section>
-                    <h2>2. Install the SDK</h2>
-                    <p>Install the official Beacon JavaScript SDK using your preferred package manager:</p>
+                    <h2>Step 2 — Install the SDK</h2>
+                    <p>Install the official Beacon SDK with npm, yarn, or pnpm:</p>
                     <pre className={`${styles.code} glass`}>
                         <code>npm install @beacon/sdk</code>
+                    </pre>
+                    <p>Or with pnpm:</p>
+                    <pre className={`${styles.code} glass`}>
+                        <code>pnpm add @beacon/sdk</code>
                     </pre>
                 </section>
 
                 <section>
-                    <h2>3. Your First Bot</h2>
-                    <p>Here is a snippet to get your first bot online and responding to messages:</p>
+                    <h2>Step 3 — Write your first bot</h2>
+                    <p>Create a new file called <code>bot.js</code> and paste this in:</p>
                     <pre className={`${styles.code} glass`}>
                         <code>{`import { BeaconClient } from '@beacon/sdk';
 
@@ -57,7 +58,14 @@ const client = new BeaconClient({
     token: 'YOUR_BOT_TOKEN'
 });
 
+client.on('ready', () => {
+    console.log(\`Logged in as \${client.user.username}!\`);
+});
+
 client.on('messageCreate', (message) => {
+    // Ignore messages from bots (including yourself)
+    if (message.author.bot) return;
+
     if (message.content === '!ping') {
         message.reply('Pong! 🏓');
     }
@@ -65,6 +73,28 @@ client.on('messageCreate', (message) => {
 
 client.login();`}</code>
                     </pre>
+                    <p>Then run it:</p>
+                    <pre className={`${styles.code} glass`}>
+                        <code>node bot.js</code>
+                    </pre>
+                </section>
+
+                <section>
+                    <h2>Step 4 — Invite your bot to a server</h2>
+                    <p>
+                        Go back to the <a href="/developer">Developer Portal</a>, open your app, and use the
+                        invite link generator to add your bot to a server you own. Select the permissions
+                        your bot will need (start with <strong>Send Messages</strong> and <strong>Read Message History</strong>).
+                    </p>
+                </section>
+
+                <section>
+                    <h2>What's next?</h2>
+                    <ul>
+                        <li><a href="/docs/sdk-tutorial">Build slash commands and buttons</a> with the Bot Framework</li>
+                        <li><a href="/docs/gateway-events">Learn about Gateway events</a> for real-time updates</li>
+                        <li><a href="/docs/api-reference">Browse the full API reference</a> for every endpoint</li>
+                    </ul>
                 </section>
             </article>
         </DocsLayout>

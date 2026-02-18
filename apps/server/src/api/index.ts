@@ -8,6 +8,8 @@ import dmRouter from './directMessages'
 import folderRouter from './folders'
 import webhookRouter from './webhooks'
 import auditLogRouter from './auditLogs'
+import beacoinRouter from './beacoin'
+import notificationsRouter from './notifications'
 
 const router = Router()
 
@@ -20,6 +22,8 @@ router.use('/dms', dmRouter)
 router.use('/folders', folderRouter)
 router.use('/webhooks', webhookRouter)
 router.use('/audit-logs', auditLogRouter)
+router.use('/beacoin', beacoinRouter)
+router.use('/notifications', notificationsRouter)
 
 export default router
 

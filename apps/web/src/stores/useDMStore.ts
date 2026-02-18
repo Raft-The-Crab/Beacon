@@ -142,18 +142,10 @@ export const useDMStore = create<DMStore>((set, get) => ({
 
   sendMessage: async (channelId: string, content: string) => {
     try {
-      // Logic for sending DM
-       const message: DirectMessage = {
-        id: `msg-${Date.now()}`,
-        authorId: 'me',
-        authorName: 'You',
-        content,
-        timestamp: new Date().toISOString(),
-        reactions: [],
-      }
-      get().addMessage(channelId, message)
+      await api.post(`/channels/${channelId}/messages`, { content })
     } catch (error) {
-       console.error(error)
+      console.error(error)
+      throw error
     }
   },
 

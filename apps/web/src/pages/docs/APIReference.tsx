@@ -6,18 +6,9 @@ export function APIReference() {
     <DocsLayout>
       <div className={`${styles.docsContent} animate-fadeIn`}>
         <header className={styles.docsHeader}>
-          <h1 className="accent-text">Kernel API Reference</h1>
-          <p>Exposing the raw communication primitives of the Beacon distributed core.</p>
+          <h1 className="accent-text">REST API Reference</h1>
+          <p>Everything you need to interact with Beacon programmatically. Standard REST, JSON responses, no surprises.</p>
         </header>
-
-        <section className={styles.docsSection}>
-          <h2>The Binary Protocol</h2>
-          <p>
-            While we expose RESTful endpoints for convenience, the Beacon core operates on a proprietary
-            binary serialization format. This ensures maximum throughput and minimum discoverability by
-            DPI (Deep Packet Inspection) engines.
-          </p>
-        </section>
 
         <section className={styles.docsSection}>
           <h2>Base URL</h2>
@@ -25,24 +16,35 @@ export function APIReference() {
             <code>https://api.beacon.chat/v1</code>
           </div>
           <p>
-            All API requests must be made over HTTPS. Data is returned in JSON format.
-            The API follows standard RESTful principles and status codes.
+            All requests must be made over HTTPS. Responses are JSON. We follow standard HTTP status codes —
+            200 for success, 4xx for client errors, 5xx for server errors.
           </p>
         </section>
 
         <section className={styles.docsSection}>
           <h2>Authentication</h2>
           <p>
-            Authenticate your requests by including your bot token in the <code>Authorization</code> header.
-            Tokens can be generated in the <a href="/developer">Developer Portal</a>.
+            Include your bot token in the <code>Authorization</code> header with every request.
+            You can get your token from the <a href="/developer">Developer Portal</a>.
           </p>
           <div className={styles.codeBlock}>
             <pre>Authorization: Bot YOUR_BOT_TOKEN_HERE</pre>
           </div>
+          <div className={styles.infoBox}>
+            Never hardcode tokens in public repos. Use environment variables like <code>process.env.BOT_TOKEN</code>.
+          </div>
         </section>
 
         <section className={styles.docsSection}>
-          <h2>Object Models</h2>
+          <h2>Rate Limits</h2>
+          <p>
+            The API is rate-limited per route and per bot. When you hit a limit, you'll get a <code>429 Too Many Requests</code> response
+            with a <code>Retry-After</code> header telling you how many seconds to wait. The SDK handles this automatically.
+          </p>
+        </section>
+
+        <section className={styles.docsSection}>
+          <h2>Object Reference</h2>
 
           <div className={styles.modelCard}>
             <h3>User Object</h3>
@@ -56,24 +58,64 @@ export function APIReference() {
               </thead>
               <tbody>
                 <tr>
-                  <td>id</td>
-                  <td>snowflake</td>
-                  <td>User's 64-bit ID</td>
-                </tr>
-                <tr>
-                  <td>username</td>
+                  <td><code>id</code></td>
                   <td>string</td>
-                  <td>User's display name</td>
+                  <td>The user's unique ID</td>
                 </tr>
                 <tr>
-                  <td>discriminator</td>
+                  <td><code>username</code></td>
                   <td>string</td>
-                  <td>User's 4-digit tag</td>
+                  <td>Their display name</td>
                 </tr>
                 <tr>
-                  <td>avatar</td>
+                  <td><code>avatar</code></td>
                   <td>string?</td>
-                  <td>Hash of the user's avatar</td>
+                  <td>Avatar image URL (null if not set)</td>
+                </tr>
+                <tr>
+                  <td><code>bot</code></td>
+                  <td>boolean?</td>
+                  <td>True if this user is a bot account</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className={styles.modelCard}>
+            <h3>Message Object</h3>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>id</code></td>
+                  <td>string</td>
+                  <td>The message's unique ID</td>
+                </tr>
+                <tr>
+                  <td><code>content</code></td>
+                  <td>string</td>
+                  <td>The text content of the message</td>
+                </tr>
+                <tr>
+                  <td><code>author</code></td>
+                  <td>User</td>
+                  <td>Who sent the message</td>
+                </tr>
+                <tr>
+                  <td><code>channelId</code></td>
+                  <td>string</td>
+                  <td>The channel this message was sent in</td>
+                </tr>
+                <tr>
+                  <td><code>createdAt</code></td>
+                  <td>ISO timestamp</td>
+                  <td>When the message was created</td>
                 </tr>
               </tbody>
             </table>
@@ -81,7 +123,7 @@ export function APIReference() {
         </section>
 
         <section className={styles.docsSection}>
-          <h2>Resources</h2>
+          <h2>Endpoints</h2>
 
           <div className={styles.resourceHeader}>
             <h3>Users</h3>
@@ -92,7 +134,7 @@ export function APIReference() {
               <span className={styles.methodGet}>GET</span>
               <span className={styles.path}>/users/@me</span>
             </div>
-            <p>Returns the user object of the requester's account.</p>
+            <p>Returns the current user's profile. Requires a valid bot or user token.</p>
           </div>
 
           <div className={styles.endpointCard}>
@@ -100,11 +142,11 @@ export function APIReference() {
               <span className={styles.methodPatch}>PATCH</span>
               <span className={styles.path}>/users/@me</span>
             </div>
-            <p>Modify the requester's user account settings. Returns a user object on success.</p>
+            <p>Update your username or avatar. Returns the updated user object.</p>
           </div>
 
           <div className={styles.resourceHeader}>
-            <h3>Guilds</h3>
+            <h3>Guilds (Servers)</h3>
           </div>
 
           <div className={styles.endpointCard}>
@@ -112,7 +154,7 @@ export function APIReference() {
               <span className={styles.methodGet}>GET</span>
               <span className={styles.path}>/guilds/{"{guild.id}"}</span>
             </div>
-            <p>Returns a guild object for the given ID. If with_counts is true, includes approximate member and presence counts.</p>
+            <p>Fetch info about a guild your bot is in. Add <code>?with_counts=true</code> to include member counts.</p>
           </div>
 
           <div className={styles.endpointCard}>
@@ -120,7 +162,35 @@ export function APIReference() {
               <span className={styles.methodPost}>POST</span>
               <span className={styles.path}>/guilds</span>
             </div>
-            <p>Create a new guild. Returns a guild object on success. Requires the CREATE_GUILD permission.</p>
+            <p>Create a new guild. The bot becomes the owner. Use sparingly — bots are limited to 10 guilds by default.</p>
+          </div>
+
+          <div className={styles.endpointCard}>
+            <div className={styles.endpointHeader}>
+              <span className={styles.methodGet}>GET</span>
+              <span className={styles.path}>/guilds/{"{guild.id}"}/members</span>
+            </div>
+            <p>List members of a guild. Requires the <code>GUILD_MEMBERS</code> intent and appropriate permissions.</p>
+          </div>
+
+          <div className={styles.resourceHeader}>
+            <h3>Channels</h3>
+          </div>
+
+          <div className={styles.endpointCard}>
+            <div className={styles.endpointHeader}>
+              <span className={styles.methodGet}>GET</span>
+              <span className={styles.path}>/channels/{"{channel.id}"}</span>
+            </div>
+            <p>Fetch a channel by ID. Works for both guild channels and DMs.</p>
+          </div>
+
+          <div className={styles.endpointCard}>
+            <div className={styles.endpointHeader}>
+              <span className={styles.methodGet}>GET</span>
+              <span className={styles.path}>/channels/{"{channel.id}"}/messages</span>
+            </div>
+            <p>Get up to 100 messages from a channel. Use <code>?before</code>, <code>?after</code>, or <code>?around</code> to paginate.</p>
           </div>
 
           <div className={styles.resourceHeader}>
@@ -132,7 +202,15 @@ export function APIReference() {
               <span className={styles.methodPost}>POST</span>
               <span className={styles.path}>/channels/{"{channel.id}"}/messages</span>
             </div>
-            <p>Post a message to a guild text or DM channel. Returns a message object.</p>
+            <p>Send a message. Include <code>content</code> (text), <code>embeds</code>, or <code>components</code> in the request body.</p>
+          </div>
+
+          <div className={styles.endpointCard}>
+            <div className={styles.endpointHeader}>
+              <span className={styles.methodPatch}>PATCH</span>
+              <span className={styles.path}>/channels/{"{channel.id}"}/messages/{"{message.id}"}</span>
+            </div>
+            <p>Edit a message you (or your bot) sent. Can update content and embeds.</p>
           </div>
 
           <div className={styles.endpointCard}>
@@ -140,12 +218,12 @@ export function APIReference() {
               <span className={styles.methodDelete}>DELETE</span>
               <span className={styles.path}>/channels/{"{channel.id}"}/messages/{"{message.id}"}</span>
             </div>
-            <p>Delete a message. If operating on a guild channel and the user has MANAGE_MESSAGES, this can delete any message.</p>
+            <p>Delete a message. Bots need <code>MANAGE_MESSAGES</code> to delete messages from other users.</p>
           </div>
         </section>
 
         <div className={styles.infoBox} style={{ marginTop: 'var(--space-2xl)' }}>
-          <strong>Note:</strong> Looking for real-time updates? Check the <a href="/docs/gateway">Gateway Documentation</a>.
+          <strong>Need real-time updates instead?</strong> Check the <a href="/docs/gateway-events">Gateway Documentation</a> to subscribe to events via WebSocket.
         </div>
       </div>
     </DocsLayout>
