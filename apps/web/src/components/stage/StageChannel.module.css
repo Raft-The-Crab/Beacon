@@ -1,0 +1,268 @@
+.stageChannel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+.header {
+  padding: 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stageIcon {
+  font-size: 32px;
+}
+
+.topicSection {
+  flex: 1;
+}
+
+.topic {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.topic:hover {
+  background: var(--bg-hover);
+}
+
+.topicInput {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--beacon-brand);
+  border-radius: 6px;
+  padding: 8px;
+  width: 100%;
+}
+
+.stage {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.section h3 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+  letter-spacing: 0.5px;
+}
+
+.memberGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.speakerCard {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.speakerCard:hover {
+  transform: translateY(-4px);
+}
+
+.avatar {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.defaultAvatar {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--beacon-brand), #9333ea);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 600;
+  color: white;
+}
+
+.speakingRing {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 3px solid #43b581;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.05); }
+}
+
+.memberName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.modBadge,
+.mutedBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 16px;
+}
+
+.memberActions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.memberActions button {
+  background: var(--bg-tertiary);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.memberActions button:hover {
+  background: var(--bg-hover);
+}
+
+.listenerList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listenerItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.listenerItem:hover {
+  background: var(--bg-hover);
+}
+
+.listenerItem .avatar {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+}
+
+.listenerItem .defaultAvatar {
+  font-size: 14px;
+}
+
+.promoteBtn {
+  margin-left: auto;
+  background: var(--beacon-brand);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+}
+
+.listenerItem:hover .promoteBtn {
+  opacity: 1;
+}
+
+.promoteBtn:hover {
+  opacity: 0.9 !important;
+}
+
+.controls {
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.requestBtn,
+.leaveBtn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.requestBtn {
+  background: var(--beacon-brand);
+  color: white;
+}
+
+.requestBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.requestBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.leaveBtn {
+  background: #ed4245;
+  color: white;
+}
+
+.leaveBtn:hover {
+  opacity: 0.9;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 32px;
+  color: var(--text-tertiary);
+}

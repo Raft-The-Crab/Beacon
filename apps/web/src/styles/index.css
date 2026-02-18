@@ -1,0 +1,17 @@
+/* Import Global Styles */
+@import './globals.css';
+@import './animations.css';
+
+/* Root Element Styling */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}

@@ -1,0 +1,492 @@
+/* Beacon Global Styles - Soft Minimalistic Theme */
+
+:root {
+  /* Brand Colors - Soft & Professional */
+  --beacon-brand: #7289da;
+  --beacon-brand-hover: #5d73c2;
+  --beacon-brand-muted: rgba(114, 137, 218, 0.1);
+
+  /* Status Colors - Sleek & High Visibility */
+  --status-success: #23a559;
+  --status-error: #fa777c;
+  --status-warning: #f0b232;
+  --status-info: var(--beacon-brand);
+
+  /* Soft Dark Theme (Default) - Pure Production Baseline */
+  --bg-primary: #0e0f11;
+  --bg-secondary: #17181c;
+  --bg-tertiary: #232428;
+  --bg-panel: var(--bg-tertiary);
+  --bg-hover: rgba(255, 255, 255, 0.035);
+  --bg-active: rgba(255, 255, 255, 0.055);
+
+  /* Lightened variants for depth */
+  --bg-surface-soft: #2b2d31;
+  --bg-surface-elevated: #313338;
+
+  /* Text Colors - Standard Contrast */
+  --text-primary: #ffffff;
+  --text-secondary: #b5bac1;
+  --text-muted: #80848e;
+  --text-normal: #dbdee1;
+  --text-link: #00a8fc;
+
+  /* Neutral Surfaces */
+  --surface-0: #0e0f11;
+  --surface-1: #17181c;
+  --surface-2: #232428;
+  --border-soft: rgba(255, 255, 255, 0.05);
+
+  /* Theme-Aware Surfaces */
+  --bg-main: var(--bg-primary);
+  --bg-side: var(--bg-secondary);
+
+  /* Ultra-Premium Soft Glass & Atmosphere */
+  --glass-bg: rgba(14, 15, 17, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.04);
+  --glass-blur: 40px;
+  --glass-reflection: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 50%);
+
+  --atmos-glow: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(114, 137, 218, 0.08) 0%, transparent 65%);
+  --atmos-radiance: 0 0 100px rgba(114, 137, 218, 0.15);
+
+  --accent-gradient: linear-gradient(135deg, #7289da 0%, #949cf7 100%);
+  --accent-glow: 0 0 30px rgba(114, 137, 218, 0.4);
+
+  /* Shadows - Lush & Dispersive */
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 12px 24px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.45);
+  --shadow-glass: 0 16px 48px rgba(0, 0, 0, 0.5);
+
+  /* Transitions - High Performance Easings */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --transition-normal: 0.25s var(--ease-out);
+  --transition-slow: 0.5s var(--ease-out);
+  --transition-fast: 0.1s var(--ease-out);
+
+  /* Extreme Soft Radius - The Perfection */
+  --radius-xs: 8px;
+  --radius-sm: 14px;
+  --radius-md: 20px;
+  --radius-lg: 32px;
+  --radius-xl: 48px;
+  --radius-full: 9999px;
+
+  /* Spacing System - Consistent */
+  --space-2xs: 4px;
+  --space-xs: 6px;
+  --space-sm: 10px;
+  --space-md: 16px;
+  --space-lg: 20px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 40px;
+  --space-4xl: 64px;
+
+  /* Typography Scales - More Fluid & Premium */
+  --font-size-xs: 0.75rem;
+  /* 12px */
+  --font-size-sm: 0.875rem;
+  /* 14px */
+  --font-size-md: 1rem;
+  /* 16px */
+  --font-size-lg: 1.125rem;
+  /* 18px */
+  --font-size-xl: 1.25rem;
+  /* 20px */
+  --font-size-2xl: 1.5rem;
+  /* 24px */
+  --font-size-3xl: 2rem;
+  /* 32px */
+  --font-size-4xl: 3rem;
+  /* 48px */
+  --font-size-5xl: 4.5rem;
+  /* 72px */
+
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --sidebar-width: 240px;
+  --z-modal: 1000;
+}
+
+[data-theme="glass"] {
+  --bg-primary: rgba(0, 0, 0, 0.45);
+  --bg-secondary: rgba(0, 0, 0, 0.65);
+  --bg-tertiary: rgba(0, 0, 0, 0.8);
+  --bg-main: rgba(0, 0, 0, 0.45);
+  --bg-side: rgba(0, 0, 0, 0.65);
+  --bg-panel: rgba(0, 0, 0, 0.8);
+  --backdrop-blur: 40px;
+  --glass-bg: rgba(0, 0, 0, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --border-soft: rgba(255, 255, 255, 0.1);
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-active: rgba(255, 255, 255, 0.12);
+  --shadow-glass: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] {
+  /* Brand override for better contrast on white */
+  --beacon-brand: #5865f2;
+  --beacon-brand-hover: #4752c4;
+
+  --bg-primary: #ffffff;
+  --bg-secondary: #f2f3f5;
+  --bg-tertiary: #ebedef;
+  --bg-main: #ffffff;
+  --bg-side: #f2f3f5;
+  --bg-panel: #ffffff;
+  --bg-surface-soft: #f2f3f5;
+  --bg-surface-elevated: #ffffff;
+
+  --bg-hover: rgba(0, 0, 0, 0.05);
+  --bg-active: rgba(0, 0, 0, 0.08);
+
+  --text-primary: #060607;
+  --text-secondary: #2e3338;
+  --text-muted: #5c6370;
+  --text-normal: #313338;
+
+  --surface-0: #ffffff;
+  --surface-1: #f2f3f5;
+  --surface-2: #ebedef;
+  --border-soft: rgba(0, 0, 0, 0.08);
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-glass: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+  --custom-bg: none !important;
+  /* Force no background image in light mode unless user insists */
+  background-image: none !important;
+  background-color: #ffffff !important;
+}
+
+/* Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  /* Use custom background if set, otherwise fallback to radial gradient */
+  background-image: var(--custom-bg, radial-gradient(circle at 50% 0%, #1a1b20 0%, #0e0f11 100%));
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--text-primary);
+  line-height: 1.5;
+  overflow-y: auto;
+}
+
+/* Scrollbar Styling - Ultra-Premium & Subtle */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Force thin scrollbars on Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.05) transparent;
+}
+
+/* Focus Styles */
+:focus-visible {
+  outline: 2px solid var(--beacon-brand);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--beacon-brand);
+  color: white;
+}
+
+/* Links */
+a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Buttons Base */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+/* Input Base */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--beacon-brand);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Utility Classes */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-xs {
+  gap: var(--space-xs);
+}
+
+.gap-sm {
+  gap: var(--space-sm);
+}
+
+.gap-md {
+  gap: var(--space-md);
+}
+
+.gap-lg {
+  gap: var(--space-lg);
+}
+
+.gap-xl {
+  gap: var(--space-xl);
+}
+
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+
+.text-md {
+  font-size: var(--font-size-md);
+}
+
+.text-lg {
+  font-size: var(--font-size-lg);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+
+.rounded-md {
+  border-radius: var(--radius-md);
+}
+
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+
+.rounded-full {
+  border-radius: var(--radius-full);
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Premium Glass & Atmosphere Utilities */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xl);
+  transition: all 0.4s var(--ease-out);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.glow-text {
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+.brand-glow {
+  box-shadow: 0 0 30px rgba(114, 137, 218, 0.2);
+}
+
+.glass-interactive {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  transition: all var(--transition-normal);
+}
+
+.glass-interactive:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.radiance {
+  position: relative;
+}
+
+.radiance::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--atmos-glow);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+.accent-text {
+  background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Animation Keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn var(--transition-normal);
+}
+
+.animate-slideUp {
+  animation: slideUp var(--transition-normal);
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}

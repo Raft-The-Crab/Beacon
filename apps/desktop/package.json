@@ -1,0 +1,24 @@
+{
+  "name": "@beacon/desktop",
+  "version": "2.3.0",
+  "private": true,
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build --target x86_64-pc-windows-msvc",
+    "build:release": "tauri build --target x86_64-pc-windows-msvc --config src-tauri/tauri.conf.json",
+    "build:msi": "tauri build --bundles msi",
+    "build:nsis": "tauri build --bundles nsis",
+    "build:all": "tauri build --bundles msi,nsis",
+    "clean": "cargo clean --manifest-path src-tauri/Cargo.toml && rm -rf dist",
+    "lint": "eslint src --ext ts"
+  },
+  "dependencies": {
+    "@beacon/types": "workspace:*",
+    "@beacon/api-client": "workspace:*",
+    "@tauri-apps/api": "^2.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "typescript": "^5.3.0"
+  }
+}

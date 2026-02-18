@@ -1,0 +1,339 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String  @id @default(cuid())
+  email         String  @unique
+  username      String
+  password      String
+  avatar        String?
+  banner        String?
+  discriminator String?
+  bio           String?
+  customStatus  String?
+
+  // Settings
+  theme         String  @default("auto") // classic, glass, light
+  accentColor   String?
+  developerMode Boolean @default(false)
+
+  bot Boolean @default(false)
+
+  // Relations
+  ownedGuilds  Guild[]       @relation("GuildOwner")
+  memberships  GuildMember[]
+  messages     Message[]
+  applications Application[]
+  auditLogs    AuditLog[]
+
+  // Social
+  friends    Friendship[] @relation("UserFriends")
+  friendOf   Friendship[] @relation("FriendUsers")
+  dmChannels Channel[]    @relation("ChannelRecipients")
+  folders    ServerFolder[]
+  blocked    Block[]      @relation("UserBlocks")
+  blockedBy  Block[]      @relation("BlockedUsers")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ServerFolder {
+  id        String   @id @default(cuid())
+  name      String?
+  color     String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guildIds  String[] // IDs of guilds in this folder
+  position  Int      @default(0)
+  expanded  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Friendship {
+  id       String @id @default(cuid())
+  userId   String
+  friendId String
+  user     User   @relation("UserFriends", fields: [userId], references: [id])
+  friend   User   @relation("FriendUsers", fields: [friendId], references: [id])
+  status   Int // 0: Pending, 1: Accepted
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
+}
+
+model Block {
+  id        String @id @default(cuid())
+  userId    String
+  blockedId String
+  user      User   @relation("UserBlocks", fields: [userId], references: [id])
+  blocked   User   @relation("BlockedUsers", fields: [blockedId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, blockedId])
+}
+
+model Guild {
+  id          String        @id @default(cuid())
+  name        String
+  icon        String?
+  banner      String?
+  description String?
+  ownerId     String
+  owner       User          @relation("GuildOwner", fields: [ownerId], references: [id])
+  inviteCode  String?       @unique @default(cuid())
+  members     GuildMember[]
+  channels    Channel[]
+  roles       Role[]
+  invites     Invite[]
+  webhooks    Webhook[]
+  auditLogs   AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id          String  @id @default(cuid())
+  name        String
+  color       String? // Hex code
+  position    Int     @default(0)
+  permissions BigInt  @default(0) // Bitfield
+  mentionable Boolean @default(false)
+  hoist       Boolean @default(false) // Display separately
+
+  guildId String
+  guild   Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  members GuildMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GuildMember {
+  id       String  @id @default(cuid())
+  userId   String
+  guildId  String
+  user     User    @relation(fields: [userId], references: [id])
+  guild    Guild   @relation(fields: [guildId], references: [id])
+  nickname String?
+  avatar   String?
+
+  roles Role[]
+
+  joinedAt DateTime @default(now())
+
+  @@unique([userId, guildId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  guildId    String
+  guild      Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     Int
+  targetId   String?
+  targetType String?
+  changes    Json?
+  reason     String?
+  createdAt  DateTime @default(now())
+}
+
+model Channel {
+  id               String      @id @default(cuid())
+  guildId          String?
+  guild            Guild?      @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  name             String
+  type             ChannelType @default(TEXT)
+  topic            String?
+  position         Int         @default(0)
+  parentId         String?
+  parent           Channel?    @relation("SubChannels", fields: [parentId], references: [id])
+  children         Channel[]   @relation("SubChannels")
+  messages         Message[]
+  recipients       User[]      @relation("ChannelRecipients")
+  nsfw             Boolean     @default(false)
+  slowmode         Int         @default(0)
+  rateLimitPerUser Int         @default(0)
+  bitrate          Int? // For voice channels
+  userLimit        Int? // For voice channels
+  rtcRegion        String? // Voice region
+  videoQualityMode Int         @default(1) // 1=auto, 2=full
+  threads          Thread[]
+  webhooks         Webhook[]
+  lastMessageAt    DateTime?   @default(now())
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model Thread {
+  id              String   @id @default(cuid())
+  channelId       String
+  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  name            String
+  ownerId         String
+  messageCount    Int      @default(0)
+  memberCount     Int      @default(0)
+  archived        Boolean  @default(false)
+  locked          Boolean  @default(false)
+  autoArchiveDuration Int  @default(1440)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Webhook {
+  id        String   @id @default(cuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  guildId   String?
+  guild     Guild?   @relation(fields: [guildId], references: [id])
+  name      String
+  avatar    String?
+  token     String   @unique
+  createdBy String
+  messages  Message[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id        String @id @default(cuid())
+  content   String
+  channelId String
+  authorId  String?
+  webhookId String?
+
+  channel Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User?    @relation(fields: [authorId], references: [id])
+  webhook Webhook? @relation(fields: [webhookId], references: [id])
+
+  attachments Attachment[]
+  reactions   Reaction[]
+
+  editedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Reaction {
+  id        String @id @default(cuid())
+  emoji     String
+  messageId String
+  userId    String
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  // Simple user relation if needed, or just store ID
+
+  createdAt DateTime @default(now())
+}
+
+model Invite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  guildId   String
+  guild     Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  uses      Int       @default(0)
+  maxUses   Int       @default(0) // 0 = infinite
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+}
+
+model Application {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  icon        String?
+  ownerId     String
+  owner       User    @relation(fields: [ownerId], references: [id])
+  bot         Bot?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Bot {
+  id            String      @id @default(cuid())
+  token         String      @unique
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id])
+  userId        String?     @unique
+  commands      SlashCommand[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SlashCommand {
+  id          String  @id @default(cuid())
+  name        String
+  description String
+  botId       String
+  bot         Bot     @relation(fields: [botId], references: [id], onDelete: Cascade)
+  guildId     String?
+  options     Json?   // Command options as JSON
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VoiceState {
+  id          String   @id @default(cuid())
+  userId      String
+  guildId     String
+  channelId   String?
+  sessionId   String   @unique
+  deaf        Boolean  @default(false)
+  mute        Boolean  @default(false)
+  selfDeaf    Boolean  @default(false)
+  selfMute    Boolean  @default(false)
+  selfVideo   Boolean  @default(false)
+  suppress    Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Attachment {
+  id          String   @id @default(cuid())
+  messageId   String
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  filename    String
+  size        Int
+  url         String
+  proxyUrl    String?
+  height      Int?
+  width       Int?
+  contentType String?
+
+  createdAt   DateTime @default(now())
+}
+
+enum ChannelType {
+  TEXT
+  VOICE
+  CATEGORY
+  THREAD
+  STAGE
+  FORUM
+  ANNOUNCEMENT
+  DM
+  GROUP_DM
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}

@@ -1,0 +1,36 @@
+PROPRIETARY SOFTWARE LICENSE
+
+Copyright (c) 2026 Beacon Team. All Rights Reserved.
+
+NOTICE: This software and its source code are proprietary and confidential.
+
+RESTRICTIONS:
+1. NO REDISTRIBUTION: You may not distribute, sublicense, lease, rent, loan, or 
+   otherwise transfer this software or any portion thereof to any third party.
+
+2. NO MODIFICATION: You may not modify, adapt, translate, reverse engineer, 
+   decompile, disassemble, or create derivative works based on this software.
+
+3. NO PUBLIC DISCLOSURE: The source code, architecture, and implementation 
+   details are trade secrets and must not be publicly disclosed.
+
+4. AUTHORIZED USE ONLY: This software may only be used by authorized personnel 
+   for deployment on official Beacon infrastructure (Railway, Supabase, ClawCloud).
+
+5. NO COMMERCIAL USE: You may not use this software for commercial purposes 
+   without explicit written permission.
+
+PERMITTED USES:
+- Deployment to authorized hosting providers (Railway, Supabase, ClawCloud)
+- Internal development and testing by authorized team members
+- Official Beacon application distribution through authorized channels
+
+DISCLAIMER:
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+For licensing inquiries, contact: [Your Contact Email]

@@ -1,0 +1,66 @@
+{
+  "name": "beacon.js",
+  "version": "2.5.0",
+  "description": "Official Bot SDK for Beacon — build powerful, event-driven bots with ease",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc && node scripts/build-esm.js",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext ts",
+    "prepublishOnly": "npm run build",
+    "publish:npm": "npm publish --access public",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "beacon",
+    "discord",
+    "bot",
+    "sdk",
+    "chat",
+    "gateway",
+    "websocket",
+    "slash-commands",
+    "embeds",
+    "api"
+  ],
+  "author": "Beacon Team",
+  "license": "MIT",
+  "homepage": "https://beacon.chat/developers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Raft-The-Crab/Beacon.git",
+    "directory": "packages/beacon-js"
+  },
+  "bugs": {
+    "url": "https://github.com/Raft-The-Crab/Beacon/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.10",
+    "typescript": "^5.3.0"
+  }
+}

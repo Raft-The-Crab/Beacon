@@ -1,0 +1,83 @@
+[package]
+name = "beacon"
+version = "1.0.0"
+description = "Cross-platform real-time communication platform"
+authors = ["Beacon Team"]
+license = "Proprietary"
+repository = "https://github.com/Raft-The-Crab/Beacon"
+edition = "2021"
+
+# Windows 10+ optimizations
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = ["Win32_Foundation", "Win32_System_Threading", "Win32_UI_WindowsAndMessaging"] }
+
+# High-performance optimizations
+[profile.release]
+opt-level = 3           # Maximum optimizations
+lto = true              # Enable Link Time Optimization
+codegen-units = 1       # Better optimization at cost of compile time
+strip = true            # Strip symbols from binary
+panic = "abort"         # Reduce binary size
+overflow-checks = false # Remove overflow checks in release
+
+# Development profile for faster builds
+[profile.dev]
+opt-level = 0
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0", features = [
+  "protocol-asset",
+  "macos-private-api",
+  "native-tls-vendored",
+  "rustls-tls",
+  "process-relaunch",
+  "system-tray",
+  "notification-all",
+  "updater",
+  "fs-all",
+  "http-all",
+  "shell-open",
+  "window-all",
+  "clipboard-all"
+] }
+tauri-plugin-fs = "2.0"
+tauri-plugin-shell = "2.0"
+tauri-plugin-dialog = "2.0"
+tauri-plugin-http = "2.0"
+tauri-plugin-notification = "2.0"
+tauri-plugin-clipboard-manager = "2.0"
+tauri-plugin-process = "2.0"
+tauri-plugin-updater = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full", "rt-multi-thread"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"] }
+log = "0.4"
+env_logger = "0.11"
+
+# Native performance modules
+rayon = "1.10" # Parallel processing
+parking_lot = "0.12" # Faster synchronization primitives
+dashmap = "6.1" # Concurrent hashmap
+num_cpus = "1.16" # CPU core detection
+
+# WebSocket for real-time
+tokio-tungstenite = { version = "0.24", features = ["native-tls"] }
+futures-util = "0.3"
+
+# Encryption and security
+ring = "0.17" # Cryptographic operations
+base64 = "0.22"
+
+# Image processing
+image = { version = "0.25", features = ["jpeg", "png", "webp"] }
+anyhow = "1.0"
+
+[features]
+# This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]

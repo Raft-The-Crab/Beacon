@@ -1,0 +1,106 @@
+.avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 16px;
+  /* Squircle/Modern rounded profile */
+  background: var(--bg-tertiary);
+  transition: all 0.3s var(--ease-out);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.avatar:hover {
+  border-color: var(--beacon-brand);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.status {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 4px solid var(--bg-primary);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s;
+}
+
+/* Neon Glows for Status */
+.status::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  box-shadow: 0 0 12px currentColor;
+  opacity: 0.6;
+}
+
+.sm {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.sm .status {
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+}
+
+.md {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+}
+
+.md .status {
+  width: 16px;
+  height: 16px;
+  border-width: 3px;
+}
+
+.lg {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+}
+
+.lg .status {
+  width: 22px;
+  height: 22px;
+  border-width: 4px;
+}
+
+.xl {
+  width: 128px;
+  height: 128px;
+  border-radius: 40px;
+}
+
+.xl .status {
+  width: 32px;
+  height: 32px;
+  border-width: 6px;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.placeholder {
+  color: var(--text-muted);
+  width: 60%;
+  height: 60%;
+}

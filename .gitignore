@@ -1,0 +1,158 @@
+# ==========================================
+# BEACON - PROPRIETARY SOURCE CODE
+# DO NOT DISTRIBUTE
+# ==========================================
+
+# Dependencies
+node_modules/
+.pnpm-store/
+.pnp
+.pnp.js
+bower_components/
+jspm_packages/
+
+# Build outputs - EXCLUDE FROM GIT
+dist/
+build/
+out/
+target/
+*.js.map
+*.d.ts.map
+
+# Frontend builds - EXCLUDE
+apps/web/dist/
+apps/web/build/
+apps/desktop/dist/
+apps/desktop/src-tauri/target/
+apps/mobile/android/
+apps/mobile/ios/
+
+# Backend compiled - EXCLUDE
+apps/server/dist/
+apps/server/build/
+packages/*/dist/
+packages/*/build/
+
+# Environment files - CRITICAL SECURITY
+.env
+.env.*
+!.env.example
+*.env
+.env.local
+.env.production
+.env.development
+.env.test
+prisma.config.ts
+apps/server/.env
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+prisma/migrations/
+apps/server/prisma/migrations/
+
+# Logs - EXCLUDE ALL
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# IDE - EXCLUDE CONFIG
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+*.lcov
+.jest/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.cache
+
+# Tauri specific
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/WixTools/
+
+# Capacitor
+apps/mobile/.capacitor/
+apps/mobile/android/
+apps/mobile/ios/
+
+# Package manager locks (optional - keep one)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Compiled binaries
+*.exe
+*.dmg
+*.app
+*.apk
+*.aab
+*.msi
+*.deb
+*.rpm
+
+# Secrets & Keys - CRITICAL
+*.pem
+*.key
+*.cert
+*.p12
+*.keystore
+secrets/
+credentials/
+
+# CI/CD - Railway deployment only
+.railway/
+.vercel/
+.netlify/
+
+# Source maps - security
+**/*.map
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Optional: Documentation (if proprietary)
+# docs/
+
+# Cloudinary cache
+.cloudinary/
+
+# Redis dumps
+dump.rdb
+
+# MongoDB local
+data/
+
+# Generated Prisma Client
+node_modules/.prisma/
+node_modules/@prisma/
