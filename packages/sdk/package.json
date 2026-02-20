@@ -40,7 +40,7 @@
   },
   "homepage": "https://github.com/Raft-The-Crab/Beacon#readme",
   "dependencies": {
-    "@beacon/types": "*"
+    "@beacon/types": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

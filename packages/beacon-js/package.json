@@ -58,8 +58,7 @@
   },
   "dependencies": {
     "ws": "^8.19.0",
-    "wrtc": "^0.4.7",
-    "opus-script": "^0.0.8"
+    "wrtc": "^0.4.7"
   },
   "devDependencies": {
     "@types/ws": "^8.5.10",
