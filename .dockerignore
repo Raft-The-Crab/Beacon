@@ -1,12 +1,5 @@
+# Force Railway to rebuild
 node_modules
-.git
-.github
 dist
-build
-.next
-.vercel
+.git
 *.log
-.env*
-apps/web/node_modules
-apps/mobile/node_modules
-packages/beacon-js/node_modules
