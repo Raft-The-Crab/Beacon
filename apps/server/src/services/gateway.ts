@@ -1,6 +1,49 @@
-import { aiModeration } from '../../ai'; // Import aiModeration
+import { WebSocketServer, WebSocket } from 'ws'
+import { v4 as uuidv4 } from 'uuid'
+import { IncomingMessage } from 'http'
+import { prisma, redis, MessageModel, ModerationReportModel } from '../db'
+import { AuthService } from './auth'
+import { moderationService } from './moderation'
+import { SovereigntyService } from './sovereignty'
+import * as membership from './membership'
 
-// ... (existing interfaces, enums, hasPermission function) ...
+export interface WebSocketClient extends WebSocket {
+  id: string
+  isAlive: boolean
+  userId?: string
+}
+
+export enum Permissions {
+  MANAGE_MESSAGES = 'MANAGE_MESSAGES',
+  ADMINISTRATOR = 'ADMINISTRATOR'
+}
+
+export async function hasPermission(userId: string, guildId: string, permission: Permissions): Promise<boolean> {
+  // Placeholder for real permission logic
+  console.log(`[Permissions] Checking ${permission} for ${userId} in ${guildId}`);
+  return true
+}
+
+export async function membershipGetGuildMembers(guildId: string): Promise<string[]> {
+  // 1. Try Redis cache first
+  const cachedMembers = await membership.getGuildMembers(guildId)
+  if (cachedMembers) return cachedMembers
+
+  // 2. Fallback to Prisma
+  const members = await prisma.guildMember.findMany({
+    where: { guildId },
+    select: { userId: true }
+  })
+
+  const memberIds = members.map((m: { userId: string }) => m.userId)
+
+  // 3. Update cache for future requests
+  for (const id of memberIds) {
+    await membership.addGuildMember(guildId, id)
+  }
+
+  return memberIds
+}
 
 export class GatewayService {
   private wss: WebSocketServer
@@ -31,7 +74,7 @@ export class GatewayService {
       console.warn('Failed to setup Redis pubsub', err)
     }
 
-    this.wss.on('connection', async (ws: WebSocketClient, req: IncomingMessage) => {
+    this.wss.on('connection', async (ws: WebSocketClient, _req: IncomingMessage) => {
       ws.id = uuidv4()
       ws.isAlive = true
       this.clients.set(ws.id, ws)
@@ -76,7 +119,7 @@ export class GatewayService {
     }, 30000)
   }
 
-  private async handleMessage(ws: WebSocketClient, message: any) {
+  private async handleMessage(ws: WebSocketClient, message: { op: number; d: any; t?: string }) {
     switch (message.op) {
       case 1: // HEARTBEAT
         this.send(ws, { op: 11 }) // HEARTBEAT_ACK
@@ -124,7 +167,7 @@ export class GatewayService {
     }
   }
 
-  private async handleVoiceStateUpdate(ws: WebSocketClient, data: any) {
+  private async handleVoiceStateUpdate(ws: WebSocketClient, data: { guild_id: string; channel_id: string | null; self_mute?: boolean; self_deaf?: boolean }) {
     if (!ws.userId) return
 
     const { guild_id, channel_id, self_mute, self_deaf } = data
@@ -208,20 +251,11 @@ export class GatewayService {
         return;
       }
 
-      // --- AI Moderation ---
-      const moderationContext = {
-        userId: authorId,
-        channelId: channelId,
-        guildId: data.guildId || null,
-        // Potentially add user roles, historical data, etc., here
-        // For now, let's assume 'admin' role for userId 'admin-user-id' for testing
-        userRole: (authorId === 'admin-user-id') ? 'admin' : 'member', // Example for context-aware rule
-      };
-
-      const moderationResult = await aiModeration.checkContent(content, 'text', moderationContext);
+      // --- Intelligent AI Moderation ---
+      const { result: moderationResult } = await moderationService.checkMessage(content, authorId, channelId);
 
       if (!moderationResult.approved) {
-        console.warn(`[AI Moderation] Prohibited message from ${authorId} in ${channelId}: "${content.substring(0, 50)}..." - Flags: ${moderationResult.flags.join(', ')}`);
+        console.warn(`[AI Moderation] Prohibited message from ${authorId} in ${channelId}: "${content.substring(0, 50)}..." - Flags: ${moderationResult.flags?.join(', ')}`);
         this.send(ws, {
           op: 0,
           t: 'MESSAGE_REJECTED',
@@ -233,6 +267,21 @@ export class GatewayService {
             status: moderationResult.status,
           },
         });
+
+        // Automatically create a Moderation Report
+        await (ModerationReportModel as any).create({
+          id: `report_${Date.now()}`,
+          channel_id: channelId,
+          guild_id: data.guildId || null,
+          reporter_id: 'system',
+          target_user_id: authorId,
+          content: content,
+          reason: moderationResult.reason,
+          flags: moderationResult.flags,
+          score: moderationResult.score,
+          status: 'pending'
+        });
+
         return; // Stop processing the message
       }
 
@@ -244,8 +293,45 @@ export class GatewayService {
       console.log(`[AI Moderation] Message from ${authorId} in ${channelId}: "${content.substring(0, 50)}..." - Status: ${moderationResult.status}`);
       // --- End AI Moderation ---
 
+      // --- Intelligent Bot Interaction ---
+      // If the message is safe, check if any bots want to respond
+      if (moderationResult.status !== 'Rejected') {
+        const botContext = {
+          userId: authorId,
+          channelId: channelId,
+          guildId: data.guildId || null,
+          history: [] // We could fetch recent history from Mongo for better NLU
+        };
+
+        const { botFramework } = await import('../bots/index');
+        const botResponse = await botFramework.handleMessage(content, botContext);
+
+        if (botResponse) {
+          // If a bot responds, create and broadcast that message too
+          const botMsg = await (MessageModel as any).create({
+            id: `bot_${Date.now()}`,
+            channel_id: channelId,
+            guild_id: data.guildId || null,
+            author: { id: 'oracle-bot-id', username: 'Oracle', bot: true },
+            content: botResponse.content,
+            timestamp: new Date(),
+            metadata: {
+              ...botResponse.metadata,
+              actions: botResponse.actions // Pass bot actions to the client
+            }
+          });
+
+          // --- Zero-Data Optimization (Sovereignty) ---
+          const isZeroData = process.env.SOVEREIGNTY_LEVEL === '3';
+          const optimizedMsg = await SovereigntyService.optimizePayload(botMsg, isZeroData);
+
+          await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_CREATE', d: optimizedMsg }));
+        }
+      }
+      // --- End Bot Interaction ---
+
       // Create document in Mongo
-      const msg = await (await import('../db')).MessageModel.create({
+      const msg = await (MessageModel as any).create({
         id: Date.now().toString(),
         channel_id: channelId,
         guild_id: data.guildId || null,
@@ -319,7 +405,7 @@ export class GatewayService {
       }
 
       // Check if user is the author
-      const isAuthor = messageToDelete.author.id === userId
+      const isAuthor = (messageToDelete.author as any)?.id === userId
 
       let canManageMessages = false
       if (messageToDelete.guild_id) {
@@ -332,7 +418,7 @@ export class GatewayService {
       }
 
       await MessageModel.deleteOne({ id: messageId, channel_id: channelId })
-      
+
       // Broadcast delete to members of the channel's guild (best-effort)
       const guildId = messageToDelete.guild_id || data.guildId
       try {
@@ -375,7 +461,7 @@ export class GatewayService {
     }
   }
 
-  private async handleUnpinMessage(ws: WebSocketClient, data: any) {
+  private async handleUnpinMessage(_ws: WebSocketClient, data: any) {
     try {
       const { channelId, messageId } = data
       const { MessageModel } = await import('../db')
@@ -491,18 +577,23 @@ export class GatewayService {
     })
   }
 
-  private handleDisconnect(ws: WebSocketClient) {
+  private async handleDisconnect(ws: WebSocketClient) {
     this.clients.delete(ws.id)
     if (ws.userId) {
-      redis.del(`session:${ws.id}`)
-      redis.srem(`user_sessions:${ws.userId}`, ws.id)
+      await redis.set(`session:${ws.id}`, ws.userId, 'EX', 86400)
+      await redis.srem(`user_sessions:${ws.userId}`, ws.id)
     }
     console.log(`Disconnected: ${ws.id}`)
   }
 
-  private send(ws: WebSocket, payload: any) {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(payload))
+  private send(ws: WebSocketClient, payload: any) {
+    if ((ws as any).readyState === (WebSocket as any).OPEN) {
+      // --- Zero-Data Optimization (Sovereignty) ---
+      // For general send, we apply system-level optimization if enabled
+      const isZeroData = process.env.SOVEREIGNTY_LEVEL === '3';
+      const optimizedPayload = SovereigntyService.optimizePayload(payload, isZeroData);
+
+      (ws as any).send(JSON.stringify(optimizedPayload));
     }
   }
 

@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Send, Plus, Smile, Volume2, Image as ImageIcon, X, File, Bot, Sparkles } from 'lucide-react'
 import { Button, Tooltip, EmojiPicker, GifPicker, Dropdown } from '../ui'
 import { fileUploadService, type UploadedFile } from '../../services/fileUpload'
+import { SlashCommandPicker, type SlashCommand } from './SlashCommandPicker'
 import styles from './MessageInput.module.css'
 
 interface MessageInputProps {
@@ -11,6 +12,7 @@ interface MessageInputProps {
   onStopTyping?: () => void
   channels?: { id: string; name: string }[]
   onVoiceClick?: () => void
+  extraSlashCommands?: SlashCommand[]
 }
 
 export function MessageInput({
@@ -19,6 +21,7 @@ export function MessageInput({
   onStartTyping,
   onStopTyping,
   onVoiceClick,
+  extraSlashCommands = [],
 }: MessageInputProps) {
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -29,8 +32,14 @@ export function MessageInput({
   const [scheduledTime, setScheduledTime] = useState('')
   const [attachments, setAttachments] = useState<UploadedFile[]>([])
   const [uploading, setUploading] = useState(false)
+
+  // Slash command state
+  const [showSlashPicker, setShowSlashPicker] = useState(false)
+  const [slashQuery, setSlashQuery] = useState('')
+
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -40,6 +49,15 @@ export function MessageInput({
     // Auto-resize textarea
     e.currentTarget.style.height = 'auto'
     e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 200)}px`
+
+    // Slash command detection: show picker when text starts with "/" and no space yet
+    if (text.startsWith('/') && !text.includes(' ')) {
+      setSlashQuery(text.slice(1))
+      setShowSlashPicker(true)
+    } else {
+      setShowSlashPicker(false)
+      setSlashQuery('')
+    }
 
     // Typing indicator
     if (!isTyping) {
@@ -57,10 +75,42 @@ export function MessageInput({
     }, 3000)
   }
 
+  const handleSlashSelect = useCallback((command: SlashCommand) => {
+    // Handle built-in commands inline
+    switch (command.name) {
+      case 'shrug':
+        setMessage(prev => prev.replace(/^\/\S*/, '¯\\_(ツ)_/¯'))
+        break
+      case 'tableflip':
+        setMessage(prev => prev.replace(/^\/\S*/, '(╯°□°）╯︵ ┻━┻'))
+        break
+      case 'unflip':
+        setMessage(prev => prev.replace(/^\/\S*/, '┬─┬ ノ( ゜-゜ノ)'))
+        break
+      default:
+        // Replace the slash command token with the command + space so user can type args
+        if (command.usage) {
+          setMessage('/' + command.name + ' ')
+        } else {
+          setMessage('/' + command.name + ' ')
+        }
+    }
+    setShowSlashPicker(false)
+    setSlashQuery('')
+    setTimeout(() => {
+      textareaRef.current?.focus()
+      // Move cursor to end
+      const ta = textareaRef.current
+      if (ta) {
+        ta.selectionStart = ta.selectionEnd = ta.value.length
+      }
+    }, 0)
+  }, [])
+
   const handleSend = () => {
     if (message.trim() || attachments.length > 0) {
-      const scheduleIso = (scheduledAt && scheduledTime) 
-        ? new Date(`${scheduledAt}T${scheduledTime}`).toISOString() 
+      const scheduleIso = (scheduledAt && scheduledTime)
+        ? new Date(`${scheduledAt}T${scheduledTime}`).toISOString()
         : undefined;
 
       onSendMessage(message.trim(), undefined, attachments, scheduleIso)
@@ -75,10 +125,19 @@ export function MessageInput({
       onStopTyping?.()
       setShowEmojiPicker(false)
       setShowGifPicker(false)
+      setShowSlashPicker(false)
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // If slash picker is open, let it consume Up/Down/Enter/Tab/Escape
+    if (showSlashPicker && ['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) {
+      if (e.key !== 'Escape') e.preventDefault()
+      if (e.key === 'Escape') {
+        setShowSlashPicker(false)
+      }
+      return
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -92,8 +151,6 @@ export function MessageInput({
       const end = textarea.selectionEnd
       const newMessage = message.slice(0, start) + emoji + message.slice(end)
       setMessage(newMessage)
-      
-      // Set cursor position after emoji
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + emoji.length
         textarea.focus()
@@ -198,7 +255,7 @@ export function MessageInput({
   ]
 
   return (
-    <div className={styles.inputContainer}>
+    <div className={styles.inputContainer} ref={containerRef}>
       {attachments.length > 0 && (
         <div className={styles.attachmentPreview}>
           {attachments.map((attachment, index) => (
@@ -220,6 +277,17 @@ export function MessageInput({
             </div>
           ))}
         </div>
+      )}
+
+      {/* Slash Command Picker — floats above the input */}
+      {showSlashPicker && (
+        <SlashCommandPicker
+          query={slashQuery}
+          onSelect={handleSlashSelect}
+          onClose={() => setShowSlashPicker(false)}
+          anchorRef={containerRef as React.RefObject<HTMLElement>}
+          extraCommands={extraSlashCommands}
+        />
       )}
 
       <div className={styles.inputWrapper}>
@@ -268,7 +336,7 @@ export function MessageInput({
 
           <div className={styles.pickerWrapper}>
             <Tooltip content="Add GIF" position="top">
-              <button 
+              <button
                 className={styles.iconButton}
                 onClick={() => {
                   setShowGifPicker(!showGifPicker)
@@ -288,7 +356,7 @@ export function MessageInput({
 
           <div className={styles.pickerWrapper}>
             <Tooltip content="Add emoji" position="top">
-              <button 
+              <button
                 className={styles.iconButton}
                 onClick={() => {
                   setShowEmojiPicker(!showEmojiPicker)

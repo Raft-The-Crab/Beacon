@@ -129,7 +129,7 @@ export async function getMyGuilds(req: Request, res: Response) {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const memberships = await (prisma.member as any).findMany({
+    const memberships = await prisma.guildMember.findMany({
       where: { userId },
       include: {
         guild: {
@@ -160,7 +160,7 @@ export async function getMyFriends(req: Request, res: Response) {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const friends = await (prisma.friend as any).findMany({
+    const friends = await prisma.friendship.findMany({
       where: {
         OR: [
           { userId, status: 'accepted' },
@@ -199,6 +199,42 @@ export async function deleteMe(req: Request, res: Response) {
   try {
     await prisma.user.delete({ where: { id: userId } });
     return res.status(204).send();
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// PATCH /users/me/e2ee
+export async function updateE2EEKeys(req: Request, res: Response) {
+  const userId = (req as any).user?.id;
+  const { publicKey, deviceSalt } = req.body;
+
+  if (!publicKey || !deviceSalt) {
+    return res.status(400).json({ error: 'publicKey and deviceSalt are required' });
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { publicKey, deviceSalt },
+    });
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// GET /users/:userId/e2ee
+export async function getE2EEKeys(req: Request, res: Response) {
+  const { userId } = req.params;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { publicKey: true, deviceSalt: true },
+    });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    return res.json(user);
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }

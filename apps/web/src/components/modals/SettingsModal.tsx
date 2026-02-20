@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book } from 'lucide-react'
-import { useUIStore } from '../../stores/useUIStore'
+import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book, AlignLeft, Layers, Zap } from 'lucide-react'
+import { useUIStore, type Theme, type MessageDensity } from '../../stores/useUIStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useServerStore } from '../../stores/useServerStore'
 import { useNavigate } from 'react-router-dom'
@@ -41,6 +41,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
         showUserSettings, setShowUserSettings,
         developerMode, setDeveloperMode,
         theme, setTheme,
+        messageDensity, setMessageDensity,
         customBackground, setCustomBackground,
         customAccentColor, setCustomAccentColor
     } = useUIStore()
@@ -344,6 +345,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                     <div className={styles.tabContent}>
                         <div className={styles.appearanceSection}>
                             <h3>Theme</h3>
+                            <p className={styles.muted} style={{ marginBottom: 12 }}>Choose your Beacon visual style</p>
                             <div className={styles.themeOptions}>
                                 <Button
                                     variant={theme === 'classic' ? 'primary' : 'secondary'}
@@ -351,7 +353,15 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                     className={styles.themeButton}
                                 >
                                     <Moon size={16} />
-                                    Dark (Soft)
+                                    Dark
+                                </Button>
+                                <Button
+                                    variant={theme === 'light' ? 'primary' : 'secondary'}
+                                    onClick={() => setTheme('light')}
+                                    className={styles.themeButton}
+                                >
+                                    <Sun size={16} />
+                                    Light
                                 </Button>
                                 <Button
                                     variant={theme === 'glass' ? 'primary' : 'secondary'}
@@ -362,13 +372,56 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                     Glass
                                 </Button>
                                 <Button
-                                    variant={theme === 'light' ? 'primary' : 'secondary'}
-                                    onClick={() => setTheme('light')}
+                                    variant={theme === 'oled' ? 'primary' : 'secondary'}
+                                    onClick={() => setTheme('oled')}
                                     className={styles.themeButton}
                                 >
-                                    <Sun size={16} />
-                                    Light
+                                    <Moon size={16} />
+                                    OLED
                                 </Button>
+                                <Button
+                                    variant={theme === 'neon' ? 'primary' : 'secondary'}
+                                    onClick={() => setTheme('neon')}
+                                    className={styles.themeButton}
+                                >
+                                    <Zap size={16} />
+                                    Neon
+                                </Button>
+                                <Button
+                                    variant={theme === 'midnight' ? 'primary' : 'secondary'}
+                                    onClick={() => setTheme('midnight')}
+                                    className={styles.themeButton}
+                                >
+                                    <Layers size={16} />
+                                    Midnight
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className={styles.appearanceSection}>
+                            <h3>Message Density</h3>
+                            <p className={styles.muted} style={{ marginBottom: 12 }}>Control how messages are spaced in chat</p>
+                            <div className={styles.densityOptions}>
+                                {([
+                                    { key: 'cozy' as const, label: 'Cozy', icon: <AlignLeft size={16} />, desc: 'Standard spacing with full avatars' },
+                                    { key: 'compact' as const, label: 'Compact', icon: <AlignLeft size={14} />, desc: 'Smaller avatars, tighter spacing' },
+                                    { key: 'ultra-compact' as const, label: 'Ultra-Compact', icon: <AlignLeft size={12} />, desc: 'No avatars, pure text list' },
+                                ] as const).map(opt => (
+                                    <button
+                                        key={opt.key}
+                                        className={`${styles.densityOption} ${messageDensity === opt.key ? styles.densityActive : ''}`}
+                                        onClick={() => setMessageDensity(opt.key)}
+                                    >
+                                        <span className={styles.densityIcon}>{opt.icon}</span>
+                                        <div className={styles.densityText}>
+                                            <span className={styles.densityLabel}>{opt.label}</span>
+                                            <span className={styles.densityDesc}>{opt.desc}</span>
+                                        </div>
+                                        {messageDensity === opt.key && (
+                                            <span className={styles.densityCheck}>✓</span>
+                                        )}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 

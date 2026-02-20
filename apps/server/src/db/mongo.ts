@@ -116,7 +116,8 @@ const MessageSchema = new mongoose.Schema({
   thread: Object,
   components: Array,
   sticker_items: Array,
-  stickers: Array
+  stickers: Array,
+  metadata: Object
 }, { timestamps: true })
 
 // Index for search/history fetching
@@ -141,4 +142,25 @@ const AuditLogSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }
 })
 
+// Auto-delete logs after 30 days (Enterprise best practice)
+AuditLogSchema.index({ timestamp: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 })
+
 export const AuditLogModel = mongoose.model('AuditLog', AuditLogSchema)
+
+const ModerationReportSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true, index: true },
+  message_id: String,
+  channel_id: String,
+  guild_id: String,
+  reporter_id: String, // 'system' if AI rejected it
+  target_user_id: String,
+  content: String,
+  reason: String,
+  flags: [String],
+  score: Number,
+  status: { type: String, enum: ['pending', 'resolved', 'dismissed'], default: 'pending' },
+  action_taken: String,
+  timestamp: { type: Date, default: Date.now }
+}, { timestamps: true })
+
+export const ModerationReportModel = mongoose.model('ModerationReport', ModerationReportSchema)

@@ -41,15 +41,18 @@ export class AuthService {
         username: data.username,
         password: hashedPassword,
         discriminator,
-        theme: 'auto', // Default from schema, explicit here for clarity
+        theme: 'auto',
         developerMode: false
       }
     })
 
-    const token = this.generateToken(user.id)
+    const accessToken = this.generateToken(user.id)
+    const refreshToken = this.generateRefreshToken(user.id)
+
     return {
       user: this.sanitizeUser(user),
-      token
+      accessToken,
+      refreshToken
     }
   }
 
@@ -67,11 +70,26 @@ export class AuthService {
       throw new Error('Invalid credentials')
     }
 
-    const token = this.generateToken(user.id)
+    // Check for 2FA
+    if ((user as any).twoFactorEnabled) {
+      return {
+        mfaRequired: true,
+        userId: user.id
+      }
+    }
+
+    const accessToken = this.generateToken(user.id)
+    const refreshToken = this.generateRefreshToken(user.id)
+
     return {
       user: this.sanitizeUser(user),
-      token
+      accessToken,
+      refreshToken
     }
+  }
+
+  static generateRefreshToken(userId: string) {
+    return jwt.sign({ id: userId, type: 'refresh' }, JWT_SECRET, { expiresIn: '30d' })
   }
 
   static generateToken(userId: string) {
@@ -87,7 +105,30 @@ export class AuthService {
   }
 
   static sanitizeUser(user: any) {
-    const { password, ...safeUser } = user
+    const { password, twoFactorSecret, ...safeUser } = user
     return safeUser
+  }
+
+  static async verifyMFA(userId: string, token: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user || !(user as any).twoFactorSecret) {
+      throw new Error('2FA not enabled')
+    }
+
+    const { TwoFactorService } = await import('../services/twoFactor')
+    const isValid = TwoFactorService.verifyToken((user as any).twoFactorSecret, token)
+
+    if (!isValid) {
+      throw new Error('Invalid 2FA token')
+    }
+
+    const accessToken = this.generateToken(user.id)
+    const refreshToken = this.generateRefreshToken(user.id)
+
+    return {
+      user: this.sanitizeUser(user),
+      accessToken,
+      refreshToken
+    }
   }
 }

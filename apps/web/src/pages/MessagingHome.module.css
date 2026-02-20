@@ -10,20 +10,43 @@
   position: relative;
 }
 
-/* Soft Island: Left Navigation */
+/* Glassmorphism 2.0 Islands */
 .leftNav {
   width: 280px;
-  background: var(--bg-secondary);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-glass);
-  transition: all var(--transition-normal);
+  transition: all 0.6s var(--ease-out);
+  animation: slideInLeft 0.8s var(--ease-out);
+  position: relative;
+}
+
+.leftNav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-reflection);
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .searchBar {
@@ -128,20 +151,26 @@
   padding: 40px 20px;
   text-align: center;
   gap: 16px;
-  background: var(--bg-secondary); /* Changed from rgba(0, 0, 0, 0.1) */
-  border-radius: var(--radius-lg); /* Added rounded corners */
+  background: var(--bg-secondary);
+  /* Changed from rgba(0, 0, 0, 0.1) */
+  border-radius: var(--radius-lg);
+  /* Added rounded corners */
   border: 1px solid var(--glass-border);
-  margin: 20px; /* Added margin to separate it from edges */
-  box-shadow: var(--shadow-sm); /* Added subtle shadow */
+  margin: 20px;
+  /* Added margin to separate it from edges */
+  box-shadow: var(--shadow-sm);
+  /* Added subtle shadow */
 }
 
 .emptyDMs p {
-  font-size: 1.1rem; /* Larger text */
+  font-size: 1.1rem;
+  /* Larger text */
   color: var(--text-muted);
   line-height: 1.6;
 }
 
-.emptyDMs .icon { /* New style for a potential icon */
+.emptyDMs .icon {
+  /* New style for a potential icon */
   color: var(--beacon-brand);
   opacity: 0.6;
   margin-bottom: 10px;
@@ -238,18 +267,41 @@
   background: var(--bg-hover);
 }
 
-/* Main Content Island */
+/* Main Content Island — Glassmorphism 2.0 */
 .mainContent {
   flex: 1;
-  background: var(--bg-primary);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-glass);
+  animation: slideInUp 0.8s 0.2s var(--ease-out) both;
+  position: relative;
+}
+
+.mainContent::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-reflection);
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Top Bar */
@@ -336,19 +388,42 @@
   box-shadow: 0 6px 20px rgba(114, 137, 218, 0.4);
 }
 
-/* Right Panel */
+/* Right Panel — Glassmorphism 2.0 */
 .rightPanel {
   width: 320px;
-  background: var(--bg-secondary);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   display: flex;
   flex-direction: column;
   padding: 24px;
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-glass);
   flex-shrink: 0;
+  animation: slideInRight 0.8s 0.4s var(--ease-out) both;
+  position: relative;
+}
+
+.rightPanel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-reflection);
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .activeNowTitle {
@@ -381,7 +456,8 @@
   display: flex;
   flex-direction: column;
   /* Add padding to the whole container to move items away from edges */
-  padding-bottom: 24px; /* Example padding */
+  padding-bottom: 24px;
+  /* Example padding */
 }
 
 .searchBarTop {

@@ -17,6 +17,13 @@ model User {
   discriminator String?
   bio           String?
   customStatus  String?
+  status        String  @default("offline")
+  
+  // Security
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
+  publicKey        String? // For E2EE (Curve25519)
+  deviceSalt       String? // Salt for client-side key derivation
 
   // Settings
   theme         String  @default("auto") // classic, glass, light
@@ -220,6 +227,8 @@ model Message {
 
   attachments Attachment[]
   reactions   Reaction[]
+
+  nonce       String?   // For E2EE encrypted payloads
 
   editedAt  DateTime?
   createdAt DateTime  @default(now())

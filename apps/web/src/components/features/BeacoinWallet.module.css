@@ -11,27 +11,50 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .wallet {
   width: 420px;
   max-height: 90vh;
-  background: var(--bg-secondary);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(40px);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-glass);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideInUp 0.8s var(--ease-out);
+  position: relative;
+}
+
+.wallet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-reflection);
+  pointer-events: none;
+  z-index: 10;
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* ── Header ── */
@@ -96,12 +119,13 @@
 .balanceCard {
   margin: 16px;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(240, 178, 50, 0.15), rgba(250, 166, 26, 0.08));
-  border: 1px solid rgba(240, 178, 50, 0.25);
-  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(240, 178, 50, 0.2), rgba(250, 166, 26, 0.1));
+  border: 1px solid rgba(240, 178, 50, 0.3);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-shadow: 0 8px 32px rgba(240, 178, 50, 0.1);
 }
 
 .balanceLabelRow {
@@ -194,7 +218,9 @@
   transition: all var(--transition-fast);
 }
 
-.tab:hover { color: var(--text-secondary); }
+.tab:hover {
+  color: var(--text-secondary);
+}
 
 .tabActive {
   color: #f0b232;
@@ -208,9 +234,18 @@
   padding: 16px;
 }
 
-.content::-webkit-scrollbar { width: 4px; }
-.content::-webkit-scrollbar-track { background: transparent; }
-.content::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 2px; }
+.content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: var(--bg-hover);
+  border-radius: 2px;
+}
 
 /* ── Tx list ── */
 .txList {
@@ -229,7 +264,9 @@
   transition: background var(--transition-fast);
 }
 
-.txItem:hover { background: var(--bg-hover); }
+.txItem:hover {
+  background: var(--bg-hover);
+}
 
 .txIcon {
   width: 36px;
@@ -280,10 +317,17 @@
   flex-shrink: 0;
 }
 
-.txAmount.income { color: #23a559; }
-.txAmount.outgoing { color: var(--status-error); }
+.txAmount.income {
+  color: #23a559;
+}
 
-.txCoin { opacity: 0.7; }
+.txAmount.outgoing {
+  color: var(--status-error);
+}
+
+.txCoin {
+  opacity: 0.7;
+}
 
 /* ── Empty ── */
 .empty {
@@ -297,7 +341,9 @@
   text-align: center;
 }
 
-.emptyIcon { opacity: 0.3; }
+.emptyIcon {
+  opacity: 0.3;
+}
 
 .empty p {
   font-size: 15px;
@@ -306,7 +352,9 @@
   margin: 8px 0 4px;
 }
 
-.empty span { font-size: 13px; }
+.empty span {
+  font-size: 13px;
+}
 
 /* ── Loading ── */
 .loading {
@@ -327,13 +375,17 @@
 .spinnerSm {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* ── Send form ── */
 .sendForm {
@@ -394,7 +446,9 @@
   border-color: #f0b232;
 }
 
-.input::placeholder { color: var(--text-muted); }
+.input::placeholder {
+  color: var(--text-muted);
+}
 
 .amountRow {
   position: relative;

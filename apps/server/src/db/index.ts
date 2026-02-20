@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { connectMongo, MessageModel, AuditLogModel } from './mongo'
+import { connectMongo, MessageModel, AuditLogModel, ModerationReportModel } from './mongo'
 import { redis } from './redis'
 
 const prismaOptions: any = {}
@@ -21,5 +21,5 @@ try {
 
 export { prisma }
 
-export { connectMongo, redis, MessageModel, AuditLogModel }
+export { connectMongo, redis, MessageModel, AuditLogModel, ModerationReportModel }
 

@@ -29,6 +29,7 @@ import { APIReference } from './pages/docs/APIReference'
 import { GatewayDocs } from './pages/docs/GatewayDocs'
 import { Mission } from './pages/docs/Mission'
 import { ModalManager } from './components/modals'
+import { KeyboardShortcutsPanel } from './components/ui/KeyboardShortcutsPanel'
 import { isAndroid } from './utils/platform'
 import { ThemeProvider } from './components/ThemeToggle/ThemeContext'
 import { ThemeSynchronizer } from './components/ThemeToggle/ThemeSynchronizer'
@@ -158,6 +159,7 @@ function App() {
               </Routes>
             </ThemeProvider>
             <ToastContainer toasts={toasts} onRemove={remove} />
+            <KeyboardShortcutsPanel />
           </ModalManager>
         </ContextMenuProvider>
       </HelmetProvider>

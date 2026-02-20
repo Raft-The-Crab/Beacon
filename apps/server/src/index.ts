@@ -19,18 +19,37 @@ import auditLogRouter from './api/auditLogs'
 import folderRouter from './api/folders'
 
 import helmet from 'helmet'
-import rateLimit from 'express-rate-limit'
+import moderationRouter from './api/moderation'
+import { ipBlockMiddleware, generalLimiter, authLimiter, sanitizeHeaders } from './middleware/security'
 
 const app = express()
 
-// Security Hardening
-app.use(helmet())
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again after 15 minutes'
-})
-app.use('/api/', limiter)
+// Security Hardening — Helmet with CSP
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+      mediaSrc: ["'self'", 'blob:', 'https:'],
+      connectSrc: ["'self'", 'wss:', 'https:'],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Needed for media
+}))
+
+// Strip X-Powered-By
+app.use(sanitizeHeaders)
+
+// IP blocklist check (async, fails open if Redis down)
+app.use(ipBlockMiddleware)
+
+// General rate limiting
+app.use('/api/', generalLimiter)
 
 const server = createServer(app)
 const wss = new WebSocketServer({ server, path: '/gateway' })
@@ -50,13 +69,13 @@ app.use(cookieParser())
 app.set('trust proxy', 1)
 
 // Request logging middleware
-app.use((req, _res, next) => {
+app.use((req: express.Request, _res: express.Response, next: express.NextFunction) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`)
   next()
 })
 
 // Routes
-app.get('/health', async (_req, res) => {
+app.get('/health', async (_req: express.Request, res: express.Response) => {
   try {
     // Health checks for all services
     const postgresConnected = !!prisma
@@ -86,7 +105,7 @@ app.get('/health', async (_req, res) => {
   }
 })
 
-app.use('/api/auth', authRouter)
+app.use('/api/auth', authLimiter, authRouter)
 app.use('/api/guilds', guildRouter)
 app.use('/api/channels', channelRouter)
 app.use('/api/users', userRouter)
@@ -97,15 +116,20 @@ app.use('/api/dms', dmRouter)
 app.use('/api/webhooks', webhookRouter)
 app.use('/api/audit-logs', auditLogRouter)
 app.use('/api/folders', folderRouter)
+app.use('/api/moderation', moderationRouter)
 
 // Initialize Gateway Service
 const gateway = new GatewayService(wss)
+
+// Initialize SMS Bridge (Claw Cloud OS optimization)
+import { SMSBridge } from './services/smsBridge'
+SMSBridge.init().catch(err => console.error('[SMS Bridge] Failed to initialize', err))
 
 // Export app/server for tests
 export { app, server, wss, gateway }
 
 // 404 handler
-app.use((_req, res) => {
+app.use((_req: express.Request, res: express.Response) => {
   res.status(404).json({ error: 'Not found' })
 })
 

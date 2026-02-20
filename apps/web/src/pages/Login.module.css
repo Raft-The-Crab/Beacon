@@ -10,112 +10,58 @@
   perspective: 1000px;
 }
 
-/* God-Tier Mesh Gradient Background */
+/* Glassmorphism 2.0 Mesh Background */
 .artwork {
   position: absolute;
   inset: -10%;
   z-index: 0;
-  background:
-    radial-gradient(at 0% 0%, rgba(114, 137, 218, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(148, 156, 247, 0.15) 0px, transparent 50%),
-    radial-gradient(at 50% 50%, rgba(88, 101, 242, 0.1) 0px, transparent 50%);
+  background-image:
+    var(--mesh-1),
+    var(--mesh-2),
+    var(--mesh-3),
+    var(--mesh-4);
   filter: blur(100px);
   animation: meshMove 20s infinite alternate ease-in-out;
 }
 
 @keyframes meshMove {
   0% {
-    transform: scale(1) rotate(0deg);
+    transform: scale(1) translate(0, 0);
+  }
+
+  50% {
+    transform: scale(1.1) translate(-2%, 2%);
   }
 
   100% {
-    transform: scale(1.1) rotate(5deg);
-  }
-}
-
-.shape1,
-.shape2,
-.shape3 {
-  position: absolute;
-  filter: blur(80px);
-  border-radius: 50%;
-  opacity: 0.6;
-}
-
-.shape1 {
-  width: 800px;
-  height: 800px;
-  background: radial-gradient(circle, rgba(114, 137, 218, 0.2) 0%, transparent 70%);
-  top: -200px;
-  right: -200px;
-  animation: float1 25s infinite alternate ease-in-out;
-}
-
-.shape2 {
-  width: 700px;
-  height: 700px;
-  background: radial-gradient(circle, rgba(148, 156, 247, 0.15) 0%, transparent 70%);
-  bottom: -200px;
-  left: -200px;
-  animation: float2 30s infinite alternate ease-in-out;
-}
-
-.shape3 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(88, 101, 242, 0.12) 0%, transparent 70%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: float3 20s infinite alternate ease-in-out;
-}
-
-@keyframes float1 {
-  0% {
-    transform: translate(0, 0);
-  }
-
-  100% {
-    transform: translate(-150px, 150px);
-  }
-}
-
-@keyframes float2 {
-  0% {
-    transform: translate(0, 0);
-  }
-
-  100% {
-    transform: translate(150px, -150px);
-  }
-}
-
-@keyframes float3 {
-  0% {
-    transform: scale(1) translate(-50%, -50%);
-  }
-
-  100% {
-    transform: scale(1.2) translate(-40%, -60%);
+    transform: scale(1) translate(0, 0);
   }
 }
 
 .card {
   width: 100%;
   max-width: 480px;
-  background: rgba(14, 15, 17, 0.45);
-  backdrop-filter: blur(60px) saturate(180%);
-  -webkit-backdrop-filter: blur(60px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 40px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
   padding: 64px;
   z-index: 10;
-  box-shadow:
-    0 40px 100px rgba(0, 0, 0, 0.6),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow-glass);
   transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
-  animation: cardEntry 1s var(--ease-out);
+  transition: transform 0.6s var(--ease-out), opacity 0.6s ease;
+  animation: cardEntry 1.2s var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-reflection);
+  pointer-events: none;
 }
 
 @keyframes cardEntry {

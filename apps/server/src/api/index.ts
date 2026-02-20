@@ -10,6 +10,10 @@ import webhookRouter from './webhooks'
 import auditLogRouter from './auditLogs'
 import beacoinRouter from './beacoin'
 import notificationsRouter from './notifications'
+import moderationRouter from './moderation'
+import analyticsRouter from './analytics'
+import videoModerationRouter from './videoModeration'
+import appsRouter from './apps'
 
 const router = Router()
 
@@ -24,6 +28,11 @@ router.use('/webhooks', webhookRouter)
 router.use('/audit-logs', auditLogRouter)
 router.use('/beacoin', beacoinRouter)
 router.use('/notifications', notificationsRouter)
+router.use('/moderation', moderationRouter)
+router.use('/moderation/video', videoModerationRouter)
+router.use('/apps', appsRouter)
+router.use('/analytics', analyticsRouter)
+router.use('/applications', appsRouter) // Alias for SDK compatibility
 
 export default router
 

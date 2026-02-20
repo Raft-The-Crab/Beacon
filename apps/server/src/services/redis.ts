@@ -7,7 +7,7 @@ class RedisService {
 
   constructor() {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-    
+
     this.client = new Redis(redisUrl, {
       retryStrategy: (times) => {
         const delay = Math.min(times * 50, 2000);
@@ -168,6 +168,62 @@ class RedisService {
     await this.client.quit();
     await this.pubClient.quit();
     await this.subClient.quit();
+  }
+
+  // Proxy methods for common Redis operations
+  async hset(key: string, object: object) {
+    return await this.client.hset(key, object);
+  }
+
+  async hgetall(key: string) {
+    return await this.client.hgetall(key);
+  }
+
+  async del(...keys: string[]) {
+    return await this.client.del(...keys);
+  }
+
+  async get(key: string) {
+    return await this.client.get(key);
+  }
+
+  async set(key: string, value: string, ...args: any[]) {
+    return await (this.client as any).set(key, value, ...args);
+  }
+
+  async sadd(key: string, ...members: string[]) {
+    return await this.client.sadd(key, ...members);
+  }
+
+  async srem(key: string, ...members: string[]) {
+    return await this.client.srem(key, ...members);
+  }
+
+  // Common Redis operations
+  async expire(key: string, seconds: number) {
+    return await this.client.expire(key, seconds);
+  }
+
+  async hmset(key: string, object: object) {
+    return await (this.client as any).hset(key, object);
+  }
+
+  get status(): string {
+    return (this.client as any).status || 'unknown';
+  }
+
+  async ping() {
+    return await this.client.ping();
+  }
+
+  async quit() {
+    return await this.client.quit();
+  }
+
+  // Event Delegation for Pub/Sub
+  on(event: string, listener: (...args: any[]) => void) {
+    this.subClient.on(event, listener);
+    return this;
   }
 }
 

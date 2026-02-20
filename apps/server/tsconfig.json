@@ -3,10 +3,15 @@
   "compilerOptions": {
     /* Language and Environment */
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "types": [
+      "node"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    
     /* Type Checking */
     "strict": true,
     "noImplicitAny": true,
@@ -23,13 +28,11 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": false,
-    
     /* Module Resolution */
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    
     /* Emit */
     "declaration": true,
     "declarationMap": true,
@@ -39,19 +42,20 @@
     "importHelpers": true,
     "downlevelIteration": true,
     "newLine": "lf",
-    
     /* Interop Constraints */
     "isolatedModules": true,
     "allowJs": false,
     "checkJs": false,
-    
     /* Path Mapping */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@beacon/types": ["../../packages/types/src"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@beacon/types": [
+        "../../packages/types/src"
+      ]
     },
-    
     /* Completeness */
     "skipLibCheck": true
   },
