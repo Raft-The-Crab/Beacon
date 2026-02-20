@@ -1,8 +1,6 @@
 name: Build Docker Images
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -30,7 +28,6 @@ jobs:
           push: true
           tags: |
             ghcr.io/raft-the-crab/beacon-clawcloud:latest
-            ghcr.io/raft-the-crab/beacon-clawcloud:${{ github.sha }}
 
       - name: Build and push Railway image
         uses: docker/build-push-action@v4
@@ -40,4 +37,3 @@ jobs:
           push: true
           tags: |
             ghcr.io/raft-the-crab/beacon-railway:latest
-            ghcr.io/raft-the-crab/beacon-railway:${{ github.sha }}
