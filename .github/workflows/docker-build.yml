@@ -1,0 +1,43 @@
+name: Build Docker Images
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ClawCloud image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile.clawcloud
+          push: true
+          tags: |
+            ghcr.io/raft-the-crab/beacon-clawcloud:latest
+            ghcr.io/raft-the-crab/beacon-clawcloud:${{ github.sha }}
+
+      - name: Build and push Railway image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile.railway
+          push: true
+          tags: |
+            ghcr.io/raft-the-crab/beacon-railway:latest
+            ghcr.io/raft-the-crab/beacon-railway:${{ github.sha }}
