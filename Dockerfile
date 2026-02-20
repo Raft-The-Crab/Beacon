@@ -2,7 +2,7 @@ FROM node:20-alpine
 
 WORKDIR /usr/src/app
 
-COPY apps/server/package*.json ./
+COPY apps/server/package.json apps/server/package-lock.json* ./
 COPY apps/server/tsconfig.json ./
 
 RUN npm install
