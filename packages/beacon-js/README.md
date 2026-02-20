@@ -1,271 +1,216 @@
 # beacon.js
 
-**Official Bot SDK for Beacon** — Build powerful, event-driven bots for the Beacon platform with ease.
+Official Bot SDK for Beacon - The next-generation communication platform that beats Discord.
 
-[![npm version](https://img.shields.io/npm/v/beacon.js)](https://www.npmjs.com/package/beacon.js)
-[![Node.js ≥18](https://img.shields.io/node/v/beacon.js)](https://nodejs.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+[![npm](https://img.shields.io/npm/v/beacon.js)](https://www.npmjs.com/package/beacon.js)
+[![Downloads](https://img.shields.io/npm/dm/beacon.js)](https://www.npmjs.com/package/beacon.js)
+[![License](https://img.shields.io/npm/l/beacon.js)](https://github.com/Raft-The-Crab/Beacon/blob/main/LICENSE)
 
----
+## 🚀 Features
 
-## Features
+- ✅ **TypeScript-first** with full type safety
+- 🎨 **Rich Components** (Buttons, Modals, Embeds, Polls)
+- 🎵 **Voice & Video** support
+- 💾 **Persistent Storage** built-in
+- 📊 **Analytics** tracking
+- ⚡ **WebSocket** with auto-reconnect
+- 🔄 **Rate Limiting** handled automatically
+- 🎯 **Slash Commands** with autocomplete
 
-- 🔌 **WebSocket Gateway** — Auto-reconnect, session resume, exponential backoff, heartbeat
-- ⚡ **Rate-limit-aware REST** — Request queuing, per-route bucket tracking, global rate limit handling
-- 🧠 **Slash Commands** — Register handlers, deploy to Beacon API, rich `InteractionContext`
-- 📦 **Collection** — Discord.js-style enhanced `Map` with `filter`, `find`, `map`, `reduce`, and more
-- 🪝 **Collectors** — Await messages or reactions matching a filter with timeouts
-- 🎨 **EmbedBuilder** — Rich message embeds with fields, images, footers, timestamps
-- 🔐 **Permissions** — Full 40+ permission bitfield system
-- 🤖 **Full Caching** — Guilds, channels, users, and messages cached by default
-- 📡 **Presence** — Update bot status and activities at runtime
-- 🌲 **TypeScript** — 100% typed, ships declarations
-
----
-
-## Installation
+## 📦 Installation
 
 ```bash
 npm install beacon.js
-# or
-pnpm add beacon.js
-# or
-yarn add beacon.js
 ```
 
-**Requirements:** Node.js 18+
-
----
-
-## Quick Start
+## 🎯 Quick Start
 
 ```typescript
-import { Client, EmbedBuilder, CommandBuilder, CommandOptionType } from 'beacon.js';
+import { Client } from 'beacon.js'
 
-const client = new Client({
-  token: process.env.BOT_TOKEN!,
-  debug: true, // log gateway events
-});
+const client = new Client({ token: process.env.BEACON_TOKEN })
 
-// Ready event
 client.on('ready', () => {
-  console.log(`✅ Logged in as ${client.user?.username}`);
-  client.setPresence('online', [{ type: 'playing', name: 'with Beacon' }]);
-});
+  console.log(`Logged in as ${client.user?.username}`)
+})
 
-// Simple message response
 client.on('messageCreate', async (msg) => {
-  if (msg.author.bot) return;
   if (msg.content === '!ping') {
-    await client.sendMessage(msg.channel_id, '🏓 Pong!');
+    await msg.reply('Pong! 🏓')
   }
-});
+})
 
-// Slash command handler
-client.command('hello', async (ctx) => {
-  const name = ctx.getString('name') ?? 'world';
-  await ctx.reply({
-    embeds: [
-      new EmbedBuilder()
-        .setTitle('Hello!')
-        .setDescription(`Hello, **${name}**! 👋`)
-        .setColor('#5865F2')
-        .setTimestamp()
-        .toJSON(),
-    ],
-  });
-});
-
-// Deploy slash commands on ready
-client.once('ready', async () => {
-  await client.deployCommands([
-    new CommandBuilder()
-      .setName('hello')
-      .setDescription('Say hello')
-      .addStringOption((opt) =>
-        opt.setName('name').setDescription('Who to greet').setRequired(false)
-      )
-      .toJSON(),
-  ]);
-});
-
-// Start the bot
-client.login();
+client.login()
 ```
 
----
+## 📚 Examples
 
-## Events
-
-| Event | Args | Description |
-|-------|------|-------------|
-| `ready` | — | Bot connected and ready |
-| `messageCreate` | `RawMessage` | New message received |
-| `messageUpdate` | `old, new` | Message edited |
-| `messageDelete` | `RawMessage` | Message deleted |
-| `guildCreate` | `RawGuild` | Bot joined a server |
-| `guildDelete` | `{id}` | Bot removed from a server |
-| `channelCreate` | `RawChannel` | Channel created |
-| `channelDelete` | `RawChannel` | Channel deleted |
-| `guildMemberAdd` | `RawMember` | Member joined |
-| `guildMemberRemove` | `data` | Member left |
-| `interactionCreate` | `InteractionContext` | Slash command / interaction |
-| `messageReactionAdd` | `data` | Reaction added |
-| `messageReactionRemove` | `data` | Reaction removed |
-| `typingStart` | `data` | User started typing |
-| `presenceUpdate` | `Presence` | User presence changed |
-| `voiceStateUpdate` | `VoiceState` | Voice state changed |
-| `disconnect` | `{code, reason}` | Gateway disconnected |
-| `error` | `Error` | An error occurred |
-| `raw` | `packet` | Every raw gateway packet |
-
----
-
-## Slash Commands
-
-### Registering Handlers
+### Slash Commands
 
 ```typescript
-client.command('ban', async (ctx) => {
-  const userId = ctx.getId('user', true);
-  const reason = ctx.getString('reason') ?? 'No reason';
+import { CommandBuilder } from 'beacon.js'
 
-  await ctx.deferReply(true); // ephemeral
-
-  await client.banMember(ctx.guildId!, userId, { reason });
-  await ctx.editReply(`✅ Banned <@${userId}> — ${reason}`);
-});
-```
-
-### Deploying Commands
-
-```typescript
-await client.deployCommands([
+client.registerCommand(
   new CommandBuilder()
-    .setName('ban')
-    .setDescription('Ban a member')
-    .addUserOption((o) => o.setName('user').setDescription('Who to ban').setRequired(true))
-    .addStringOption((o) => o.setName('reason').setDescription('Reason for ban'))
-    .setDefaultMemberPermissions(PermissionFlags.BAN_MEMBERS)
-    .toJSON(),
-], guildId); // omit guildId for global commands
+    .setName('hello')
+    .setDescription('Say hello')
+    .addStringOption(opt => 
+      opt.setName('name')
+         .setDescription('Your name')
+         .setRequired(true)
+    )
+    .build()
+)
+
+client.on('interactionCreate', async (interaction) => {
+  if (interaction.commandName === 'hello') {
+    const name = interaction.options.getString('name')
+    await interaction.reply(`Hello, ${name}! 👋`)
+  }
+})
 ```
 
----
-
-## Collectors
+### Rich Embeds
 
 ```typescript
-// Collect up to 5 messages from a user within 30 seconds
-const collector = client.createMessageCollector(channelId, {
-  filter: (msg) => msg.author.id === targetUserId,
-  max: 5,
-  time: 30_000,
-  errors: ['time'], // throw if times out
-});
+import { EmbedBuilder } from 'beacon.js'
 
-collector.on('collect', (msg) => console.log('Got:', msg.content));
-collector.on('end', (collected, reason) => {
-  console.log(`Collected ${collected.length} messages (${reason})`);
-});
-
-// Or await it:
-const messages = await client.createMessageCollector(channelId, {
-  filter: (msg) => msg.author.id === userId,
-  max: 1,
-  time: 15_000,
-}).await();
-```
-
----
-
-## Embeds
-
-```typescript
 const embed = new EmbedBuilder()
-  .setTitle('Server Stats')
-  .setDescription('Here are the current statistics:')
-  .setColor('#00FF88')
-  .setAuthor('Beacon Bot', 'https://beacon.chat', 'https://beacon.chat/logo.png')
-  .addFields(
-    { name: 'Members', value: '1,234', inline: true },
-    { name: 'Channels', value: '42', inline: true },
-    { name: 'Online', value: '567', inline: true },
-  )
-  .setFooter('Powered by beacon.js')
+  .setTitle('Welcome to Beacon!')
+  .setDescription('The Discord killer')
+  .setColor(0x6366f1)
+  .addField('Feature 1', 'Free forever', true)
+  .addField('Feature 2', '500MB uploads', true)
+  .setThumbnail('https://beacon.chat/logo.png')
+  .setFooter({ text: 'Powered by Beacon' })
   .setTimestamp()
-  .toJSON();
+  .build()
 
-await client.sendMessage(channelId, { embeds: [embed] });
+await channel.send({ embeds: [embed] })
 ```
 
----
-
-## Permissions
+### Interactive Buttons
 
 ```typescript
-import { Permissions, PermissionFlags } from 'beacon.js';
+import { ButtonBuilder, ActionRowBuilder } from 'beacon.js'
 
-const perms = new Permissions([
-  PermissionFlags.SEND_MESSAGES,
-  PermissionFlags.EMBED_LINKS,
-  PermissionFlags.ATTACH_FILES,
-]);
+const row = new ActionRowBuilder()
+  .addButton(
+    new ButtonBuilder()
+      .setLabel('Click Me')
+      .setStyle('PRIMARY')
+      .setCustomId('my_button')
+      .build()
+  )
+  .build()
 
-perms.has(PermissionFlags.SEND_MESSAGES); // true
-perms.has(PermissionFlags.BAN_MEMBERS);   // false
+await channel.send({
+  content: 'Click the button!',
+  components: [row]
+})
 
-// Serialize for storage
-const bitfield = perms.serialize(); // "18432"
-
-// Default permissions
-const defaults = new Permissions(Permissions.default());
+client.on('interactionCreate', async (interaction) => {
+  if (interaction.customId === 'my_button') {
+    await interaction.reply('Button clicked! 🎉')
+  }
+})
 ```
 
----
-
-## Collection
+### Persistent Storage
 
 ```typescript
-// client.guilds, client.channels, client.users, client.messages are all Collections
+// Save user data
+await client.storage.set('points', userId, 100)
 
-const textChannels = client.channels.filter((ch) => ch.type === 0);
-const guildNames = client.guilds.map((g) => g.name);
-const bigGuilds = client.guilds.filter((g) => (g.member_count ?? 0) > 100);
-const random = client.guilds.random();
+// Get user data
+const points = await client.storage.get('points', userId)
+
+// Delete user data
+await client.storage.delete('points', userId)
 ```
 
----
-
-## API Reference
-
-Full API docs available at **[https://beacon.chat/developers/docs](https://beacon.chat/developers/docs)**
-
----
-
-## Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `BEACON_API_URL` | `https://api.beacon.chat` | Beacon REST API base URL |
-| `BEACON_GATEWAY_URL` | `wss://gateway.beacon.chat` | Beacon WebSocket gateway URL |
-
----
-
-## Self-hosting
-
-If you're running a self-hosted Beacon instance:
+### Scheduled Tasks
 
 ```typescript
-const client = new Client({
-  token: 'Bot YOUR_TOKEN',
-  apiURL: 'http://localhost:4000',
-  gatewayURL: 'ws://localhost:4000/gateway',
-});
+// Run daily at midnight
+client.scheduler.schedule('0 0 * * *', async () => {
+  console.log('Daily task running!')
+  await resetDailyQuests()
+})
 ```
 
----
+### Analytics
 
-## License
+```typescript
+// Track events
+await client.analytics.track('command_used', {
+  command: 'hello',
+  userId: msg.author.id
+})
+
+// Get metrics
+const metrics = await client.analytics.getMetrics()
+console.log(`Total commands: ${metrics.commandUsage}`)
+```
+
+### Voice Integration
+
+```typescript
+// Join voice channel
+const connection = await client.joinVoice(channelId)
+
+// Play audio
+await connection.playAudio('./music.mp3')
+
+// Listen for speaking
+connection.on('speaking', (userId) => {
+  console.log(`${userId} is speaking`)
+})
+
+// Disconnect
+connection.disconnect()
+```
+
+## 📖 Documentation
+
+Full documentation: [beacon.chat/docs/sdk](https://beacon.chat/docs/sdk)
+
+## 🤝 Contributing
+
+Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+## 📄 License
 
 MIT © Beacon Team
+
+## 📄 License
+
+**PROPRIETARY** - Free to use, not open source.
+
+### ✅ What you CAN do:
+- Use beacon.js to build bots
+- Distribute your bots
+- Use in commercial projects
+- Read documentation
+
+### ❌ What you CANNOT do:
+- Redistribute modified SDK
+- Reverse engineer
+- Create competing SDKs
+- Remove copyright notices
+
+**Similar to Discord.js licensing model.**
+
+© 2024 Beacon Team. All rights reserved.
+
+## 🔗 Links
+
+- [Website](https://beacon.chat)
+- [Documentation](https://docs.beacon.chat)
+- [Developer Portal](https://developers.beacon.chat)
+- [GitHub](https://github.com/Raft-The-Crab/Beacon)
+- [Discord Server](https://beacon.chat/discord)
+
+---
+
+**Made with ❤️ by the Beacon Team**

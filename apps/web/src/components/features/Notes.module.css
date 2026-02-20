@@ -1,0 +1,224 @@
+.container {
+  display: flex;
+  height: 100vh;
+  background: var(--bg-primary);
+}
+
+.sidebar {
+  width: 280px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--glass-border);
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.createBtn {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 1rem;
+}
+
+.createBtn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.notesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.noteItem {
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.noteItem:hover {
+  background: var(--glass-bg);
+  transform: translateX(4px);
+}
+
+.noteItem.active {
+  background: var(--accent);
+  color: white;
+}
+
+.noteItem h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.noteItem p {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.editor {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--glass-border);
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--text-primary);
+}
+
+.titleInput {
+  font-size: 2rem;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actions button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.editBtn, .saveBtn {
+  background: var(--accent);
+  color: white;
+}
+
+.musicBtn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.deleteBtn {
+  background: #ef4444;
+  color: white;
+}
+
+.actions button:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow);
+}
+
+.contentInput {
+  width: 100%;
+  min-height: 400px;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.content {
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  min-height: 400px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.musicClips {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+}
+
+.musicClips h3 {
+  margin: 0 0 1rem 0;
+  color: var(--accent);
+}
+
+.clip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.clip audio {
+  width: 200px;
+}
+
+.musicPicker {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-secondary);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  min-width: 400px;
+}
+
+.musicPicker h3 {
+  margin: 0 0 1rem 0;
+  color: var(--accent);
+}
+
+.musicOption {
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.musicOption:hover {
+  background: var(--accent);
+  color: white;
+  transform: translateX(4px);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}

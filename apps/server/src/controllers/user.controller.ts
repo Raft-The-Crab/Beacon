@@ -4,6 +4,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
 import { redis } from '../services/redis';
+import { CacheService } from '../services/cache';
 
 // GET /users/me
 export async function getMe(req: Request, res: Response) {
@@ -90,6 +91,9 @@ export async function updateMe(req: Request, res: Response) {
       }));
     }
 
+    // Invalidate profile cache
+    await CacheService.del(`user:${userId}`);
+
     return res.json(updated);
   } catch (err) {
     console.error('updateMe error:', err);
@@ -102,8 +106,11 @@ export async function getUser(req: Request, res: Response) {
   const { userId } = req.params;
 
   try {
+    const cached = await CacheService.get(`user:${userId}`);
+    if (cached) return res.json(cached);
+
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId as string },
       select: {
         id: true,
         username: true,
@@ -117,6 +124,8 @@ export async function getUser(req: Request, res: Response) {
       },
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    await CacheService.set(`user:${userId}`, user, 600); // 10 min cache
     return res.json(user);
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
@@ -163,8 +172,8 @@ export async function getMyFriends(req: Request, res: Response) {
     const friends = await prisma.friendship.findMany({
       where: {
         OR: [
-          { userId, status: 'accepted' },
-          { friendId: userId, status: 'accepted' },
+          { userId, status: 'accepted' } as any,
+          { friendId: userId, status: 'accepted' } as any,
         ],
       },
       include: {
@@ -177,7 +186,8 @@ export async function getMyFriends(req: Request, res: Response) {
     const presenceData = await redis.hgetall('presence');
     const enriched = friends.map((f: any) => {
       const other = f.userId === userId ? f.friend : f.user;
-      const presence = presenceData[other.id] ? JSON.parse(presenceData[other.id]) : null;
+      const presenceKey = other?.id ? other.id : 'unknown';
+      const presence = presenceData && presenceData[presenceKey] ? JSON.parse(presenceData[presenceKey]!) : null;
       return {
         ...other,
         status: presence?.status || 'offline',
@@ -230,7 +240,7 @@ export async function getE2EEKeys(req: Request, res: Response) {
 
   try {
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId as string },
       select: { publicKey: true, deviceSalt: true },
     });
     if (!user) return res.status(404).json({ error: 'User not found' });

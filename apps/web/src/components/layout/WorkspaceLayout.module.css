@@ -1,0 +1,144 @@
+.container {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+    overflow: hidden;
+    font-family: var(--font-family);
+    background: transparent;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.leftNav {
+    width: 280px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
+    transition: all var(--transition-slow);
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
+    /* GPU Acceleration */
+    position: relative;
+    box-sizing: border-box;
+}
+
+.leftNav::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-reflection);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.leftNav::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--noise-texture);
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 5;
+    mix-blend-mode: overlay;
+}
+
+.mainContent {
+    flex: 1;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
+    position: relative;
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
+    /* GPU Acceleration */
+}
+
+.mainContent::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-reflection);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.mainContent::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--noise-texture);
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 5;
+    mix-blend-mode: overlay;
+}
+
+.rightPanel {
+    width: 320px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
+    flex-shrink: 0;
+    position: relative;
+    will-change: transform, backdrop-filter;
+    transform: translateZ(0);
+    /* GPU Acceleration */
+}
+
+.rightPanel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--glass-reflection);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.rightPanel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--noise-texture);
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 5;
+    mix-blend-mode: overlay;
+}
+
+@media (max-width: 1024px) {
+    .rightPanel {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .leftNav {
+        display: none;
+    }
+}

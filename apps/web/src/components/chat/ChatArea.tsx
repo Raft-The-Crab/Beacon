@@ -23,7 +23,7 @@ interface ChatAreaProps {
 export function ChatArea({ channelId }: ChatAreaProps) {
   // Directly select the messages for the current channel
   const messages = useMessageStore((state) => state.messages.get(channelId) || EMPTY_ARRAY);
-  
+
   // Select individual actions for better performance and stability
   const handleMessageCreate = useMessageStore(state => state.handleMessageCreate);
   const handleMessageDelete = useMessageStore(state => state.handleMessageDelete);
@@ -123,9 +123,9 @@ export function ChatArea({ channelId }: ChatAreaProps) {
     setShowPinnedModal(true)
   }
 
-  const handleOpenMembers = () => {
-    setShowMembersModal(true)
-  }
+  // const handleOpenMembers = () => {
+  //   setShowMembersModal(true)
+  // }
 
   const handleEditChannel = () => {
     setEditChannelName(currentChannel?.name || '')
@@ -136,7 +136,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
     if (!currentServer || !channelId) return
     // TODO: Implement updateChannel method in useServerStore
     // useServerStore.getState().updateChannel(currentServer.id, channelId, { name: editChannelName })
-    show(`Channel rename feature coming soon!`, 'info')
+    show(`Channel rename feature coming soon! (Target: ${editChannelName})`, 'info')
     setShowEditChannelModal(false)
   }
 
@@ -294,6 +294,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                   attachments={msg.attachments}
                   edited={!!msg.editedAt}
                   isPinned={getPinnedMessages(channelId).some((p: any) => p.id === msg.id)}
+                  isEncrypted={!!msg.nonce || !!msg.encryptedContent} // Logic for E2EE
                   showActions={true}
                   isContinuing={isContinuing}
                   canDelete={msg.authorId === 'current-user'}

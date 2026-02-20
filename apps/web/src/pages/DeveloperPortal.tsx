@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Plus, Book, Rocket, Shield, Terminal, MoreVertical, Key, Activity, Code, ExternalLink } from 'lucide-react'
+import { Plus, Book, Rocket, Terminal, MoreVertical, Key, Activity, Layout, Database, Layers, Zap } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
 import { useToast } from '../components/ui/Toast'
 import { API_CONFIG } from '../config/api'
 import { BotConsole } from '../components/dev/BotConsole'
+import { ComponentShowcase } from '../components/dev/ComponentShowcase'
+import { WorkspaceLayout } from '../components/layout/WorkspaceLayout'
+import { Tooltip } from '../components/ui'
 import styles from './DeveloperPortal.module.css'
 
 interface Application {
@@ -22,8 +25,11 @@ interface Application {
   icon?: string
 }
 
+type Tab = 'apps' | 'showcase'
+
 export function DeveloperPortal() {
   const { show: showToast } = useToast()
+  const [activeTab, setActiveTab] = useState<Tab>('apps')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newAppName, setNewAppName] = useState('')
   const [apps, setApps] = useState<Application[]>([])
@@ -84,236 +90,238 @@ export function DeveloperPortal() {
     }
   }
 
+  const sidebar = (
+    <div className={styles.sidebarContent}>
+      <div className={styles.sidebarHeader}>
+        <Terminal size={20} className={styles.sidebarIcon} />
+        <span>DEVELOPER</span>
+      </div>
+
+      <div className={styles.navGroup}>
+        <div className={styles.navGroupLabel}>BUILD</div>
+        <button
+          className={`${styles.navItem} ${activeTab === 'apps' ? styles.active : ''}`}
+          onClick={() => setActiveTab('apps')}
+        >
+          <Rocket size={18} />
+          <span>Applications</span>
+        </button>
+        <button
+          className={`${styles.navItem} ${activeTab === 'showcase' ? styles.active : ''}`}
+          onClick={() => setActiveTab('showcase')}
+        >
+          <Zap size={18} />
+          <span>SDK Showcase</span>
+        </button>
+        <button className={styles.navItem} onClick={() => window.open('/docs', '_blank')}>
+          <Book size={18} />
+          <span>Documentation</span>
+        </button>
+      </div>
+
+      <div className={styles.navGroup}>
+        <div className={styles.navGroupLabel}>RESOURCES</div>
+        <button className={styles.navItem}>
+          <Layers size={18} />
+          <span>SDKs & Libraries</span>
+        </button>
+        <button className={styles.navItem}>
+          <Database size={18} />
+          <span>API Reference</span>
+        </button>
+        <button className={styles.navItem}>
+          <Layout size={18} />
+          <span>App Directory</span>
+        </button>
+      </div>
+
+      <div className={styles.newAppCta}>
+        <Tooltip content="Launch a new integration" position="top">
+          <Button variant="primary" fullWidth onClick={() => setIsModalOpen(true)}>
+            <Plus size={16} /> New Application
+          </Button>
+        </Tooltip>
+      </div>
+    </div>
+  )
+
+  const rightPanel = activeTab === 'apps' ? (
+    <div className={styles.metricsPanel}>
+      <h3 className={styles.panelTitle}>API Status</h3>
+      <div className={styles.statusCard}>
+        <div className={styles.statusHeader}>
+          <Activity size={18} style={{ color: 'var(--status-online)' }} />
+          <span>Operational</span>
+        </div>
+        <div className={styles.statusDetails}>
+          All systems are performing normally.
+          <br />99.99% uptime this month.
+        </div>
+      </div>
+
+      <h3 className={styles.panelTitle} style={{ marginTop: 32 }}>Metrics</h3>
+      <div className={styles.miniStats}>
+        <div className={styles.miniStatCard}>
+          <div className={styles.miniStatValue}>{apps.length}</div>
+          <div className={styles.miniStatLabel}>Applications</div>
+        </div>
+        <div className={styles.miniStatCard}>
+          <div className={styles.miniStatValue}>{apps.filter(a => a.bot).length}</div>
+          <div className={styles.miniStatLabel}>Active Bots</div>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className={styles.metricsPanel}>
+      <h3 className={styles.panelTitle}>Quick Stats</h3>
+      <div className={styles.miniStats}>
+        <div className={styles.miniStatCard}>
+          <div className={styles.miniStatValue}>13</div>
+          <div className={styles.miniStatLabel}>SDK Builders</div>
+        </div>
+        <div className={styles.miniStatCard}>
+          <div className={styles.miniStatValue}>v2.4</div>
+          <div className={styles.miniStatLabel}>Latest SDK</div>
+        </div>
+      </div>
+      <p style={{ marginTop: 32, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+        The Beacon SDK Component Showcase allows you to preview interactive elements before implementing them in your code.
+      </p>
+    </div>
+  )
+
   return (
-    <div className={styles.container}>
+    <WorkspaceLayout sidebar={sidebar} rightPanel={rightPanel}>
       <Helmet>
         <title>Developer Portal - Beacon</title>
       </Helmet>
 
-      <div className={styles.atmosGlow} />
+      {activeTab === 'apps' ? (
+        <div className={`${styles.contentWrapper} mesh-gradient vista-transition`}>
+          <div className="floating-orb" style={{ top: '5%', left: '20%', width: '350px', height: '350px', background: 'var(--beacon-brand)', opacity: 0.15 }} />
 
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <div className={styles.headerText}>
-            <h1>Developer Portal</h1>
-            <p>Build bots, integrations, and apps on Beacon. Create an application to get started.</p>
+          <div className={styles.heroSection}>
+            <h1 className={styles.title}>Developer Portal</h1>
+            <p className={styles.subtitle}>Build the next generation of social apps on the world's most open messaging platform.</p>
           </div>
-          <div className={styles.headerActions}>
-            <div className={styles.statusIndicator}>
-              <div className={styles.statusDot} />
-              <span className={styles.statusText}>API: Online</span>
+
+          <section className={styles.appsSection}>
+            <div className={styles.appsHeader}>
+              <h2>My Applications</h2>
+              <div className={styles.appCount}>{apps.length}</div>
             </div>
-            <Button variant="primary" size="lg" onClick={() => setIsModalOpen(true)}>
-              <Plus size={20} />
-              New Application
-            </Button>
-          </div>
-        </div>
-      </header>
 
-      <main className={styles.main}>
-        {/* Stats */}
-        <section className={styles.metricsGrid}>
-          <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>My Apps</span>
-            <div className={styles.metricValue}>
-              {loading ? '—' : apps.length}
-              <span className={styles.metricUnit}>total</span>
-            </div>
-          </div>
-          <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>Active Bots</span>
-            <div className={styles.metricValue}>
-              {loading ? '—' : apps.filter(a => a.bot).length}
-              <span className={styles.metricUnit}>online</span>
-            </div>
-          </div>
-          <div className={styles.metricCard}>
-            <span className={styles.metricLabel}>API Status</span>
-            <div className={styles.metricValue} style={{ color: 'var(--status-online)', fontSize: 18 }}>
-              <Activity size={18} style={{ display: 'inline', marginRight: 6 }} />
-              Operational
-            </div>
-          </div>
-        </section>
-
-        {/* Quick Links */}
-        <section className={styles.resourceGrid}>
-          <ResourceCard
-            icon={<Book size={24} />}
-            title="Documentation"
-            description="Guides, API reference, and examples"
-            href="/docs"
-          />
-          <ResourceCard
-            icon={<Code size={24} />}
-            title="API Reference"
-            description="Every endpoint, object, and event"
-            href="/docs/api-reference"
-          />
-          <ResourceCard
-            icon={<Shield size={24} />}
-            title="Bot Policies"
-            description="What bots can and can't do"
-            href="/terms"
-          />
-        </section>
-
-        {/* Applications */}
-        <section className={styles.appsSection}>
-          <div className={styles.sectionHeader}>
-            <h2>My Applications</h2>
-            <span>{apps.length} total</span>
-          </div>
-
-          <div className={styles.appsGrid}>
-            {loading ? (
-              <div className={styles.loading}>Loading your applications…</div>
-            ) : (
-              <>
-                {apps.map(app => (
-                  <div key={app.id} className={styles.appCard}>
-                    <div className={styles.appIcon}>
-                      {app.icon ? <img src={app.icon} alt="" /> : <Rocket size={24} />}
+            <div className={styles.appsGrid}>
+              {loading ? (
+                <div className={styles.loading}>
+                  <div className={styles.spinner} />
+                  <span>Syncing Applications...</span>
+                </div>
+              ) : (
+                <>
+                  {apps.map(app => (
+                    <div key={app.id} className={styles.appCard}>
+                      <div className={styles.appBanner} />
+                      <div className={styles.appCardContent}>
+                        <div className={styles.appIcon}>
+                          {app.icon ? <img src={app.icon} alt="" /> : <Rocket size={24} />}
+                        </div>
+                        <div className={styles.appInfo}>
+                          <h3>{app.name}</h3>
+                          <p className={styles.appId}>ID: {app.id}</p>
+                          {app.bot && (
+                            <div className={styles.botBadge}>
+                              <div className={styles.botDot} />
+                              <span>Bot Enabled</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.appActions}>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => { setSelectedApp(app); setIsBotModalOpen(true) }}
+                          >
+                            <Key size={14} /> Manage
+                          </Button>
+                          <button className={styles.moreBtn}>
+                            <MoreVertical size={16} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div className={styles.appInfo}>
-                      <h3>{app.name}</h3>
-                      <p className={styles.appId}>ID: {app.id}</p>
-                      {app.bot && (
-                        <span style={{ fontSize: 12, color: 'var(--status-online)', fontWeight: 600 }}>
-                          ● Bot enabled
-                        </span>
-                      )}
+                  ))}
+
+                  {apps.length === 0 && (
+                    <div className={styles.emptyApps}>
+                      <Rocket size={48} className={styles.emptyIcon} />
+                      <h3>No applications found</h3>
+                      <p>Create your first application to get access to the Beacon API and WebSocket Gateway.</p>
+                      <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                        <Plus size={16} /> Create Application
+                      </Button>
                     </div>
-                    <div className={styles.appActions}>
-                      <button
-                        className={styles.botBtn}
-                        onClick={() => { setSelectedApp(app); setIsBotModalOpen(true) }}
-                        title="Manage Bot"
-                      >
-                        <Key size={18} />
-                      </button>
-                      <button className={styles.moreBtn} title="More options">
-                        <MoreVertical size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  )}
+                </>
+              )}
+            </div>
+          </section>
 
-                {apps.length === 0 && (
-                  <div style={{
-                    gridColumn: '1 / -1',
-                    padding: '48px 24px',
-                    textAlign: 'center',
-                    color: 'var(--text-muted)',
-                    background: 'var(--bg-secondary)',
-                    borderRadius: 'var(--radius-lg)',
-                    border: '1px dashed var(--glass-border)',
-                  }}>
-                    <Rocket size={48} style={{ marginBottom: 16, opacity: 0.4 }} />
-                    <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>
-                      No apps yet
-                    </p>
-                    <p style={{ fontSize: 14, marginBottom: 20 }}>
-                      Create your first application to get a bot token and start building.
-                    </p>
-                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-                      <Plus size={16} /> Create Application
-                    </Button>
-                  </div>
-                )}
-
-                {apps.length > 0 && (
-                  <button className={styles.addAppCard} onClick={() => setIsModalOpen(true)}>
-                    <Plus size={24} />
-                    <span>New App</span>
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        </section>
-
-        {/* Quick Start */}
-        <section className={styles.bottomSection}>
-          <div className={styles.bottomCard}>
-            <div className={styles.atmosGlow} />
-            <Terminal size={32} className={styles.bottomIcon} />
-            <div className={styles.bottomText}>
-              <h3>Ready to build?</h3>
-              <p>Check out the getting started guide to have a working bot in under 5 minutes.</p>
-              <div className={styles.bottomActions}>
-                <Button variant="secondary" size="sm" onClick={() => window.open('/docs/getting-started', '_blank')}>
-                  <ExternalLink size={14} /> Getting Started
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => window.open('/docs/api-reference', '_blank')}>
-                  API Reference
-                </Button>
+          <section className={styles.quickStartSection}>
+            <div className={styles.quickStartCard}>
+              <Terminal size={32} />
+              <div className={styles.quickStartText}>
+                <h3>Ready to build?</h3>
+                <p>Learn how to connect to the Gateway and send your first message in 5 minutes.</p>
+                <div className={styles.quickStartActions}>
+                  <Button variant="secondary" size="sm" onClick={() => window.open('/docs/getting-started', '_blank')}>
+                    Getting Started
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      </main>
-
-      <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-          <div className={styles.footerLogo}>B</div>
-          <div className={styles.footerLinks}>
-            <a href="/terms">Terms</a>
-            <a href="/privacy">Privacy</a>
-            <a href="/contact">Support</a>
-          </div>
+          </section>
         </div>
-      </footer>
+      ) : (
+        <ComponentShowcase />
+      )}
 
-      {/* Create App Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Create Application"
       >
         <div className={styles.modalContent}>
-          <p>Give your app a name. You can always change it later.</p>
+          <p className={styles.modalDesc}>Give your application a name. This is how users will see your integration.</p>
           <Input
-            label="Application Name"
+            label="APPLICATION NAME"
             value={newAppName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewAppName(e.currentTarget.value)}
             onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && handleCreateApp()}
-            placeholder="My Awesome Bot"
+            placeholder="e.g. My Awesome Bot"
             autoFocus
           />
           <div className={styles.modalActions}>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleCreateApp} disabled={!newAppName.trim()}>Create</Button>
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleCreateApp} disabled={!newAppName.trim()}>Create Application</Button>
           </div>
         </div>
       </Modal>
 
-      {/* Bot Management Modal */}
       <Modal
         isOpen={isBotModalOpen}
         onClose={() => setIsBotModalOpen(false)}
         title={selectedApp ? `${selectedApp.name} — Bot Settings` : 'Bot Settings'}
+        size="lg"
       >
-        <div className={styles.modalContent} style={{ padding: 0 }}>
+        <div className={styles.botModalContent}>
           {selectedApp && <BotConsole applicationId={selectedApp.id} />}
-          <div className={styles.modalActions} style={{ padding: '16px' }}>
+          <div className={styles.modalActions}>
             <Button variant="secondary" onClick={() => setIsBotModalOpen(false)}>Close</Button>
           </div>
         </div>
       </Modal>
-    </div>
+    </WorkspaceLayout>
   )
 }
 
-function ResourceCard({ icon, title, description, href }: { icon: React.ReactNode, title: string, description: string, href: string }) {
-  return (
-    <a href={href} className={styles.resourceCard}>
-      <div className={styles.resourceIcon}>{icon}</div>
-      <div>
-        <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)', marginBottom: 2 }}>{title}</div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{description}</div>
-      </div>
-    </a>
-  )
-}

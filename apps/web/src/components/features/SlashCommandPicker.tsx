@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Zap, Music, Hash, Image, Poll, Calendar, Smile, Clock, Gift, Mic } from 'lucide-react'
+import { Zap, Music, Hash, Image, Vote, Calendar, Smile, Clock, Gift, Mic } from 'lucide-react'
 import styles from './SlashCommandPicker.module.css'
 
 export interface SlashCommand {
@@ -22,7 +22,7 @@ const BUILT_IN_COMMANDS: SlashCommand[] = [
   { name: 'gif', description: 'Search and send a GIF', usage: '/gif <search>', category: 'media', icon: <Image size={16} /> },
   { name: 'image', description: 'Upload an image', category: 'media', icon: <Image size={16} /> },
   // Poll
-  { name: 'poll', description: 'Create a poll', usage: '/poll <question> | <option1> | <option2>', category: 'poll', icon: <Poll size={16} /> },
+  { name: 'poll', description: 'Create a poll', usage: '/poll <question> | <option1> | <option2>', category: 'poll', icon: <Vote size={16} /> },
   // Utility
   { name: 'reminder', description: 'Set a reminder', usage: '/reminder <time> <message>', category: 'utility', icon: <Clock size={16} /> },
   { name: 'event', description: 'Create a server event', usage: '/event <name> <date>', category: 'utility', icon: <Calendar size={16} /> },
@@ -75,10 +75,10 @@ export function SlashCommandPicker({
 
   const filtered = query.trim()
     ? allCommands.filter(
-        c =>
-          c.name.toLowerCase().startsWith(query.toLowerCase()) ||
-          c.description.toLowerCase().includes(query.toLowerCase())
-      )
+      c =>
+        c.name.toLowerCase().startsWith(query.toLowerCase()) ||
+        c.description.toLowerCase().includes(query.toLowerCase())
+    )
     : allCommands
 
   // Group by category

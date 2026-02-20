@@ -1,20 +1,24 @@
 /* ── Message wrapper ── */
 .message {
   display: flex;
-  gap: 14px;
-  padding: 4px 16px 4px 16px;
-  transition: background 0.15s ease;
+  gap: 16px;
+  padding: 2px 16px;
+  /* Discord density */
+  transition: background 0.1s ease;
   position: relative;
   border-radius: 0;
+  margin-top: 2px;
 }
 
 .message:hover {
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.03);
+  /* Buttery transition already in greens */
 }
 
 .message.continuing {
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
 }
 
 /* ── Avatar ── */
@@ -27,18 +31,21 @@
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  /* Hyper-rounded */
   object-fit: cover;
   cursor: pointer;
-  transition: transform 0.2s var(--ease-out), box-shadow 0.2s ease;
+  transition: all var(--transition-normal);
   display: block;
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
 }
 
 .avatar:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 /* Compact mode timestamp (replaces avatar in continuing messages) */
@@ -121,29 +128,32 @@
 }
 
 .text pre {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-top: 6px;
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-top: 8px;
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 13.5px;
 }
 
 /* ── Pinned indicator ── */
 .pinnedBadge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 800;
   color: var(--status-warning);
-  background: rgba(240, 178, 50, 0.08);
+  background: rgba(240, 178, 50, 0.1);
   border: 1px solid rgba(240, 178, 50, 0.2);
-  border-radius: 6px;
-  padding: 1px 6px;
-  margin-left: 6px;
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ── Attachments ── */
@@ -155,14 +165,16 @@
 }
 
 .imageAttachment {
-  max-width: 480px;
-  max-height: 360px;
-  border-radius: 12px;
+  max-width: 520px;
+  max-height: 400px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--glass-border);
   display: flex;
   cursor: pointer;
   position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-normal);
 }
 
 .imageAttachment img {
@@ -182,14 +194,15 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.25);
+  padding: 14px 20px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   text-decoration: none;
   color: var(--text-primary);
-  transition: all 0.2s ease;
-  max-width: 400px;
+  transition: all var(--transition-normal);
+  max-width: 420px;
 }
 
 .fileAttachment:hover {
@@ -209,16 +222,16 @@
 .reaction {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 8px;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 15px;
-  font-weight: 600;
-  transition: all 0.15s ease;
+  font-weight: 700;
+  transition: all 0.3s var(--transition-smooth);
   user-select: none;
 }
 
@@ -242,21 +255,21 @@
 /* ── Action toolbar (appears on hover, floating above message) ── */
 .actions {
   position: absolute;
-  top: -20px;
-  right: 16px;
+  top: -24px;
+  right: 20px;
   background: var(--bg-tertiary);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-radius: 10px;
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   opacity: 0;
   pointer-events: none;
-  padding: 3px 4px;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  padding: 4px 6px;
+  transition: all var(--transition-normal);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
   z-index: 15;
 }
 
@@ -360,10 +373,12 @@
     gap: 10px;
     padding: 4px 12px;
   }
+
   .avatar {
     width: 36px;
     height: 36px;
   }
+
   .avatarArea {
     width: 36px;
   }

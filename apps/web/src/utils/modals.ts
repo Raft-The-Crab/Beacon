@@ -51,7 +51,9 @@ export function openCreateServerModal() {
   setShowCreateServer(true)
 }
 
-export function openCreateChannelModal() {
+export function openCreateChannelModal(_type?: string, _parentId?: string) {
   const { setShowCreateChannel } = useUIStore.getState()
+  // Note: If you want to store type/parentId in store, you'd add state for it.
+  // For now, we just open the modal.
   setShowCreateChannel(true)
 }

@@ -1,3 +1,4 @@
+export { LandingPage } from './LandingPage';
 export { Login } from './Login';
 export { MessagingHome } from './MessagingHome';
 export { DeveloperPortal } from './DeveloperPortal';
@@ -9,3 +10,10 @@ export { Contact } from './Contact';
 export { Terms } from './legal/Terms';
 export { Privacy } from './legal/Privacy';
 export { TOS } from './legal/TOS';
+export { DocsHome } from './docs/DocsHome';
+export { GettingStarted } from './docs/GettingStarted';
+export { SDKTutorial } from './docs/SDKTutorial';
+export { APIReference } from './docs/APIReference';
+export { GatewayDocs } from './docs/GatewayDocs';
+export { Mission } from './docs/Mission';
+export { BeaconPlusStore } from './BeaconPlusStore';

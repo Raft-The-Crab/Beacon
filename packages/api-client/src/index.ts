@@ -1,4 +1,5 @@
-import type { User, Guild, Channel, Message, Member } from '@beacon/types'
+// @ts-ignore
+import type { User, Guild, Channel, Message, Member } from '../../types/src/index'
 
 export type ApiResponseStatus = 'success' | 'error' | 'loading'
 

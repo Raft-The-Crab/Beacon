@@ -104,6 +104,14 @@ export class AuthService {
     }
   }
 
+  static verifyRefreshToken(token: string) {
+    try {
+      return jwt.verify(token, JWT_SECRET) as { id: string, type: 'refresh' }
+    } catch (err) {
+      return null
+    }
+  }
+
   static sanitizeUser(user: any) {
     const { password, twoFactorSecret, ...safeUser } = user
     return safeUser

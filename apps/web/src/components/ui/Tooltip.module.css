@@ -5,50 +5,63 @@
 
 .tooltip {
   position: absolute;
-  background: var(--bg-tertiary);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  z-index: 1000;
+  padding: 10px 16px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   border: 1px solid var(--glass-border);
-  color: var(--text-primary);
-  padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
+  /* Hyper-rounded */
+  color: white;
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
-  z-index: var(--z-tooltip);
   pointer-events: none;
   box-shadow: var(--shadow-md);
-  animation: slideIn 0.2s var(--ease-out);
+  animation: tooltipFadeIn 0.4s var(--ease-out);
+  /* Buttery elastic */
+  letter-spacing: -0.01em;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  /* Hardware Acceleration */
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .top {
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%);
 }
 
 .top .arrow {
-  top: 100%;
+  bottom: -5px;
   left: 50%;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid var(--bg-tertiary);
-  transform: translateX(-50%);
+  margin-left: -4px;
 }
 
 .bottom {
-  top: calc(100% + 8px);
+  top: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%);
 }
 
 .bottom .arrow {
-  bottom: 100%;
+  top: -5px;
   left: 50%;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-bottom: 6px solid var(--bg-tertiary);
-  transform: translateX(-50%);
+  margin-left: -4px;
+  transform: rotate(225deg);
 }
 
 .left {

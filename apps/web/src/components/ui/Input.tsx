@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, TextareaHTMLAttributes, forwardRef } from 'react'
+import { InputHTMLAttributes, forwardRef } from 'react'
 import styles from './Input.module.css'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -10,7 +10,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   rows?: number
 }
 
-export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
+export const Input = forwardRef<any, InputProps>(
   ({ label, error, icon, className, multiline, rows = 3, ...props }, ref) => {
     return (
       <div className={styles.wrapper}>

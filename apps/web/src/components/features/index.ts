@@ -11,5 +11,5 @@ export { RoleManager } from './RoleManager';
 export { RoleTemplateSelector } from './RoleTemplateSelector';
 export { default as GroupDMModal } from './GroupDMModal';
 export { default as SlowmodeControl } from './SlowmodeControl';
-export { Poll } from './Poll';
+export { PollRenderer as Poll } from './Poll';
 export { ProfileEnhanced } from './ProfileEnhanced';

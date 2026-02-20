@@ -3,7 +3,7 @@
  * Handles: auth, rooms, messages, typing, presence, voice
  */
 import { Server as HTTPServer } from 'http';
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import { Server as SocketIOServer } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db';
 
@@ -56,7 +56,7 @@ export function initWS(httpServer: HTTPServer) {
   });
 
   // ─── Connection ───────────────────────────────────────────────
-  io.on('connection', async (socket: Socket) => {
+  (io as any).on('connection', async (socket: any) => {
     const user = (socket as any).user as { id: string; username: string; avatar: string | null };
     if (!user) return socket.disconnect();
 
@@ -90,9 +90,26 @@ export function initWS(httpServer: HTTPServer) {
     }
 
     // ─── Channel rooms ──────────────────────────────────────────
-    socket.on('JOIN_CHANNEL', (channelId: string) => {
-      socket.join(`channel:${channelId}`);
-      socket.emit('CHANNEL_JOINED', channelId);
+    socket.on('JOIN_CHANNEL', async (channelId: string) => {
+      try {
+        const channel = await prisma.channel.findUnique({
+          where: { id: channelId },
+          select: { guildId: true }
+        });
+
+        if (channel?.guildId) {
+          // Verify guild membership
+          const isMember = await prisma.guildMember.findFirst({
+            where: { guildId: channel.guildId, userId: user.id }
+          });
+          if (!isMember) return;
+        }
+
+        socket.join(`channel:${channelId}`);
+        socket.emit('CHANNEL_JOINED', channelId);
+      } catch (err) {
+        console.error('[WS] JOIN_CHANNEL Error:', err);
+      }
     });
 
     socket.on('LEAVE_CHANNEL', (channelId: string) => {
@@ -137,10 +154,10 @@ export function initWS(httpServer: HTTPServer) {
             ...(customStatus !== undefined && { customStatus }),
           } as any,
         });
-      } catch (_) {}
+      } catch (_) { }
 
       // Broadcast to guilds
-      socket.rooms.forEach((room) => {
+      socket.rooms.forEach((room: string) => {
         if (room.startsWith('guild:')) {
           io.to(room).emit('PRESENCE_UPDATE', {
             userId: user.id,
@@ -165,21 +182,31 @@ export function initWS(httpServer: HTTPServer) {
       // Find guild and broadcast
       try {
         if (channelId) {
-          const channel = await (prisma as any).channel.findUnique({ where: { id: channelId } });
+          const channel = await prisma.channel.findUnique({
+            where: { id: channelId },
+            select: { guildId: true }
+          });
+
           if (channel?.guildId) {
+            // Membership check
+            const isMember = await prisma.guildMember.findFirst({
+              where: { guildId: channel.guildId, userId: user.id }
+            });
+            if (!isMember) return;
+
             io.to(`guild:${channel.guildId}`).emit('VOICE_STATE_UPDATE', state);
           }
         }
-      } catch (_) {}
+      } catch (_) { }
     });
 
     // ─── Disconnect ─────────────────────────────────────────────
-    socket.on('disconnect', async (reason) => {
+    socket.on('disconnect', async (reason: string) => {
       console.log(`[WS] ${user.username} disconnected: ${reason}`);
       presence.delete(user.id);
 
-      socket.rooms.forEach((room) => {
-        if (room.startsWith('guild:')) {
+      socket.rooms.forEach((room: any) => {
+        if (typeof room === 'string' && room.startsWith('guild:')) {
           io.to(room).emit('PRESENCE_UPDATE', { userId: user.id, status: 'offline' });
         }
       });
@@ -189,7 +216,7 @@ export function initWS(httpServer: HTTPServer) {
           where: { id: user.id },
           data: { status: 'offline' as any },
         });
-      } catch (_) {}
+      } catch (_) { }
     });
   });
 

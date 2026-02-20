@@ -1,6 +1,6 @@
 {
   "name": "beacon.js",
-  "version": "2.5.0",
+  "version": "3.0.1",
   "description": "Official Bot SDK for Beacon — build powerful, event-driven bots with ease",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -39,7 +39,7 @@
     "api"
   ],
   "author": "Beacon Team",
-  "license": "MIT",
+  "license": "PROPRIETARY",
   "homepage": "https://beacon.chat/developers",
   "repository": {
     "type": "git",
@@ -57,7 +57,9 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "ws": "^8.19.0"
+    "ws": "^8.19.0",
+    "wrtc": "^0.4.7",
+    "opus-script": "^0.0.8"
   },
   "devDependencies": {
     "@types/ws": "^8.5.10",

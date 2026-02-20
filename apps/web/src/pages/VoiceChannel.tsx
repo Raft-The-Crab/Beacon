@@ -17,6 +17,7 @@ interface VoiceParticipant {
   isVideoOn: boolean
   isSpeaking: boolean
   isHandRaised: boolean
+  isScreenSharing: boolean
   role?: 'owner' | 'mod' | 'member'
 }
 
@@ -43,12 +44,13 @@ export function VoiceChannel() {
         {
           id: user.id,
           username: user.username,
-          avatar: user.avatar,
+          avatar: user.avatar as any,
           isMuted: false,
           isDeafened: false,
           isVideoOn: false,
           isSpeaking: false,
           isHandRaised: false,
+          isScreenSharing: false,
           role: 'member',
         },
       ])

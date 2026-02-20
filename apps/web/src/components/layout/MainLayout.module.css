@@ -1,12 +1,5 @@
 .layout {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-  background: transparent;
-  padding: 10px;
-  gap: 8px;
-  position: relative;
+  display: contents;
 }
 
 .loadingView {
@@ -31,7 +24,9 @@
 }
 
 @keyframes beacon-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .mobileMenuBtn {
@@ -56,11 +51,12 @@
     padding: 0;
     gap: 0;
   }
+
   .mobileMenuBtn {
     display: flex;
   }
 }
 
-.layout > * {
+.layout>* {
   min-height: 0;
 }

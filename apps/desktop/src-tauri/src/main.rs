@@ -1,6 +1,9 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod performance;
+
+use performance::{PerformanceConfig, get_performance_config};
 use tauri::{Manager, State, Window};
 use std::sync::{Arc, Mutex};
 use parking_lot::RwLock;
@@ -217,12 +220,15 @@ fn main() {
             minimize_to_tray,
             restore_from_tray,
             get_system_info,
+            get_performance_config,
         ])
         .setup(|app| {
             info!("Beacon Desktop starting...");
             
-            // Set up system tray
+            // Detect and apply performance optimizations
+            let perf_config = PerformanceConfig::detect();
             let window = app.get_webview_window("main").unwrap();
+            perf_config.apply_to_webview(&window);
             
             #[cfg(target_os = "windows")]
             {

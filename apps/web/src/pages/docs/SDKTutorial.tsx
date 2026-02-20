@@ -164,7 +164,42 @@ bot.command({
                 </section>
 
                 <section>
-                    <h2>6. Permissions and errors</h2>
+                    <h2>6. Voice Connections (Beyond Discord)</h2>
+                    <p>
+                        Beacon supports native 48kHz stereo Opus audio with zero external dependencies.
+                        Bots can join voice channels and emit high-fidelity sound.
+                    </p>
+                    <pre className={styles.code}>
+                        <code>{`const connection = await client.voice.join(guildId, channelId);
+
+connection.on('stateChange', (state) => {
+    console.log(\`Voice state: \${state}\`);
+});
+
+// Play local file or stream
+const player = connection.createAudioPlayer();
+await player.play('./soundboard/wow.mp3');`}</code>
+                    </pre>
+                </section>
+
+                <section>
+                    <h2>7. Theme-Aware Development</h2>
+                    <p>
+                        Build UIs that adapt to the user's selected theme (Glass, OLED, Neon, Midnight, Dark).
+                        Use CSS variables for automatic styling.
+                    </p>
+                    <pre className={styles.code}>
+                        <code>{`.my-component {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+}`}</code>
+                    </pre>
+                </section>
+
+                <section>
+                    <h2>8. Permissions and errors</h2>
                     <p>Always check permissions before performing actions, and handle errors gracefully:</p>
                     <pre className={styles.code}>
                         <code>{`bot.command({

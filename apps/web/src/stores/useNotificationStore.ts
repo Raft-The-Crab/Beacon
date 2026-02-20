@@ -1,111 +1,116 @@
 import { create } from 'zustand'
-import { api } from '../lib/api'
+import { persist } from 'zustand/middleware'
 
-export type NotificationType =
-  | 'message'
-  | 'mention'
-  | 'friend_request'
-  | 'friend_accept'
-  | 'server_invite'
-  | 'reaction'
-  | 'system'
+interface NotificationSettings {
+  priority: 'all' | 'high' | 'mentions'
+  quietHours: { start: string; end: string } | null
+  keywords: string[]
+  mutedChannels: string[]
+  mutedServers: string[]
+}
 
-export interface Notification {
+interface SmartNotification {
   id: string
-  type: NotificationType
+  type: 'message' | 'mention' | 'dm' | 'call'
+  priority: 'low' | 'medium' | 'high'
   title: string
   body: string
+  timestamp: Date
   read: boolean
-  createdAt: string
-  // optional context
-  serverId?: string
-  channelId?: string
-  userId?: string
-  avatarUrl?: string
 }
 
-interface NotificationState {
-  notifications: Notification[]
-  unreadCount: number
-  isLoading: boolean
-  dropdownOpen: boolean
-
-  fetchNotifications: () => Promise<void>
-  markRead: (id: string) => Promise<void>
-  markAllRead: () => Promise<void>
-  deleteNotification: (id: string) => void
+interface NotificationStore {
+  settings: NotificationSettings
+  notifications: SmartNotification[]
+  
+  updateSettings: (settings: Partial<NotificationSettings>) => void
+  addNotification: (notification: Omit<SmartNotification, 'id' | 'timestamp' | 'read'>) => void
+  markAsRead: (id: string) => void
   clearAll: () => void
-  addNotification: (n: Notification) => void
-  setDropdownOpen: (open: boolean) => void
-  toggleDropdown: () => void
+  shouldNotify: (notification: Omit<SmartNotification, 'id' | 'timestamp' | 'read'>) => boolean
 }
 
-export const useNotificationStore = create<NotificationState>((set, get) => ({
-  notifications: [],
-  unreadCount: 0,
-  isLoading: false,
-  dropdownOpen: false,
+export const useNotificationStore = create<NotificationStore>()(
+  persist(
+    (set, get) => ({
+      settings: {
+        priority: 'high',
+        quietHours: { start: '22:00', end: '08:00' },
+        keywords: ['urgent', '@me'],
+        mutedChannels: [],
+        mutedServers: []
+      },
+      notifications: [],
 
-  fetchNotifications: async () => {
-    set({ isLoading: true })
-    try {
-      const { data } = await api.get('/users/@me/notifications')
-      const notes: Notification[] = data
-      set({
-        notifications: notes,
-        unreadCount: notes.filter((n) => !n.read).length,
-        isLoading: false,
-      })
-    } catch {
-      // Backend may not have this endpoint yet — start empty
-      set({ isLoading: false })
-    }
-  },
+      updateSettings: (newSettings) => {
+        set(state => ({
+          settings: { ...state.settings, ...newSettings }
+        }))
+      },
 
-  markRead: async (id) => {
-    set((state) => {
-      const updated = state.notifications.map((n) =>
-        n.id === id ? { ...n, read: true } : n
-      )
-      return {
-        notifications: updated,
-        unreadCount: updated.filter((n) => !n.read).length,
+      addNotification: (notification) => {
+        const { shouldNotify } = get()
+        if (!shouldNotify(notification)) return
+
+        const newNotif: SmartNotification = {
+          ...notification,
+          id: Date.now().toString(),
+          timestamp: new Date(),
+          read: false
+        }
+
+        set(state => ({
+          notifications: [newNotif, ...state.notifications].slice(0, 100)
+        }))
+
+        // Browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification(notification.title, {
+            body: notification.body,
+            icon: '/logo.png'
+          })
+        }
+      },
+
+      markAsRead: (id) => {
+        set(state => ({
+          notifications: state.notifications.map(n =>
+            n.id === id ? { ...n, read: true } : n
+          )
+        }))
+      },
+
+      clearAll: () => {
+        set({ notifications: [] })
+      },
+
+      shouldNotify: (notification) => {
+        const { settings } = get()
+
+        // Check quiet hours
+        if (settings.quietHours) {
+          const now = new Date()
+          const hour = now.getHours()
+          const start = parseInt(settings.quietHours.start.split(':')[0])
+          const end = parseInt(settings.quietHours.end.split(':')[0])
+          
+          if (hour >= start || hour < end) {
+            return notification.priority === 'high'
+          }
+        }
+
+        // Check priority filter
+        if (settings.priority === 'high' && notification.priority !== 'high') {
+          return false
+        }
+
+        if (settings.priority === 'mentions' && notification.type !== 'mention') {
+          return false
+        }
+
+        return true
       }
-    })
-    try {
-      await api.patch(`/users/@me/notifications/${id}/read`)
-    } catch { /* best-effort */ }
-  },
-
-  markAllRead: async () => {
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, read: true })),
-      unreadCount: 0,
-    }))
-    try {
-      await api.post('/users/@me/notifications/read-all')
-    } catch { /* best-effort */ }
-  },
-
-  deleteNotification: (id) => {
-    set((state) => {
-      const updated = state.notifications.filter((n) => n.id !== id)
-      return {
-        notifications: updated,
-        unreadCount: updated.filter((n) => !n.read).length,
-      }
-    })
-  },
-
-  clearAll: () => set({ notifications: [], unreadCount: 0 }),
-
-  addNotification: (n) => {
-    set((state) => ({
-      notifications: [n, ...state.notifications].slice(0, 100),
-      unreadCount: state.unreadCount + (n.read ? 0 : 1),
-    }))
-  },
-
-  setDropdownOpen: (open) => set({ dropdownOpen: open }),
-  toggleDropdown: () => set((s) => ({ dropdownOpen: !s.dropdownOpen })),
-}))
+    }),
+    { name: 'beacon-notifications' }
+  )
+)

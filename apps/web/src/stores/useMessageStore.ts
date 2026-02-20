@@ -1,103 +1,153 @@
 import { create } from 'zustand'
-import { api } from '../lib/api'
-import type { MessageWithExtras as Message } from '@beacon/types'
+import { apiRequest } from '../lib/api'
+import type { MessageWithExtras as Message, PaginatedResponse } from '@beacon/types'
 
 interface MessageState {
-  messages: Map<string, Message[]> // channelId -> messages
-  isLoading: Map<string, boolean> // channelId -> loading state
+  messages: Map<string, Message[]>
+  isLoading: Map<string, boolean>
+  hasMore: Map<string, boolean>
+  oldestMessageId: Map<string, string>
 
-  // Actions
-  fetchMessages: (channelId: string) => Promise<void>
+  fetchMessages: (channelId: string, before?: string) => Promise<void>
+  loadMoreMessages: (channelId: string) => Promise<void>
   sendMessage: (channelId: string, content: string, attachments?: any[]) => Promise<void>
-  getMessages: (channelId: string) => Message[] // Add this selector
+  getMessages: (channelId: string) => Message[]
+  getIsLoading: (channelId: string) => boolean
+  getHasMore: (channelId: string) => boolean
 
-  // Socket handlers
   handleMessageCreate: (message: Message & { channelId: string }) => void
   handleMessageUpdate: (channelId: string, messageId: string, updates: Partial<Message>) => void
   handleMessageDelete: (channelId: string, messageId: string) => void
 }
 
-export const useMessageStore = create<MessageState>((set, get) => ({ // Add 'get' here
+export const useMessageStore = create<MessageState>((set, get) => ({
   messages: new Map(),
   isLoading: new Map(),
+  hasMore: new Map(),
+  oldestMessageId: new Map(),
 
-  // Selector to get messages for a specific channel
   getMessages: (channelId: string) => {
-    return get().messages.get(channelId) || [];
+    return get().messages.get(channelId) || []
   },
 
-  fetchMessages: async (channelId) => {
-    // Set loading
+  getIsLoading: (channelId: string) => {
+    return get().isLoading.get(channelId) || false
+  },
+
+  getHasMore: (channelId: string) => {
+    return get().hasMore.get(channelId) ?? true
+  },
+
+  fetchMessages: async (channelId, before) => {
+    const state = get()
+    if (state.isLoading.get(channelId)) return
+
     set(state => {
-      const newLoading = new Map(state.isLoading);
-      newLoading.set(channelId, true);
+      const newLoading = new Map(state.isLoading)
+      newLoading.set(channelId, true)
       return { isLoading: newLoading }
-    });
+    })
 
     try {
-      const { data } = await api.get(`/channels/${channelId}/messages`);
-      set(state => {
-        const newMessages = new Map(state.messages);
-        newMessages.set(channelId, data);
+      const response = await apiRequest<PaginatedResponse<Message>>({
+        method: 'GET',
+        url: `/messages/${channelId}`,
+        params: { limit: 50, before }
+      })
 
-        const newLoading = new Map(state.isLoading);
-        newLoading.set(channelId, false);
-        return { messages: newMessages, isLoading: newLoading };
-      });
+      if (response.success && response.data) {
+        set(state => {
+          const newMessages = new Map(state.messages)
+          const existing = newMessages.get(channelId) || []
+          
+          // Prepend older messages
+          const combined = before 
+            ? [...response.data!.items, ...existing]
+            : response.data!.items
+          
+          newMessages.set(channelId, combined)
+
+          const newHasMore = new Map(state.hasMore)
+          newHasMore.set(channelId, response.data!.hasMore)
+
+          const newOldest = new Map(state.oldestMessageId)
+          if (response.data!.items.length > 0) {
+            newOldest.set(channelId, response.data!.items[0].id)
+          }
+
+          const newLoading = new Map(state.isLoading)
+          newLoading.set(channelId, false)
+
+          return { 
+            messages: newMessages, 
+            hasMore: newHasMore,
+            oldestMessageId: newOldest,
+            isLoading: newLoading 
+          }
+        })
+      }
     } catch (error) {
-      console.error(error);
+      console.error('Failed to fetch messages:', error)
       set(state => {
-        const newLoading = new Map(state.isLoading);
-        newLoading.set(channelId, false);
+        const newLoading = new Map(state.isLoading)
+        newLoading.set(channelId, false)
         return { isLoading: newLoading }
-      });
+      })
     }
   },
 
+  loadMoreMessages: async (channelId) => {
+    const state = get()
+    const oldestId = state.oldestMessageId.get(channelId)
+    if (!oldestId || !state.hasMore.get(channelId)) return
+
+    await state.fetchMessages(channelId, oldestId)
+  },
+
   sendMessage: async (channelId, content, attachments) => {
-    // We don't optimistically update here because we expect a fast socket event back
-    // Or we could. For now, let's rely on the API response or Socket.
     try {
-      await api.post(`/channels/${channelId}/messages`, { content, attachments });
+      await apiRequest({
+        method: 'POST',
+        url: `/channels/${channelId}/messages`,
+        data: { content, attachments }
+      })
     } catch (error) {
-      console.error(error);
-      throw error;
+      console.error('Failed to send message:', error)
+      throw error
     }
   },
 
   handleMessageCreate: (message) => {
-    const { channelId } = message;
+    const { channelId } = message
     set(state => {
-      const current = state.messages.get(channelId) || [];
-      // Dedupe - if message already exists, do NOT create a new Map,
-      // which would trigger an unnecessary state update.
+      const current = state.messages.get(channelId) || []
       if (current.find(m => m.id === message.id)) {
-        return state; // Return current state to prevent update
+        return state
       }
 
-      const newMessages = new Map(state.messages);
-      newMessages.set(channelId, [...current, message]);
-      return { messages: newMessages };
-    });
+      const newMessages = new Map(state.messages)
+      newMessages.set(channelId, [...current, message])
+      return { messages: newMessages }
+    })
   },
 
   handleMessageUpdate: (channelId, messageId, updates) => {
     set(state => {
-      const newMessages = new Map(state.messages);
-      const current = newMessages.get(channelId) || [];
-      const updated = current.map(m => m.id === messageId ? { ...m, ...updates } : m);
-      newMessages.set(channelId, updated);
-      return { messages: newMessages };
-    });
+      const newMessages = new Map(state.messages)
+      const current = newMessages.get(channelId) || []
+      const updated = current.map(m => m.id === messageId ? { ...m, ...updates } : m)
+      newMessages.set(channelId, updated)
+      return { messages: newMessages }
+    })
   },
 
   handleMessageDelete: (channelId, messageId) => {
     set(state => {
-      const newMessages = new Map(state.messages);
-      const current = newMessages.get(channelId) || [];
-      const filtered = current.filter(m => m.id !== messageId);
-      newMessages.set(channelId, filtered);
-      return { messages: newMessages };
-    });
+      const newMessages = new Map(state.messages)
+      const current = newMessages.get(channelId) || []
+      const filtered = current.filter(m => m.id !== messageId)
+      newMessages.set(channelId, filtered)
+      return { messages: newMessages }
+    })
   }
 }))

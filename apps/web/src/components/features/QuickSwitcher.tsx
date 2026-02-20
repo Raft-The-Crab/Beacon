@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Hash, Volume2, Users, MessageSquare, Server, X, Clock, ArrowRight } from 'lucide-react'
 import { useServerStore } from '../../stores/useServerStore'
-import { useAuthStore } from '../../stores/useAuthStore'
 import { useDMStore } from '../../stores/useDMStore'
 import styles from './QuickSwitcher.module.css'
 
@@ -33,7 +32,7 @@ function saveRecent(item: Omit<SearchResult, 'icon' | 'action'>) {
     const existing = getRecent().filter(r => r.id !== item.id)
     const updated = [item, ...existing].slice(0, MAX_RECENT)
     localStorage.setItem(RECENT_KEY, JSON.stringify(updated))
-  } catch {}
+  } catch { }
 }
 
 export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
@@ -45,8 +44,8 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
 
   const servers = useServerStore(state => state.servers || [])
   const currentServer = useServerStore(state => state.currentServer)
-  const user = useAuthStore(state => state.user)
-  const dms = useDMStore(state => state.conversations || [])
+  // const user = useAuthStore(state => state.user)
+  const dms = useDMStore(state => (state as any).conversations || (state as any).dms || [])
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -54,13 +53,13 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
 
   const buildResults = useCallback((q: string): SearchResult[] => {
     const lower = q.toLowerCase().trim()
-    const results: SearchResult[] = []
+    const searchResults: SearchResult[] = []
 
     if (!lower) {
       // Show recent + current server channels
       const recentRaw = getRecent()
       for (const r of recentRaw) {
-        results.push({
+        searchResults.push({
           ...r,
           icon: r.type === 'channel' ? <Hash size={16} /> : r.type === 'server' ? <Server size={16} /> : <Users size={16} />,
           action: () => {
@@ -76,8 +75,8 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
       // Also show first few channels of current server
       if (currentServer?.channels) {
         for (const ch of (currentServer.channels as any[]).slice(0, 5)) {
-          if (!results.find(r => r.id === ch.id)) {
-            results.push({
+          if (!searchResults.find(r => r.id === ch.id)) {
+            searchResults.push({
               id: ch.id,
               type: 'channel',
               label: `#${ch.name}`,
@@ -94,7 +93,7 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
     // Search servers
     for (const server of (servers as any[])) {
       if (server.name?.toLowerCase().includes(lower)) {
-        results.push({
+        searchResults.push({
           id: server.id,
           type: 'server',
           label: server.name,
@@ -114,7 +113,7 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
       for (const ch of (currentServer.channels as any[])) {
         if (ch.name?.toLowerCase().includes(lower)) {
           const isVoice = ch.type === 2 || String(ch.type).toLowerCase() === 'voice'
-          results.push({
+          searchResults.push({
             id: ch.id,
             type: 'channel',
             label: `#${ch.name}`,
@@ -135,7 +134,7 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
       if (server.id === currentServer?.id) continue
       for (const ch of (server.channels || [])) {
         if ((ch as any).name?.toLowerCase().includes(lower)) {
-          results.push({
+          searchResults.push({
             id: (ch as any).id,
             type: 'channel',
             label: `#${(ch as any).name}`,
@@ -155,7 +154,7 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
     for (const dm of (dms as any[])) {
       const name = dm.username || dm.name || ''
       if (name.toLowerCase().includes(lower)) {
-        results.push({
+        searchResults.push({
           id: dm.id,
           type: 'dm',
           label: name,
@@ -170,7 +169,7 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
       }
     }
 
-    return results.slice(0, 12)
+    return searchResults.slice(0, 12)
   }, [servers, currentServer, dms, navigate, onClose])
 
   useEffect(() => {

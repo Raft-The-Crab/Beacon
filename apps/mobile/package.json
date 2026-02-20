@@ -14,8 +14,8 @@
     "lint": "eslint src --ext ts,tsx"
   },
   "dependencies": {
-    "@beacon/types": "workspace:*",
-    "@beacon/api-client": "workspace:*",
+    "@beacon/types": "file:../../packages/types",
+    "@beacon/api-client": "file:../../packages/api-client",
     "@capacitor/core": "^7.0.0",
     "@capacitor/android": "^7.0.0"
   },

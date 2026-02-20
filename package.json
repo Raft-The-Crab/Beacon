@@ -2,6 +2,10 @@
   "name": "beacon",
   "version": "2.3.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "description": "Cross-platform real-time communication platform",
   "scripts": {
     "dev:web": "cd apps/web && npm run dev",

@@ -9,61 +9,85 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  animation: overlayFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+
+  to {
+    opacity: 1;
+    backdrop-filter: blur(16px);
+  }
 }
 
 .modal {
-  background: var(--bg-primary);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-glass);
-  max-width: 90%;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  max-width: 95%;
   max-height: 90%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
   border: 1px solid var(--glass-border);
-  animation: slideUp 0.3s var(--ease-out);
+  animation: modalSpringUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
-.modal.sm {
-  width: 440px;
+.modal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--noise-texture);
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: overlay;
 }
 
-.modal.md {
-  width: 640px;
-}
+@keyframes modalSpringUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
 
-.modal.lg {
-  width: 940px;
-}
-
-.modal.xl {
-  width: 1140px;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 32px;
+  padding: 32px 40px;
   border-bottom: 1px solid var(--glass-border);
-  background: rgba(0, 0, 0, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+  position: relative;
+  z-index: 10;
 }
 
 .title {
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
-  margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .closeButton {
-  background: var(--bg-tertiary);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
-  font-size: 28px;
   cursor: pointer;
   color: var(--text-secondary);
   width: 40px;
@@ -71,43 +95,50 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  transition: all 0.2s;
+  border-radius: var(--radius-full);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 24px;
   line-height: 1;
 }
 
 .closeButton:hover {
-  background-color: var(--bg-hover);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
-  transform: rotate(90deg);
+  transform: scale(1.05);
 }
 
 .content {
-  flex: 1;
-  padding: 32px;
+  padding: 32px 40px;
   overflow-y: auto;
+  position: relative;
+  z-index: 10;
 }
 
 .noPadding {
   padding: 0;
 }
 
-.transparent {
-  background: transparent;
-  border: none;
-  box-shadow: none;
+.sm {
+  width: 400px;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
-  }
+.md {
+  width: 600px;
+}
 
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.lg {
+  width: 800px;
+}
+
+.xl {
+  width: 1000px;
+}
+
+.transparent {
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {

@@ -1,9 +1,9 @@
 import {
   Hash, Volume2, Settings, Plus, Rocket, Book, Smile,
   ChevronDown, ChevronRight, Bell, BellOff, Link, Trash2, Edit2,
-  Megaphone, Mic, MessageSquare, ShieldAlert, GitBranch, Radio,
-  Users, ChevronDown as ChevronDownSmall, FolderPlus, FolderOpen,
-  Copy, Flag, Search, Star
+  Megaphone, MessageSquare, ShieldAlert, GitBranch, Radio,
+  Users, ChevronDown as ChevronDownSmall, FolderPlus,
+  Copy
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useState, useCallback } from 'react'
@@ -46,7 +46,7 @@ function ChannelButton({ channel, isActive, onClick, onCreateChannel }: {
       id: 'edit',
       label: 'Edit Channel',
       icon: <Edit2 size={15} />,
-      onClick: () => {},
+      onClick: () => { },
     },
     {
       id: 'copy',
@@ -66,7 +66,7 @@ function ChannelButton({ channel, isActive, onClick, onCreateChannel }: {
       icon: muted ? <Bell size={15} /> : <BellOff size={15} />,
       onClick: () => setMuted(m => !m),
     },
-    { id: 'd1', type: 'divider' as const },
+    { id: 'd1', divider: true, label: '' },
     {
       id: 'create-channel',
       label: 'Create Channel',
@@ -79,12 +79,12 @@ function ChannelButton({ channel, isActive, onClick, onCreateChannel }: {
       icon: <FolderPlus size={15} />,
       onClick: () => openCreateChannelModal('category'),
     },
-    { id: 'd2', type: 'divider' as const },
+    { id: 'd2', divider: true, label: '' },
     {
       id: 'delete',
       label: 'Delete Channel',
       icon: <Trash2 size={15} />,
-      onClick: () => {},
+      onClick: () => { },
       danger: true,
     },
   ])
@@ -124,12 +124,12 @@ function CategoryHeader({ category, isCollapsed, onToggle, onCreateChannel }: {
       icon: <FolderPlus size={15} />,
       onClick: () => openCreateChannelModal('category'),
     },
-    { id: 'd1', type: 'divider' as const },
+    { id: 'd1', divider: true, label: '' },
     {
       id: 'edit',
       label: 'Edit Category',
       icon: <Edit2 size={15} />,
-      onClick: () => {},
+      onClick: () => { },
     },
     {
       id: 'copy-id',
@@ -137,12 +137,12 @@ function CategoryHeader({ category, isCollapsed, onToggle, onCreateChannel }: {
       icon: <Copy size={15} />,
       onClick: () => category?.id && navigator.clipboard.writeText(category.id),
     },
-    { id: 'd2', type: 'divider' as const },
+    { id: 'd2', divider: true, label: '' },
     {
       id: 'delete',
       label: 'Delete Category',
       icon: <Trash2 size={15} />,
-      onClick: () => {},
+      onClick: () => { },
       danger: true,
     },
   ])
@@ -170,11 +170,10 @@ function CategoryHeader({ category, isCollapsed, onToggle, onCreateChannel }: {
 }
 
 // ── Uncategorized section header with right-click ─────────────────
-function UncategorizedHeader({ label, isCollapsed, onToggle, catKey }: {
+function UncategorizedHeader({ label, isCollapsed, onToggle }: {
   label: string
   isCollapsed: boolean
   onToggle: () => void
-  catKey: string
 }) {
   const ctxMenu = useContextMenuTrigger([
     {
@@ -258,7 +257,7 @@ export function Sidebar() {
     { id: 'settings', label: 'Server Settings', icon: <Settings size={15} />, onClick: () => setShowServerSettings(true) },
     { id: 'create-channel', label: 'Create Channel', icon: <Plus size={15} />, onClick: () => openCreateChannelModal() },
     { id: 'create-category', label: 'Create Category', icon: <FolderPlus size={15} />, onClick: () => openCreateChannelModal('category') },
-    { id: 'd1', type: 'divider' as const },
+    { id: 'd1', divider: true, label: '' },
     { id: 'copy-id', label: 'Copy Server ID', icon: <Copy size={15} />, onClick: () => currentServer && navigator.clipboard.writeText(currentServer.id) },
     { id: 'invite', label: 'Invite People', icon: <Link size={15} />, onClick: () => currentServer && navigator.clipboard.writeText(`https://beacon.app/invite/${currentServer.id}`) },
   ])
@@ -364,7 +363,6 @@ export function Sidebar() {
                   label="TEXT CHANNELS"
                   isCollapsed={collapsedCategories.has('__text__')}
                   onToggle={() => toggleCategory('__text__')}
-                  catKey="__text__"
                 />
                 {!collapsedCategories.has('__text__') && (
                   <div className={styles.channelList}>
@@ -388,7 +386,6 @@ export function Sidebar() {
                   label="VOICE CHANNELS"
                   isCollapsed={collapsedCategories.has('__voice__')}
                   onToggle={() => toggleCategory('__voice__')}
-                  catKey="__voice__"
                 />
                 {!collapsedCategories.has('__voice__') && (
                   <div className={styles.channelList}>

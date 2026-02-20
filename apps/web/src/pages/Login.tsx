@@ -60,7 +60,7 @@ export function Login() {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} radiance`}>
       {/* Hyper-Fluid Holographic Background */}
       <div className={styles.artwork}>
         <div className={styles.shape1} />

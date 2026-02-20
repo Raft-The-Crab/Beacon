@@ -1,0 +1,259 @@
+.showcase {
+    display: flex;
+    height: 100%;
+    min-height: 600px;
+}
+
+.sidebar {
+    width: 240px;
+    border-right: 1px solid var(--glass-border);
+    padding: 24px 16px;
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.sidebarHeader {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    margin-bottom: 20px;
+    padding-left: 12px;
+}
+
+.builderList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.builderItem {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+}
+
+.builderItem:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.builderItem.active {
+    background: var(--beacon-brand-muted);
+    color: var(--beacon-brand);
+}
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.contentHeader {
+    padding: 32px 48px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.headerInfo {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.builderIcon {
+    width: 56px;
+    height: 56px;
+    background: var(--accent-gradient);
+    color: white;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--accent-glow);
+}
+
+.headerInfo h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.headerInfo p {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.viewToggle {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--glass-border);
+}
+
+.toggleBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
+}
+
+.toggleBtn.toggleActive {
+    background: var(--bg-active);
+    color: var(--text-primary);
+}
+
+.viewport {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.previewArea {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+}
+
+.previewContainer {
+    width: 100%;
+    max-width: 500px;
+}
+
+/* Mock Embed */
+.mockEmbed {
+    background: #1e1f22;
+    border-radius: 4px;
+    display: flex;
+    overflow: hidden;
+    border-left: 4px solid var(--beacon-brand);
+    box-shadow: var(--shadow-lg);
+}
+
+.embedContent {
+    padding: 16px;
+    flex: 1;
+}
+
+.embedAuthor {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.embedTitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-link);
+    margin-bottom: 8px;
+}
+
+.embedDesc {
+    font-size: 14px;
+    color: var(--text-normal);
+    line-height: 1.4;
+    margin-bottom: 16px;
+}
+
+.embedFields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.fieldName {
+    font-size: 11px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.fieldValue {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* Mock Buttons */
+.mockButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Mock Dropdown */
+.mockDropdown {
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dropdownHeader {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.dropdownOption {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: default;
+}
+
+.dropdownOption:hover {
+    background: var(--bg-hover);
+}
+
+.codeArea {
+    height: 100%;
+    background: #000;
+    padding: 32px;
+    overflow: auto;
+}
+
+.code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #00ff88;
+    line-height: 1.6;
+}
+
+.placeholderPreview {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.placeholderIcon {
+    margin-bottom: 16px;
+    opacity: 0.2;
+}
+
+.contentFooter {
+    padding: 24px 48px;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+}

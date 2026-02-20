@@ -28,8 +28,19 @@
   ],
   "author": "Beacon Team",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Raft-The-Crab/Beacon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Raft-The-Crab/Beacon/issues"
+  },
+  "homepage": "https://github.com/Raft-The-Crab/Beacon#readme",
   "dependencies": {
-    "@beacon/types": "workspace:*"
+    "@beacon/types": "*"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

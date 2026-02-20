@@ -1,36 +1,14 @@
+import type { WSOpCode, WSEventType, WSPayload } from '@beacon/types'
 
-export type WebSocketEventType = 
-  | 'MESSAGE_CREATE'
-  | 'MESSAGE_UPDATE'
-  | 'MESSAGE_DELETE'
-  | 'TYPING_START'
-  | 'TYPING_STOP'
-  | 'PRESENCE_UPDATE'
-  | 'VOICE_STATE_UPDATE'
-  | 'MEMBER_ADD'
-  | 'MEMBER_REMOVE'
-  | 'CHANNEL_CREATE'
-  | 'CHANNEL_UPDATE'
-  | 'CHANNEL_DELETE'
-  | 'GUILD_UPDATE'
-  | 'MESSAGE_PIN'
-  | 'MESSAGE_REACTION'
-  | 'MESSAGE_UNPIN'
-  | 'READY'
-  | 'ERROR'
+export type WebSocketEventType = WSEventType
 
 export interface WebSocketEvent<T = any> {
-  type: WebSocketEventType
+  type: WSEventType
   data: T
   timestamp: number
 }
 
-export interface WebSocketPayload {
-  op: number // Operation code
-  d?: any // Data
-  t?: WebSocketEventType // Event type
-  s?: number // Sequence number
-}
+export type WebSocketPayload = WSPayload
 
 export class BeaconWebSocket {
   private ws: WebSocket | null = null
@@ -84,10 +62,8 @@ export class BeaconWebSocket {
 
   private handleMessage(rawData: string): void {
     try {
-      const payload: WebSocketPayload = JSON.parse(rawData)
+      const payload: WSPayload = JSON.parse(rawData)
       
-      // (sequence number handling removed)
-
       if (payload.t) {
         this.emit(payload.t, payload.d || {})
       }
@@ -117,7 +93,7 @@ export class BeaconWebSocket {
 
   // Reserved for future heartbeat implementation
 
-  private send(payload: WebSocketPayload): void {
+  private send(payload: WSPayload): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(payload))
     }
@@ -149,7 +125,7 @@ export class BeaconWebSocket {
     }
   }
 
-  private emit(type: WebSocketEventType, data: any): void {
+  private emit(type: WSEventType, data: any): void {
     const event: WebSocketEvent = {
       type,
       data,

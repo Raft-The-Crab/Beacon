@@ -1,17 +1,18 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
-import { SocketService } from '../services/socket';
 import { AuditLogService, AuditLogAction } from '../services/auditLog';
+import { CacheService } from '../services/cache';
+
+// Local stub — SocketService will be wired via gateway when available
+const SocketService = { emitToRoom: (_room: string, _event: string, _data: unknown) => { } };
 
 export class GuildController {
     static async createGuild(req: Request, res: Response) {
         try {
-            // @ts-ignore
-            const userId = req.user?.id;
+            const userId = (req as any).user?.id;
             const { name, icon } = req.body;
 
-            // Transaction: Create Guild, Default Channels, Default Role, Add Member
-            const guild = await prisma.$transaction(async (tx) => {
+            const guild = await prisma.$transaction(async (tx: any) => {
                 const guild = await tx.guild.create({
                     data: {
                         name,
@@ -20,7 +21,6 @@ export class GuildController {
                     }
                 });
 
-                // Default Channels
                 await tx.channel.createMany({
                     data: [
                         { name: 'general', type: 0, guildId: guild.id, position: 0 },
@@ -28,23 +28,20 @@ export class GuildController {
                     ]
                 });
 
-                // Default Role (@everyone)
                 const everyoneRole = await tx.role.create({
                     data: {
                         name: '@everyone',
                         guildId: guild.id,
                         position: 0,
-                        permissions: BigInt(0) // Default permissions
+                        permissions: BigInt(0)
                     }
                 });
 
-                // Add Owner
-                await tx.member.create({
+                await tx.guildMember.create({
                     data: {
                         userId,
                         guildId: guild.id,
                         roles: {
-                            // @ts-ignore
                             connect: [{ id: everyoneRole.id }]
                         }
                     }
@@ -58,7 +55,6 @@ export class GuildController {
         } catch (error) {
             console.error('Create Guild Error:', error);
             res.status(500).json({ error: 'Failed to create guild' });
-            return;
         }
     }
 
@@ -66,19 +62,18 @@ export class GuildController {
         try {
             const { id } = req.params;
             const { name, icon, banner, description } = req.body;
-            // @ts-ignore
-            const userId = req.user?.id;
+            const userId = (req as any).user?.id;
 
             const guild = await prisma.guild.update({
-                where: { id },
+                where: { id: id as string },
                 data: { name, icon, banner, description }
             });
 
-            await AuditLogService.log(id, userId, AuditLogAction.GUILD_UPDATE, { name });
-            SocketService.emitToRoom(id, 'GUILD_UPDATE', { guild });
+            await CacheService.del(`guild:${id}`);
+            await AuditLogService.log(id as string, userId as string, AuditLogAction.GUILD_UPDATE, { name });
+            SocketService.emitToRoom(id as string, 'GUILD_UPDATE', { guild });
             res.json(guild);
         } catch (error) {
-            console.error(error);
             res.status(500).json({ error: 'Failed to update guild' });
         }
     }
@@ -86,12 +81,20 @@ export class GuildController {
     static async getGuild(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params as { id: string };
+
+            // Try cache first
+            const cached = await CacheService.get(`guild:${id}`);
+            if (cached) {
+                res.json(cached);
+                return;
+            }
+
             const guild = await prisma.guild.findUnique({
                 where: { id },
                 include: {
                     channels: { orderBy: { position: 'asc' } },
                     roles: { orderBy: { position: 'desc' } },
-                    members: { take: 100, include: { user: true } } // Cap members for now
+                    members: { take: 100, include: { user: true } }
                 }
             });
 
@@ -100,16 +103,14 @@ export class GuildController {
                 return;
             }
 
-            // Serialize BigInt permissions to string for JSON
             const serializedGuild = JSON.parse(JSON.stringify(guild, (_, value) =>
                 typeof value === 'bigint' ? value.toString() : value
             ));
 
+            await CacheService.set(`guild:${id}`, serializedGuild, 300); // 5 min cache
             res.json(serializedGuild);
-            return;
         } catch (error) {
             res.status(500).json({ error: 'Internal Server Error' });
-            return;
         }
     }
 

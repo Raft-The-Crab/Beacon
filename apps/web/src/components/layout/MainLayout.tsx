@@ -2,12 +2,11 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { useUIStore } from '../../stores/useUIStore'
 import { useServerStore } from '../../stores/useServerStore'
-import { ServerList } from './ServerList'
+import { WorkspaceLayout } from './WorkspaceLayout'
 import { Sidebar } from './Sidebar'
 import { ChatArea } from '../chat/ChatArea'
 import { MemberList } from './MemberList'
 import { QuickSwitcher } from '../features/QuickSwitcher'
-import { Menu } from 'lucide-react'
 import styles from './MainLayout.module.css'
 
 export function MainLayout() {
@@ -22,7 +21,6 @@ export function MainLayout() {
   const servers = useServerStore(state => state.servers)
   const storeCurrentServer = useServerStore(state => state.currentServer)
 
-  // Cmd+K / Ctrl+K global quick switcher
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault()
@@ -64,43 +62,35 @@ export function MainLayout() {
 
   if (serverId && servers.length === 0) {
     return (
-      <div className={styles.layout}>
-        <ServerList />
+      <WorkspaceLayout sidebar={<div className={styles.loadingSidebar} />}>
         <div className={styles.loadingView}>
           <div className={styles.spinner}></div>
           <span>Syncing Beacon...</span>
         </div>
-      </div>
+      </WorkspaceLayout>
     )
   }
 
   if (serverId && !targetServer) {
     return (
-      <div className={styles.layout}>
-        <ServerList />
+      <WorkspaceLayout sidebar={<div className={styles.loadingSidebar} />}>
         <div className={styles.loadingView}>
           <span>Server not found or loading...</span>
         </div>
-      </div>
+      </WorkspaceLayout>
     )
   }
 
   return (
-    <div className={styles.layout}>
-      <button
-        className={styles.mobileMenuBtn}
-        onClick={() => useUIStore.getState().setShowMobileSidebar(true)}
-      >
-        <Menu size={24} />
-      </button>
-      <ServerList />
-      <Sidebar />
+    <WorkspaceLayout
+      sidebar={<Sidebar />}
+      rightPanel={showMemberList ? <MemberList /> : undefined}
+    >
       <ChatArea channelId={channelId || (targetServer?.channels?.[0]?.id) || ''} />
-      {showMemberList && <MemberList />}
 
       {showQuickSwitcher && (
         <QuickSwitcher onClose={() => setShowQuickSwitcher(false)} />
       )}
-    </div>
+    </WorkspaceLayout>
   )
 }

@@ -23,10 +23,13 @@ export interface ClientOptions {
 
 type CommandHandler = (ctx: InteractionContext) => void | Promise<void>;
 
+import { VoiceManager } from './voice/VoiceManager';
+
 export class Client extends EventEmitter {
   public readonly token: string;
   public readonly rest: RestClient;
   public readonly Intents = Intents;
+  public readonly voice: VoiceManager;
 
   // Caches
   public guilds: Collection<string, RawGuild> = new Collection();
@@ -55,6 +58,8 @@ export class Client extends EventEmitter {
       token: options.token,
       baseURL: options.apiURL ?? (process.env.BEACON_API_URL || 'https://api.beacon.chat'),
     });
+
+    this.voice = new VoiceManager(this);
 
     if (options.debug) {
       this._gateway.on('debug', (msg: string) => console.debug('[beacon.js]', msg));

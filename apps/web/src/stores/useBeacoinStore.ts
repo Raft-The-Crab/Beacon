@@ -21,11 +21,12 @@ interface BeacoinState {
 
   fetchWallet: () => Promise<void>
   sendCoins: (toUserId: string, amount: number, note?: string) => Promise<void>
+  purchaseSubscription: (tier: 'monthly' | 'yearly') => Promise<void>
   setWalletOpen: (open: boolean) => void
   toggleWallet: () => void
 }
 
-export const useBeacoinStore = create<BeacoinState>((set, get) => ({
+export const useBeacoinStore = create<BeacoinState>((set) => ({
   balance: 0,
   transactions: [],
   isLoading: false,
@@ -57,6 +58,22 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
         transactions: [data.transaction, ...state.transactions],
       }))
     } catch (err) {
+      throw err
+    }
+  },
+
+  purchaseSubscription: async (tier: 'monthly' | 'yearly') => {
+    set({ isLoading: true })
+    try {
+      const { data } = await api.post('/users/@me/beacoin/subscribe', { tier })
+      // Update balance and maybe user status (not in store yet but balance update matters)
+      set((state) => ({
+        isLoading: false,
+        balance: state.balance - data.cost,
+        transactions: [data.transaction, ...state.transactions]
+      }))
+    } catch (err) {
+      set({ isLoading: false })
       throw err
     }
   },

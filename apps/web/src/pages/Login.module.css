@@ -45,13 +45,13 @@
   backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  padding: 64px;
+  border-radius: var(--radius-2xl);
+  padding: 56px;
   z-index: 10;
-  box-shadow: var(--shadow-glass);
+  box-shadow: var(--shadow-xl);
   transform-style: preserve-3d;
-  transition: transform 0.6s var(--ease-out), opacity 0.6s ease;
-  animation: cardEntry 1.2s var(--ease-out);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+  animation: cardEntry 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
@@ -95,20 +95,19 @@
 }
 
 .logoIcon {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   background: linear-gradient(135deg, var(--beacon-brand) 0%, #949cf7 100%);
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36px;
-  font-weight: 1000;
+  font-size: 32px;
+  font-weight: 900;
   color: white;
-  margin: 0 auto 32px;
-  box-shadow: 0 12px 32px rgba(114, 137, 218, 0.4);
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 24px rgba(114, 137, 218, 0.25);
   position: relative;
-  animation: logoFloat 4s infinite ease-in-out;
 }
 
 @keyframes logoFloat {
@@ -155,11 +154,11 @@
 }
 
 .title {
-  font-size: 36px;
-  font-weight: 1000;
+  font-size: 32px;
+  font-weight: 800;
   margin-bottom: 12px;
-  letter-spacing: -0.04em;
-  background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
+  letter-spacing: -0.02em;
+  background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -220,18 +219,18 @@
   padding: 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   color: var(--text-secondary);
   font-size: 14px;
-  font-weight: 700;
-  transition: all 0.3s var(--ease-out);
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .guestBtn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
   color: var(--text-primary);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .divider {

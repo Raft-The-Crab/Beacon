@@ -1,13 +1,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type Theme = 'classic' | 'glass' | 'light' | 'oled' | 'neon' | 'midnight' | 'auto'
+export type Theme = 'classic' | 'dark' | 'glass' | 'light' | 'oled' | 'neon' | 'midnight' | 'auto'
 export type MessageDensity = 'cozy' | 'compact' | 'ultra-compact'
 
 interface UIState {
   currentChannelId: string | null
   isSidebarCollapsed: boolean
   theme: Theme
+  glassEnabled: boolean
   messageDensity: MessageDensity
   showUserSettings: boolean
   selectedUserId: string | null
@@ -42,10 +43,12 @@ interface UIState {
 
   // Keyboard shortcuts panel
   showKeyboardShortcuts: boolean
+  showQuickSwitcher: boolean
 
   setCurrentChannel: (channelId: string | null) => void
   toggleSidebar: () => void
   setTheme: (theme: Theme) => void
+  setGlassEnabled: (enabled: boolean) => void
   setMessageDensity: (density: MessageDensity) => void
   setShowUserSettings: (show: boolean) => void
   setSelectedUser: (userId: string | null) => void
@@ -74,6 +77,7 @@ interface UIState {
   toggleMemberList: () => void
   setShowMemberList: (show: boolean) => void
   setShowKeyboardShortcuts: (show: boolean) => void
+  setShowQuickSwitcher: (show: boolean) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -81,7 +85,8 @@ export const useUIStore = create<UIState>()(
     (set, _get) => ({
       currentChannelId: null,
       isSidebarCollapsed: false,
-      theme: 'classic',
+      theme: 'dark',
+      glassEnabled: true,
       messageDensity: 'cozy',
       showUserSettings: false,
       selectedUserId: null,
@@ -111,6 +116,7 @@ export const useUIStore = create<UIState>()(
       pinnedMessagesPanelOpen: false,
       showMemberList: true,
       showKeyboardShortcuts: false,
+      showQuickSwitcher: false,
 
       setCurrentChannel: (channelId) =>
         set({ currentChannelId: channelId }),
@@ -129,6 +135,16 @@ export const useUIStore = create<UIState>()(
         }
         // Persist
         localStorage.setItem('beacon:theme', theme)
+      },
+
+      setGlassEnabled: (enabled) => {
+        set({ glassEnabled: enabled })
+        if (enabled) {
+          document.body.classList.add('glass-theme-active')
+        } else {
+          document.body.classList.remove('glass-theme-active')
+        }
+        localStorage.setItem('beacon:glass_enabled', enabled ? 'true' : 'false')
       },
 
       setMessageDensity: (density) => {
@@ -217,9 +233,11 @@ export const useUIStore = create<UIState>()(
       toggleMemberList: () => set((state) => ({ showMemberList: !state.showMemberList })),
       setShowMemberList: (show) => set({ showMemberList: show }),
       setShowKeyboardShortcuts: (show) => set({ showKeyboardShortcuts: show }),
+      setShowQuickSwitcher: (show) => set({ showQuickSwitcher: show }),
 
       syncTheme: () => {
         const stored = localStorage.getItem('beacon:theme') as Theme | null
+        const glass = localStorage.getItem('beacon:glass_enabled') !== 'false'
         const density = localStorage.getItem('beacon:density') as MessageDensity | null
         const accent = localStorage.getItem('beacon:custom_accent')
         const bg = localStorage.getItem('beacon:custom_bg')
@@ -230,6 +248,14 @@ export const useUIStore = create<UIState>()(
             document.documentElement.setAttribute('data-theme', stored)
           }
         }
+
+        set({ glassEnabled: glass })
+        if (glass) {
+          document.body.classList.add('glass-theme-active')
+        } else {
+          document.body.classList.remove('glass-theme-active')
+        }
+
         if (density) {
           set({ messageDensity: density })
           document.documentElement.setAttribute('data-density', density)
@@ -246,6 +272,7 @@ export const useUIStore = create<UIState>()(
       name: 'beacon:ui',
       partialize: (state) => ({
         theme: state.theme,
+        glassEnabled: state.glassEnabled,
         messageDensity: state.messageDensity,
         developerMode: state.developerMode,
         showMemberList: state.showMemberList,
@@ -256,6 +283,9 @@ export const useUIStore = create<UIState>()(
         // Apply theme + density on rehydrate
         if (state.theme && state.theme !== 'classic' && state.theme !== 'auto') {
           document.documentElement.setAttribute('data-theme', state.theme)
+        }
+        if (state.glassEnabled) {
+          document.body.classList.add('glass-theme-active')
         }
         if (state.messageDensity) {
           document.documentElement.setAttribute('data-density', state.messageDensity)

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book, AlignLeft, Layers, Zap } from 'lucide-react'
-import { useUIStore, type Theme, type MessageDensity } from '../../stores/useUIStore'
+import { useUIStore } from '../../stores/useUIStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useServerStore } from '../../stores/useServerStore'
 import { useNavigate } from 'react-router-dom'

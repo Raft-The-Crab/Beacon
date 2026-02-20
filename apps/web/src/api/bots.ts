@@ -26,45 +26,59 @@ export const botsApi = {
             const error = await res.json()
             throw new Error(error.error || 'Failed to create bot')
         }
-        return res.json()
+        return res.json() as Promise<Bot>
+    },
+
+    get: async (applicationId: string) => {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${applicationId}/bot`, {
+            headers: getHeaders()
+        })
+        if (!res.ok) throw new Error('Failed to fetch bot details')
+        return res.json() as Promise<Bot>
     },
 
     list: async (applicationId: string) => {
-        // Note: The backend might not have a dedicated list endpoint if it's 1:1.
-        // We fetch via application details.
         const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${applicationId}`, {
             headers: getHeaders()
         })
-        if (!res.ok) throw new Error('Failed to fetch bots')
+        if (!res.ok) throw new Error('Failed to fetch application bots')
         const app = await res.json()
-        // The backend returns the app object which contains the bot relation
         return app.bot ? [app.bot] : []
     },
 
-    regenerateToken: async (_botId: string) => {
-        // We'll throw an error for now as we need to know the structure or pass appId
-        // But wait, the DeveloperPortal passes appId to handleCreateBot which calls /api/applications/:appId/bot
-        // So 'regenerate' is effectively 'create' (upsert) on the backend for 1:1 bots.
-        // The UI in BotConsole calls this with botId. 
-        // We should probably change BotConsole to pass appId and use create() for regeneration if it's 1:1.
-        // OR we implement a explicit reset endpoint.
-        // Let's assume there's a specific endpoint or we use the create one using the known structure.
-        // Since I don't have the appId easily in regenerateToken(botId), strict 1:1 implies I can't easily do it without lookup.
-        // I will throw for now, and update BotConsole to use create() for reset.
-        throw new Error('Use create/reset in UI for now')
+    update: async (applicationId: string, data: Partial<{ name: string; avatar: string }>) => {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${applicationId}/bot`, {
+            method: 'PATCH',
+            headers: getHeaders(),
+            body: JSON.stringify(data)
+        })
+        if (!res.ok) {
+            const error = await res.json()
+            throw new Error(error.error || 'Failed to update bot')
+        }
+        return res.json() as Promise<Bot>
     },
 
-    delete: async (botId: string) => {
-        // DELETE /api/applications/:appId/bot would be better for 1:1
-        // But let's try a direct bot delete if it exists
-        // Actually, looking at the backend routes list in api.ts, there isn't a clear DELETE /bots/:id
-        // There is /api/applications/:id
-        // I'll assume standard REST: DELETE /api/bots/:id might not exist.
-        // I will disable delete for now or try.
-        const res = await fetch(`${API_CONFIG.BASE_URL}/api/bots/${botId}`, {
+    regenerateToken: async (applicationId: string) => {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${applicationId}/bot/token`, {
+            method: 'POST',
+            headers: getHeaders()
+        })
+        if (!res.ok) {
+            const error = await res.json()
+            throw new Error(error.error || 'Failed to regenerate token')
+        }
+        return res.json() as Promise<{ token: string }>
+    },
+
+    delete: async (applicationId: string) => {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${applicationId}/bot`, {
             method: 'DELETE',
             headers: getHeaders()
         })
-        if (!res.ok) throw new Error('Failed to delete bot')
+        if (!res.ok) {
+            const error = await res.json()
+            throw new Error(error.error || 'Failed to delete bot')
+        }
     }
 }

@@ -38,8 +38,8 @@ function MemberRow({ member, isOwner }: { member: any; isOwner: boolean }) {
         )}
       </div>
       <div className={styles.badges}>
-        {isOwner && <Crown size={13} className={styles.ownerBadge} title="Server Owner" />}
-        {!isOwner && member.roles?.length > 0 && <Shield size={13} className={styles.roleBadge} title={member.roles[0]?.name} />}
+        {isOwner && <div title="Server Owner"><Crown size={13} className={styles.ownerBadge} /></div>}
+        {!isOwner && (member.roles?.length ?? 0) > 0 && <Shield size={13} className={styles.roleBadge} />}
       </div>
     </button>
   )

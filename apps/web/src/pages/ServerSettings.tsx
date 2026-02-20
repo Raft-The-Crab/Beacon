@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Upload, Trash2, Plus, Shield, Users, Globe, Bell, Ban, Lock, BarChart2, Webhook, FileText } from 'lucide-react'
+import { X, Upload, Trash2, Plus, Shield, Users, Globe, Ban, Lock, BarChart2, Webhook, FileText } from 'lucide-react'
 import { useUIStore } from '../stores/useUIStore'
 import { useServerStore } from '../stores/useServerStore'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -21,15 +21,15 @@ type TabId =
   | 'insights'
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode; group: string }[] = [
-  { id: 'overview',    label: 'Overview',    icon: <Globe size={15} />,     group: 'Settings' },
-  { id: 'roles',       label: 'Roles',       icon: <Shield size={15} />,    group: 'Settings' },
-  { id: 'members',     label: 'Members',     icon: <Users size={15} />,     group: 'Settings' },
-  { id: 'moderation',  label: 'Moderation',  icon: <Ban size={15} />,       group: 'Community' },
-  { id: 'invites',     label: 'Invites',     icon: <Plus size={15} />,      group: 'Community' },
-  { id: 'bans',        label: 'Bans',        icon: <Lock size={15} />,      group: 'Community' },
-  { id: 'webhooks',    label: 'Webhooks',    icon: <Webhook size={15} />,   group: 'Integrations' },
-  { id: 'auditlog',    label: 'Audit Log',   icon: <FileText size={15} />,  group: 'Integrations' },
-  { id: 'insights',    label: 'Insights',    icon: <BarChart2 size={15} />, group: 'Integrations' },
+  { id: 'overview', label: 'Overview', icon: <Globe size={15} />, group: 'Settings' },
+  { id: 'roles', label: 'Roles', icon: <Shield size={15} />, group: 'Settings' },
+  { id: 'members', label: 'Members', icon: <Users size={15} />, group: 'Settings' },
+  { id: 'moderation', label: 'Moderation', icon: <Ban size={15} />, group: 'Community' },
+  { id: 'invites', label: 'Invites', icon: <Plus size={15} />, group: 'Community' },
+  { id: 'bans', label: 'Bans', icon: <Lock size={15} />, group: 'Community' },
+  { id: 'webhooks', label: 'Webhooks', icon: <Webhook size={15} />, group: 'Integrations' },
+  { id: 'auditlog', label: 'Audit Log', icon: <FileText size={15} />, group: 'Integrations' },
+  { id: 'insights', label: 'Insights', icon: <BarChart2 size={15} />, group: 'Integrations' },
 ]
 
 export function ServerSettings() {

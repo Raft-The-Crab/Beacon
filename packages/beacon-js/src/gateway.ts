@@ -218,7 +218,7 @@ export class Gateway extends EventEmitter {
     this.send({ op: OPCodes.HEARTBEAT, d: this.sequence });
   }
 
-  private send(data: object) {
+  public send(data: object) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(data));
     }

@@ -57,6 +57,10 @@ export type {
   InteractionOption,
 } from './structures/Message';
 
+// Utility Managers
+export { VoiceManager } from './managers/VoiceManager';
+export { E2EEContext } from './structures/E2EEContext';
+
 // Utilities
 export { Permissions, PermissionFlags, type PermissionFlagValues } from './utils/Permissions';
 export { BeaconEventEmitter, type BeaconEvents } from './events/EventEmitter';

@@ -1,11 +1,26 @@
 import React, { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { Login } from './pages/Login'
-import { MessagingHome } from './pages/MessagingHome'
-import { DeveloperPortal } from './pages/DeveloperPortal'
-import { UserProfile } from './pages/UserProfile'
-import { ServerSettings } from './pages/ServerSettings'
-import { VoiceChannel } from './pages/VoiceChannel'
+import {
+  Login,
+  MessagingHome,
+  DeveloperPortal,
+  LandingPage,
+  UserProfile,
+  ServerSettings,
+  VoiceChannel,
+  AboutUs,
+  Contact,
+  Terms,
+  Privacy,
+  TOS,
+  DocsHome,
+  GettingStarted,
+  SDKTutorial,
+  APIReference,
+  GatewayDocs,
+  Mission,
+  BeaconPlusStore
+} from './pages'
 import { MainLayout } from './components/layout/MainLayout'
 import { ToastContainer, useToast } from './components/ui'
 import { wsClient } from './services/websocket'
@@ -15,26 +30,19 @@ import { useServerStore } from './stores/useServerStore'
 import { useUserListStore } from './stores/useUserListStore'
 import { useDMStore } from './stores/useDMStore'
 import { useAuthStore } from './stores/useAuthStore'
-// Removed useUIStore import from here if only syncTheme was used
+import { useBeacoinStore } from './stores/useBeacoinStore'
 import { HelmetProvider } from 'react-helmet-async'
-import { Terms } from './pages/legal/Terms'
-import { Privacy } from './pages/legal/Privacy'
-import { TOS } from './pages/legal/TOS'
-import { AboutUs } from './pages/AboutUs'
-import { Contact } from './pages/Contact'
-import { DocsHome } from './pages/docs/DocsHome'
-import { GettingStarted } from './pages/docs/GettingStarted'
-import { SDKTutorial } from './pages/docs/SDKTutorial'
-import { APIReference } from './pages/docs/APIReference'
-import { GatewayDocs } from './pages/docs/GatewayDocs'
-import { Mission } from './pages/docs/Mission'
 import { ModalManager } from './components/modals'
 import { KeyboardShortcutsPanel } from './components/ui/KeyboardShortcutsPanel'
 import { isAndroid } from './utils/platform'
-import { ThemeProvider } from './components/ThemeToggle/ThemeContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { ThemeSynchronizer } from './components/ThemeToggle/ThemeSynchronizer'
 import { ContextMenuProvider } from './components/ui/ContextMenu'
+import { VersionCheck } from './components/utils/VersionCheck'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import './styles/globals.css'
+import './styles/themes.css'
+import './styles/ui-system.css'
 
 function App() {
   const { toasts, remove } = useToast()
@@ -55,6 +63,7 @@ function App() {
   const fetchGuilds = useServerStore(s => s.fetchGuilds)
   const fetchFriends = useUserListStore(s => s.fetchFriends)
   const fetchChannels = useDMStore(s => s.fetchChannels)
+  const fetchWallet = useBeacoinStore(s => s.fetchWallet)
   const user = useAuthStore(s => s.user)
 
   // Initial Data Fetch
@@ -63,8 +72,9 @@ function App() {
       fetchGuilds()
       fetchFriends()
       fetchChannels()
+      fetchWallet()
     }
-  }, [user, fetchGuilds, fetchFriends, fetchChannels])
+  }, [user, fetchGuilds, fetchFriends, fetchChannels, fetchWallet])
 
   // Global WS event handler to sync incoming events into local stores
   React.useEffect(() => {
@@ -112,13 +122,15 @@ function App() {
   return (
     <BrowserRouter>
       <HelmetProvider>
-        <ContextMenuProvider>
-          <ModalManager>
-            <ThemeProvider>
-              <ThemeSynchronizer />
-              <Routes>
-                {/* Entry: always go to login first */}
-                <Route path="/" element={<Navigate to="/login" replace />} />
+        <ErrorBoundary>
+          <ContextMenuProvider>
+            <ModalManager>
+              <ThemeProvider>
+                <ThemeSynchronizer />
+                <Routes>
+                {/* Entry Point */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/landing" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
 
                 {/* Legal & About (Windows or Non-Android only) */}
@@ -153,6 +165,8 @@ function App() {
                 <Route path="/user/:userId" element={<UserProfile />} />
                 <Route path="/server/:serverId/settings" element={<ServerSettings />} />
                 <Route path="/voice" element={<VoiceChannel />} />
+                <Route path="/plus" element={<BeaconPlusStore />} />
+                <Route path="/shop" element={<BeaconPlusStore />} />
 
                 {/* Redirect everything else to Messaging Home */}
                 <Route path="*" element={<Navigate to="/channels/@me" replace />} />
@@ -160,10 +174,12 @@ function App() {
             </ThemeProvider>
             <ToastContainer toasts={toasts} onRemove={remove} />
             <KeyboardShortcutsPanel />
+            <VersionCheck />
           </ModalManager>
         </ContextMenuProvider>
-      </HelmetProvider>
-    </BrowserRouter>
+      </ErrorBoundary>
+    </HelmetProvider>
+  </BrowserRouter>
   )
 }
 

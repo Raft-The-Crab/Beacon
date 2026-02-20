@@ -1,16 +1,21 @@
-import { WebSocketServer, WebSocket } from 'ws'
+import { WebSocketServer, WebSocket as WSWebSocket } from 'ws'
 import { v4 as uuidv4 } from 'uuid'
 import { IncomingMessage } from 'http'
 import { prisma, redis, MessageModel, ModerationReportModel } from '../db'
 import { AuthService } from './auth'
 import { moderationService } from './moderation'
 import { SovereigntyService } from './sovereignty'
-import * as membership from './membership'
+import { getGuildMembers, addGuildMember } from './membership'
+import { PermissionService } from './permissions'
+import { sanitizeMessage } from '../utils/sanitize'
+import { wsRateLimit } from '../middleware/security'
+import { WSOpCode, WSEventType, WSPayload, PermissionBit } from '@beacon/types'
 
-export interface WebSocketClient extends WebSocket {
+export type WebSocketClient = WSWebSocket & {
   id: string
   isAlive: boolean
   userId?: string
+  lastMessageTime?: number
 }
 
 export enum Permissions {
@@ -19,14 +24,16 @@ export enum Permissions {
 }
 
 export async function hasPermission(userId: string, guildId: string, permission: Permissions): Promise<boolean> {
-  // Placeholder for real permission logic
-  console.log(`[Permissions] Checking ${permission} for ${userId} in ${guildId}`);
-  return true
+  const permBit = permission === Permissions.ADMINISTRATOR 
+    ? PermissionBit.ADMINISTRATOR 
+    : PermissionBit.MANAGE_MESSAGES
+  
+  return PermissionService.hasPermission(userId, guildId, permBit)
 }
 
 export async function membershipGetGuildMembers(guildId: string): Promise<string[]> {
   // 1. Try Redis cache first
-  const cachedMembers = await membership.getGuildMembers(guildId)
+  const cachedMembers = await getGuildMembers(guildId)
   if (cachedMembers) return cachedMembers
 
   // 2. Fallback to Prisma
@@ -35,11 +42,10 @@ export async function membershipGetGuildMembers(guildId: string): Promise<string
     select: { userId: true }
   })
 
-  const memberIds = members.map((m: { userId: string }) => m.userId)
-
   // 3. Update cache for future requests
+  const memberIds = members.map((m: { userId: string }) => m.userId)
   for (const id of memberIds) {
-    await membership.addGuildMember(guildId, id)
+    await addGuildMember(guildId, id)
   }
 
   return memberIds
@@ -57,18 +63,8 @@ export class GatewayService {
   private setup() {
     // Subscribe to Redis pubsub channel for cross-instance events
     try {
-      redis.subscribe('gateway:events').then(() => {
-        console.log('Subscribed to Redis channel: gateway:events')
-      }).catch((err) => console.warn('Redis subscribe failed', err))
-
-      redis.on('message', (channel: string, message: string) => {
-        if (channel !== 'gateway:events') return
-        try {
-          const evt = JSON.parse(message)
-          this.handlePubSubEvent(evt)
-        } catch (err) {
-          console.warn('Failed to parse pubsub message', err)
-        }
+      redis.subscribe('gateway:events', (message: any) => {
+        if (message) this.handlePubSubEvent(message)
       })
     } catch (err) {
       console.warn('Failed to setup Redis pubsub', err)
@@ -85,7 +81,7 @@ export class GatewayService {
         ws.isAlive = true
       })
 
-      ws.on('message', async (data) => {
+      ws.on('message', async (data: any) => {
         try {
           const message = JSON.parse(data.toString())
           await this.handleMessage(ws, message)
@@ -100,7 +96,7 @@ export class GatewayService {
 
       // Send Hello Opcode
       this.send(ws, {
-        op: 10, // HELLO
+        op: WSOpCode.HELLO,
         d: {
           heartbeat_interval: 45000
         }
@@ -109,7 +105,7 @@ export class GatewayService {
 
     // Heartbeat interval
     setInterval(() => {
-      this.wss.clients.forEach((ws: WebSocket) => {
+      this.wss.clients.forEach((ws: any) => {
         const client = ws as WebSocketClient
         if (!client.isAlive) return client.terminate()
 
@@ -119,21 +115,34 @@ export class GatewayService {
     }, 30000)
   }
 
-  private async handleMessage(ws: WebSocketClient, message: { op: number; d: any; t?: string }) {
+  private async handleMessage(ws: WebSocketClient, message: WSPayload) {
+    // Rate limiting
+    if (ws.userId && message.t) {
+      const allowed = await wsRateLimit(ws.userId, message.t)
+      if (!allowed) {
+        this.send(ws, { 
+          op: WSOpCode.DISPATCH, 
+          t: 'ERROR' as WSEventType, 
+          d: { code: 4008, message: 'Rate limit exceeded' } 
+        })
+        return
+      }
+    }
+
     switch (message.op) {
-      case 1: // HEARTBEAT
-        this.send(ws, { op: 11 }) // HEARTBEAT_ACK
+      case WSOpCode.HEARTBEAT:
+        this.send(ws, { op: WSOpCode.HEARTBEAT_ACK })
         break
 
-      case 2: // IDENTIFY
+      case WSOpCode.IDENTIFY:
         await this.handleIdentify(ws, message.d)
         break
 
-      case 4: // VOICE_STATE_UPDATE
+      case WSOpCode.VOICE_STATE_UPDATE:
         await this.handleVoiceStateUpdate(ws, message.d)
         break
 
-      case 0: // DISPATCH-like actions from client (MESSAGE_CREATE, MESSAGE_UPDATE, etc.)
+      case WSOpCode.DISPATCH:
         if (!message.t) return
         try {
           switch (message.t) {
@@ -160,10 +169,13 @@ export class GatewayService {
           }
         } catch (err) {
           console.error('Error handling client event', err)
+          this.send(ws, { 
+            op: WSOpCode.DISPATCH, 
+            t: 'ERROR' as WSEventType, 
+            d: { code: 5000, message: 'Internal error' } 
+          })
         }
         break
-
-      // Add other opcodes here
     }
   }
 
@@ -241,24 +253,30 @@ export class GatewayService {
     return await membershipGetGuildMembers(guildId)
   }
 
-  // --- Message handlers (simple implementations using Mongo)
   private async handleCreateMessage(ws: WebSocketClient, data: any) {
     try {
-      const { channelId, content, replyTo } = data
+      const { channelId, content } = data
       const authorId = ws.userId
       if (!authorId) {
-        this.send(ws, { op: 0, t: 'ERROR', d: { code: 4001, message: 'Not authenticated' } });
-        return;
+        this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 4001, message: 'Not authenticated' } })
+        return
       }
 
-      // --- Intelligent AI Moderation ---
-      const { result: moderationResult } = await moderationService.checkMessage(content, authorId, channelId);
+      // Sanitize content
+      const sanitizedContent = sanitizeMessage(content)
+      if (!sanitizedContent) {
+        this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 4002, message: 'Invalid message content' } })
+        return
+      }
+
+      // AI Moderation
+      const { result: moderationResult } = await moderationService.checkMessage(sanitizedContent, authorId, channelId)
 
       if (!moderationResult.approved) {
-        console.warn(`[AI Moderation] Prohibited message from ${authorId} in ${channelId}: "${content.substring(0, 50)}..." - Flags: ${moderationResult.flags?.join(', ')}`);
+        console.warn(`[AI Moderation] Prohibited message from ${authorId} in ${channelId}: "${sanitizedContent.substring(0, 50)}..." - Flags: ${moderationResult.flags?.join(', ')}`)
         this.send(ws, {
-          op: 0,
-          t: 'MESSAGE_REJECTED',
+          op: WSOpCode.DISPATCH,
+          t: 'MESSAGE_REJECTED' as WSEventType,
           d: {
             code: 4005,
             message: 'Your message was rejected by the moderation system.',
@@ -266,48 +284,44 @@ export class GatewayService {
             score: moderationResult.score,
             status: moderationResult.status,
           },
-        });
+        })
 
-        // Automatically create a Moderation Report
         await (ModerationReportModel as any).create({
           id: `report_${Date.now()}`,
           channel_id: channelId,
           guild_id: data.guildId || null,
           reporter_id: 'system',
           target_user_id: authorId,
-          content: content,
+          content: sanitizedContent,
           reason: moderationResult.reason,
           flags: moderationResult.flags,
           score: moderationResult.score,
           status: 'pending'
-        });
+        })
 
-        return; // Stop processing the message
+        return
       }
 
       if (moderationResult.status === 'Warning') {
-        console.log(`[AI Moderation] Warning message from ${authorId} in ${channelId}: "${content.substring(0, 50)}..." - Flags: ${moderationResult.flags.join(', ')}`);
-        // Optionally, add moderation flags to the message object or log for human review
+        const flags = moderationResult.flags || []
+        console.log(`[AI Moderation] Warning message from ${authorId} in ${channelId}: "${sanitizedContent.substring(0, 50)}..." - Flags: ${flags.join(', ')}`)
       }
 
-      console.log(`[AI Moderation] Message from ${authorId} in ${channelId}: "${content.substring(0, 50)}..." - Status: ${moderationResult.status}`);
-      // --- End AI Moderation ---
+      console.log(`[AI Moderation] Message from ${authorId} in ${channelId}: "${sanitizedContent.substring(0, 50)}..." - Status: ${moderationResult.status}`)
 
-      // --- Intelligent Bot Interaction ---
-      // If the message is safe, check if any bots want to respond
+      // Bot Interaction
       if (moderationResult.status !== 'Rejected') {
         const botContext = {
           userId: authorId,
           channelId: channelId,
           guildId: data.guildId || null,
-          history: [] // We could fetch recent history from Mongo for better NLU
-        };
+          history: []
+        }
 
-        const { botFramework } = await import('../bots/index');
-        const botResponse = await botFramework.handleMessage(content, botContext);
+        const { botFramework } = await import('../bots/index')
+        const botResponse = await botFramework.handleMessage(sanitizedContent, botContext)
 
         if (botResponse) {
-          // If a bot responds, create and broadcast that message too
           const botMsg = await (MessageModel as any).create({
             id: `bot_${Date.now()}`,
             channel_id: channelId,
@@ -317,56 +331,50 @@ export class GatewayService {
             timestamp: new Date(),
             metadata: {
               ...botResponse.metadata,
-              actions: botResponse.actions // Pass bot actions to the client
+              actions: botResponse.actions
             }
-          });
+          })
 
-          // --- Zero-Data Optimization (Sovereignty) ---
-          const isZeroData = process.env.SOVEREIGNTY_LEVEL === '3';
-          const optimizedMsg = await SovereigntyService.optimizePayload(botMsg, isZeroData);
+          const isZeroData = process.env.SOVEREIGNTY_LEVEL === '3'
+          const optimizedMsg = await SovereigntyService.optimizePayload(botMsg, isZeroData)
 
-          await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_CREATE', d: optimizedMsg }));
+          await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_CREATE', d: optimizedMsg }))
         }
       }
-      // --- End Bot Interaction ---
 
-      // Create document in Mongo
+      // Create message
       const msg = await (MessageModel as any).create({
         id: Date.now().toString(),
         channel_id: channelId,
         guild_id: data.guildId || null,
         author: { id: authorId },
-        content,
+        content: sanitizedContent,
         timestamp: new Date(),
-        // Potentially save moderation flags here if status is 'Warning'
         moderationFlags: moderationResult.flags,
         moderationStatus: moderationResult.status,
         moderationScore: moderationResult.score,
-      });
+      })
 
-      // Broadcast DISPATCH to guild members if possible
       const guildId = msg.guild_id || data.guildId
-      // Publish message create to Redis so all instances can handle broadcasting
       try {
         await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_CREATE', d: msg }))
       } catch (err) {
         console.warn('Failed to publish MESSAGE_CREATE to redis', err)
-        // Fallback to local broadcasting
         if (guildId) {
           const members = await this.getGuildMembers(guildId)
-          if (members) this.broadcast(members, { op: 0, t: 'MESSAGE_CREATE', d: msg })
-          else this.broadcastAll({ op: 0, t: 'MESSAGE_CREATE', d: msg })
+          if (members) this.broadcast(members, { op: WSOpCode.DISPATCH, t: 'MESSAGE_CREATE' as WSEventType, d: msg })
+          else this.broadcastAll({ op: WSOpCode.DISPATCH, t: 'MESSAGE_CREATE' as WSEventType, d: msg })
         } else {
-          this.broadcastAll({ op: 0, t: 'MESSAGE_CREATE', d: msg })
+          this.broadcastAll({ op: WSOpCode.DISPATCH, t: 'MESSAGE_CREATE' as WSEventType, d: msg })
         }
       }
     } catch (err) {
       console.error('handleCreateMessage error', err)
-      this.send(ws, { op: 0, t: 'ERROR', d: { code: 5000, message: 'Internal server error during message processing.' } });
+      this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 5000, message: 'Internal server error during message processing.' } })
     }
   }
 
-  private async handleUpdateMessage(ws: WebSocketClient, data: any) {
+  private async handleUpdateMessage(_ws: WebSocketClient, data: any) {
     try {
       const { channelId, messageId, content } = data
       const { MessageModel } = await import('../db')
@@ -440,7 +448,7 @@ export class GatewayService {
     }
   }
 
-  private async handlePinMessage(ws: WebSocketClient, data: any) {
+  private async handlePinMessage(_ws: WebSocketClient, data: any) {
     try {
       const { channelId, messageId } = data
       const { MessageModel } = await import('../db')
@@ -486,25 +494,30 @@ export class GatewayService {
     try {
       const { channelId, messageId, emoji, remove } = data
       const { MessageModel } = await import('../db')
-      const msg = await MessageModel.findOne({ id: messageId, channel_id: channelId })
-      if (!msg) return
+      const msgDoc = await MessageModel.findOne({ id: messageId, channel_id: channelId })
+      if (!msgDoc) return
+      const msg = msgDoc as any
+
+      const userId = ws.userId
+      if (!userId) return
 
       const reactions = msg.reactions || []
       const idx = reactions.findIndex((r: any) => (r.emoji && ((r.emoji.name && r.emoji.name === emoji) || r.emoji === emoji)))
       if (idx === -1 && !remove) {
         // add new reaction with users array
-        reactions.push({ emoji: { name: emoji }, users: [ws.userId] })
+        reactions.push({ emoji: { name: emoji }, users: [userId] })
       } else if (idx !== -1) {
-        const users: string[] = reactions[idx].users || []
+        const reaction: any = reactions[idx]
+        const users: string[] = reaction.users || []
         if (remove) {
-          const newUsers = users.filter((u) => u !== ws.userId)
+          const newUsers = users.filter((u) => u !== userId)
           if (newUsers.length === 0) {
             reactions.splice(idx, 1)
           } else {
             reactions[idx].users = newUsers
           }
         } else {
-          if (!users.includes(ws.userId!)) users.push(ws.userId!)
+          if (!users.includes(userId)) users.push(userId)
           reactions[idx].users = users
         }
       }
@@ -518,7 +531,8 @@ export class GatewayService {
       } catch (err) {
         console.warn('Failed to publish MESSAGE_REACTION to redis', err)
         // Fallback to local broadcast
-        const guildId = msg.guild_id || data.guildId
+        // Fallback to local broadcast
+        const guildId = msg.guild_id
         const members = guildId ? await this.getGuildMembers(guildId) : null
         if (members) this.broadcast(members, { op: 0, t: 'MESSAGE_REACTION', d: { channelId, messageId, reactions: msg.reactions } })
         else this.broadcastAll({ op: 0, t: 'MESSAGE_REACTION', d: { channelId, messageId, reactions: msg.reactions } })
@@ -567,8 +581,8 @@ export class GatewayService {
     }
 
     this.send(ws, {
-      op: 0, // DISPATCH
-      t: 'READY',
+      op: WSOpCode.DISPATCH,
+      t: 'READY' as WSEventType,
       d: {
         v: 1,
         user: { id: userId },

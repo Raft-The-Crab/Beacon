@@ -3,15 +3,18 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-weight: 700;
-  border-radius: 8px;
+  font-weight: 800;
+  border-radius: var(--radius-full);
+  /* Maximum Softness */
   white-space: nowrap;
   transition: all var(--transition-normal);
   border: 1px solid rgba(255, 255, 255, 0.05);
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 /* Variants */

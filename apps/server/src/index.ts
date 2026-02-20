@@ -6,6 +6,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import { connectMongo, prisma, redis } from './db'
 import { GatewayService } from './services/gateway'
+import notesRouter from './api/notes'
 import authRouter from './api/auth'
 import guildRouter from './api/guilds'
 import channelRouter from './api/channels'
@@ -17,12 +18,21 @@ import dmRouter from './api/directMessages'
 import webhookRouter from './api/webhooks'
 import auditLogRouter from './api/auditLogs'
 import folderRouter from './api/folders'
+import beacoinRouter from './api/beacoin'
+import messagesRouter from './api/messages'
+import analyticsRouter from './api/analytics'
 
 import helmet from 'helmet'
 import moderationRouter from './api/moderation'
-import { ipBlockMiddleware, generalLimiter, authLimiter, sanitizeHeaders } from './middleware/security'
+import { ipBlockMiddleware, generalLimiter, authLimiter, sanitizeHeaders, csrfProtection, generateCSRFToken } from './middleware/security'
+import { responseWrapper } from './middleware/responseWrapper'
+import { globalErrorHandler, notFoundHandler } from './middleware/error'
+import { requestTimer } from './middleware/performance'
+import { sanitizeBody } from './utils/sanitize'
 
 const app = express()
+
+app.use(requestTimer)
 
 // Security Hardening — Helmet with CSP
 app.use(helmet({
@@ -45,11 +55,17 @@ app.use(helmet({
 // Strip X-Powered-By
 app.use(sanitizeHeaders)
 
+// Input sanitization
+app.use(sanitizeBody)
+
 // IP blocklist check (async, fails open if Redis down)
 app.use(ipBlockMiddleware)
 
 // General rate limiting
 app.use('/api/', generalLimiter)
+
+// Standard Response Wrapper
+app.use(responseWrapper)
 
 const server = createServer(app)
 const wss = new WebSocketServer({ server, path: '/gateway' })
@@ -65,6 +81,9 @@ app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 app.use(cookieParser())
 
+// CSRF Protection (skip for GET requests)
+app.use(csrfProtection)
+
 // Trust proxy for secure cookies and rate limiting (required for Railway/Heroku)
 app.set('trust proxy', 1)
 
@@ -78,9 +97,14 @@ app.use((req: express.Request, _res: express.Response, next: express.NextFunctio
 app.get('/health', async (_req: express.Request, res: express.Response) => {
   try {
     // Health checks for all services
+    const postgresStart = Date.now()
     const postgresConnected = !!prisma
+    let postgresLatency = -1
     try {
-      if (prisma) await prisma.$queryRaw`SELECT 1`
+      if (prisma) {
+        await prisma.$queryRaw`SELECT 1`
+        postgresLatency = Date.now() - postgresStart
+      }
     } catch (e) {
       console.warn('Postgres health check failed:', e)
     }
@@ -92,6 +116,7 @@ app.get('/health', async (_req: express.Request, res: express.Response) => {
       timestamp: new Date().toISOString(),
       services: {
         postgres: postgresConnected ? 'connected' : 'unavailable',
+        postgresLatency: postgresLatency > -1 ? `${postgresLatency}ms` : 'N/A',
         mongodb: 'connected',
         redis: redisStatus ? 'connected' : 'disconnected',
       },
@@ -106,6 +131,7 @@ app.get('/health', async (_req: express.Request, res: express.Response) => {
 })
 
 app.use('/api/auth', authLimiter, authRouter)
+app.use('/api/notes', notesRouter)
 app.use('/api/guilds', guildRouter)
 app.use('/api/channels', channelRouter)
 app.use('/api/users', userRouter)
@@ -117,31 +143,38 @@ app.use('/api/webhooks', webhookRouter)
 app.use('/api/audit-logs', auditLogRouter)
 app.use('/api/folders', folderRouter)
 app.use('/api/moderation', moderationRouter)
+app.use('/api/messages', messagesRouter)
+app.use('/api/analytics', analyticsRouter)
+app.use('/api', beacoinRouter)
+
+// CSRF token endpoint
+app.get('/api/csrf-token', (_req, res) => {
+  const token = generateCSRFToken()
+  res.cookie('csrf_token', token, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 3600000 // 1 hour
+  })
+  res.json({ token })
+})
+
+// Version endpoint for auto-updates
+app.get('/api/version', (_req, res) => {
+  res.json({ version: '2.4.0' })
+})
 
 // Initialize Gateway Service
 const gateway = new GatewayService(wss)
-
-// Initialize SMS Bridge (Claw Cloud OS optimization)
-import { SMSBridge } from './services/smsBridge'
-SMSBridge.init().catch(err => console.error('[SMS Bridge] Failed to initialize', err))
 
 // Export app/server for tests
 export { app, server, wss, gateway }
 
 // 404 handler
-app.use((_req: express.Request, res: express.Response) => {
-  res.status(404).json({ error: 'Not found' })
-})
+app.use(notFoundHandler)
 
 // Global error handler
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Server Error:', err)
-  res.status(500).json({
-    error: process.env.NODE_ENV === 'production'
-      ? 'Internal server error'
-      : err.message,
-  })
-})
+app.use(globalErrorHandler)
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
@@ -191,6 +224,21 @@ const start = async () => {
       console.log(`🔌 WebSocket Gateway: ws://localhost:${PORT}/gateway`)
       console.log(`🏥 Health Check: http://localhost:${PORT}/health`)
       console.log(`\n🎉 Ready to accept connections!`)
+
+      // ── Keep-Alive: self-ping every 10 minutes to prevent Railway/Render/Fly
+      // inactivity shutdowns (they kill sleeping services after ~15min)
+      const SELF_URL = process.env.RAILWAY_PUBLIC_DOMAIN
+        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/health`
+        : `http://localhost:${PORT}/health`
+
+      setInterval(async () => {
+        try {
+          const res = await fetch(SELF_URL)
+          console.log(`[keep-alive] ping → ${res.status}`)
+        } catch (e) {
+          console.warn('[keep-alive] ping failed:', e)
+        }
+      }, 10 * 60 * 1000) // every 10 minutes
     })
   } catch (err) {
     console.error('❌ Failed to start server:', err)

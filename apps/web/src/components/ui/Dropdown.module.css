@@ -16,18 +16,23 @@
 .menu {
   position: absolute;
   top: 100%;
-  margin-top: 8px;
-  min-width: 220px;
-  background: var(--bg-secondary);
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
+  margin-top: 12px;
+  min-width: 240px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
+  /* Hyper-rounded */
   box-shadow: var(--shadow-lg);
   z-index: var(--z-dropdown);
-  animation: slideUp 0.2s var(--ease-out);
+  animation: slideUp 0.4s var(--ease-out);
+  /* Buttery elastic */
   overflow: hidden;
-  padding: 4px;
+  padding: 8px;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  /* Hardware Acceleration */
 }
 
 .left {
@@ -43,15 +48,16 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 12px 16px;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
+  /* Softer items */
   color: var(--text-secondary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-normal);
   text-align: left;
 }
 

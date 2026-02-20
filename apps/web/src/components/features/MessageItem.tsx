@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Heart, Smile, MoreVertical, Copy, Edit, Trash2, File, Pin } from 'lucide-react'
+import { Heart, Smile, MoreVertical, Copy, Edit, Trash2, File, Pin, Shield } from 'lucide-react'
+
 import { Avatar, Tooltip, Dropdown, EmojiPicker } from '../ui'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useReactionsStore } from '../../stores/useReactionsStore'
@@ -30,6 +31,7 @@ interface MessageItemProps {
   onPin?: () => void
   showActions?: boolean
   isContinuing?: boolean
+  isEncrypted?: boolean
 }
 
 export function MessageItem({
@@ -50,6 +52,7 @@ export function MessageItem({
   onPin,
   showActions,
   isContinuing,
+  isEncrypted,
 }: MessageItemProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false)
   const { customReactions } = useReactionsStore()
@@ -58,9 +61,9 @@ export function MessageItem({
   // Normalize reaction objects to { emoji, count, userReacted }
   const normalizedReactions = (reactions || []).map((r: any) => {
     // server shape: { emoji: { name }, users: [userId] }
-      if (r && r.users) {
-        const emojiName = r.emoji?.name || r.emoji
-        const users: string[] = r.users || []
+    if (r && r.users) {
+      const emojiName = r.emoji?.name || r.emoji
+      const users: string[] = r.users || []
       return {
         emoji: typeof emojiName === 'string' ? emojiName : emojiName?.name || '•',
         count: users.length,
@@ -89,6 +92,16 @@ export function MessageItem({
           <div className={styles.header}>
             <span className={styles.author}>{authorName}</span>
             <span className={styles.time}>{timestamp}</span>
+            {isEncrypted && (
+              <Tooltip content="End-to-end encrypted">
+                <Shield size={12} style={{ color: 'var(--brand-experiment)', marginLeft: 4 }} />
+              </Tooltip>
+            )}
+            {isEncrypted && (
+              <Tooltip content="End-to-end encrypted">
+                <Shield size={12} style={{ color: 'var(--brand-experiment)', marginLeft: 4 }} />
+              </Tooltip>
+            )}
             {edited && <span className={styles.edited}>(edited)</span>}
           </div>
         )}
@@ -102,8 +115,8 @@ export function MessageItem({
             {attachments.map((attachment) => (
               <div key={attachment.id} className={styles.attachment}>
                 {attachment.contentType?.startsWith('image/') ? (
-                  <img 
-                    src={attachment.url} 
+                  <img
+                    src={attachment.url}
                     alt={attachment.filename}
                     className={styles.imageAttachment}
                     onClick={() => window.open(attachment.url, '_blank')}
@@ -184,33 +197,33 @@ export function MessageItem({
             items={[
               ...(canEdit
                 ? [
-                    {
-                      id: 'edit',
-                      label: 'Edit',
-                      icon: <Edit size={16} />,
-                      onClick: onEdit,
-                    },
-                  ]
+                  {
+                    id: 'edit',
+                    label: 'Edit',
+                    icon: <Edit size={16} />,
+                    onClick: onEdit,
+                  },
+                ]
                 : []),
               ...(onReaction
                 ? [
-                    {
-                      id: 'react',
-                      label: 'React',
-                      icon: <Heart size={16} />,
-                      onClick: () => setShowReactionPicker(true),
-                    },
-                  ]
+                  {
+                    id: 'react',
+                    label: 'React',
+                    icon: <Heart size={16} />,
+                    onClick: () => setShowReactionPicker(true),
+                  },
+                ]
                 : []),
               ...(onPin
                 ? [
-                    {
-                      id: 'pin',
-                      label: isPinned ? 'Unpin' : 'Pin',
-                      icon: <Pin size={16} />,
-                      onClick: onPin,
-                    },
-                  ]
+                  {
+                    id: 'pin',
+                    label: isPinned ? 'Unpin' : 'Pin',
+                    icon: <Pin size={16} />,
+                    onClick: onPin,
+                  },
+                ]
                 : []),
               {
                 id: 'copy',
@@ -220,14 +233,14 @@ export function MessageItem({
               },
               ...(canDelete
                 ? [
-                    {
-                      id: 'delete',
-                      label: 'Delete',
-                      icon: <Trash2 size={16} />,
-                      onClick: onDelete,
-                      variant: 'danger' as const,
-                    },
-                  ]
+                  {
+                    id: 'delete',
+                    label: 'Delete',
+                    icon: <Trash2 size={16} />,
+                    onClick: onDelete,
+                    variant: 'danger' as const,
+                  },
+                ]
                 : []),
             ]}
             align="right"

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Plus, RefreshCw, Trash2, Copy, Check } from 'lucide-react'
+import { Plus, RefreshCw, Trash2, Copy, Check, Shield, Zap } from 'lucide-react'
 import { botsApi, Bot } from '../../api/bots'
+import { Button } from '../ui/Button'
 import styles from './BotConsole.module.css'
 
 export function BotConsole({ applicationId }: { applicationId: string }) {
@@ -18,7 +19,10 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
     const loadBots = async () => {
         try {
             const data = await botsApi.list(applicationId)
-            setBots(data)
+            setBots(data || [])
+        } catch (err) {
+            console.error('Failed to load bots', err)
+            setBots([])
         } finally {
             setLoading(false)
         }
@@ -37,21 +41,21 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
         }
     }
 
-    const handleRegenerateToken = async (botId: string) => {
+    const handleRegenerateToken = async () => {
         if (!confirm('Are you sure? The old token will stop working immediately.')) return
         try {
-            const { token } = await botsApi.regenerateToken(botId)
+            const { token } = await botsApi.regenerateToken(applicationId)
             setLastToken(token)
         } catch (err) {
             console.error('Failed to regenerate token', err)
         }
     }
 
-    const handleDeleteBot = async (botId: string) => {
+    const handleDeleteBot = async () => {
         if (!confirm('Delete this bot? This cannot be undone.')) return
         try {
-            await botsApi.delete(botId)
-            setBots(bots.filter(b => b.id !== botId))
+            await botsApi.delete(applicationId)
+            setBots([])
         } catch (err) {
             console.error('Failed to delete bot', err)
         }
@@ -68,23 +72,30 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
     return (
         <div className={styles.container}>
             <div className={styles.header}>
-                <h3>Bots</h3>
-                <button className={styles.createBtn} onClick={() => setCreating(true)}>
-                    <Plus size={16} /> New Bot
-                </button>
+                <div className={styles.headerTitle}>
+                    <Shield size={20} style={{ color: 'var(--beacon-brand)' }} />
+                    <h3>Bot Configuration</h3>
+                </div>
+                {!creating && bots.length === 0 && (
+                    <Button variant="primary" size="sm" onClick={() => setCreating(true)}>
+                        <Plus size={16} /> New Bot
+                    </Button>
+                )}
             </div>
 
             {lastToken && (
                 <div className={styles.tokenAlert}>
-                    <div className={styles.tokenTitle}>New Bot Token</div>
+                    <div className={styles.tokenTitle}>
+                        <Zap size={14} /> New Bot Token
+                    </div>
                     <div className={styles.tokenValue}>
-                        {lastToken}
+                        <code>{lastToken}</code>
                         <button onClick={copyToken} className={styles.copyBtn}>
                             {copied ? <Check size={14} /> : <Copy size={14} />}
                         </button>
                     </div>
                     <div className={styles.tokenWarning}>
-                        Save this token now! It will not be shown again.
+                        Save this token now! It will not be shown again for security reasons.
                     </div>
                 </div>
             )}
@@ -93,14 +104,15 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                 <div className={styles.createForm}>
                     <input
                         type="text"
-                        placeholder="Bot Name"
+                        placeholder="Define your bot's name..."
                         value={newBotName}
                         onChange={e => setNewBotName(e.target.value)}
                         className={styles.input}
+                        autoFocus
                     />
                     <div className={styles.formActions}>
-                        <button className={styles.cancelBtn} onClick={() => setCreating(false)}>Cancel</button>
-                        <button className={styles.confirmBtn} onClick={handleCreateBot}>Create</button>
+                        <Button variant="ghost" size="sm" onClick={() => setCreating(false)}>Cancel</Button>
+                        <Button variant="primary" size="sm" onClick={handleCreateBot}>Create Bot</Button>
                     </div>
                 </div>
             )}
@@ -118,26 +130,35 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                             </div>
                         </div>
                         <div className={styles.botActions}>
-                            <button
-                                className={styles.actionBtn}
-                                onClick={() => handleRegenerateToken(bot.id)}
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={handleRegenerateToken}
                                 title="Regenerate Token"
                             >
-                                <RefreshCw size={16} />
-                            </button>
-                            <button
-                                className={`${styles.actionBtn} ${styles.danger}`}
-                                onClick={() => handleDeleteBot(bot.id)}
+                                <RefreshCw size={14} /> Token
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={handleDeleteBot}
+                                className={styles.danger}
                                 title="Delete Bot"
                             >
-                                <Trash2 size={16} />
-                            </button>
+                                <Trash2 size={14} />
+                            </Button>
                         </div>
                     </div>
                 ))}
 
                 {!loading && bots.length === 0 && !creating && (
-                    <div className={styles.empty}>No bots created yet.</div>
+                    <div className={styles.empty}>
+                        <div className={styles.emptyIcon}>🤖</div>
+                        <p>No active bots found for this application.</p>
+                        <Button variant="secondary" size="sm" style={{ marginTop: 16 }} onClick={() => setCreating(true)}>
+                            Initialize Bot
+                        </Button>
+                    </div>
                 )}
             </div>
         </div>

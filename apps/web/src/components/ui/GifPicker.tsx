@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, Loader } from 'lucide-react'
-import { tenorService, type TenorGif } from '../../services/tenor'
+import { giphyService, type GiphyGif } from '../../services/giphy'
 import { Input } from './Input'
 import styles from './GifPicker.module.css'
 
@@ -11,17 +11,15 @@ interface GifPickerProps {
 
 export function GifPicker({ onSelect, onClose }: GifPickerProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [gifs, setGifs] = useState<TenorGif[]>([])
+  const [gifs, setGifs] = useState<GiphyGif[]>([])
   const [loading, setLoading] = useState(false)
-  const [selectedGif, setSelectedGif] = useState<TenorGif | null>(null)
+  const [selectedGif, setSelectedGif] = useState<GiphyGif | null>(null)
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pickerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Load trending GIFs on mount
     loadTrending()
 
-    // Click outside handler
     const handleClickOutside = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
         onClose()
@@ -49,8 +47,8 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
   const loadTrending = async () => {
     setLoading(true)
     try {
-      const response = await tenorService.getTrending(30)
-      setGifs(response.results)
+      const response = await giphyService.getTrending(30)
+      setGifs(response.data)
     } catch (error) {
       console.error('Failed to load trending GIFs:', error)
     } finally {
@@ -61,8 +59,8 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
   const searchGifs = async (query: string) => {
     setLoading(true)
     try {
-      const response = await tenorService.searchGifs(query, 30)
-      setGifs(response.results)
+      const response = await giphyService.searchGifs(query, 30)
+      setGifs(response.data)
     } catch (error) {
       console.error('Failed to search GIFs:', error)
     } finally {
@@ -70,11 +68,9 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
     }
   }
 
-  const handleGifSelect = async (gif: TenorGif) => {
+  const handleGifSelect = (gif: GiphyGif) => {
     setSelectedGif(gif)
-    const gifUrl = tenorService.getGifUrl(gif, 'gif')
-    await tenorService.registerShare(gif.id)
-    onSelect(gifUrl)
+    onSelect(gif.images.original.url)
   }
 
   return (
@@ -84,7 +80,7 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
           <Search size={18} className={styles.searchIcon} />
           <Input
             type="text"
-            placeholder="Search for GIFs..."
+            placeholder="Search GIPHY..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             autoFocus
@@ -105,11 +101,11 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
                 key={gif.id}
                 className={`${styles.gifItem} ${selectedGif?.id === gif.id ? styles.selected : ''}`}
                 onClick={() => handleGifSelect(gif)}
-                title={gif.content_description || gif.title}
+                title={gif.title}
               >
                 <img
-                  src={tenorService.getGifUrl(gif, 'tinygif')}
-                  alt={gif.content_description || gif.title}
+                  src={gif.images.fixed_height_small.url}
+                  alt={gif.title}
                   loading="lazy"
                 />
               </button>
@@ -127,8 +123,8 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
 
       <div className={styles.footer}>
         <img
-          src="https://tenor.com/assets/img/tenor-logo.svg"
-          alt="Powered by Tenor"
+          src="https://giphy.com/static/img/powered_by_giphy_light.png"
+          alt="Powered by GIPHY"
           className={styles.tenorLogo}
         />
       </div>

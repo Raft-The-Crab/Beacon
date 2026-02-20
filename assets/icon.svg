@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7289da;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#949cf7;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="beaconGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e8e9f8;stop-opacity:0.9" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bgGradient)"/>
+  <g transform="translate(256, 256)">
+    <rect x="-40" y="80" width="80" height="60" rx="12" fill="url(#beaconGradient)" opacity="0.9"/>
+    <path d="M -30 80 L -20 -60 L 20 -60 L 30 80 Z" fill="url(#beaconGradient)"/>
+    <path d="M -60 -80 Q -60 -120 0 -140 Q 60 -120 60 -80" stroke="white" stroke-width="12" fill="none" stroke-linecap="round" opacity="0.95"/>
+    <path d="M -90 -60 Q -90 -140 0 -170 Q 90 -140 90 -60" stroke="white" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.7"/>
+    <path d="M -120 -40 Q -120 -160 0 -200 Q 120 -160 120 -40" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.45"/>
+    <circle cx="0" cy="-70" r="18" fill="white" opacity="0.95"/>
+    <circle cx="0" cy="-70" r="12" fill="#ffd700" opacity="0.8"/>
+  </g>
+</svg>

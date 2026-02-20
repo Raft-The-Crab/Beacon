@@ -1,10 +1,10 @@
-import { Home, Plus, Compass, Folder, Settings, UserPlus, LogOut, Bell, BellOff, Copy, Hash } from 'lucide-react'
+import { Home, Plus, Compass, Folder, Settings, UserPlus, LogOut, Bell, Copy, Hash } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useServerStore } from '../../stores/useServerStore'
 import { useUIStore } from '../../stores/useUIStore'
-import { useToast } from '../ui'
 import { openCreateServerModal } from '../../utils/modals'
 import { useContextMenuTrigger } from '../ui/ContextMenu'
+import { Tooltip, useToast } from '../ui'
 import styles from './ServerList.module.css'
 
 // ── Individual server button with its own context menu ──────
@@ -13,7 +13,6 @@ function ServerButton({ server, isActive, onClick }: {
   isActive: boolean
   onClick: () => void
 }) {
-  const navigate = useNavigate()
   const { show } = useToast()
   const setShowServerSettings = useUIStore(s => s.setShowServerSettings)
 
@@ -66,22 +65,23 @@ function ServerButton({ server, isActive, onClick }: {
   ])
 
   return (
-    <button
-      className={`${styles.serverButton} ${isActive ? styles.activeServer : ''}`}
-      title={server.name}
-      onClick={onClick}
-      onContextMenu={onContextMenu}
-    >
-      <div className={styles.serverIcon}>
-        {server.icon ? (
-          <img src={server.icon} alt={server.name} className={styles.serverIconImg} />
-        ) : (
-          <span>{server.name.charAt(0).toUpperCase()}</span>
-        )}
-      </div>
-      {/* Active indicator pill */}
-      <div className={styles.activePill} />
-    </button>
+    <Tooltip content={server.name} position="right">
+      <button
+        className={`${styles.serverButton} ${isActive ? styles.activeServer : ''}`}
+        onClick={onClick}
+        onContextMenu={onContextMenu}
+      >
+        <div className={styles.serverIcon}>
+          {server.icon ? (
+            <img src={server.icon} alt={server.name} className={styles.serverIconImg} />
+          ) : (
+            <span>{server.name.charAt(0).toUpperCase()}</span>
+          )}
+        </div>
+        {/* Active indicator pill */}
+        <div className={styles.activePill} />
+      </button>
+    </Tooltip>
   )
 }
 
@@ -131,30 +131,32 @@ export function ServerList() {
   return (
     <div className={styles.serverList}>
       {/* Home */}
-      <button
-        className={`${styles.serverButton} ${styles.homeButton} ${currentServerId === null ? styles.activeServer : ''}`}
-        title="Home"
-        onClick={() => { setCurrentServer(null); navigate('/channels/@me') }}
-      >
-        <Home size={22} />
-        <div className={styles.activePill} />
-      </button>
+      <Tooltip content="Home" position="right">
+        <button
+          className={`${styles.serverButton} ${styles.homeButton} ${currentServerId === null ? styles.activeServer : ''}`}
+          onClick={() => { setCurrentServer(null); navigate('/channels/@me') }}
+        >
+          <Home size={22} />
+          <div className={styles.activePill} />
+        </button>
+      </Tooltip>
 
       <div className={styles.divider} />
 
       {/* Folders */}
       {folders.map(folder => (
         <div key={folder.id} className={`${styles.folderContainer} ${folder.isCollapsed ? styles.collapsed : ''}`}>
-          <button
-            className={styles.folderIcon}
-            onClick={() => toggleFolder(folder.id)}
-            style={{ backgroundColor: folder.color }}
-            title={folder.name}
-          >
-            {folder.isCollapsed
-              ? <Folder size={22} fill="currentColor" />
-              : <div className={styles.folderOpenIndicator} />}
-          </button>
+          <Tooltip content={folder.name} position="right">
+            <button
+              className={styles.folderIcon}
+              onClick={() => toggleFolder(folder.id)}
+              style={{ backgroundColor: folder.color }}
+            >
+              {folder.isCollapsed
+                ? <Folder size={22} fill="currentColor" />
+                : <div className={styles.folderOpenIndicator} />}
+            </button>
+          </Tooltip>
           <div className={styles.folderServers}>
             {folder.serverIds.map(sid => {
               const server = servers.find(s => s.id === sid)
@@ -183,25 +185,27 @@ export function ServerList() {
       ))}
 
       {/* Add / Create server */}
-      <button
-        className={`${styles.serverButton} ${styles.addButton}`}
-        title="Add a server"
-        onClick={() => openCreateServerModal()}
-        onContextMenu={addMenuTrigger}
-      >
-        <Plus size={22} />
-      </button>
+      <Tooltip content="Add a server" position="right">
+        <button
+          className={`${styles.serverButton} ${styles.addButton}`}
+          onClick={() => openCreateServerModal()}
+          onContextMenu={addMenuTrigger}
+        >
+          <Plus size={22} />
+        </button>
+      </Tooltip>
 
       <div className={styles.divider} />
 
       {/* Discover */}
-      <button
-        className={styles.serverButton}
-        title="Discover communities"
-        onClick={() => show('Server discovery coming soon!', 'info')}
-      >
-        <Compass size={22} />
-      </button>
+      <Tooltip content="Discover" position="right">
+        <button
+          className={styles.serverButton}
+          onClick={() => show('Server discovery coming soon!', 'info')}
+        >
+          <Compass size={22} />
+        </button>
+      </Tooltip>
     </div>
   )
 }

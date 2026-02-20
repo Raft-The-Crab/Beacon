@@ -9,14 +9,15 @@
     padding: 32px;
     background: rgba(255, 255, 255, 0.03);
     border-radius: var(--radius-xl);
-    border: 1px solid var(--border-glass);
-    transition: all 0.3s ease;
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: var(--border-secondary);
+    border-color: rgba(255, 255, 255, 0.12);
     transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .iconWrapper {
@@ -27,7 +28,7 @@
     width: 64px;
     height: 64px;
     background: rgba(255, 255, 255, 0.02);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
 }
 
 .card h3 {
@@ -46,7 +47,7 @@
 
 .contactValue {
     font-size: 1.125rem;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-primary);
     display: block;
 }
@@ -55,7 +56,7 @@
     padding: 32px;
     background: var(--bg-secondary);
     border-radius: var(--radius-xl);
-    border: 1px solid var(--border-glass);
+    border: 1px solid var(--glass-border);
     color: var(--text-normal);
 }
 
@@ -65,5 +66,3 @@
     margin-bottom: 8px;
     font-size: 1.1rem;
 }
-
-

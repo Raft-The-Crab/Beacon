@@ -13,6 +13,7 @@ import { AuditLogModal } from './AuditLogModal'
 import WebhooksManager from './WebhooksManager'
 import GroupDMModal from '../features/GroupDMModal'
 import { PinnedMessages } from '../features/PinnedMessages'
+import { QuickSwitcherModal } from './QuickSwitcherModal'
 
 interface ModalContextType {
   openModal: (modalName: string, props?: any) => void
@@ -42,6 +43,7 @@ export function ModalManager({ children }: ModalManagerProps) {
     if (modalName === 'webhooks') ui.setShowWebhooks(true, props?.guildId)
     if (modalName === 'auditLog') ui.setShowAuditLog(true, props?.guildId)
     if (modalName === 'pinnedMessages') ui.setShowPinnedMessages(true, props?.channelId)
+    if (modalName === 'quickSwitcher') ui.setShowQuickSwitcher(true)
   }
 
   const closeModal = (modalName: string) => {
@@ -55,6 +57,7 @@ export function ModalManager({ children }: ModalManagerProps) {
     if (modalName === 'webhooks') ui.setShowWebhooks(false)
     if (modalName === 'auditLog') ui.setShowAuditLog(false)
     if (modalName === 'pinnedMessages') ui.setShowPinnedMessages(false)
+    if (modalName === 'quickSwitcher') ui.setShowQuickSwitcher(false)
   }
 
   const closeAllModals = () => {
@@ -68,6 +71,7 @@ export function ModalManager({ children }: ModalManagerProps) {
     ui.setShowWebhooks(false)
     ui.setShowAuditLog(false)
     ui.setShowPinnedMessages(false)
+    ui.setShowQuickSwitcher(false)
   }
 
   const isModalOpen = (modalName: string) => {
@@ -81,6 +85,7 @@ export function ModalManager({ children }: ModalManagerProps) {
     if (modalName === 'webhooks') return ui.showWebhooks
     if (modalName === 'auditLog') return ui.showAuditLog
     if (modalName === 'pinnedMessages') return ui.showPinnedMessages
+    if (modalName === 'quickSwitcher') return ui.showQuickSwitcher
     return false
   }
 
@@ -209,6 +214,13 @@ export function ModalManager({ children }: ModalManagerProps) {
             }}
           />
         </Modal>
+      )}
+
+      {ui.showQuickSwitcher && (
+        <QuickSwitcherModal
+          isOpen={true}
+          onClose={() => ui.setShowQuickSwitcher(false)}
+        />
       )}
     </ModalContext.Provider>
   )

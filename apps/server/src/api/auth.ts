@@ -6,7 +6,8 @@ const router = Router()
 
 router.post('/register', AuthController.register)
 router.post('/login', AuthController.login)
-router.post('/verify-mfa', AuthController.verifyMFA) // Added this
+router.post('/mfa/verify', AuthController.verifyMFA)
+router.post('/refresh', AuthController.refresh)
 router.get('/me', authenticate, AuthController.getMe)
 
 // 2FA Routes
