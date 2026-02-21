@@ -21,7 +21,6 @@ import folderRouter from './api/folders'
 import beacoinRouter from './api/beacoin'
 import messagesRouter from './api/messages'
 import analyticsRouter from './api/analytics'
-
 import helmet from 'helmet'
 import moderationRouter from './api/moderation'
 import { ipBlockMiddleware, generalLimiter, authLimiter, sanitizeHeaders, csrfProtection, generateCSRFToken } from './middleware/security'
@@ -30,8 +29,12 @@ import { globalErrorHandler, notFoundHandler } from './middleware/error'
 import { requestTimer } from './middleware/performance'
 import { sanitizeBody } from './utils/sanitize'
 
-const app = express()
+// Memory optimization for 512MB RAM
+if (process.env.NODE_ENV === 'production') {
+  process.env.NODE_OPTIONS = '--max-old-space-size=384 --optimize-for-size'
+}
 
+const app = express()
 app.use(requestTimer)
 
 // Security Hardening — Helmet with CSP
@@ -77,8 +80,8 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'https://beacon.app'],
   credentials: true,
 }))
-app.use(express.json({ limit: '50mb' }))
-app.use(express.urlencoded({ extended: true, limit: '50mb' }))
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(cookieParser())
 
 // CSRF Protection (skip for GET requests)

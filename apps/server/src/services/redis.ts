@@ -14,10 +14,13 @@ class RedisService {
         return delay;
       },
       maxRetriesPerRequest: 3,
+      lazyConnect: true,
+      enableOfflineQueue: false,
+      maxLoadingRetryTime: 3000,
     });
 
-    this.pubClient = new Redis(redisUrl);
-    this.subClient = new Redis(redisUrl);
+    this.pubClient = new Redis(redisUrl, { lazyConnect: true });
+    this.subClient = new Redis(redisUrl, { lazyConnect: true });
 
     this.client.on('error', (err) => console.error('Redis Client Error:', err));
     this.pubClient.on('error', (err) => console.error('Redis Pub Error:', err));

@@ -12,6 +12,9 @@ export const connectMongo = async () => {
     await mongoose.connect(MONGO_URI, {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      maxPoolSize: 5, // Limit connections for low memory
+      minPoolSize: 1,
+      maxIdleTimeMS: 30000,
     })
     console.log('✅ MongoDB connected successfully')
   } catch (error) {
