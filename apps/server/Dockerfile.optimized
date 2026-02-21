@@ -1,40 +1,29 @@
-# Optimized for 1 vCPU / 512MB RAM
-FROM node:20-alpine AS builder
-
-WORKDIR /app
-
-# Copy root package files for workspace
-COPY package*.json pnpm-*.yaml ./
-COPY apps/server/package*.json ./apps/server/
-
-# Install pnpm and dependencies
-RUN npm install -g pnpm && \
-    pnpm install --filter @beacon/server --frozen-lockfile
-
-# Copy server files
-COPY apps/server ./apps/server
-
-# Generate Prisma and build
-WORKDIR /app/apps/server
-RUN npx prisma generate && \
-    NODE_OPTIONS="--max-old-space-size=384" pnpm build
-
-# Production stage
+# Optimized for 1 vCPU / 512MB RAM - No TypeScript compilation
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy built files
-COPY --from=builder /app/apps/server/node_modules ./node_modules
-COPY --from=builder /app/apps/server/dist ./dist
-COPY --from=builder /app/apps/server/package.json ./
-COPY --from=builder /app/apps/server/prisma ./prisma
+# Copy root package files
+COPY package*.json pnpm-*.yaml ./
+COPY apps/server/package*.json ./apps/server/
+
+# Install pnpm and ALL dependencies (including dev for tsx)
+RUN npm install -g pnpm && \
+    pnpm install --filter @beacon/server
+
+# Copy server files
+COPY apps/server ./apps/server
+
+# Generate Prisma
+WORKDIR /app/apps/server
+RUN npx prisma generate
 
 # Set environment
 ENV NODE_ENV=production
 ENV PORT=8080
-ENV NODE_OPTIONS="--max-old-space-size=384 --optimize-for-size"
+ENV NODE_OPTIONS="--max-old-space-size=384"
 
 EXPOSE 8080
 
-CMD ["node", "dist/src/index.js"]
+# Run TypeScript directly with tsx (no build needed)
+CMD ["npx", "tsx", "src/index.ts"]
