@@ -11,11 +11,12 @@
     "resolveJsonModule": true,
     "outDir": "./dist",
     "rootDir": "./",
-    "declaration": true,
-    "sourceMap": true,
+    "declaration": false,
+    "sourceMap": false,
     "removeComments": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["node"]
+    "types": ["node"],
+    "noEmitOnError": false
   },
   "include": ["src/**/*", "ai/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
