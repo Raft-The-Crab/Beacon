@@ -1,0 +1,29 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install minimal dependencies for canvas/image processing
+RUN apk add --no-cache cairo-dev jpeg-dev pango-dev giflib-dev
+
+# Copy package files
+COPY package*.json pnpm-*.yaml ./
+COPY apps/server/package*.json ./apps/server/
+
+# Install dependencies
+RUN npm install -g pnpm && \
+    pnpm install --filter @beacon/server --prod
+
+# Copy AI folder and server
+COPY apps/server/ai ./apps/server/ai
+COPY apps/server/src/ai-server-lite.ts ./apps/server/src/
+
+WORKDIR /app/apps/server
+
+# Memory limit: 350MB
+ENV NODE_ENV=production
+ENV PORT=8081
+ENV NODE_OPTIONS=--max-old-space-size=350
+
+EXPOSE 8081
+
+CMD ["npx", "tsx", "src/ai-server-lite.ts"]
