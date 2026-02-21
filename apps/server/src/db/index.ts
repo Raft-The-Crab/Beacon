@@ -4,22 +4,26 @@ import { redis } from './redis'
 
 const prismaOptions: any = {}
 if (process.env.DATABASE_URL) {
-	prismaOptions.datasources = {
-		db: {
-			url: process.env.DATABASE_URL,
-		},
-	}
+  prismaOptions.datasources = {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  }
 }
 
-let prisma: PrismaClient
+let prisma: PrismaClient | null = null
+
 try {
-	prisma = new PrismaClient(prismaOptions)
+  if (process.env.DATABASE_URL) {
+    prisma = new PrismaClient(prismaOptions)
+    console.log('✅ Prisma client initialized')
+  } else {
+    console.warn('⚠️  DATABASE_URL not set, Prisma disabled')
+  }
 } catch (err) {
-	console.error('Prisma client initialization failed, creating fallback client:', err)
-	prisma = new PrismaClient()
+  console.error('❌ Prisma client initialization failed:', err)
+  prisma = null
 }
 
-export { prisma }
-
-export { connectMongo, redis, MessageModel, AuditLogModel, ModerationReportModel }
+export { prisma, connectMongo, redis, MessageModel, AuditLogModel, ModerationReportModel }
 

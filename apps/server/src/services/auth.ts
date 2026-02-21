@@ -19,6 +19,8 @@ export const LoginSchema = z.object({
 
 export class AuthService {
   static async register(data: z.infer<typeof RegisterSchema>) {
+    if (!prisma) throw new Error('Database not available')
+    
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -57,6 +59,8 @@ export class AuthService {
   }
 
   static async login(data: z.infer<typeof LoginSchema>) {
+    if (!prisma) throw new Error('Database not available')
+    
     const user = await prisma.user.findUnique({
       where: { email: data.email }
     })
@@ -118,6 +122,8 @@ export class AuthService {
   }
 
   static async verifyMFA(userId: string, token: string) {
+    if (!prisma) throw new Error('Database not available')
+    
     const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user || !(user as any).twoFactorSecret) {
       throw new Error('2FA not enabled')

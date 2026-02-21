@@ -1,15 +1,22 @@
-// MongoDB connection setup using Mongoose
 import mongoose from 'mongoose'
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/beacon'
 
 export const connectMongo = async () => {
   try {
-    await mongoose.connect(MONGO_URI)
-    console.log('MongoDB connected successfully')
+    if (mongoose.connection.readyState === 1) {
+      console.log('MongoDB already connected')
+      return
+    }
+    
+    await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    })
+    console.log('✅ MongoDB connected successfully')
   } catch (error) {
-    console.error('MongoDB connection error:', error)
-    process.exit(1)
+    console.error('❌ MongoDB connection error:', error)
+    throw error
   }
 }
 

@@ -203,20 +203,35 @@ const start = async () => {
     console.log('🚀 Starting Beacon Server...')
     console.log('📊 Environment:', process.env.NODE_ENV || 'development')
 
-    // Connect to databases
+    // Connect to databases with error handling
     console.log('🔌 Connecting to databases...')
-    await connectMongo()
-    if (prisma) {
-      try { await prisma.$connect() } catch (e) { console.warn('Prisma connect failed:', e) }
-    } else {
-      console.warn('Prisma client not initialized; skipping Postgres connect')
+    
+    // MongoDB
+    try {
+      await connectMongo()
+    } catch (e) {
+      console.warn('⚠️  MongoDB connection failed, continuing without it:', e)
     }
-    await redis.ping()
-
-    console.log('✅ All database connections established')
-    console.log('  - PostgreSQL (Supabase): Connected')
-    console.log('  - MongoDB Atlas: Connected')
-    console.log('  - Redis Cloud: Connected')
+    
+    // PostgreSQL
+    if (prisma) {
+      try {
+        await prisma.$connect()
+        console.log('✅ PostgreSQL (Supabase): Connected')
+      } catch (e) {
+        console.warn('⚠️  PostgreSQL connection failed:', e)
+      }
+    } else {
+      console.warn('⚠️  PostgreSQL: Skipped (DATABASE_URL not set)')
+    }
+    
+    // Redis
+    try {
+      await redis.ping()
+      console.log('✅ Redis Cloud: Connected')
+    } catch (e) {
+      console.warn('⚠️  Redis connection failed:', e)
+    }
 
     server.listen(PORT, () => {
       console.log(`\n✨ Beacon server is running!`)
@@ -225,8 +240,7 @@ const start = async () => {
       console.log(`🏥 Health Check: http://localhost:${PORT}/health`)
       console.log(`\n🎉 Ready to accept connections!`)
 
-      // ── Keep-Alive: self-ping every 10 minutes to prevent Railway/Render/Fly
-      // inactivity shutdowns (they kill sleeping services after ~15min)
+      // Keep-Alive: self-ping every 10 minutes
       const SELF_URL = process.env.RAILWAY_PUBLIC_DOMAIN
         ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/health`
         : `http://localhost:${PORT}/health`
@@ -238,7 +252,7 @@ const start = async () => {
         } catch (e) {
           console.warn('[keep-alive] ping failed:', e)
         }
-      }, 10 * 60 * 1000) // every 10 minutes
+      }, 10 * 60 * 1000)
     })
   } catch (err) {
     console.error('❌ Failed to start server:', err)
