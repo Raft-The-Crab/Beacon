@@ -58,6 +58,7 @@ NODE_ENV="production"
 # Protocols
 SOVEREIGNTY_LEVEL=3
 SMS_BRIDGE_ENABLED=true
+BEACOIN_WEBHOOK_SECRET="95c3c8007527f2cca8ffbd2c2b218666"
 ```
 
 ## 🚀 Launching the Cluster
