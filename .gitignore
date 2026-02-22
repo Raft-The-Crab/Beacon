@@ -31,8 +31,8 @@
 !/apps/server/package.json
 !/apps/server/tsconfig.json
 !/apps/server/Dockerfile
-!/apps/server/prisma/
-!/apps/server/src/types/
+!/apps/server/prisma/**
+!/apps/server/src/**
 
 # 3. Hide all other proprietary blocks
 /packages/
