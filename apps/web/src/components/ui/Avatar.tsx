@@ -5,38 +5,92 @@ interface AvatarProps {
   src?: string | null
   alt?: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
-  status?: PresenceStatus
+  status?: PresenceStatus | 'offline'
   onClick?: () => void
+  username?: string
 }
 
-const statusColors: Record<PresenceStatus, string> = {
-  online: 'var(--status-success)',
-  idle: 'var(--status-warning)',
-  dnd: 'var(--status-error)',
-  invisible: 'var(--text-muted)',
+const statusColors: Record<string, string> = {
+  online: '#23a559',
+  idle: '#f0b232',
+  dnd: '#f23f43',
+  invisible: '#80848e',
+  offline: '#80848e',
 }
 
-export function Avatar({ src, alt = '', size = 'md', status, onClick }: AvatarProps) {
+// Generate a stable gradient from a string (no external service)
+function stringToGradient(str: string): { bg: string; text: string } {
+  const palettes = [
+    { bg: 'linear-gradient(135deg, #5865f2 0%, #7289da 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #23a559 0%, #2da652 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #f0b232 0%, #e67e22 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #f23f43 0%, #c0392b 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #1abc9c 0%, #16a085 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #e91e8c 0%, #c2185b 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #ff6b35 0%, #e55116 100%)', text: '#fff' },
+  ]
+  if (!str) return palettes[0]
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i)
+    hash |= 0
+  }
+  return palettes[Math.abs(hash) % palettes.length]
+}
 
+function getInitials(name?: string | null): string {
+  if (!name || name.trim() === '') return '?'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return name.substring(0, 2).toUpperCase()
+}
+
+export function Avatar({
+  src,
+  alt = '',
+  size = 'md',
+  status,
+  onClick,
+  username,
+}: AvatarProps) {
+  const displayName = username || alt || ''
+  const { bg, text } = stringToGradient(displayName)
+  const initials = getInitials(displayName)
+
+  // Only show image if src is a real user-uploaded URL (not DiceBear)
+  const showImage = !!src && !src.includes('dicebear') && !src.includes('api.dicebear')
 
   return (
     <div
       className={`${styles.avatar} ${styles[size]} ${onClick ? styles.clickable : ''}`}
       onClick={onClick}
     >
-      {src ? (
-        <img src={src} alt={alt} className={styles.image} />
-      ) : (
-        <div className={styles.placeholder}>
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-          </svg>
-        </div>
-      )}
-      {status && (
+      <div className={styles.inner}>
+        {showImage ? (
+          <img
+            src={src!}
+            alt={alt}
+            className={styles.image}
+            onError={(e) => {
+              // Fallback: hide broken image, show initials below
+              const target = e.currentTarget
+              target.style.display = 'none'
+            }}
+          />
+        ) : (
+          <div
+            className={styles.placeholder}
+            style={{ background: bg, color: text }}
+          >
+            {initials}
+          </div>
+        )}
+      </div>
+      {status && status !== 'invisible' && (
         <span
           className={styles.status}
-          style={{ backgroundColor: statusColors[status] }}
+          style={{ backgroundColor: statusColors[status] ?? statusColors.offline }}
         />
       )}
     </div>

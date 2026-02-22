@@ -16,8 +16,9 @@ interface ServerState {
   currentServerId: string | null;
   currentServer: Server | null;
   isLoading: boolean;
-  
+
   fetchGuilds: () => Promise<void>;
+  eagerLoad: () => Promise<void>;
   fetchFolders: () => Promise<void>;
   fetchGuild: (id: string) => Promise<void>;
   createGuild: (name: string, icon?: string) => Promise<void>;
@@ -25,7 +26,9 @@ interface ServerState {
   updateGuild: (guildId: string, updates: Partial<Server>) => Promise<void>;
   deleteGuild: (guildId: string) => Promise<void>;
   setCurrentServer: (serverId: string | null) => void;
-  
+  boostGuild: (guildId: string) => Promise<void>;
+  updateVanityUrl: (guildId: string, vanityUrl: string) => Promise<void>;
+
   createFolder: (name: string, serverIds: string[], color?: string) => Promise<void>;
   toggleFolder: (folderId: string) => void;
   addToFolder: (folderId: string, serverId: string) => Promise<void>;
@@ -54,6 +57,25 @@ export const useServerStore = create<ServerState>((set, get) => ({
     } catch (error) {
       console.error('Failed to fetch guilds', error)
       set({ isLoading: false })
+    }
+  },
+
+  eagerLoad: async () => {
+    // Eagerly fetch all essential server data at once
+    try {
+      const [{ data: guilds }, { data: folders }] = await Promise.all([
+        api.get('/guilds/me'),
+        api.get('/folders')
+      ]);
+      set({
+        servers: guilds,
+        folders: folders.map((f: any) => ({ ...f, isCollapsed: false }))
+      });
+      if (guilds.length > 0 && !get().currentServerId) {
+        get().setCurrentServer(guilds[0].id);
+      }
+    } catch (error) {
+      console.error('Store eager load failed', error);
     }
   },
 
@@ -138,6 +160,32 @@ export const useServerStore = create<ServerState>((set, get) => ({
     set({ currentServerId: serverId, currentServer: server });
   },
 
+  boostGuild: async (guildId) => {
+    try {
+      const { data } = await api.post(`/guilds/${guildId}/boost`);
+      set(state => ({
+        servers: state.servers.map(s => s.id === guildId ? { ...s, ...data.guild } : s),
+        currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...data.guild } as any) : state.currentServer
+      }));
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  updateVanityUrl: async (guildId, vanityUrl) => {
+    try {
+      const { data } = await api.post(`/guilds/${guildId}/vanity`, { vanityUrl });
+      set(state => ({
+        servers: state.servers.map(s => s.id === guildId ? { ...s, ...data } : s),
+        currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...data } as any) : state.currentServer
+      }));
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
   createFolder: async (name, serverIds, color = '#5865f2') => {
     try {
       const { data } = await api.post('/folders', { name, serverIds, color });
@@ -157,15 +205,15 @@ export const useServerStore = create<ServerState>((set, get) => ({
     try {
       const folder = get().folders.find(f => f.id === folderId);
       if (!folder) return;
-      
+
       const newServerIds = [...folder.serverIds, serverId];
-      const { data } = await api.post('/folders', { 
-        id: folderId, 
-        name: folder.name, 
-        serverIds: newServerIds, 
-        color: folder.color 
+      const { data } = await api.post('/folders', {
+        id: folderId,
+        name: folder.name,
+        serverIds: newServerIds,
+        color: folder.color
       });
-      
+
       set(state => ({
         folders: state.folders.map(f => f.id === folderId ? { ...f, serverIds: data.serverIds } : f)
       }));
@@ -178,15 +226,15 @@ export const useServerStore = create<ServerState>((set, get) => ({
     try {
       const folder = get().folders.find(f => f.id === folderId);
       if (!folder) return;
-      
+
       const newServerIds = folder.serverIds.filter(id => id !== serverId);
-      const { data } = await api.post('/folders', { 
-        id: folderId, 
-        name: folder.name, 
-        serverIds: newServerIds, 
-        color: folder.color 
+      const { data } = await api.post('/folders', {
+        id: folderId,
+        name: folder.name,
+        serverIds: newServerIds,
+        color: folder.color
       });
-      
+
       set(state => ({
         folders: state.folders.map(f => f.id === folderId ? { ...f, serverIds: data.serverIds } : f)
       }));

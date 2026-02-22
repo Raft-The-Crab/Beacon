@@ -1,5 +1,6 @@
 import React from 'react'
 import { ServerList } from './ServerList'
+import { useUIStore } from '../../stores/useUIStore'
 import styles from './WorkspaceLayout.module.css'
 
 interface WorkspaceLayoutProps {
@@ -13,15 +14,28 @@ export function WorkspaceLayout({
     children,
     rightPanel
 }: WorkspaceLayoutProps) {
+    const { showMobileSidebar, setShowMobileSidebar } = useUIStore()
+
     return (
         <div className={styles.container}>
             <ServerList />
-            <div className={`${styles.leftNav} vista-transition`}>
+
+            {/* Mobile Drawer Backdrop */}
+            {showMobileSidebar && (
+                <div
+                    className={styles.mobileBackdrop}
+                    onClick={() => setShowMobileSidebar(false)}
+                />
+            )}
+
+            <div className={`${styles.leftNav} ${showMobileSidebar ? styles.mobileOpen : ''} vista-transition`}>
                 {sidebar}
             </div>
+
             <div className={`${styles.mainContent} vista-transition`} style={{ animationDelay: '0.1s' }}>
                 {children}
             </div>
+
             {rightPanel && (
                 <div className={`${styles.rightPanel} vista-transition`} style={{ animationDelay: '0.2s' }}>
                     {rightPanel}

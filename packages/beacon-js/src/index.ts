@@ -16,8 +16,17 @@
  *   client.login();
  */
 
-// Core client
+// Core types (Consolidated)
+export * from './types/index';
+
+// SDK API Client (Consolidated)
+export { BeaconClient } from './sdk/BeaconClient';
+export { BeaconEventEmitter as SDKEventEmitter } from './sdk/BeaconEventEmitter';
+export type { MusicMetadata } from './types/index';
+
+// Core bot client
 export { Client } from './client';
+export { AIClient, type AIClientOptions } from './enhanced';
 
 // Gateway
 export { Gateway, Intents, DEFAULT_INTENTS, type GatewayOptions } from './gateway';

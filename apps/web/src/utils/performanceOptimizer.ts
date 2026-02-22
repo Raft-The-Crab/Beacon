@@ -27,20 +27,20 @@ class PerformanceOptimizer {
   private detectSpecs() {
     // Check RAM
     const memory = (navigator as any).deviceMemory || 4
-    
+
     // Check CPU cores
     const cores = navigator.hardwareConcurrency || 4
-    
+
     // Check if mobile
     const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent)
-    
+
     // Check connection
     const connection = (navigator as any).connection
     const slowConnection = connection?.effectiveType === '2g' || connection?.effectiveType === 'slow-2g'
-    
+
     // Determine if low-spec
     this.isLowSpec = memory < 4 || cores < 4 || slowConnection || (isMobile && memory < 3)
-    
+
     console.log(`[Performance] Device: ${this.isLowSpec ? 'Low-spec' : 'High-spec'}`)
     console.log(`[Performance] RAM: ${memory}GB, Cores: ${cores}, Mobile: ${isMobile}`)
   }
@@ -56,10 +56,10 @@ class PerformanceOptimizer {
         autoplay: false,
         maxMessages: 50
       }
-      
+
       // Apply CSS optimizations
       document.documentElement.classList.add('low-spec-mode')
-      
+
       // Disable expensive CSS features
       const style = document.createElement('style')
       style.textContent = `
@@ -74,7 +74,7 @@ class PerformanceOptimizer {
         }
       `
       document.head.appendChild(style)
-      
+
       console.log('[Performance] Low-spec optimizations applied')
     }
   }
@@ -111,6 +111,6 @@ export const performanceOptimizer = PerformanceOptimizer.getInstance()
 // Auto-initialize on app load
 if (typeof window !== 'undefined') {
   window.addEventListener('DOMContentLoaded', () => {
-    performanceOptimizer.getInstance()
+    PerformanceOptimizer.getInstance()
   })
 }

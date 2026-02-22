@@ -31,11 +31,11 @@ export class Client extends EventEmitter {
   public readonly Intents = Intents;
   public readonly voice: VoiceManager;
 
-  // Caches
-  public guilds: Collection<string, RawGuild> = new Collection();
-  public channels: Collection<string, RawChannel> = new Collection();
-  public users: Collection<string, RawUser> = new Collection();
-  public messages: Collection<string, RawMessage> = new Collection();
+  // Caches (Bounded limits to protect memory footprints natively)
+  public guilds: Collection<string, RawGuild> = new Collection<string, RawGuild>().setMaxSize(100);
+  public channels: Collection<string, RawChannel> = new Collection<string, RawChannel>().setMaxSize(500);
+  public users: Collection<string, RawUser> = new Collection<string, RawUser>().setMaxSize(1000);
+  public messages: Collection<string, RawMessage> = new Collection<string, RawMessage>().setMaxSize(2000);
 
   public user: RawUser | null = null;
   public applicationId: string | null = null;

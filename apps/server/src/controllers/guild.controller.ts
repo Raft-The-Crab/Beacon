@@ -202,4 +202,106 @@ export class GuildController {
             res.status(500).json({ error: 'Failed to create invite' });
         }
     }
+
+    static async boostGuild(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const userId = (req as any).user?.id;
+            const BOOST_COST = 1000;
+
+            const result = await prisma.$transaction(async (tx: any) => {
+                // 1. Check wallet
+                const wallet = await tx.beacoinWallet.findUnique({ where: { userId } });
+                if (!wallet || wallet.balance < BOOST_COST) {
+                    throw new Error('INSUFFICIENT_FUNDS');
+                }
+
+                // 2. Deduct coins
+                await tx.beacoinWallet.update({
+                    where: { userId },
+                    data: { balance: { decrement: BOOST_COST } }
+                });
+
+                // 3. Create transaction
+                await tx.beacoinTransaction.create({
+                    data: {
+                        walletId: wallet.id,
+                        fromUserId: userId,
+                        amount: BOOST_COST,
+                        type: 'SPEND',
+                        description: `Server Boost for Guild ${id}`,
+                    } as any
+                });
+
+                // 4. Update Guild
+                const guild = await tx.guild.update({
+                    where: { id },
+                    data: {
+                        boostCount: { increment: 1 }
+                    }
+                });
+
+                // 5. Calculate level (Simple: 1 boost = 1 level for prototyping, 10 boosts = Level 10 Max)
+                const newLevel = Math.min(Math.floor(guild.boostCount), 10);
+                await tx.guild.update({
+                    where: { id },
+                    data: { boostLevel: newLevel }
+                });
+
+                return { guild, newLevel };
+            });
+
+            await CacheService.del(`guild:${id}`);
+            SocketService.emitToRoom(id as string, 'GUILD_BOOST', { guildId: id, ...result });
+            res.json(result);
+        } catch (error: any) {
+            if (error.message === 'INSUFFICIENT_FUNDS') {
+                res.status(400).json({ error: 'Insufficient Beacoins to boost' });
+                return;
+            }
+            console.error('Boost Error:', error);
+            res.status(500).json({ error: 'Failed to boost server' });
+        }
+    }
+
+    static async updateVanityUrl(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const { vanityUrl } = req.body;
+            const userId = (req as any).user?.id;
+
+            // Check if user is owner
+            const guild = await prisma.guild.findUnique({ where: { id } });
+            if (!guild || guild.ownerId !== userId) {
+                res.status(403).json({ error: 'Only server owners can set vanity URLs' });
+                return;
+            }
+
+            // Check level
+            // @ts-ignore
+            if (guild.boostLevel < 10) {
+                res.status(400).json({ error: 'Server must be Level 10 to unlock a Vanity URL' });
+                return;
+            }
+
+            // Validate format: Beacon-*.inv
+            if (!vanityUrl.startsWith('Beacon-') || !vanityUrl.endsWith('.inv')) {
+                res.status(400).json({ error: 'Vanity URL must start with Beacon- and end with .inv' });
+                return;
+            }
+
+            const updated = await prisma.guild.update({
+                where: { id },
+                data: {
+                    // @ts-ignore
+                    vanityUrl
+                }
+            });
+
+            await CacheService.del(`guild:${id}`);
+            res.json(updated);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to set vanity URL' });
+        }
+    }
 }

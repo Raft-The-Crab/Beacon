@@ -1,4 +1,4 @@
-import { SCREEN_SHARE_TIERS } from '@beacon/types'
+// import { SCREEN_SHARE_TIERS } from '@beacon/types'
 
 export class ScreenShareService {
   private stream: MediaStream | null = null
@@ -7,8 +7,8 @@ export class ScreenShareService {
 
   async startScreenShare(hasBeaconPlus: boolean = false) {
     this.isPlus = hasBeaconPlus
-    const quality = hasBeaconPlus ? '4k' : '720p'
-    const fps = hasBeaconPlus ? 60 : 60
+    const resolution = hasBeaconPlus ? '4K' : '720p'
+    const fps = 60
 
     try {
       this.stream = await navigator.mediaDevices.getDisplayMedia({
@@ -19,6 +19,8 @@ export class ScreenShareService {
         },
         audio: true
       })
+
+      console.log(`[ScreenShare] Quality: ${resolution} @ ${fps}fps`)
 
       const videoTrack = this.stream.getVideoTracks()[0]
       if (videoTrack) {

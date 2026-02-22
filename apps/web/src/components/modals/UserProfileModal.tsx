@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useUserListStore } from '../../stores/useUserListStore'
 import { useDMStore } from '../../stores/useDMStore'
+import { useUIStore } from '../../stores/useUIStore'
 import { Button, Modal, useToast } from '../ui'
+import { Avatar } from '../ui/Avatar'
 import styles from './UserProfileModal.module.css'
 
 interface UserProfileModalProps {
@@ -36,14 +38,13 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
       try {
         // Simulated API call for user profile
-        // In a real production environment, this would call apiClient.getUser(userId)
         await new Promise(resolve => setTimeout(resolve, 600))
 
         setUser({
           id: userId,
           username: `User ${userId.slice(0, 8)}`,
           email: 'user@beacon.local',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
+          avatar: undefined,
           customStatus: 'Using Beacon',
           joinedAt: '2024-01-15',
           status: 'online',
@@ -152,7 +153,12 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
         <div className={styles.profileCard}>
           <div className={styles.profileHeader}>
             <div className={styles.avatarWrapper}>
-              <img src={user.avatar} className={styles.avatar} alt="" />
+              <Avatar
+                src={user.avatar && !user.avatar.includes('dicebear') ? user.avatar : undefined}
+                username={user.username}
+                status={user.status as any}
+                size="lg"
+              />
               <div className={`${styles.statusBadge} ${user.status || 'offline'}`} />
             </div>
           </div>

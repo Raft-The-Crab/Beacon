@@ -12,17 +12,18 @@ interface UserListState {
   blockedUsers: string[]
   currentUser: User | null
   users: Map<string, User>
-  
+
   fetchFriends: () => Promise<void>;
+  eagerLoad: () => Promise<void>;
   setCurrentUser: (user: User) => void
   addFriend: (friend: Friend) => void
   removeFriend: (userId: string) => void
   updateFriendStatus: (userId: string, status: PresenceStatus) => void
-  
+
   blockUser: (userId: string) => void
   unblockUser: (userId: string) => void
   isBlocked: (userId: string) => boolean
-  
+
   addUser: (user: User) => void
   getUser: (userId: string) => User | null
   updateUser: (userId: string, updates: Partial<User>) => void
@@ -45,6 +46,19 @@ export const useUserListStore = create<UserListState>((set, get) => ({
       set({ friends: friendsList })
     } catch (e) {
       console.error('Failed to fetch friends', e)
+    }
+  },
+
+  eagerLoad: async () => {
+    try {
+      const { data } = await api.get('/friends')
+      const friendsList = data.map((f: any) => ({
+        ...f.friend,
+        status: f.friend.status || 'offline'
+      }))
+      set({ friends: friendsList })
+    } catch (e) {
+      console.error('UserList eager load failed', e)
     }
   },
 

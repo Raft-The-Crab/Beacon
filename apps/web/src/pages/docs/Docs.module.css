@@ -1,8 +1,8 @@
 .docsContent {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 80px 40px;
-  animation: fadeIn 0.8s var(--ease-out);
+  padding: 120px 64px;
+  animation: fadeIn 1s var(--ease-out);
 }
 
 .docsHeader {
@@ -11,15 +11,16 @@
 }
 
 .docsHeader h1 {
-  font-size: var(--font-size-4xl);
+  font-size: var(--font-size-5xl);
   font-weight: 1000;
-  margin-bottom: 16px;
-  letter-spacing: -0.05em;
-  background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.6) 100%);
+  margin-bottom: 24px;
+  letter-spacing: -0.06em;
+  background: var(--accent-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  line-height: 1;
+  line-height: 0.9;
+  filter: drop-shadow(0 0 30px rgba(88, 101, 242, 0.2));
 }
 
 .docsHeader p {
@@ -34,33 +35,34 @@
 }
 
 .docsSection h2 {
-  font-size: var(--font-size-2xl);
-  font-weight: 900;
-  margin-bottom: 24px;
-  letter-spacing: -0.02em;
+  font-size: var(--font-size-3xl);
+  font-weight: 950;
+  margin-bottom: 32px;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
 }
 
 .docsSection p {
   color: var(--text-secondary);
-  font-size: 1.125rem;
-  line-height: 1.7;
-  margin-bottom: 24px;
+  font-size: 1.25rem;
+  line-height: 1.8;
+  margin-bottom: 40px;
+  opacity: 0.9;
 }
 
 /* Glassmorphism 2.0 Elements */
 .infoBox {
-  padding: 32px;
-  background: rgba(114, 137, 218, 0.03);
-  backdrop-filter: blur(20px);
-  border-left: 4px solid var(--beacon-brand);
-  border-radius: 24px;
-  color: var(--text-secondary);
-  font-size: 1rem;
-  line-height: 1.6;
-  margin: 32px 0;
-  border: 1px solid rgba(114, 137, 218, 0.1);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  padding: 48px;
+  background: rgba(88, 101, 242, 0.04);
+  backdrop-filter: blur(40px);
+  border-left: 6px solid var(--beacon-brand);
+  border-radius: 32px;
+  color: var(--text-normal);
+  font-size: 1.125rem;
+  line-height: 1.8;
+  margin: 64px 0;
+  border: 1px solid var(--beacon-brand-muted);
+  box-shadow: var(--shadow-xl), var(--aura-brand);
 }
 
 .infoBox code {

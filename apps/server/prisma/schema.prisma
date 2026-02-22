@@ -76,6 +76,8 @@ model Friendship {
   createdAt DateTime @default(now())
 
   @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
 }
 
 model Block {
@@ -105,6 +107,11 @@ model Guild {
   invites     Invite[]
   webhooks    Webhook[]
   auditLogs   AuditLog[]
+
+  // Boosting System
+  boostCount  Int           @default(0)
+  boostLevel  Int           @default(0) // 0-10
+  vanityUrl   String?       @unique // Premium unlock at Level 10 (Beacon-*.inv)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -141,6 +148,8 @@ model GuildMember {
   joinedAt DateTime @default(now())
 
   @@unique([userId, guildId])
+  @@index([userId])
+  @@index([guildId])
 }
 
 model AuditLog {
@@ -155,6 +164,8 @@ model AuditLog {
   changes    Json?
   reason     String?
   createdAt  DateTime @default(now())
+
+  @@index([guildId])
 }
 
 model Channel {
@@ -182,6 +193,9 @@ model Channel {
   lastMessageAt    DateTime?   @default(now())
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
+
+  @@index([guildId])
+  @@index([parentId])
 }
 
 model Thread {
@@ -233,6 +247,10 @@ model Message {
   editedAt  DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([channelId])
+  @@index([authorId])
+  @@index([createdAt])
 }
 
 model Reaction {
@@ -339,6 +357,11 @@ enum ChannelType {
   ANNOUNCEMENT
   DM
   GROUP_DM
+  DIRECTORY
+  STORE
+  MEDIA
+  TICKET
+  RULES
 }
 
 enum FriendshipStatus {

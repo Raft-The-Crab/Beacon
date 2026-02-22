@@ -1,8 +1,8 @@
-import { Home, Plus, Compass, Folder, Settings, UserPlus, LogOut, Bell, Copy, Hash } from 'lucide-react'
+import { Home, Plus, Compass, Folder, Settings, UserPlus, LogOut, Bell, Copy, Hash, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useServerStore } from '../../stores/useServerStore'
 import { useUIStore } from '../../stores/useUIStore'
-import { openCreateServerModal } from '../../utils/modals'
+import { openCreateServerModal, openCreateChannelModal } from '../../utils/modals'
 import { useContextMenuTrigger } from '../ui/ContextMenu'
 import { Tooltip, useToast } from '../ui'
 import styles from './ServerList.module.css'
@@ -22,12 +22,45 @@ function ServerButton({ server, isActive, onClick }: {
       label: 'Mark as Read',
       icon: <Hash size={16} />,
       onClick: () => show('Marked as read', 'success'),
+      divider: true,
+    },
+    {
+      id: 'boost',
+      label: 'Server Boost',
+      icon: <Zap size={16} />,
+      onClick: () => {
+        onClick()
+        // We'll handle this in MessagingHome using a custom event or store
+        window.dispatchEvent(new CustomEvent('open-server-boost'))
+      },
     },
     {
       id: 'invite',
       label: 'Invite People',
       icon: <UserPlus size={16} />,
-      onClick: () => show('Invite link copied!', 'success'),
+      onClick: () => {
+        onClick()
+        window.dispatchEvent(new CustomEvent('open-server-invite'))
+      },
+    },
+    {
+      id: 'create-channel',
+      label: 'Create Channel',
+      icon: <Hash size={16} />,
+      onClick: () => {
+        onClick()
+        openCreateChannelModal('TEXT')
+      },
+    },
+    {
+      id: 'create-category',
+      label: 'Create Category',
+      icon: <Folder size={16} />,
+      divider: true,
+      onClick: () => {
+        onClick()
+        openCreateChannelModal('CATEGORY')
+      },
     },
     {
       id: 'notifs',

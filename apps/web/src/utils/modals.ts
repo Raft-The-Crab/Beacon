@@ -57,3 +57,7 @@ export function openCreateChannelModal(_type?: string, _parentId?: string) {
   // For now, we just open the modal.
   setShowCreateChannel(true)
 }
+
+export function openServerBoostingModal() {
+  window.dispatchEvent(new CustomEvent('open-server-boost'))
+}

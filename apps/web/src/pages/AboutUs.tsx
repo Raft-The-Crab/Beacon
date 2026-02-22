@@ -10,29 +10,35 @@ export function AboutUs() {
 
             <section>
                 <p>
-                    Beacon was born from a simple idea: that digital communication should be as natural and fluid as a face-to-face conversation, yet powerful enough to span the globe.
+                    Beacon isn't just a messaging app; it's a statement. Born from the need for a truly sovereign, de-centralized, and high-performance communication layer, Beacon represents the next evolution in digital interaction.
                 </p>
             </section>
 
             <section>
-                <h2>Our Mission</h2>
+                <h2>Our Vision</h2>
                 <p>
-                    Our mission is to build reliable communication infrastructure that is easy to use and secure. We believe that when people can talk freely and securely, it strengthens communities and fosters collaboration.
+                    We believe that communication is a fundamental human right. Our vision is to provide the infrastructure where privacy is the default, not an option. We are building a world where your data remains yours, protected by the "Sovereign Protocol"—a custom engine designed for absolute security and sub-100ms global latency.
                 </p>
             </section>
 
             <section>
-                <h2>The Team</h2>
+                <h2>The Beacon Core</h2>
                 <p>
-                    We are a distributed team of engineers and designers based globally. We work to ensure Beacon remains a stable and reliable tool for communication.
+                    Driven by the Raft-The-Crab collective, our team consists of elite architects and designers focused on one goal: visual and technical perfection. We don't just write code; we craft experiences.
                 </p>
             </section>
 
             <section>
-                <h2>Our Technology</h2>
+                <h2>Engine Specifications</h2>
                 <p>
-                    Built on cutting-edge technologies like React, Node.js, and high-performance WebSockets, Beacon is engineered for speed. Our infrastructure is designed to handle millions of simultaneous connections with sub-100ms latency.
+                    Beacon is powered by a proprietary stack optimized for "God-Tier" performance:
                 </p>
+                <ul>
+                    <li><strong>Aesthetic:</strong> Glassmorphism 2.0 with mesh shaders and floating orbital orbs.</li>
+                    <li><strong>Audio:</strong> Native Opus integration with spatial awareness.</li>
+                    <li><strong>Backend:</strong> A 3-way split architecture (Azure/Railway/Render) for extreme redundancy.</li>
+                    <li><strong>Intelligence:</strong> An AI-first framework for seamless bot integration.</li>
+                </ul>
             </section>
         </PolicyPage>
     )

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+
 import {
   Login,
   MessagingHome,
@@ -21,6 +22,7 @@ import {
   Mission,
   BeaconPlusStore
 } from './pages'
+
 import { MainLayout } from './components/layout/MainLayout'
 import { ToastContainer, useToast } from './components/ui'
 import { wsClient } from './services/websocket'
@@ -60,21 +62,24 @@ function App() {
   //   syncTheme()
   // }, [syncTheme])
 
-  const fetchGuilds = useServerStore(s => s.fetchGuilds)
-  const fetchFriends = useUserListStore(s => s.fetchFriends)
-  const fetchChannels = useDMStore(s => s.fetchChannels)
+  const eagerLoadServers = useServerStore(s => s.eagerLoad)
+  const eagerLoadFriends = useUserListStore(s => s.eagerLoad)
+  const eagerLoadChannels = useDMStore(s => s.eagerLoad)
   const fetchWallet = useBeacoinStore(s => s.fetchWallet)
   const user = useAuthStore(s => s.user)
 
-  // Initial Data Fetch
+  // Initial Data Fetch (Eager Loading for zero lag)
   useEffect(() => {
     if (user) {
-      fetchGuilds()
-      fetchFriends()
-      fetchChannels()
-      fetchWallet()
+      // Parallel eager loading
+      Promise.all([
+        eagerLoadServers(),
+        eagerLoadFriends(),
+        eagerLoadChannels(),
+        fetchWallet()
+      ]).catch(err => console.error('Initial eager load failed', err))
     }
-  }, [user, fetchGuilds, fetchFriends, fetchChannels, fetchWallet])
+  }, [user, eagerLoadServers, eagerLoadFriends, eagerLoadChannels, fetchWallet])
 
   // Global WS event handler to sync incoming events into local stores
   React.useEffect(() => {
@@ -128,58 +133,58 @@ function App() {
               <ThemeProvider>
                 <ThemeSynchronizer />
                 <Routes>
-                {/* Entry Point */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/landing" element={<LandingPage />} />
-                <Route path="/login" element={<Login />} />
+                  {/* Entry Point */}
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/landing" element={<LandingPage />} />
+                  <Route path="/login" element={<Login />} />
 
-                {/* Legal & About (Windows or Non-Android only) */}
-                {!isMobilePlatform && (
-                  <>
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="/safety" element={<TOS />} />
-                    <Route path="/about" element={<AboutUs />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/docs" element={<DocsHome />} />
-                    <Route path="/docs/getting-started" element={<GettingStarted />} />
-                    <Route path="/docs/mission" element={<Mission />} />
-                    <Route path="/docs/sdk-tutorial" element={<SDKTutorial />} />
-                    <Route path="/docs/api-reference" element={<APIReference />} />
-                    <Route path="/docs/gateway-events" element={<GatewayDocs />} />
-                  </>
-                )}
+                  {/* Legal & About (Windows or Non-Android only) */}
+                  {!isMobilePlatform && (
+                    <>
+                      <Route path="/terms" element={<Terms />} />
+                      <Route path="/privacy" element={<Privacy />} />
+                      <Route path="/safety" element={<TOS />} />
+                      <Route path="/about" element={<AboutUs />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/docs" element={<DocsHome />} />
+                      <Route path="/docs/getting-started" element={<GettingStarted />} />
+                      <Route path="/docs/mission" element={<Mission />} />
+                      <Route path="/docs/sdk-tutorial" element={<SDKTutorial />} />
+                      <Route path="/docs/api-reference" element={<APIReference />} />
+                      <Route path="/docs/gateway-events" element={<GatewayDocs />} />
+                    </>
+                  )}
 
-                {/* Main App Routes (Universal) */}
-                <Route path="/channels" element={<Navigate to="/channels/@me" replace />} />
-                <Route path="/channels/@me" element={<MessagingHome />} />
-                <Route path="/channels/:serverId" element={<MainLayout />} />
-                <Route path="/channels/:serverId/:channelId" element={<MainLayout />} />
+                  {/* Main App Routes (Universal) */}
+                  <Route path="/channels" element={<Navigate to="/channels/@me" replace />} />
+                  <Route path="/channels/@me" element={<MessagingHome />} />
+                  <Route path="/channels/:serverId" element={<MainLayout />} />
+                  <Route path="/channels/:serverId/:channelId" element={<MainLayout />} />
 
-                {/* Developer Features (Windows Only) */}
-                {!isMobilePlatform && (
-                  <Route path="/developer" element={<DeveloperPortal />} />
-                )}
+                  {/* Developer Features (Windows Only) */}
+                  {!isMobilePlatform && (
+                    <Route path="/developer" element={<DeveloperPortal />} />
+                  )}
 
-                {/* Universal Sub-routes */}
-                <Route path="/user/:userId" element={<UserProfile />} />
-                <Route path="/server/:serverId/settings" element={<ServerSettings />} />
-                <Route path="/voice" element={<VoiceChannel />} />
-                <Route path="/plus" element={<BeaconPlusStore />} />
-                <Route path="/shop" element={<BeaconPlusStore />} />
+                  {/* Universal Sub-routes */}
+                  <Route path="/user/:userId" element={<UserProfile />} />
+                  <Route path="/server/:serverId/settings" element={<ServerSettings />} />
+                  <Route path="/voice" element={<VoiceChannel />} />
+                  <Route path="/plus" element={<BeaconPlusStore />} />
+                  <Route path="/shop" element={<BeaconPlusStore />} />
 
-                {/* Redirect everything else to Messaging Home */}
-                <Route path="*" element={<Navigate to="/channels/@me" replace />} />
-              </Routes>
-            </ThemeProvider>
-            <ToastContainer toasts={toasts} onRemove={remove} />
-            <KeyboardShortcutsPanel />
-            <VersionCheck />
-          </ModalManager>
-        </ContextMenuProvider>
-      </ErrorBoundary>
-    </HelmetProvider>
-  </BrowserRouter>
+                  {/* Redirect everything else to Messaging Home */}
+                  <Route path="*" element={<Navigate to="/channels/@me" replace />} />
+                </Routes>
+              </ThemeProvider>
+              <ToastContainer toasts={toasts} onRemove={remove} />
+              <KeyboardShortcutsPanel />
+              <VersionCheck />
+            </ModalManager>
+          </ContextMenuProvider>
+        </ErrorBoundary>
+      </HelmetProvider>
+    </BrowserRouter>
   )
 }
 

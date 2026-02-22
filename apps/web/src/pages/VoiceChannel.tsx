@@ -6,6 +6,7 @@ import {
   VolumeX, Hand, MoreVertical, Maximize2, Crown, Shield
 } from 'lucide-react'
 import { useAuthStore } from '../stores/useAuthStore'
+import { Avatar } from '../components/ui'
 import styles from './VoiceChannel.module.css'
 
 interface VoiceParticipant {
@@ -238,7 +239,7 @@ function ParticipantTile({
   participant: VoiceParticipant
   isSelf: boolean
 }) {
-  const avatarUrl = p.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.id}`
+  const avatarUrl = p.avatar && !p.avatar.includes('dicebear') ? p.avatar : null
 
   return (
     <div className={`${styles.tile} ${p.isSpeaking && !p.isMuted ? styles.tileSpeaking : ''}`}>
@@ -246,7 +247,11 @@ function ParticipantTile({
         <video className={styles.tileVideo} autoPlay muted={isSelf} playsInline />
       ) : (
         <div className={styles.tileAvatar}>
-          <img src={avatarUrl} alt={p.username} />
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={p.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <Avatar username={p.username} size="lg" />
+          )}
         </div>
       )}
 
@@ -264,7 +269,7 @@ function ParticipantTile({
 
       {/* Status icons */}
       <div className={styles.tileStatus}>
-        {p.isHandRaised && <span className={styles.handIcon}>✋</span>}
+        {p.isHandRaised && <Hand size={14} className={styles.handIcon} />}
         {p.isMuted && <MicOff size={14} className={styles.mutedIcon} />}
         {p.isScreenSharing && <Monitor size={14} className={styles.screenIcon} />}
       </div>
@@ -296,11 +301,15 @@ function MembersPanel({ participants }: { participants: VoiceParticipant[] }) {
         {participants.map((p) => (
           <div key={p.id} className={styles.memberItem}>
             <div className={styles.memberAvatarWrap}>
-              <img
-                src={p.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.id}`}
-                alt={p.username}
-                className={styles.memberAvatar}
-              />
+              {p.avatar && !p.avatar.includes('dicebear') ? (
+                <img
+                  src={p.avatar}
+                  alt={p.username}
+                  className={styles.memberAvatar}
+                />
+              ) : (
+                <Avatar username={p.username} size="sm" />
+              )}
               {p.isSpeaking && !p.isMuted && (
                 <div className={styles.memberSpeakRing} />
               )}
@@ -309,7 +318,7 @@ function MembersPanel({ participants }: { participants: VoiceParticipant[] }) {
             <div className={styles.memberIcons}>
               {p.isMuted && <MicOff size={13} className={styles.memberMuted} />}
               {p.isDeafened && <VolumeX size={13} className={styles.memberMuted} />}
-              {p.isHandRaised && <span style={{ fontSize: 13 }}>✋</span>}
+              {p.isHandRaised && <Hand size={13} className={styles.memberMuted} />}
             </div>
           </div>
         ))}

@@ -17,6 +17,12 @@ interface AuthState {
   logout: () => void
   checkSession: () => Promise<void>
   updateProfile: (data: Partial<User>) => Promise<void>
+  updateStatus: (update: {
+    statusText?: string,
+    statusEmoji?: string,
+    statusMusic?: string,
+    statusMusicMetadata?: User['statusMusicMetadata']
+  }) => Promise<void>
   setUser: (user: User | null) => void
 
   // UI Actions
@@ -107,6 +113,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (err) {
       console.error(err);
+    }
+  },
+
+  updateStatus: async (update) => {
+    try {
+      const { user } = get()
+      if (!user) return
+
+      const newStatus = {
+        ...user,
+        ...update
+      }
+
+      // Simulate API call for now or use updateProfile if backend supports it
+      await get().updateProfile(update as any)
+      set({ user: newStatus })
+    } catch (err) {
+      console.error('Failed to update status:', err)
     }
   },
 

@@ -39,12 +39,10 @@
     "api"
   ],
   "author": "Beacon Team",
-  "license": "PROPRIETARY",
-  "homepage": "https://beacon.chat/developers",
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Raft-The-Crab/Beacon.git",
-    "directory": "packages/beacon-js"
+    "url": "https://github.com/Raft-The-Crab/Beacon-Sdk.git"
   },
   "bugs": {
     "url": "https://github.com/Raft-The-Crab/Beacon/issues"
@@ -58,7 +56,8 @@
   },
   "dependencies": {
     "ws": "^8.19.0",
-    "wrtc": "^0.4.7"
+    "axios": "^1.6.0",
+    "events": "^3.3.0"
   },
   "devDependencies": {
     "@types/ws": "^8.5.10",

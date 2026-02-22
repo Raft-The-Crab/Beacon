@@ -260,3 +260,38 @@
         grid-template-columns: 1fr;
     }
 }
+
+.landingFooter {
+    margin-top: 80px;
+    padding-top: 40px;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.footerLinks {
+    display: flex;
+    gap: 32px;
+}
+
+.footerLinks a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.footerLinks a:hover {
+    color: var(--beacon-brand);
+}
+
+.copyright {
+    font-size: 12px;
+    color: var(--text-muted);
+    opacity: 0.6;
+}

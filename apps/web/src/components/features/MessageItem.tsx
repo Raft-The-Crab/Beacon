@@ -22,6 +22,7 @@ interface MessageItemProps {
   edited?: boolean
   reactions?: MessageReaction[]
   attachments?: any[]
+  components?: any[]
   canDelete?: boolean
   canEdit?: boolean
   isPinned?: boolean
@@ -43,6 +44,7 @@ export function MessageItem({
   edited,
   reactions,
   attachments,
+  components,
   canDelete,
   canEdit,
   isPinned,
@@ -131,6 +133,39 @@ export function MessageItem({
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* ── Bot Framework Components ── */}
+        {components && components.length > 0 && (
+          <div className={styles.messageComponents}>
+            {components.map((row: any, i: number) => {
+              // ActionRow is type 1
+              if (row.type !== 1) return null;
+              return (
+                <div key={i} className={styles.actionRow}>
+                  {row.components?.map((comp: any, j: number) => {
+                    // Button is type 2
+                    if (comp.type === 2) {
+                      return (
+                        <button
+                          key={j}
+                          className={`${styles.componentButton} ${styles['buttonStyle' + (comp.style || 1)]}`}
+                          disabled={comp.disabled}
+                          onClick={() => {
+                            // In a real environment, send WSS event INTERACTION_CREATE or POST /api/interactions
+                            console.log('[Gateway Event] INTERACTION_CREATE:', { customId: comp.custom_id || comp.customId, messageId: _id })
+                          }}
+                        >
+                          {comp.label}
+                        </button>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+              )
+            })}
           </div>
         )}
 

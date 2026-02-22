@@ -280,12 +280,17 @@ export const useUIStore = create<UIState>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (!state) return
-        // Apply theme + density on rehydrate
-        if (state.theme && state.theme !== 'classic' && state.theme !== 'auto') {
-          document.documentElement.setAttribute('data-theme', state.theme)
+        // Apply theme on rehydrate — even for 'dark' which is the default
+        const theme = state.theme
+        if (theme && theme !== 'classic' && theme !== 'auto') {
+          document.documentElement.setAttribute('data-theme', theme)
+        } else if (!theme || theme === 'classic') {
+          document.documentElement.removeAttribute('data-theme')
         }
         if (state.glassEnabled) {
           document.body.classList.add('glass-theme-active')
+        } else {
+          document.body.classList.remove('glass-theme-active')
         }
         if (state.messageDensity) {
           document.documentElement.setAttribute('data-density', state.messageDensity)

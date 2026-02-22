@@ -115,6 +115,16 @@ export function LandingPage() {
             </div>
           </div>
         </section>
+
+        <footer className={styles.landingFooter}>
+          <div className={styles.footerLinks}>
+            <Link to="/terms">Terms of Service</Link>
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/about">About Us</Link>
+            <Link to="/contact">Support</Link>
+          </div>
+          <p className={styles.copyright}>© 2026 Beacon Communication Platform. Proprietary Engine.</p>
+        </footer>
       </div>
     </WorkspaceLayout>
   )

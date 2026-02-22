@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig } from 'axios'
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import type { APIResponse } from '@beacon/types'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
@@ -30,24 +30,30 @@ export const api = axios.create({
 api.interceptors.request.use((config: any) => {
   const token = localStorage.getItem('token')
   if (token) {
+    if (!config.headers) {
+      config.headers = {}
+    }
     config.headers.Authorization = `Bearer ${token}`
   }
-  
+
   // Add CSRF token if available
   const csrfToken = getCookie('csrf_token')
   if (csrfToken) {
+    if (!config.headers) {
+      config.headers = {}
+    }
     config.headers['x-csrf-token'] = csrfToken
   }
-  
+
   return config
 })
 
 // Response interceptor with retry logic
 api.interceptors.response.use(
-  (response: any) => response,
+  (response: AxiosResponse) => response,
   async (error: AxiosError) => {
     const config = error.config as AxiosRequestConfig & { _retry?: number; _retryConfig?: RetryConfig }
-    
+
     if (!config) {
       return Promise.reject(error)
     }
@@ -72,8 +78,8 @@ api.interceptors.response.use(
     ) {
       config._retry++
       console.log(`Retrying request (${config._retry}/${retryConfig.retries})...`)
-      
-      await new Promise(resolve => setTimeout(resolve, retryConfig.retryDelay * config._retry))
+
+      await new Promise(resolve => setTimeout(resolve, (retryConfig.retryDelay as number) * (config._retry as number)))
       return api.request(config)
     }
 
@@ -95,11 +101,8 @@ export async function apiRequest<T = any>(
   retryConfig?: Partial<RetryConfig>
 ): Promise<APIResponse<T>> {
   try {
-    const response = await api.request<APIResponse<T>>({
-      ...config,
-      _retryConfig: { ...defaultRetryConfig, ...retryConfig } as any
-    })
-    return response.data
+    const response = await api.request<APIResponse<T>>(config)
+    return response.data as APIResponse<T>
   } catch (error) {
     if (axios.isAxiosError(error)) {
       return {

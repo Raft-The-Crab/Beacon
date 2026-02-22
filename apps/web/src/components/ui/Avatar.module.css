@@ -1,84 +1,118 @@
+/* Avatar — premium gradient initials */
+/* No external service. No emojis. Pure CSS + SVG. */
+
 .avatar {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border-radius: var(--radius-md);
-  background: var(--bg-tertiary);
-  transition: all var(--transition-normal);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-sm);
-  will-change: transform, box-shadow, border-color;
-  transform: translateZ(0);
+  border-radius: 50%;
+  overflow: visible;
+  user-select: none;
 }
 
-.avatar:hover {
-  border-color: var(--beacon-brand);
-  transform: translateY(-4px) scale(1.08);
-  /* More elastic */
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+.avatar.clickable {
+  cursor: pointer;
+}
+
+.avatar.clickable:hover .inner {
+  transform: scale(1.06);
+  filter: brightness(1.1);
+}
+
+/* Sizes */
+.sm {
+  width: 32px;
+  height: 32px;
+}
+
+.md {
+  width: 40px;
+  height: 40px;
+}
+
+.lg {
+  width: 56px;
+  height: 56px;
+}
+
+.xl {
+  width: 80px;
+  height: 80px;
+}
+
+/* Inner wrapper so status dot sits outside */
+.inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  border: 2px solid rgba(255, 255, 255, 0.08);
 }
 
 .image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: inherit;
+  display: block;
 }
 
+/* Gradient placeholder — derived from name hash */
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: white;
+  border-radius: 50%;
+}
+
+.sm .placeholder {
+  font-size: 13px;
+}
+
+.md .placeholder {
+  font-size: 15px;
+}
+
+.lg .placeholder {
+  font-size: 20px;
+}
+
+.xl .placeholder {
+  font-size: 28px;
+}
+
+/* Status indicator */
 .status {
   position: absolute;
-  bottom: -2px;
-  right: -2px;
+  bottom: 1px;
+  right: 1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-secondary, #1a1b1e);
+  z-index: 1;
+}
+
+.sm .status {
+  width: 9px;
+  height: 9px;
+}
+
+.lg .status {
+  width: 14px;
+  height: 14px;
+}
+
+.xl .status {
   width: 18px;
   height: 18px;
-  border-radius: 50%;
-  border: 4px solid var(--bg-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  transition: all 0.3s var(--transition-smooth);
-  z-index: 10;
-}
-
-.status::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  box-shadow: 0 0 16px currentColor;
-  opacity: 0.4;
-}
-
-.sm {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-}
-
-.md {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-}
-
-.lg {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-lg);
-}
-
-.xl {
-  width: 128px;
-  height: 128px;
-  border-radius: var(--radius-xl);
-}
-
-.clickable {
-  cursor: pointer;
-}
-
-.placeholder {
-  color: var(--text-muted);
-  width: 60%;
-  height: 60%;
 }

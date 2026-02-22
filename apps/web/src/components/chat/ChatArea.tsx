@@ -8,7 +8,7 @@ import { MessageInput } from '../features/MessageInput'
 import { MessageItem } from '../features/MessageItem'
 import { type UploadedFile } from '../../services/fileUpload'
 import styles from './ChatArea.module.css'
-import { Modal, Input, Button, ToastContainer, useToast } from '../ui'
+import { Modal, Input, Button, ToastContainer, useToast, Avatar } from '../ui'
 import { wsClient } from '../../services/websocket'
 import { apiClient } from '@beacon/api-client'
 import { usePinnedMessagesStore } from '../../stores/usePinnedMessagesStore'
@@ -159,7 +159,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         channelId,
         content: msg.content,
         authorName: msg.authorId === 'current-user' ? 'You' : msg.authorId,
-        authorAvatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.authorId}`,
+        authorAvatar: msg.authorAvatar || null,
         timestamp: msg.createdAt,
         pinnedBy: 'current-user',
         pinnedAt: new Date().toISOString(),
@@ -288,7 +288,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                 <MessageItem
                   id={msg.id}
                   authorName={msg.authorId === 'current-user' ? 'You' : msg.authorId}
-                  authorAvatar={`https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.authorId}`}
+                  authorAvatar={msg.authorAvatar || undefined}
                   content={msg.content}
                   timestamp={new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   attachments={msg.attachments}
@@ -414,7 +414,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
           ) : (
             currentServer.members.map((m: any) => (
               <div key={m.userId} style={{ padding: 8, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <img src={m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.userId}`} alt={m.username} style={{ width: 28, height: 28, borderRadius: 6 }} />
+                <Avatar username={m.username || m.userId} src={m.avatar} size="sm" />
                 <div>
                   <div style={{ fontWeight: 600 }}>{m.username || m.userId}</div>
                   <div style={{ fontSize: 12, color: 'var(--muted)' }}>{m.role || ''}</div>

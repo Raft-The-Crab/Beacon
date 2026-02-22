@@ -35,6 +35,7 @@ interface DMStore {
 
   // Actions
   fetchChannels: () => Promise<void>
+  eagerLoad: () => Promise<void>
   setChannels: (channels: DMChannel[]) => void
   setActiveChannel: (channelId: string | null) => void
   addMessage: (channelId: string, message: DirectMessage) => void
@@ -71,6 +72,25 @@ export const useDMStore = create<DMStore>((set, get) => ({
       set({ channels: formatted })
     } catch (e) {
       console.error('Failed to fetch DMs', e)
+    }
+  },
+
+  eagerLoad: async () => {
+    try {
+      const { data } = await api.get('/dms')
+      const formatted = data.map((channel: any) => ({
+        id: channel.id,
+        unreadCount: 0,
+        participants: channel.recipients.map((r: any) => ({
+          id: r.user.id,
+          username: r.user.username,
+          avatar: r.user.avatar,
+          status: 'offline'
+        }))
+      }))
+      set({ channels: formatted })
+    } catch (e) {
+      console.error('DM eager load failed', e)
     }
   },
 
@@ -120,9 +140,9 @@ export const useDMStore = create<DMStore>((set, get) => ({
       set((state) => {
         const exists = state.channels.find((c) => c.id === data.id)
         if (exists) return { activeChannel: data.id }
-        return { 
+        return {
           channels: [...state.channels, newChannel],
-          activeChannel: data.id 
+          activeChannel: data.id
         }
       })
     } catch (e) {

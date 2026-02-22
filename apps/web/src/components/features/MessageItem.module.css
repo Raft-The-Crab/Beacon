@@ -210,6 +210,89 @@
   border-color: var(--beacon-brand);
 }
 
+/* ── Bot Components (Action Rows / Buttons) ── */
+.messageComponents {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.componentButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: #fff;
+}
+
+.componentButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Primary / Blurple (1) */
+.buttonStyle1 {
+  background: var(--beacon-brand);
+}
+
+.buttonStyle1:hover:not(:disabled) {
+  background: var(--beacon-brand-hover);
+}
+
+/* Secondary / Gray (2) */
+.buttonStyle2 {
+  background: var(--bg-surface-elevated);
+}
+
+.buttonStyle2:hover:not(:disabled) {
+  background: var(--text-muted);
+  color: var(--bg-primary);
+}
+
+/* Success / Green (3) */
+.buttonStyle3 {
+  background: var(--status-success);
+}
+
+.buttonStyle3:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* Danger / Red (4) */
+.buttonStyle4 {
+  background: var(--status-error);
+}
+
+.buttonStyle4:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* Link / Url (5) */
+.buttonStyle5 {
+  background: var(--bg-surface-soft);
+  color: var(--text-secondary);
+}
+
+.buttonStyle5:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
 /* ── Reactions ── */
 .reactions {
   display: flex;

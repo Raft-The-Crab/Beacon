@@ -262,7 +262,8 @@ export function Sidebar() {
     { id: 'invite', label: 'Invite People', icon: <Link size={15} />, onClick: () => currentServer && navigator.clipboard.writeText(`https://beacon.app/invite/${currentServer.id}`) },
   ])
 
-  const userAvatar = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}`
+  const showAvatar = !!user?.avatar && !user.avatar.includes('dicebear')
+  const userAvatar = showAvatar ? user.avatar : undefined
   const username = user?.username || 'User'
   const discriminator = user?.discriminator || '0000'
   const memberCount = currentServer?.members?.length || 0

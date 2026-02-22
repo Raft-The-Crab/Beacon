@@ -77,6 +77,15 @@ export interface WSErrorPayload {
 
 export type PresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible'
 
+export interface MusicMetadata {
+  url: string
+  start: number
+  duration: 15 | 30
+  title: string
+  artist: string
+  platform: 'spotify' | 'youtube' | 'unknown'
+}
+
 export interface User {
   id: string
   username: string
@@ -85,6 +94,10 @@ export interface User {
   email: string
   status: PresenceStatus
   customStatus: string | null
+  statusText?: string
+  statusEmoji?: string
+  statusMusic?: string
+  statusMusicMetadata?: MusicMetadata
   theme?: string
   bio?: string | null
   banner?: string | null
@@ -101,6 +114,9 @@ export interface Guild {
   memberCount?: number
   members?: User[]
   channels?: Channel[]
+  boostCount?: number
+  boostLevel?: number
+  vanityUrl?: string | null
 }
 
 // Server is an alias for Guild
@@ -264,28 +280,28 @@ export interface PaginatedResponse<T> {
 // ============================================================================
 
 export enum PermissionBit {
-  ADMINISTRATOR = 1n << 0n,
-  MANAGE_SERVER = 1n << 1n,
-  MANAGE_ROLES = 1n << 2n,
-  MANAGE_CHANNELS = 1n << 3n,
-  KICK_MEMBERS = 1n << 4n,
-  BAN_MEMBERS = 1n << 5n,
-  CREATE_INVITE = 1n << 6n,
-  MANAGE_NICKNAMES = 1n << 7n,
-  MANAGE_MESSAGES = 1n << 8n,
-  SEND_MESSAGES = 1n << 9n,
-  EMBED_LINKS = 1n << 10n,
-  ATTACH_FILES = 1n << 11n,
-  ADD_REACTIONS = 1n << 12n,
-  USE_EXTERNAL_EMOJIS = 1n << 13n,
-  MENTION_EVERYONE = 1n << 14n,
-  MANAGE_WEBHOOKS = 1n << 15n,
-  VIEW_CHANNELS = 1n << 16n,
-  CONNECT_VOICE = 1n << 17n,
-  SPEAK_VOICE = 1n << 18n,
-  MUTE_MEMBERS = 1n << 19n,
-  DEAFEN_MEMBERS = 1n << 20n,
-  MOVE_MEMBERS = 1n << 21n,
+  ADMINISTRATOR = 1 << 0,
+  MANAGE_SERVER = 1 << 1,
+  MANAGE_ROLES = 1 << 2,
+  MANAGE_CHANNELS = 1 << 3,
+  KICK_MEMBERS = 1 << 4,
+  BAN_MEMBERS = 1 << 5,
+  CREATE_INVITE = 1 << 6,
+  MANAGE_NICKNAMES = 1 << 7,
+  MANAGE_MESSAGES = 1 << 8,
+  SEND_MESSAGES = 1 << 9,
+  EMBED_LINKS = 1 << 10,
+  ATTACH_FILES = 1 << 11,
+  ADD_REACTIONS = 1 << 12,
+  USE_EXTERNAL_EMOJIS = 1 << 13,
+  MENTION_EVERYONE = 1 << 14,
+  MANAGE_WEBHOOKS = 1 << 15,
+  VIEW_CHANNELS = 1 << 16,
+  CONNECT_VOICE = 1 << 17,
+  SPEAK_VOICE = 1 << 18,
+  MUTE_MEMBERS = 1 << 19,
+  DEAFEN_MEMBERS = 1 << 20,
+  MOVE_MEMBERS = 1 << 21,
 }
 
 // ============================================================================

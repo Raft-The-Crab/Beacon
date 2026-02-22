@@ -10,10 +10,9 @@ export function GettingStarted() {
             </Helmet>
 
             <article className={`${styles.article} animate-fadeIn`}>
-                <h1 className="accent-text">Getting Started</h1>
+                <h1 className="accent-text gradient-text">Architectural Genesis</h1>
                 <p className={styles.lead}>
-                    Welcome! This guide will get you from zero to a working bot in about 5 minutes.
-                    No prior experience with Beacon's API needed.
+                    Welcome to the frontier. This guide is your gateway to the Beacon ecosystem. In less than 5 minutes, you will deploy your first autonomous node (Bot) utilizing our native SDK.
                 </p>
 
                 <section>
@@ -28,11 +27,11 @@ export function GettingStarted() {
                 <section>
                     <h2>Step 1 — Create an Application</h2>
                     <p>
-                        Head to the <a href="/developer">Developer Portal</a> and click <strong>"New App"</strong>.
-                        Give it a name, then open the app to find your <strong>Client ID</strong> and <strong>Bot Token</strong>.
+                        Access the <a href="/developer">Sovereign Portal</a> and initiate <strong>"New App"</strong>.
+                        Define your identity, then proceed to secure your <strong>Client ID</strong> and <strong>Bot Token</strong>.
                     </p>
                     <div className={styles.infoBox}>
-                        🔒 <strong>Keep your bot token secret.</strong> Anyone who has it can control your bot. If it leaks, regenerate it immediately from the Developer Portal.
+                        🔒 <strong>Security Warning:</strong> Your bot token is a primary key. Exposure grants absolute control over your node. If compromised, regenerate immediately.
                     </div>
                 </section>
 

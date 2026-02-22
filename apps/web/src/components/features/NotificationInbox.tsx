@@ -1,7 +1,20 @@
 import { useEffect, useRef } from 'react'
 import { Bell, X, Check, CheckCheck, MessageCircle, UserPlus, AtSign, Heart, Info } from 'lucide-react'
-import { useNotificationStore, NotificationType, Notification } from '../../stores/useNotificationStore'
+import { useNotificationStore } from '../../stores/useNotificationStore'
 import styles from './NotificationInbox.module.css'
+
+// Define local types if not exported by the store
+type NotificationType = 'message' | 'mention' | 'friend_request' | 'friend_accept' | 'reaction' | 'system' | 'dm' | 'call'
+interface Notification {
+  id: string
+  type: NotificationType
+  title: string
+  body: string
+  createdAt: string
+  read: boolean
+  avatarUrl?: string
+  link?: string
+}
 
 function getNotifIcon(type: NotificationType) {
   switch (type) {

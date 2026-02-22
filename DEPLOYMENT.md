@@ -1,52 +1,49 @@
-# Deployment notes
+# Deploying Beacon
 
-This project includes convenience files to deploy the backend server to Railway and ClawCloud Run.
+Beacon is designed to be deployed as a unified Node.js monolith across Azure App Services (for core APIs) and Railway (for WebSockets). 
 
-Files added:
+## 1. Prerequisites
+- A Node.js environment (v20+ recommended).
+- The 5 databases set up and their connection strings ready:
+  - `DATABASE_URL` (PostgreSQL / Supabase)
+  - `MONGO_URI` (MongoDB Atlas)
+  - `REDIS_URL` (ClawCloud Managed Redis)
+  - `CLOUDINARY_*` keys
 
-- `apps/server/Dockerfile` — container image build for the server
-- `apps/server/Procfile` — Railway process file
-- `scripts/deploy-clawcloudrun.sh` — build + deploy script for ClawCloud Run
+## 2. Deploying to Azure App Services (Main API)
+Azure App Services is perfect for hosting the main Express REST API (utilizing our $99.05 credits on the B1S tier: 1 vCPU, 1GB RAM).
 
-Railway
-- Use `scripts/deploy-server.ps1` to deploy to Railway (PowerShell script). Railway CLI is optional;
-  the script will push to `main` if CLI is not present and Railway auto-deploys from GitHub.
+1. Ensure you have the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) installed and are logged in.
+2. Navigate to `apps/server` and ensure your `package.json` uses the `start:api` script. Azure runs `npm start` by default, so you should temporarily alias `"start"` to `"npm run start:api"` in production.
+3. Create an Azure App Service plan (Linux, Node 20, **B1S Tier**).
+4. Configure the Environment Variables in the Azure Portal to match `.env.production`.
+5. Deploy using the Azure CLI or VS Code Azure extension.
+   ```bash
+   az webapp up --sku B1 --name beacon-api --runtime "NODE:20LTS"
+   ```
 
-ClawCloud Run
-- Ensure the ClawCloud Run CLI (or compatible `gcloud`) is installed and authenticated.
-- Run:
+## 3. Deploying to Railway (WebSocket Gateway)
+Railway sits in front of the real-time websocket connections to leverage their edge network. 
 
-```bash
-bash scripts/deploy-clawcloudrun.sh
-```
+1. Install the [Railway CLI](https://docs.railway.app/guides/cli).
+2. Login with `railway login`.
+3. Navigate to `apps/server`.
+4. Run `railway init` and link your project.
+5. In the Railway Dashboard, add all the environment variables from `.env.production`.
+6. Go to Settings > Service > Start Command and set it to: `npm run start:ws`
+7. Run `railway up` to deploy.
 
-Adjust `SERVICE_NAME` and `REGION` in the script as needed.
+## 4. Deploying to Render (Background Workers)
+Render handles our high-memory AI and Media tasks reliably.
 
-### CI / ClawCloud Run (example)
+1. Create a new "Web Service" on [Render](https://render.com).
+2. Connect your GitHub repository.
+3. Set the Root Directory to `apps/server` (or leave as root and use a build script).
+4. For the **Start Command**, use: `npm run start:render`
+5. Add all the environment variables from `.env.production`.
+6. Use the **Free Tier** (or Starter) to get a permanent `https://*.onrender.com` URL.
 
-This repo includes a template workflow that invokes `scripts/deploy-clawcloudrun.sh` after building the workspace. Place it at `.github/workflows/deploy-clawcloudrun.yml`. The workflow runs on pushes to `main` and will execute the provided script — set repository secrets like `CLAW_SERVICE_NAME` and `CLAW_REGION` as needed.
-
-### Railway
-
-You can deploy to Railway using `scripts/deploy-server.ps1` or the Railway CLI. For CI, a sample workflow `.github/workflows/deploy-railway.yml` is included. It installs the Railway CLI and will run `railway up` when a `RAILWAY_TOKEN` secret is provided.
-
-Notes:
-- If you use Railway's GitHub integration, pushing to `main` may automatically trigger a Railway deploy — the PowerShell script supports that fallback.
-- For CI-driven Railway deploys, set `RAILWAY_TOKEN` in repository secrets and the workflow will call `railway up --environment production`.
-
-#### Recommended repository secrets / env vars
-
-ClawCloud Run workflow expects (examples):
-- `CLAW_SERVICE_NAME` — service name (e.g., `beacon-server`)
-- `CLAW_REGION` — region (e.g., `us-central1`)
-
-Cloud Run / GCP workflow expects (examples):
-- `GCP_PROJECT_ID` — Google Cloud project ID
-- `GCP_SA_KEY` — base64-encoded service account JSON key with Cloud Run permissions
-- `IMAGE_NAME` — container image tag (e.g., `gcr.io/my-project/beacon-server:latest`)
-- `CLOUD_RUN_SERVICE` — Cloud Run service name
-
-Railway workflow expects:
-- `RAILWAY_TOKEN` — Railway API token with deploy permissions
-
-Make sure any keys are stored in GitHub repository secrets and not checked into source control.
+## Continuous Integration (GitHub Actions)
+You can configure GitHub Actions to automatically deploy to Azure and Railway on pushes to the `main` branch. 
+- For Azure, use the `azure/webapps-deploy` action.
+- For Railway, ensure the `RAILWAY_TOKEN` secret is set and use a script that runs `railway up --ci`.

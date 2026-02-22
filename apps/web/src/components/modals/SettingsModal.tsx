@@ -4,7 +4,7 @@ import { useUIStore } from '../../stores/useUIStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useServerStore } from '../../stores/useServerStore'
 import { useNavigate } from 'react-router-dom'
-import { Button, Input, AvatarUpload, Switch } from '../ui'
+import { Button, Input, AvatarUpload, Switch, Avatar } from '../ui'
 import { useToast } from '../ui'
 import { apiClient } from '@beacon/api-client'
 import { fileUploadService, type UploadedFile } from '../../services/fileUpload'
@@ -144,7 +144,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                     <div className={styles.tabContent}>
                         <div className={styles.profileSection}>
                             <AvatarUpload
-                                currentAvatar={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`}
+                                currentAvatar={user?.avatar && !user.avatar.includes('dicebear') ? user.avatar : undefined}
                                 onUpload={handleAvatarUpload}
                                 size={96}
                                 type="user"
@@ -155,7 +155,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                             <Input
                                 label="Username"
                                 value={username}
-                                onChange={(e) => setUsername(e.currentTarget.value)}
+                                onChange={(e: any) => setUsername(e.target.value)}
                                 placeholder="Your username"
                             />
                         </div>
@@ -164,7 +164,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                             <Input
                                 label="Custom Status"
                                 value={customStatus}
-                                onChange={(e) => setCustomStatus(e.currentTarget.value)}
+                                onChange={(e: any) => setCustomStatus(e.target.value)}
                                 placeholder="What's on your mind?"
                             />
                         </div>
@@ -173,7 +173,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                             <Input
                                 label="Bio"
                                 value={bio}
-                                onChange={(e) => setBio(e.currentTarget.value)}
+                                onChange={(e: any) => setBio(e.target.value)}
                                 placeholder="Tell us about yourself"
                                 multiline
                                 rows={4}
@@ -436,7 +436,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                 <div className={styles.backgroundControls}>
                                     <Input
                                         value={customBackground || ''}
-                                        onChange={(e) => setCustomBackground(e.currentTarget.value || null)}
+                                        onChange={(e: any) => setCustomBackground(e.target.value || null)}
                                         placeholder="Enter image URL..."
                                         className={styles.bgInput}
                                     />
@@ -547,10 +547,19 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                     <Code size={16} />
                                     GitHub
                                 </Button>
-                                <Button variant="secondary" size="sm" onClick={() => window.open('https://beacon.com/docs', '_blank')}>
+                                <Button variant="secondary" size="sm" onClick={() => {
+                                    navigate('/docs')
+                                    onClose()
+                                }}>
                                     <Book size={16} />
                                     Documentation
                                 </Button>
+                            </div>
+
+                            <div className={styles.legalLinks}>
+                                <button onClick={() => { navigate('/terms'); onClose(); }}>Terms of Service</button>
+                                <div className={styles.dot} />
+                                <button onClick={() => { navigate('/privacy'); onClose(); }}>Privacy Policy</button>
                             </div>
                         </div>
                     </div>
@@ -567,7 +576,11 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                 <div className={styles.sidebar}>
                     <div className={styles.userProfile}>
                         <div className={styles.avatar}>
-                            <img src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`} alt={user?.username} />
+                            <Avatar
+                                src={user?.avatar && !user.avatar.includes('dicebear') ? user.avatar : undefined}
+                                username={user?.username}
+                                size="md"
+                            />
                         </div>
                         <div className={styles.userInfo}>
                             <h3>{user?.username}</h3>

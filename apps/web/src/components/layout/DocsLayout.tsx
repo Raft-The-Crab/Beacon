@@ -84,8 +84,14 @@ export function DocsLayout({ children }: DocsLayoutProps) {
 
     return (
         <WorkspaceLayout sidebar={sidebar} rightPanel={toc}>
-            <div className={styles.contentWrapper}>
-                {children}
+            <div className={`${styles.contentWrapper} mesh-gradient`}>
+                <div className={styles.atmosGlow} />
+                <div className={styles.orb} style={{ top: '15%', right: '5%' }} />
+                <div className={styles.orb} style={{ bottom: '15%', left: '5%', animationDelay: '-12s' }} />
+
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                    {children}
+                </div>
             </div>
         </WorkspaceLayout>
     )

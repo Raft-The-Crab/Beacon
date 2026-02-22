@@ -51,7 +51,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
     if (friends.length === 0) {
       apiFetch('/users/me/friends')
         .then(data => setAllFriends(data.friends || data || []))
-        .catch(() => {});
+        .catch(() => { });
     }
     searchRef.current?.focus();
   }, []);
@@ -136,7 +136,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
               <div key={f.id} className={styles.chip}>
                 <img
                   className={styles.chipAvatar}
-                  src={f.avatarUrl || `https://api.dicebear.com/7.x/thumbs/svg?seed=${f.username}`}
+                  src={f.avatarUrl || undefined}
                   alt={f.username}
                 />
                 <span className={styles.chipName}>{f.displayName || f.username}</span>
@@ -174,7 +174,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
                 <div className={styles.avatarWrap}>
                   <img
                     className={styles.avatar}
-                    src={f.avatarUrl || `https://api.dicebear.com/7.x/thumbs/svg?seed=${f.username}`}
+                    src={f.avatarUrl || undefined}
                     alt={f.username}
                   />
                   <span

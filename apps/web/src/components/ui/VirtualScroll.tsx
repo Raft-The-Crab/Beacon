@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useState, useCallback } from 'react'
 
 interface VirtualScrollProps<T> {
   items: T[]

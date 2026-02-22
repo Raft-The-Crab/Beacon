@@ -1,5 +1,5 @@
-import { Client } from './client'
-import { RestClient } from './rest/RestClient'
+import { Client } from '../client'
+import { RestClient } from '../rest/RestClient'
 
 // ============================================================================
 // ADVANCED COMPONENTS (Beyond Discord)
@@ -62,7 +62,7 @@ export class ChartBuilder {
   }
 
   build() {
-    return { type: 'chart', ...this.data }
+    return { ...this.data }
   }
 }
 
@@ -317,18 +317,7 @@ export class RatingBuilder {
 }
 
 // Export all
-export {
-  DataTableBuilder,
-  ChartBuilder,
-  KanbanBuilder,
-  CalendarBuilder,
-  ProgressTrackerBuilder,
-  FileBrowserBuilder,
-  CodeEditorBuilder,
-  CarouselBuilder,
-  AccordionBuilder,
-  RatingBuilder
-}
+// Export all (already exported individually)
 
 interface Column {
   name: string

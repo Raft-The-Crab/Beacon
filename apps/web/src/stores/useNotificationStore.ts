@@ -15,17 +15,24 @@ interface SmartNotification {
   priority: 'low' | 'medium' | 'high'
   title: string
   body: string
-  timestamp: Date
+  createdAt: string
   read: boolean
 }
 
 interface NotificationStore {
   settings: NotificationSettings
   notifications: SmartNotification[]
-  
+  unreadCount: number
+  dropdownOpen: boolean
+  isLoading: boolean
+
   updateSettings: (settings: Partial<NotificationSettings>) => void
   addNotification: (notification: Omit<SmartNotification, 'id' | 'timestamp' | 'read'>) => void
-  markAsRead: (id: string) => void
+  markRead: (id: string) => void
+  markAllRead: () => void
+  deleteNotification: (id: string) => void
+  toggleDropdown: () => void
+  setDropdownOpen: (open: boolean) => void
   clearAll: () => void
   shouldNotify: (notification: Omit<SmartNotification, 'id' | 'timestamp' | 'read'>) => boolean
 }
@@ -41,6 +48,9 @@ export const useNotificationStore = create<NotificationStore>()(
         mutedServers: []
       },
       notifications: [],
+      unreadCount: 0,
+      dropdownOpen: false,
+      isLoading: false,
 
       updateSettings: (newSettings) => {
         set(state => ({
@@ -55,12 +65,13 @@ export const useNotificationStore = create<NotificationStore>()(
         const newNotif: SmartNotification = {
           ...notification,
           id: Date.now().toString(),
-          timestamp: new Date(),
+          createdAt: new Date().toISOString(),
           read: false
         }
 
         set(state => ({
-          notifications: [newNotif, ...state.notifications].slice(0, 100)
+          notifications: [newNotif, ...state.notifications].slice(0, 100),
+          unreadCount: state.unreadCount + 1
         }))
 
         // Browser notification
@@ -72,16 +83,42 @@ export const useNotificationStore = create<NotificationStore>()(
         }
       },
 
-      markAsRead: (id) => {
+      markRead: (id) => {
         set(state => ({
           notifications: state.notifications.map(n =>
             n.id === id ? { ...n, read: true } : n
-          )
+          ),
+          unreadCount: Math.max(0, state.unreadCount - 1)
         }))
       },
 
+      markAllRead: () => {
+        set(state => ({
+          notifications: state.notifications.map(n => ({ ...n, read: true })),
+          unreadCount: 0
+        }))
+      },
+
+      deleteNotification: (id) => {
+        set(state => {
+          const notif = state.notifications.find(n => n.id === id)
+          return {
+            notifications: state.notifications.filter(n => n.id !== id),
+            unreadCount: notif && !notif.read ? Math.max(0, state.unreadCount - 1) : state.unreadCount
+          }
+        })
+      },
+
+      toggleDropdown: () => {
+        set(state => ({ dropdownOpen: !state.dropdownOpen }))
+      },
+
+      setDropdownOpen: (open) => {
+        set({ dropdownOpen: open })
+      },
+
       clearAll: () => {
-        set({ notifications: [] })
+        set({ notifications: [], unreadCount: 0 })
       },
 
       shouldNotify: (notification) => {
@@ -93,7 +130,7 @@ export const useNotificationStore = create<NotificationStore>()(
           const hour = now.getHours()
           const start = parseInt(settings.quietHours.start.split(':')[0])
           const end = parseInt(settings.quietHours.end.split(':')[0])
-          
+
           if (hour >= start || hour < end) {
             return notification.priority === 'high'
           }

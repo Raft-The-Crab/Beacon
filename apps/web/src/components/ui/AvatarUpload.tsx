@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
-import { Upload, Camera, Loader } from 'lucide-react'
+import { Camera, Upload, Loader2 } from 'lucide-react'
+import { Avatar } from './Avatar'
 import { fileUploadService, type UploadedFile } from '../../services/fileUpload'
 import styles from './AvatarUpload.module.css'
 
@@ -35,10 +36,10 @@ export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user
     // Upload
     setUploading(true)
     try {
-      const uploaded = type === 'bot' 
+      const uploaded = type === 'bot'
         ? await fileUploadService.uploadBotAvatar(file)
         : await fileUploadService.uploadAvatar(file)
-      
+
       onUpload(uploaded)
     } catch (error) {
       console.error('Avatar upload failed:', error)
@@ -58,14 +59,14 @@ export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user
       >
         {uploading ? (
           <div className={styles.uploading}>
-            <Loader className={styles.spinner} size={size / 3} />
+            <Loader2 className={styles.spinner} size={size / 3} />
           </div>
         ) : (
           <>
-            <img
-              src={preview || currentAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`}
-              alt="Avatar"
-              className={styles.avatar}
+            <Avatar
+              src={preview || currentAvatar || undefined}
+              username="User"
+              size="xl"
             />
             <div className={styles.overlay}>
               <Camera size={size / 4} />

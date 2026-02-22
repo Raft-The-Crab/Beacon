@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 
 interface TranscriptLine {
   userId: string
@@ -7,7 +7,7 @@ interface TranscriptLine {
   timestamp: Date
 }
 
-export function VoiceTranscription({ channelId }: { channelId: string }) {
+export function VoiceTranscription({ channelId: _channelId }: { channelId: string }) {
   const [transcript, setTranscript] = useState<TranscriptLine[]>([])
   const [isEnabled, setIsEnabled] = useState(false)
 

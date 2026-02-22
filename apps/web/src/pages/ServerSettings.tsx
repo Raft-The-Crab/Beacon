@@ -6,7 +6,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { AuditLogModal } from '../components/modals/AuditLogModal'
 import WebhooksManager from '../components/modals/WebhooksManager'
 import { fileUploadService } from '../services/fileUpload'
-import { useToast } from '../components/ui/Toast'
+import { Avatar, Input, Button, Modal, ToastContainer, useToast } from '../components/ui'
 import styles from './ServerSettings.module.css'
 
 type TabId =
@@ -149,9 +149,10 @@ export function ServerSettings() {
                     {uploadingIcon ? (
                       <div className={styles.uploadingSpinner} />
                     ) : (
-                      <img
-                        src={currentServer.icon || `https://api.dicebear.com/7.x/initials/svg?seed=${currentServer.name}`}
-                        alt="Server Icon"
+                      <Avatar
+                        src={currentServer.icon && !currentServer.icon.includes('dicebear') ? currentServer.icon : undefined}
+                        username={currentServer.name}
+                        size="lg"
                       />
                     )}
                     <div className={styles.avatarOverlay} onClick={() => fileInputRef.current?.click()}>
@@ -237,10 +238,10 @@ export function ServerSettings() {
                   <div className={styles.memberList}>
                     {(currentServer.members ?? []).map((m: any) => (
                       <div key={m.id} className={styles.memberRow}>
-                        <img
-                          src={m.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.id}`}
-                          alt={m.user?.username}
-                          className={styles.memberAvatar}
+                        <Avatar
+                          src={m.user?.avatar && !m.user.avatar.includes('dicebear') ? m.user.avatar : undefined}
+                          username={m.user?.username || m.userId}
+                          size="sm"
                         />
                         <div className={styles.memberInfo}>
                           <span className={styles.memberName}>{m.user?.username || m.userId}</span>

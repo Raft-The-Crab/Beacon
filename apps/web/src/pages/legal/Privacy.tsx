@@ -10,68 +10,55 @@ export function Privacy() {
 
             <section>
                 <p>
-                    Beacon ("we", "us", or "our") is committed to protecting your privacy. This Privacy Policy explains how your personal information is collected, used, and disclosed by Beacon.
+                    At Beacon, privacy isn't just a feature—it's the core of our protocol. We are committed to transparency regarding the data we collect and how we utilize it to power your communication experience.
                 </p>
             </section>
 
             <section>
-                <h2>1. Information Collection</h2>
+                <h2>1. Data Collection Protocol</h2>
                 <p>
-                    <strong>Personal Data:</strong> We collect information that you provide directly to us when you create an account, such as your email address, username, and password.
+                    <strong>Identity:</strong> We collect your email address and username to establish your node identity.
                 </p>
                 <p>
-                    <strong>Message Content:</strong> We process and store the messages, images, and other content you transmit through the platform to provide the service and features like message history and search.
+                    <strong>Metadata:</strong> To ensure high-performance delivery, we process temporary metadata such as IP addresses for latency routing. This is purged periodically.
                 </p>
                 <p>
-                    <strong>Technical Data:</strong> We automatically collect certain information when you visit, use, or navigate the platform. This includes IP address, device identifiers, browser type, and usage patterns.
-                </p>
-            </section>
-
-            <section>
-                <h2>2. Use of Information</h2>
-                <p>We use the information we collect for various purposes, including:</p>
-                <ul>
-                    <li>To provide, operate, and maintain our platform</li>
-                    <li>To improve, personalize, and expand our platform</li>
-                    <li>To understand and analyze how you use our platform</li>
-                    <li>To develop new products, services, features, and functionality</li>
-                    <li>To communicate with you, either directly or through one of our partners</li>
-                    <li>To find and prevent fraud and abuse</li>
-                </ul>
-            </section>
-
-            <section>
-                <h2>3. Data Sharing and Disclosure</h2>
-                <p>
-                    We do not sell your personal data. We may share information with third-party service providers that perform services for us, such as hosting providers, customer support tools, and analytics services, but only to the extent necessary for them to provide those services.
+                    <strong>Music Analytics:</strong> If you use "Music Status Pro", we may temporarily cache track metadata (Title/Artist) to improve loading speeds for other users viewing your profile.
                 </p>
             </section>
 
             <section>
-                <h2>4. Data Security</h2>
+                <h2>2. Advanced Encryption</h2>
                 <p>
-                    We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable.
+                    Your messages are treated with the highest priority. We utilize industry-standard encryption for data at rest and in transit. Private communications remain private.
                 </p>
             </section>
 
             <section>
-                <h2>5. Data Retention</h2>
+                <h2>3. No-Sale Guarantee</h2>
                 <p>
-                    We retain your personal information only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use your information to the extent necessary to comply with our legal obligations and resolve disputes.
+                    Beacon does not, and will never, sell your personal data to third-party advertisers. Our business model is based on premium features (Beacon Pro), not on the exploitation of user information.
                 </p>
             </section>
 
             <section>
-                <h2>6. Your Privacy Rights</h2>
+                <h2>4. Third-Party Integrations</h2>
                 <p>
-                    Depending on your location, you may have certain rights regarding your personal data, including the right to access, correct, or delete your data. You can manage your account settings and data exports directly within the Beacon application.
+                    When you link a Spotify or YouTube account for music status, we interact with their respective APIs. These interactions are governed by their privacy policies. We only request the minimum data necessary for the feature.
                 </p>
             </section>
 
             <section>
-                <h2>7. Contact Information</h2>
+                <h2>5. Right to Erasure</h2>
                 <p>
-                    If you have questions or comments about this policy, you may contact our Data Protection Officer at <strong>privacy@beacon.chat</strong>.
+                    You have total control over your data. You may request account deletion at any time via the Settings panel, which will trigger a cascade purge of your associated data from our active clusters.
+                </p>
+            </section>
+
+            <section>
+                <h2>6. Security Incident Protocol</h2>
+                <p>
+                    In the unlikely event of a security breach, we maintain a rapid-response team to mitigate risks and notify affected users within 72 hours of verification.
                 </p>
             </section>
         </PolicyPage>

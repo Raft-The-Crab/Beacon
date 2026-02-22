@@ -76,7 +76,7 @@ class FileUploadService {
     }
 
     const data = await response.json()
-    return data
+    return data.success ? data.data : data
   }
 
   async uploadMultiple(files: File[], options?: UploadOptions): Promise<UploadedFile[]> {

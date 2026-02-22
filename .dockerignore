@@ -1,5 +1,0 @@
-# Force Railway to rebuild
-node_modules
-dist
-.git
-*.log

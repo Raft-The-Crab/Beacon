@@ -1,8 +1,29 @@
 /**
- * Collection<K, V> — Enhanced Map with utility methods
- * Similar to Discord.js Collection for familiar DX
+ * Collection<K, V> — Enhanced Map with utility methods and LRU cache limits
+ * Similar to Discord.js Collection, but memory-safe for edge environments
  */
 export class Collection<K, V> extends Map<K, V> {
+  public maxSize?: number;
+
+  constructor(entries?: readonly (readonly [K, V])[] | null) {
+    super(entries);
+  }
+
+  /** Set maximum cache size before oldest entries are evicted */
+  setMaxSize(size: number): this {
+    this.maxSize = size;
+    return this;
+  }
+
+  /** Set an item, automatically evicting the oldest if over capacity */
+  set(key: K, value: V): this {
+    super.set(key, value);
+    if (this.maxSize !== undefined && this.size > this.maxSize) {
+      const firstKey = this.keys().next().value;
+      if (firstKey !== undefined) this.delete(firstKey);
+    }
+    return this;
+  }
   /** Return first value matching predicate */
   find(predicate: (value: V, key: K, collection: this) => boolean): V | undefined {
     for (const [key, val] of this) {
@@ -14,6 +35,7 @@ export class Collection<K, V> extends Map<K, V> {
   /** Filter into a new Collection */
   filter(predicate: (value: V, key: K, collection: this) => boolean): Collection<K, V> {
     const result = new Collection<K, V>();
+    if (this.maxSize) result.setMaxSize(this.maxSize);
     for (const [key, val] of this) {
       if (predicate(val, key, this)) result.set(key, val);
     }
@@ -91,7 +113,9 @@ export class Collection<K, V> extends Map<K, V> {
 
   /** Clone this collection */
   clone(): Collection<K, V> {
-    return new Collection(this);
+    const cloned = new Collection<K, V>([...this]);
+    if (this.maxSize) cloned.setMaxSize(this.maxSize);
+    return cloned;
   }
 
   /** Merge another collection into this one (non-destructive, returns new) */

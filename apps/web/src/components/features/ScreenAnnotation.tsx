@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 
 interface AnnotationTool {
   type: 'pen' | 'highlighter' | 'arrow' | 'text'
@@ -13,7 +13,7 @@ interface Annotation {
   text?: string
 }
 
-export function ScreenAnnotation({ streamId }: { streamId: string }) {
+export function ScreenAnnotation({ streamId: _streamId }: { streamId: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [tool, setTool] = useState<AnnotationTool>({ type: 'pen', color: '#ff0000', size: 3 })
   const [annotations, setAnnotations] = useState<Annotation[]>([])
@@ -62,21 +62,21 @@ export function ScreenAnnotation({ streamId }: { streamId: string }) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    // Draw all annotations
-    ;[...annotations, currentAnnotation].filter(Boolean).forEach(ann => {
-      if (!ann) return
-      ctx.strokeStyle = ann.tool.color
-      ctx.lineWidth = ann.tool.size
-      ctx.lineCap = 'round'
-      ctx.globalAlpha = ann.tool.type === 'highlighter' ? 0.5 : 1
+      // Draw all annotations
+      ;[...annotations, currentAnnotation].filter(Boolean).forEach(ann => {
+        if (!ann) return
+        ctx.strokeStyle = ann.tool.color
+        ctx.lineWidth = ann.tool.size
+        ctx.lineCap = 'round'
+        ctx.globalAlpha = ann.tool.type === 'highlighter' ? 0.5 : 1
 
-      ctx.beginPath()
-      ann.points.forEach((point, i) => {
-        if (i === 0) ctx.moveTo(point.x, point.y)
-        else ctx.lineTo(point.x, point.y)
+        ctx.beginPath()
+        ann.points.forEach((point, i) => {
+          if (i === 0) ctx.moveTo(point.x, point.y)
+          else ctx.lineTo(point.x, point.y)
+        })
+        ctx.stroke()
       })
-      ctx.stroke()
-    })
   }, [annotations, currentAnnotation])
 
   return (

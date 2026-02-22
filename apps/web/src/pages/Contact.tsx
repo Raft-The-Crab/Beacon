@@ -12,7 +12,7 @@ export function Contact() {
 
             <section>
                 <p>
-                    Need help? Have feedback? We'd love to hear from you. The Beacon team is committed to providing the best support in the industry.
+                    Whether you are an architect building on our SDK, a user seeking sovereignty, or a partner interested in the Beacon protocol, our lines of communication are always open. We prioritize high-impact feedback and technical inquiries.
                 </p>
             </section>
 
@@ -27,9 +27,9 @@ export function Contact() {
 
                     <div className={styles.card}>
                         <div className={styles.iconWrapper} style={{ color: 'var(--accent-green)' }}><MessageSquare size={32} /></div>
-                        <h3>Community</h3>
-                        <p>Join our Beacon server for real-time help.</p>
-                        <span className={styles.contactValue}>beacon.app/community</span>
+                        <h3>Protocol HQ</h3>
+                        <p>Join our global Beacon server for real-time architectural support.</p>
+                        <span className={styles.contactValue}>beacon.network/hq</span>
                     </div>
 
                     <div className={styles.card}>

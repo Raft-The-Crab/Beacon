@@ -127,16 +127,16 @@
 }
 
 .appCard {
-  background: var(--bg-secondary);
+  background: var(--bg-surface-elevated);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
   transition: all var(--transition-normal);
   display: flex;
   flex-direction: column;
-  backdrop-filter: blur(10px);
   position: relative;
   z-index: 2;
+  box-shadow: var(--shadow-md);
 }
 
 .appBanner {

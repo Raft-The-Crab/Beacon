@@ -1,7 +1,6 @@
 /**
- * Beacon Moderation Service v3
- * Context-aware, multi-language, NOT paranoid
- * Supports: SWI-Prolog engine + pure TS fallback + any language
+ * Beacon Moderation Service v4
+ * Hosted AI > Prolog > Decision > Final Fallback
  */
 
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process'
@@ -10,6 +9,9 @@ import path from 'path'
 const __dirname = path.resolve();
 const PROLOG_SCRIPT = path.join(__dirname, 'ai', 'moderation.pl')
 const SWIPL = process.env.SWIPL_PATH || 'swipl'
+const AI_ENDPOINT = process.env.AI_MODERATION_ENDPOINT || 'http://localhost:11434/v1/chat/completions'
+const AI_MODEL = process.env.AI_MODERATION_MODEL || 'llama3'
+const AI_API_KEY = process.env.AI_API_KEY || 'sk-none'
 
 export interface ModerationResult {
   severity: 'safe' | 'low' | 'medium' | 'high' | 'critical'
@@ -28,6 +30,69 @@ export interface ModerationAction {
   duration?: number // ms, for temp actions
   reason: string
   automated: boolean
+}
+
+// ── AI Engine ─────────────────────────────────────────────────────
+class AIEngine {
+  async check(content: string, userId: string, priorOffenses: number): Promise<ModerationResult | null> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s timeout for fast AI
+
+      const response = await fetch(AI_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: AI_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: `You are a moderation AI. Reply exactly in JSON format with no extra text. Format: {"flagged": boolean, "severity": "safe"|"low"|"medium"|"high"|"critical", "reason": "short phrase"}`
+            },
+            {
+              role: 'user',
+              content: `Analyze this chat message: "${content}"`
+            }
+          ],
+          response_format: { type: 'json_object' }
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) return null;
+
+      const data = await response.json() as any;
+      const result = JSON.parse(data.choices[0].message.content);
+
+      if (!result.flagged || result.severity === 'safe') {
+        return { severity: 'safe', reason: 'none', action: 'none', description: 'AI verified safe.', approved: true, priorOffenses };
+      }
+
+      // If AI flags it, we normalize it to a ModerationResult to be evaluated
+      let action: ModerationResult['action'] = 'warning';
+      if (result.severity === 'critical') action = 'immediate_ban_and_ip_ban';
+      else if (result.severity === 'high') action = 'escalate';
+      else if (result.severity === 'medium') action = 'account_risk_flag';
+
+      return {
+        severity: result.severity,
+        reason: result.reason || 'ai_flagged',
+        action,
+        description: `AI flagged message as ${result.severity}`,
+        approved: false,
+        priorOffenses
+      };
+
+    } catch (e) {
+      // Return null to cascade down to Prolog
+      console.warn(`[AI Engine] Offline or timeout, cascading to Prolog...`);
+      return null;
+    }
+  }
 }
 
 // ── Prolog Bridge ─────────────────────────────────────────────────
@@ -118,36 +183,17 @@ function tsFallback(content: string, priorOffenses: number): ModerationResult {
 
   const csam = [
     'child pornography', 'cp collection trade', 'loli trade', 'csam',
-    'pedo trade', 'selling child',
-    'bata porn', 'bata hubad ibenta', 'anak porno jual',
-    'pornografia infantil vender'
+    'pedo trade', 'selling child'
   ]
   if (csam.some(p => text.includes(p))) {
     return { severity: 'critical', reason: 'csam', action: 'immediate_ban_and_ip_ban', description: 'Explicit CSAM content detected.', approved: false, priorOffenses }
   }
 
   const drugTrafficking = [
-    'fentanyl vendor', 'selling fentanyl', 'heroin vendor', 'meth vendor',
-    'cocaine shop', 'shabu ibenta', 'droga ibenta telegram', 'sabu jual telegram',
-    'drogas vender telegram'
+    'fentanyl vendor', 'selling fentanyl', 'heroin vendor', 'meth vendor', 'cocaine shop'
   ]
   if (!isSafe && drugTrafficking.some(p => text.includes(p))) {
     return { severity: 'critical', reason: 'real_drug_trafficking', action: 'immediate_ban_and_ip_ban', description: 'Real drug trafficking coordination detected.', approved: false, priorOffenses }
-  }
-
-  const terrorism = ['mass shooting', 'isis', 'al-qaeda', 'how to make pipe bomb', 'جهاد', 'داعش']
-  if (!isSafe && terrorism.some(p => text.includes(p))) {
-    return { severity: 'critical', reason: 'terrorism_radicalization', action: 'immediate_ban_and_ip_ban', description: 'Terrorism or radicalization content detected.', approved: false, priorOffenses }
-  }
-
-  const humanTrafficking = ['job offer abroad no experience', 'passport pickup', 'selling girl', 'escort service minors']
-  if (!isSafe && humanTrafficking.some(p => text.includes(p))) {
-    return { severity: 'critical', reason: 'human_trafficking', action: 'immediate_ban_and_ip_ban', description: 'Human trafficking pattern detected.', approved: false, priorOffenses }
-  }
-
-  const financialCrimes = ['money laundering', 'clean stolen cash', 'bank login trade', 'phishing script']
-  if (!isSafe && financialCrimes.some(p => text.includes(p))) {
-    return { severity: 'critical', reason: 'financial_crimes', action: 'immediate_ban_and_ip_ban', description: 'Financial crime involvement detected.', approved: false, priorOffenses }
   }
 
   const doxxing = [
@@ -159,15 +205,10 @@ function tsFallback(content: string, priorOffenses: number): ModerationResult {
     return { severity: priorOffenses >= 2 ? 'critical' : 'high', reason: 'doxxing', action, description: 'Malicious info sharing.', approved: false, priorOffenses }
   }
 
-  const credibleThreats = ["i will kill you irl", "i know where you live and", "you're dead tonight"]
-  if (!isSafe && credibleThreats.some(p => text.includes(p))) {
-    return { severity: 'high', reason: 'credible_targeted_threat', action: 'escalate', description: 'Specific threat detected.', approved: false, priorOffenses }
-  }
-
   return { severity: 'safe', reason: 'none', action: 'none', description: 'Content is safe.', approved: true, priorOffenses }
 }
 
-// ── Determine moderation action from result ───────────────────────
+// ── Decision Engine ───────────────────────────────────────────────
 export function determineModerationAction(result: ModerationResult, priorOffenses: number): ModerationAction {
   switch (result.action) {
     case 'immediate_ban_and_ip_ban':
@@ -192,13 +233,14 @@ export function determineModerationAction(result: ModerationResult, priorOffense
 
 // ── Main service ──────────────────────────────────────────────────
 class ModerationService {
+  private aiEngine = new AIEngine()
   private bridge = new PrologBridge()
   private offenseCache = new Map<string, number>()
   private messageHistory = new Map<string, string[]>()
 
   async init() {
     this.bridge.init()
-    console.log('[Moderation] Service started (AI + Prolog + TS fallback)')
+    console.log('[Moderation] Service started (Pipeline: AI -> Prolog -> TS)')
   }
 
   getOffenses(userId: string): number {
@@ -228,13 +270,22 @@ class ModerationService {
     }
 
     const priorOffenses = this.getOffenses(userId)
-    let result: ModerationResult
-    try {
-      result = await this.bridge.check(content, userId, priorOffenses)
-    } catch {
-      result = tsFallback(content, priorOffenses)
+    let result: ModerationResult | null = null
+
+    // 1. Hosted AI Phase
+    result = await this.aiEngine.check(content, userId, priorOffenses)
+
+    // 2. Prolog Deterministic Rules Phase
+    if (!result) {
+      try {
+        result = await this.bridge.check(content, userId, priorOffenses)
+      } catch {
+        // 3. TS Fallback Phase
+        result = tsFallback(content, priorOffenses)
+      }
     }
 
+    // 4. Final Decision Phase
     const action = determineModerationAction(result, priorOffenses)
     if (result.severity !== 'safe' && result.severity !== 'low') {
       this.incrementOffenses(userId)
@@ -244,7 +295,6 @@ class ModerationService {
 
   async checkImage(imageBuffer: Buffer, userId: string): Promise<{ result: ModerationResult; action: ModerationAction }> {
     const priorOffenses = this.getOffenses(userId)
-    // AI image analysis disabled - would require TensorFlow
     return {
       result: { severity: 'safe', reason: 'none', action: 'none', description: 'Image safe.', approved: true, priorOffenses },
       action: { type: 'none', reason: 'safe', automated: false }
@@ -253,21 +303,10 @@ class ModerationService {
 
   async checkVideo(videoPath: string, userId: string): Promise<{ result: ModerationResult; action: ModerationAction }> {
     const priorOffenses = this.getOffenses(userId)
-    // Video analysis disabled - would require ffmpeg
     return {
       result: { severity: 'safe', reason: 'none', action: 'none', description: 'Video safe.', approved: true, priorOffenses },
       action: { type: 'none', reason: 'safe', automated: false }
     }
-  }
-
-  getLanguageHint(text: string): string {
-    if (/[\u4e00-\u9fff]/.test(text)) return 'zh'
-    if (/[\u3040-\u309f\u30a0-\u30ff]/.test(text)) return 'ja'
-    if (/[\uac00-\ud7af]/.test(text)) return 'ko'
-    if (/[\u0600-\u06ff]/.test(text)) return 'ar'
-    if (/[\u0900-\u097f]/.test(text)) return 'hi'
-    if (/[\u0e00-\u0e7f]/.test(text)) return 'th'
-    return 'en'
   }
 }
 

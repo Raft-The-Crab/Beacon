@@ -13,7 +13,8 @@ function getStatusClass(status?: string) {
 }
 
 function MemberRow({ member, isOwner }: { member: any; isOwner: boolean }) {
-  const avatar = member.avatar || member.user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.userId || member.id}`
+  const avatar = member.avatar || member.user?.avatar
+  const showAvatar = !!avatar && !avatar.includes('dicebear')
   const username = member.username || member.user?.username || member.nickname || member.userId || 'Unknown'
   const status = member.status || member.user?.status || 'offline'
   const setSelectedUser = useUIStore(state => state.setSelectedUser)

@@ -1,28 +1,33 @@
 /* Beacon Global Styles - Soft Minimalistic Theme */
 
 :root {
-  /* Brand Colors - Soft & Professional */
-  --beacon-brand: #7289da;
-  --beacon-brand-hover: #5d73c2;
-  --beacon-brand-muted: rgba(114, 137, 218, 0.1);
+  /* Brand Colors - Ionized & High-Saturation */
+  --beacon-brand: #5865f2;
+  /* More electric Discord-like but refined */
+  --beacon-brand-hover: #4752c4;
+  --beacon-brand-muted: rgba(88, 101, 242, 0.12);
 
-  /* Status Colors - Sleek & High Visibility */
-  --status-success: #23a559;
-  --status-error: #fa777c;
-  --status-warning: #f0b232;
-  --status-info: var(--beacon-brand);
+  /* Status Colors - High Vibrancy */
+  --status-success: #24da76;
+  /* Vibrant Neon Green */
+  --status-error: #ff4757;
+  --status-warning: #ffa502;
+  --status-info: #1e90ff;
 
   /* Soft Dark Theme (Default) - Pure Production Baseline */
-  --bg-primary: #0e0f11;
-  --bg-secondary: #17181c;
-  --bg-tertiary: #232428;
-  --bg-panel: var(--bg-tertiary);
-  --bg-hover: rgba(255, 255, 255, 0.035);
-  --bg-active: rgba(255, 255, 255, 0.055);
+  --bg-primary: #111214;
+  /* Main Content (Slightly lighter than sidebar) */
+  --bg-secondary: #0b0c0e;
+  /* Sidebar (Darkest) */
+  --bg-tertiary: #040405;
+  /* Server List / Deep Backfill */
+  --bg-panel: #16171b;
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-active: rgba(255, 255, 255, 0.08);
 
   /* Lightened variants for depth */
-  --bg-surface-soft: #2b2d31;
-  --bg-surface-elevated: #313338;
+  --bg-surface-soft: #202126;
+  --bg-surface-elevated: #282a30;
 
   /* Text Colors - Standard Contrast */
   --text-primary: #ffffff;
@@ -41,12 +46,13 @@
   --bg-main: var(--bg-primary);
   --bg-side: var(--bg-secondary);
 
-  /* Ultra-Premium Glassmorphism 3.0 & Atmospheric Lighting */
-  --glass-bg: rgba(20, 21, 26, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: 32px;
-  --glass-reflection: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 40%);
-  --glass-saturation: 210%;
+  /* Ultra-Premium Structure (Replaced Glass) */
+  --glass-bg: var(--bg-secondary);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  /* Increased from 0.06 for visibility */
+  --glass-blur: 0px;
+  --glass-reflection: transparent;
+  --glass-saturation: 100%;
 
   /* Mesh Gradient Tokens - Far more vibrant */
   --mesh-1: radial-gradient(at 0% 0%, rgba(114, 137, 218, 0.25) 0px, transparent 55%);
@@ -56,22 +62,29 @@
 
   --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 
-  --atmos-glow: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(114, 137, 218, 0.12) 0%, transparent 60%);
-  --atmos-radiance: 0 0 120px rgba(114, 137, 218, 0.2);
+  --atmos-glow: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(88, 101, 242, 0.15) 0%, transparent 65%);
+  --atmos-radiance: 0 0 120px rgba(88, 101, 242, 0.25);
 
-  --accent-gradient: linear-gradient(135deg, #7289da 0%, #8ea1e1 50%, #949cf7 100%);
-  --accent-glow: 0 0 50px rgba(114, 137, 218, 0.4);
+  --accent-gradient: linear-gradient(135deg, #5865f2 0%, #7289da 50%, #949cf7 100%);
+  --accent-glow: 0 0 50px rgba(88, 101, 242, 0.4);
+
+  /* Aura Glows for Active Panels */
+  --aura-brand: 0 0 40px rgba(88, 101, 242, 0.25);
+  --aura-success: 0 0 40px rgba(36, 218, 118, 0.2);
+  --aura-glow-primary: radial-gradient(circle at center, rgba(88, 101, 242, 0.15), transparent 70%);
+  --aura-glow-secondary: radial-gradient(circle at center, rgba(148, 156, 247, 0.1), transparent 70%);
   --shimmer-gradient: linear-gradient(90deg,
       rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0.2) 50%,
       rgba(255, 255, 255, 0) 100%);
 
-  /* Shadows - Soft & Ethereal */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.16);
-  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.2);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12);
+  /* Shadows - Crisp & Precise */
+  /* Shadows - Deep & Lustrous (Multi-layered) */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.45), 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 32px 64px rgba(0, 0, 0, 0.6), 0 16px 32px rgba(0, 0, 0, 0.4);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
 
   /* Transitions - High Performance Easings */
   /* Transitions - Buttery Elastic Spring Curves */
@@ -449,17 +462,7 @@ html {
 body {
   font-family: var(--font-family);
   background-color: var(--bg-primary);
-  /* Layered ambient mesh gradient background — Glassmorphism 2.0 */
-  background-image: var(--custom-bg,
-      var(--mesh-1),
-      var(--mesh-2),
-      var(--mesh-3),
-      var(--mesh-4),
-      linear-gradient(160deg, #0e0f11 0%, #12131a 40%, #0e0f11 100%));
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-image: none !important;
   color: var(--text-primary);
   line-height: 1.5;
   overflow-y: auto;
@@ -1093,4 +1096,84 @@ h4 {
     transform: scale(1) translateY(0);
     filter: blur(0);
   }
+}
+
+/* ─── High-Performance Aura VFX ─── */
+@keyframes aura-float {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes aura-pulse {
+
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.aura-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: -1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  animation: aura-float 20s infinite ease-in-out, aura-pulse 10s infinite ease-in-out;
+}
+
+.aura-orb-primary {
+  width: 600px;
+  height: 600px;
+  background: var(--aura-glow-primary);
+  top: -10%;
+  left: -10%;
+}
+
+.aura-orb-secondary {
+  width: 500px;
+  height: 500px;
+  background: var(--aura-glow-secondary);
+  bottom: -5%;
+  right: -5%;
+  animation-delay: -5s;
+}
+
+/* ─── Low-Data Mode — Asia SIM Card Optimization ─── */
+/* Applied when [data-low-data="true"] is on the root element */
+[data-low-data="true"] .aura-orb,
+[data-low-data="true"] .aura-orb-primary,
+[data-low-data="true"] .aura-orb-secondary {
+  display: none !important;
+}
+
+[data-low-data="true"] * {
+  animation-play-state: paused !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition-duration: 0.05s !important;
+}
+
+[data-low-data="true"] .glass,
+[data-low-data="true"] .glass-card {
+  backdrop-filter: none !important;
+  background: var(--bg-secondary) !important;
 }
