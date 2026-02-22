@@ -20,19 +20,29 @@
 !/DEPLOYMENT_TUTORIAL.md
 !/railyway.json
 
-# 2. Hide all core logic blocks
-/apps/
-/packages/
-/libs/
-/scripts/
-/.github/
-
-# 3. Explicitly Allow Production Launchers (Proprietary Entry Points)
+# 2. Layered Un-ignore Strategy
+!/apps/
+/apps/*
 !/apps/server/
 /apps/server/*
 !/apps/server/server-azure.js
 !/apps/server/server-railway.js
 !/apps/server/server-render.js
+
+# 3. Hide all other proprietary blocks
+/packages/
+/libs/
+/scripts/
+/.github/
+/.agents/
+/.gemini/
+/apps/web/
+/apps/desktop/
+/apps/mobile/
+/apps/server/src/
+/apps/server/prisma/
+/apps/server/tests/
+/apps/server/native/
 
 # 4. Standard Node/Dependency Protections
 node_modules/
