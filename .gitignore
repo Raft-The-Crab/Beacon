@@ -44,8 +44,6 @@
 /apps/web/
 /apps/desktop/
 /apps/mobile/
-/apps/server/src/
-/apps/server/prisma/
 /apps/server/tests/
 /apps/server/native/
 
