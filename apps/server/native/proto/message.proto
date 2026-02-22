@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package beacon;
-
-message WebSocketMessage {
-  string op = 1;
-  string t = 2;
-  bytes d = 3; // 'd' can be any JSON-encoded data, so bytes is flexible
-}
