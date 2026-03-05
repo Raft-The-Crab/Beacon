@@ -28,6 +28,7 @@ jobs:
 
       - name: Install dependencies and build (Shared Types & Server)
         run: |
+          ls -R
           npm install
           cd packages/types && npm run build
           cd ../../apps/server && npx prisma generate && npm run build
