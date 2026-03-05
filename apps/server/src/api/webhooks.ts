@@ -3,16 +3,17 @@
  * Features: Discord-compatible JSON format, token-based authentication
  */
 
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { prisma } from '../db';
 import { redis } from '../services/redis';
 import { randomBytes } from 'crypto';
+import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// Create Webhook
-router.post('/guilds/:guildId/channels/:channelId', async (req, res) => {
-  const userId = (req as any).user?.id;
+// Only protect API endpoints, execute is public
+router.post('/guilds/:guildId/channels/:channelId', authenticate, async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
   const { name, avatar } = req.body;
   const { channelId, guildId } = req.params;
 
@@ -24,9 +25,11 @@ router.post('/guilds/:guildId/channels/:channelId', async (req, res) => {
   });
   if (!guild) return res.status(403).json({ error: 'Insufficient permissions' });
 
+  if (!prisma) return res.status(500).json({ error: 'Database not connected' });
+
   try {
     const token = randomBytes(24).toString('hex');
-    const webhook = await (prisma as any).webhook.create({
+    const webhook = await prisma.webhook.create({
       data: {
         id: randomBytes(8).toString('hex'), // Friendly short ID
         name: name || 'Beacon Webhook',
@@ -50,8 +53,10 @@ router.post('/execute/:id/:token', async (req, res) => {
   const { id, token } = req.params;
   const { content, username, avatar_url, embeds } = req.body;
 
+  if (!prisma) return res.status(500).json({ error: 'Database not connected' });
+
   try {
-    const webhook = await (prisma as any).webhook.findFirst({
+    const webhook = await prisma.webhook.findFirst({
       where: { id, token }
     });
 
@@ -74,13 +79,13 @@ router.post('/execute/:id/:token', async (req, res) => {
     };
 
     // Pub/Sub to WebSocket server
-    await redis.publish(`channel:${webhook.channelId}`, JSON.stringify({ 
-      type: 'MESSAGE_CREATE', 
-      data: newMessage 
+    await redis.publish(`channel:${webhook.channelId}`, JSON.stringify({
+      type: 'MESSAGE_CREATE',
+      data: newMessage
     }));
 
     // Persistent storage
-    await (prisma.message as any).create({
+    await prisma.message.create({
       data: {
         content: content || '',
         channelId: webhook.channelId,
@@ -96,14 +101,16 @@ router.post('/execute/:id/:token', async (req, res) => {
 });
 
 // List Channel Webhooks
-router.get('/channels/:channelId', async (req, res) => {
-  const userId = (req as any).user?.id;
+router.get('/channels/:channelId', authenticate, async (req, res) => {
+  const userId = req.user?.id;
   const { channelId } = req.params;
 
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
+  if (!prisma) return res.status(500).json({ error: 'Database not connected' });
+
   try {
-    const webhooks = await (prisma as any).webhook.findMany({
+    const webhooks = await prisma.webhook.findMany({
       where: { channelId },
       select: {
         id: true,

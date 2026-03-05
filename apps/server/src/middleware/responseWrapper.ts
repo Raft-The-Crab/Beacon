@@ -12,6 +12,7 @@ export interface ApiResponse<T = any> {
 }
 
 export function responseWrapper(req: Request, res: Response, next: NextFunction) {
+    console.log(`[responseWrapper] Incoming request: ${req.method} ${req.path}`)
     const originalJson = res.json
 
     res.json = function (data: any) {
@@ -30,8 +31,12 @@ export function responseWrapper(req: Request, res: Response, next: NextFunction)
 
         if (res.statusCode >= 400) {
             wrappedResponse.error = data.error || data.message || 'An unknown error occurred'
+            if (data.details) (wrappedResponse as any).details = data.details
         } else {
-            wrappedResponse.data = data
+            // Recursively convert BigInt to string for JSON serialization
+            wrappedResponse.data = JSON.parse(JSON.stringify(data, (_, value) =>
+                typeof value === 'bigint' ? value.toString() : value
+            ))
         }
 
         return originalJson.call(this, wrappedResponse)

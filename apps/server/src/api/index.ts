@@ -14,6 +14,14 @@ import moderationRouter from './moderation'
 import analyticsRouter from './analytics'
 import videoModerationRouter from './videoModeration'
 import appsRouter from './apps'
+import shopRouter from './shop'
+import interactionsRouter from './interactions'
+import questRouter from './quests'
+import giftingRouter from './gifting'
+import activityRouter from '../routes/activity.routes'
+import uploadRouter from '../routes/upload.routes'
+import { authenticate } from '../middleware/auth'
+import { isSovereign } from '../middleware/sovereign'
 
 const router = Router()
 
@@ -33,6 +41,12 @@ router.use('/moderation/video', videoModerationRouter)
 router.use('/apps', appsRouter)
 router.use('/analytics', analyticsRouter)
 router.use('/applications', appsRouter) // Alias for SDK compatibility
+router.use('/shop', shopRouter)
+router.use('/interactions', interactionsRouter)
+router.use('/quests', questRouter)
+router.use('/gifting', giftingRouter)
+router.use('/activities', activityRouter)
+router.use('/upload', uploadRouter)
 
 export default router
 

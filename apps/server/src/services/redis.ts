@@ -2,31 +2,41 @@ import Redis from 'ioredis';
 
 class RedisService {
   private client: Redis;
-  private pubClient: Redis;
   private subClient: Redis;
 
   constructor() {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
-    this.client = new Redis(redisUrl, {
-      retryStrategy: (times) => {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
+    const baseOptions = {
+      retryStrategy: (times: number) => {
+        if (times > 10) {
+          console.warn('[Redis] Max retries reached. Continuing in offline mode.');
+          return null;
+        }
+        return Math.min(times * 500, 5000);
       },
       maxRetriesPerRequest: 3,
+      connectTimeout: 5000,
       lazyConnect: true,
       enableOfflineQueue: false,
-      maxLoadingRetryTime: 3000,
-    });
+      maxLoadingRetryTime: 5000,
+      reconnectOnError: (err: Error) => err.message.startsWith('READONLY'),
+    };
 
-    this.pubClient = new Redis(redisUrl, { lazyConnect: true });
-    this.subClient = new Redis(redisUrl, { lazyConnect: true });
+    this.client = new Redis(redisUrl, baseOptions);
+    this.subClient = new Redis(redisUrl, baseOptions);
 
     this.client.on('error', (err) => console.error('Redis Client Error:', err));
-    this.pubClient.on('error', (err) => console.error('Redis Pub Error:', err));
     this.subClient.on('error', (err) => console.error('Redis Sub Error:', err));
+  }
 
-    console.log('✅ Redis Service Initialized');
+  async connect() {
+    try {
+      await Promise.all([this.client.connect(), this.subClient.connect()]);
+      console.log('✅ Redis Service Connected');
+    } catch (error) {
+      console.error('❌ Failed to connect to Redis:', error);
+    }
   }
 
   // Presence Management
@@ -106,9 +116,8 @@ class RedisService {
     }
   }
 
-  // Pub/Sub for distributed WebSocket
   async publish(channel: string, message: any) {
-    await this.pubClient.publish(channel, JSON.stringify(message));
+    await this.client.publish(channel, JSON.stringify(message));
   }
 
   subscribe(channel: string, callback: (message: any) => void) {
@@ -169,13 +178,16 @@ class RedisService {
 
   async disconnect() {
     await this.client.quit();
-    await this.pubClient.quit();
     await this.subClient.quit();
   }
 
   // Proxy methods for common Redis operations
   async hset(key: string, ...args: any[]) {
     return await (this.client as any).hset(key, ...args);
+  }
+
+  async hget(key: string, field: string) {
+    return await this.client.hget(key, field);
   }
 
   async hgetall(key: string) {
@@ -204,6 +216,10 @@ class RedisService {
 
   async smembers(key: string) {
     return await this.client.smembers(key);
+  }
+
+  async scard(key: string) {
+    return await this.client.scard(key);
   }
 
   async keys(pattern: string) {

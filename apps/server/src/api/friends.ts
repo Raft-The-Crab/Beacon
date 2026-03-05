@@ -2,18 +2,18 @@
  * Friends System - API Routes
  */
 
-import { Router, Request } from 'express';
+import { Router, Response } from 'express';
 import { prisma } from '../db';
-import { authenticate } from '../middleware/auth';
+import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
 // Get user's friends
-router.get('/', authenticate, async (req: Request, res) => {
+router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!prisma) return res.status(500).json({ error: 'Database not connected' });
 
     const friends = await prisma.friendship.findMany({
       where: {
@@ -37,11 +37,11 @@ router.get('/', authenticate, async (req: Request, res) => {
 });
 
 // Get pending friend requests
-router.get('/pending', authenticate, async (req: Request, res) => {
+router.get('/pending', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!prisma) return res.status(500).json({ error: 'Database not connected' });
 
     const pending = await prisma.friendship.findMany({
       where: { friendId: userId, status: 0 },
@@ -57,13 +57,13 @@ router.get('/pending', authenticate, async (req: Request, res) => {
 });
 
 // Send friend request
-router.post('/request', authenticate, async (req: Request, res) => {
+router.post('/request', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    // @ts-ignore
     const userId = req.user?.id;
-    const { username, discriminator } = req.body;
-
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!prisma) return res.status(500).json({ error: 'Database not connected' });
+
+    const { username, discriminator } = req.body;
 
     const targetUser = await prisma.user.findFirst({
       where: { username, discriminator }
@@ -81,14 +81,14 @@ router.post('/request', authenticate, async (req: Request, res) => {
     const existing = await prisma.friendship.findFirst({
       where: {
         OR: [
-          { userId: userId, friendId: targetId },
+          { userId, friendId: targetId },
           { userId: targetId, friendId: userId }
         ]
       }
     });
 
     if (existing) {
-      return res.status(400).json({ error: 'Request already exists' });
+      return res.status(400).json({ error: 'Friendship or request already exists' });
     }
 
     const friendRequest = await prisma.friendship.create({
@@ -109,14 +109,12 @@ router.post('/request', authenticate, async (req: Request, res) => {
 });
 
 // Accept friend request
-router.put('/:friendId/accept', authenticate, async (req: Request, res) => {
+router.put('/:friendId/accept', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    // @ts-ignore
     const userId = req.user?.id;
     const { friendId } = req.params;
-    if (typeof friendId !== 'string') return res.status(400).json({ error: 'Invalid friendId' });
-
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!prisma) return res.status(500).json({ error: 'Database not connected' });
 
     const friendRequest = await prisma.friendship.findFirst({
       where: { userId: friendId, friendId: userId, status: 0 }
@@ -138,14 +136,12 @@ router.put('/:friendId/accept', authenticate, async (req: Request, res) => {
 });
 
 // Remove friend / decline request
-router.delete('/:friendId', authenticate, async (req: Request, res) => {
+router.delete('/:friendId', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    // @ts-ignore
     const userId = req.user?.id;
     const { friendId } = req.params;
-    if (typeof friendId !== 'string') return res.status(400).json({ error: 'Invalid friendId' });
-
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!prisma) return res.status(500).json({ error: 'Database not connected' });
 
     await prisma.friendship.deleteMany({
       where: {

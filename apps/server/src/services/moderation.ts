@@ -5,6 +5,7 @@
 
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process'
 import path from 'path'
+import { getProfile } from '../utils/autoTune'
 
 const __dirname = path.resolve();
 const PROLOG_SCRIPT = path.join(__dirname, 'ai', 'moderation.pl')
@@ -35,10 +36,9 @@ export interface ModerationAction {
 // ── AI Engine ─────────────────────────────────────────────────────
 class AIEngine {
   async check(content: string, userId: string, priorOffenses: number): Promise<ModerationResult | null> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s timeout for fast AI
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s timeout for fast AI
-
       const response = await fetch(AI_ENDPOINT, {
         method: 'POST',
         headers: {
@@ -61,7 +61,6 @@ class AIEngine {
         }),
         signal: controller.signal
       });
-      clearTimeout(timeoutId);
 
       if (!response.ok) return null;
 
@@ -91,6 +90,8 @@ class AIEngine {
       // Return null to cascade down to Prolog
       console.warn(`[AI Engine] Offline or timeout, cascading to Prolog...`);
       return null;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 }
@@ -99,7 +100,7 @@ class AIEngine {
 class PrologBridge {
   private proc: ChildProcessWithoutNullStreams | null = null
   private buf = ''
-  private pending: Array<{ resolve: (r: ModerationResult) => void; reject: (e: Error) => void }> = []
+  private pending: Array<{ resolve: (r: ModerationResult) => void; reject: (e: Error) => void; timer?: NodeJS.Timeout }> = []
   private available = false
 
   init() {
@@ -119,10 +120,16 @@ class PrologBridge {
           try {
             const result = JSON.parse(trimmed) as ModerationResult
             const pending = this.pending.shift()
-            if (pending) pending.resolve(result)
+            if (pending) {
+              if (pending.timer) clearTimeout(pending.timer)
+              pending.resolve(result)
+            }
           } catch {
             const pending = this.pending.shift()
-            if (pending) pending.reject(new Error(`Prolog parse error: ${trimmed}`))
+            if (pending) {
+              if (pending.timer) clearTimeout(pending.timer)
+              pending.reject(new Error(`Prolog parse error: ${trimmed}`))
+            }
           }
         }
       })
@@ -134,7 +141,10 @@ class PrologBridge {
         // Drain pending with fallback
         while (this.pending.length) {
           const p = this.pending.shift()
-          if (p) p.reject(new Error('Prolog process exited'))
+          if (p) {
+            if (p.timer) clearTimeout(p.timer)
+            p.reject(new Error('Prolog process exited'))
+          }
         }
         // Restart after 2s
         setTimeout(() => this.init(), 2000)
@@ -151,11 +161,12 @@ class PrologBridge {
       throw new Error('Prolog not available')
     }
     return new Promise((resolve, reject) => {
-      this.pending.push({ resolve, reject })
+      const pendingObj: any = { resolve, reject }
+      this.pending.push(pendingObj)
       const payload = JSON.stringify({ content, userId, priorOffenses }) + '\n'
       this.proc!.stdin.write(payload)
       // Timeout fallback
-      setTimeout(() => {
+      pendingObj.timer = setTimeout(() => {
         const idx = this.pending.findIndex(p => p.resolve === resolve)
         if (idx !== -1) {
           this.pending.splice(idx, 1)
@@ -235,20 +246,53 @@ export function determineModerationAction(result: ModerationResult, priorOffense
 class ModerationService {
   private aiEngine = new AIEngine()
   private bridge = new PrologBridge()
-  private offenseCache = new Map<string, number>()
+  private offenseCache = new Map<string, { count: number; lastUpdated: number }>()
   private messageHistory = new Map<string, string[]>()
+  private readonly MAX_HISTORY_PER_CHANNEL = 20
+  private readonly OFFENSE_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
 
   async init() {
     this.bridge.init()
+    // Periodic cleanup: evict stale offense entries every 30 min
+    setInterval(() => this.cleanupCaches(), 30 * 60 * 1000)
     console.log('[Moderation] Service started (Pipeline: AI -> Prolog -> TS)')
   }
 
+  private cleanupCaches() {
+    const now = Date.now()
+    let evicted = 0
+    for (const [userId, data] of this.offenseCache) {
+      if (now - data.lastUpdated > this.OFFENSE_EXPIRY_MS) {
+        this.offenseCache.delete(userId)
+        evicted++
+      }
+    }
+    // Also cap total history channels
+    if (this.messageHistory.size > 50) {
+      const keys = [...this.messageHistory.keys()]
+      for (let i = 0; i < keys.length - 50; i++) {
+        this.messageHistory.delete(keys[i])
+      }
+    }
+    if (evicted > 0) console.log(`[Moderation] Evicted ${evicted} stale offense entries`)
+  }
+
   getOffenses(userId: string): number {
-    return this.offenseCache.get(userId) || 0
+    const entry = this.offenseCache.get(userId)
+    if (!entry) return 0
+    if (Date.now() - entry.lastUpdated > this.OFFENSE_EXPIRY_MS) {
+      this.offenseCache.delete(userId)
+      return 0
+    }
+    return entry.count
   }
 
   incrementOffenses(userId: string) {
-    this.offenseCache.set(userId, (this.offenseCache.get(userId) || 0) + 1)
+    const existing = this.offenseCache.get(userId)
+    this.offenseCache.set(userId, {
+      count: (existing?.count || 0) + 1,
+      lastUpdated: Date.now()
+    })
   }
 
   async checkMessage(content: string, userId: string, channelId?: string): Promise<{
@@ -265,7 +309,7 @@ class ModerationService {
     if (channelId) {
       const hist = this.messageHistory.get(channelId) || []
       hist.push(content)
-      if (hist.length > 50) hist.shift()
+      if (hist.length > this.MAX_HISTORY_PER_CHANNEL) hist.shift()
       this.messageHistory.set(channelId, hist)
     }
 
@@ -275,13 +319,21 @@ class ModerationService {
     // 1. Hosted AI Phase
     result = await this.aiEngine.check(content, userId, priorOffenses)
 
-    // 2. Prolog Deterministic Rules Phase
+    // 2. Prolog Deterministic Rules Phase (skip if memory pressure)
     if (!result) {
-      try {
-        result = await this.bridge.check(content, userId, priorOffenses)
-      } catch {
-        // 3. TS Fallback Phase
+      const rssMB = process.memoryUsage().rss / 1024 / 1024
+      const profile = getProfile()
+      if (profile.prologBypassMB === 0 || rssMB > profile.prologBypassMB) {
+        // Under memory pressure or minimal mode, skip Prolog and go to TS fallback
+        console.warn(`[Moderation] RSS ${Math.round(rssMB)} MB, skipping Prolog → TS fallback`)
         result = tsFallback(content, priorOffenses)
+      } else {
+        try {
+          result = await this.bridge.check(content, userId, priorOffenses)
+        } catch {
+          // 3. TS Fallback Phase
+          result = tsFallback(content, priorOffenses)
+        }
       }
     }
 
@@ -295,6 +347,7 @@ class ModerationService {
 
   async checkImage(imageBuffer: Buffer, userId: string): Promise<{ result: ModerationResult; action: ModerationAction }> {
     const priorOffenses = this.getOffenses(userId)
+    // TODO: When fine-tuned image model is ready, run actual analysis here
     return {
       result: { severity: 'safe', reason: 'none', action: 'none', description: 'Image safe.', approved: true, priorOffenses },
       action: { type: 'none', reason: 'safe', automated: false }
@@ -303,11 +356,45 @@ class ModerationService {
 
   async checkVideo(videoPath: string, userId: string): Promise<{ result: ModerationResult; action: ModerationAction }> {
     const priorOffenses = this.getOffenses(userId)
+    // TODO: When fine-tuned video model is ready, run frame extraction + analysis here
     return {
       result: { severity: 'safe', reason: 'none', action: 'none', description: 'Video safe.', approved: true, priorOffenses },
       action: { type: 'none', reason: 'safe', automated: false }
     }
   }
+
+  /**
+   * Register moderation handlers with the priority queue.
+   * - text_moderation → fast lane (inline, < 2s)
+   * - image_moderation → slow lane (background, queued)
+   * - video_moderation → slow lane (background, queued)
+   */
+  initQueue() {
+    const { priorityQueue } = require('./priorityQueue')
+
+    // FAST: text moderation runs inline
+    priorityQueue.register('text_moderation', async (job: any) => {
+      const { content, userId, channelId } = job.data
+      return this.checkMessage(content, userId, channelId)
+    })
+
+    // SLOW: image moderation runs in background
+    priorityQueue.register('image_moderation', async (job: any) => {
+      const { imageBuffer, userId } = job.data
+      const buffer = Buffer.from(imageBuffer, 'base64')
+      return this.checkImage(buffer, userId)
+    })
+
+    // SLOW: video moderation runs in background
+    priorityQueue.register('video_moderation', async (job: any) => {
+      const { videoUrl, userId } = job.data
+      const { videoModerationService } = require('./videoModeration')
+      return videoModerationService.moderateVideoUrl(videoUrl, userId)
+    })
+
+    console.log('[Moderation] Priority queue handlers registered (fast: text | slow: image, video)')
+  }
 }
 
 export const moderationService = new ModerationService()
+

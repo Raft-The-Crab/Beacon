@@ -86,13 +86,13 @@ export const guildLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => (req as any).user?.id || req.ip || 'unknown',
+  keyGenerator: (req) => req.user?.id || req.ip || 'unknown',
   message: { error: 'You are modifying guilds too quickly.' },
   handler: (req, res, _next, options) => {
     SystemAuditService.log({
       action: AuditAction.RATE_LIMIT_HIT,
       reason: 'Guild rate limit exceeded',
-      userId: (req as any).user?.id,
+      userId: req.user?.id,
       ip: req.ip,
       metadata: { path: req.path }
     });
@@ -106,7 +106,7 @@ export const messageLimiter = rateLimit({
   max: 60,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => (req as any).user?.id || req.ip || 'unknown',
+  keyGenerator: (req) => req.user?.id || req.ip || 'unknown',
   message: { error: 'You are sending messages too quickly.' },
 })
 
@@ -116,7 +116,7 @@ export const mediaLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => (req as any).user?.id || req.ip || 'unknown',
+  keyGenerator: (req) => req.user?.id || req.ip || 'unknown',
   message: { error: 'Media operation limit exceeded. Please wait a moment.' },
 })
 
@@ -163,11 +163,13 @@ export function sanitizeHeaders(_req: Request, res: Response, next: NextFunction
 
 // ─── CSRF Protection ─────────────────────────────────────────────────────────
 
+// Using a stateless double-submit cookie pattern, but more robust for SPAs.
+// The frontend reads the token from the cookie, and sends it in the header.
 const CSRF_HEADER = 'x-csrf-token'
 const CSRF_COOKIE = 'csrf_token'
 
 export function csrfProtection(req: Request, res: Response, next: NextFunction) {
-  // Skip CSRF for GET, HEAD, OPTIONS
+  // Skip CSRF for safe methods
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
     return next()
   }
@@ -175,7 +177,9 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
   const token = req.headers[CSRF_HEADER] as string
   const cookieToken = req.cookies?.[CSRF_COOKIE]
 
+  // Enforce CSRF in ALL environments — require both header and cookie to match
   if (!token || !cookieToken || token !== cookieToken) {
+    console.warn(`[CSRF] 403 Forbidden on ${req.method} ${req.path}. Header: ${!!token}, Cookie: ${!!cookieToken}, Match: ${token === cookieToken}`)
     res.status(403).json({ error: 'Invalid CSRF token' })
     return
   }
@@ -184,15 +188,19 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
 }
 
 export function generateCSRFToken(): string {
-  return require('crypto').randomBytes(32).toString('hex')
+  return crypto.randomBytes(32).toString('hex')
 }
 
 /** Validate Content-Type for POST/PUT/PATCH */
 export function requireJSON(req: Request, res: Response, next: NextFunction) {
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
     const ct = req.headers['content-type'] || ''
+    // Allow empty bodies (e.g. logout) or JSON/Multipart
+    if (req.headers['content-length'] === '0') {
+      return next()
+    }
     if (!ct.includes('application/json') && !ct.includes('multipart/form-data')) {
-      res.status(415).json({ error: 'Unsupported Media Type. Use application/json.' })
+      res.status(415).json({ error: 'Unsupported Media Type. Use application/json or multipart.' })
       return
     }
   }
@@ -233,7 +241,7 @@ export async function wsRateLimit(
 ): Promise<boolean> {
   const key = `ws:ratelimit:${userId}:${eventType}`
   const limit = eventType === 'MESSAGE_CREATE' ? 5 : 10 // 5 msgs/sec, 10 events/sec
-  
+
   try {
     const count = await redis.incr(key)
     if (count === 1) {

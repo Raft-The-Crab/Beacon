@@ -3,20 +3,21 @@
  * Features: High-end folder management, cross-device sync
  */
 
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { prisma } from '../db';
+import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
+router.use(authenticate);
 
 // Get user folders
-router.get('/', async (req, res) => {
-  const userId = (req as any).user?.id;
-  if (!userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+router.get('/', async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!prisma) return res.status(500).json({ error: 'Database not connected' });
 
   try {
-    const folders = await (prisma as any).serverFolder.findMany({
+    const folders = await prisma.serverFolder.findMany({
       where: { userId },
       orderBy: { position: 'asc' }
     });
@@ -27,16 +28,15 @@ router.get('/', async (req, res) => {
 });
 
 // Create/Update folder
-router.post('/', async (req, res) => {
-  const userId = (req as any).user?.id;
+router.post('/', async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
   const { id, name, color, guildIds, position } = req.body;
 
-  if (!userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!prisma) return res.status(500).json({ error: 'Database not connected' });
 
   try {
-    const folder = await (prisma as any).serverFolder.upsert({
+    const folder = await prisma.serverFolder.upsert({
       where: { id: id || 'new' },
       update: {
         name,
@@ -59,12 +59,15 @@ router.post('/', async (req, res) => {
 });
 
 // Delete folder
-router.delete('/:id', async (req, res) => {
-  const userId = (req as any).user?.id;
+router.delete('/:id', async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
   const { id } = req.params;
 
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!prisma) return res.status(500).json({ error: 'Database not connected' });
+
   try {
-    await (prisma as any).serverFolder.deleteMany({
+    await prisma.serverFolder.deleteMany({
       where: { id, userId }
     });
     res.status(204).send();

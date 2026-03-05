@@ -10,6 +10,8 @@ import { PermissionService } from './permissions'
 import { sanitizeMessage } from '../utils/sanitize'
 import { wsRateLimit } from '../middleware/security'
 import { WSOpCode, WSEventType, WSPayload, PermissionBit } from '@beacon/types'
+import { publishGatewayEvent } from './gatewayPublisher'
+import { questService } from './quest'
 
 export type WebSocketClient = WSWebSocket & {
   id: string
@@ -24,30 +26,25 @@ export enum Permissions {
 }
 
 export async function hasPermission(userId: string, guildId: string, permission: Permissions): Promise<boolean> {
-  const permBit = permission === Permissions.ADMINISTRATOR 
-    ? PermissionBit.ADMINISTRATOR 
+  const permBit = permission === Permissions.ADMINISTRATOR
+    ? PermissionBit.ADMINISTRATOR
     : PermissionBit.MANAGE_MESSAGES
-  
   return PermissionService.hasPermission(userId, guildId, permBit)
 }
 
 export async function membershipGetGuildMembers(guildId: string): Promise<string[]> {
-  // 1. Try Redis cache first
   const cachedMembers = await getGuildMembers(guildId)
   if (cachedMembers) return cachedMembers
 
-  // 2. Fallback to Prisma
   const members = await prisma.guildMember.findMany({
     where: { guildId },
     select: { userId: true }
   })
 
-  // 3. Update cache for future requests
   const memberIds = members.map((m: { userId: string }) => m.userId)
   for (const id of memberIds) {
     await addGuildMember(guildId, id)
   }
-
   return memberIds
 }
 
@@ -97,9 +94,7 @@ export class GatewayService {
       // Send Hello Opcode
       this.send(ws, {
         op: WSOpCode.HELLO,
-        d: {
-          heartbeat_interval: 45000
-        }
+        d: { heartbeat_interval: 45000 }
       })
     })
 
@@ -115,16 +110,108 @@ export class GatewayService {
     }, 30000)
   }
 
+  private async handleDisconnect(ws: WebSocketClient) {
+    this.clients.delete(ws.id)
+    if (ws.userId) {
+      await redis.del(`session:${ws.id}`)
+      await redis.srem(`user_sessions:${ws.userId}`, ws.id)
+
+      const remainingSessions = await redis.scard(`user_sessions:${ws.userId}`)
+      if (remainingSessions === 0) {
+        const isSovereign = SovereigntyService.isSovereign(ws.userId)
+        const isGhost = isSovereign && (await redis.get(`ghost_mode:${ws.userId}`)) === 'true'
+
+        const offlineData = { userId: ws.userId, status: 'offline', lastSeen: Date.now() }
+        await redis.hset('presence', ws.userId, JSON.stringify(offlineData))
+
+        if (!isGhost) {
+          await publishGatewayEvent('PRESENCE_UPDATE', offlineData)
+        }
+      }
+    }
+  }
+
+  private send(ws: WebSocketClient, payload: any) {
+    if ((ws as any).readyState === (WSWebSocket as any).OPEN) {
+      const isZeroData = process.env.SOVEREIGNTY_LEVEL === '3';
+      const optimizedPayload = SovereigntyService.optimizePayload(payload, isZeroData);
+      (ws as any).send(JSON.stringify(optimizedPayload));
+    }
+  }
+
+  public broadcast(userIds: string[], payload: any) {
+    // Local iteration, cross-instance is done via publishEvent
+    for (const [, client] of this.clients) {
+      if (client.userId && userIds.includes(client.userId)) {
+        this.send(client, payload)
+      }
+    }
+  }
+
+  public broadcastAll(payload: any) {
+    for (const [, client] of this.clients) {
+      this.send(client, payload)
+    }
+  }
+
+  // --- Core Utility: Publish and fallback local broadcast ---
+  // Note: publishEvent is now extracted into gatewayPublisher.ts
+  // This class purely listens to Redis events and broadcasts down to local connected sockets
+
+  private handlePubSubEvent(rawMessage: string) {
+    try {
+      const message = JSON.parse(rawMessage)
+      const payload = { op: WSOpCode.DISPATCH, t: message.t, d: message.d }
+
+      if (message.recipientIds && Array.isArray(message.recipientIds)) {
+        this.broadcast(message.recipientIds, payload)
+        return
+      }
+
+      if (message.t === 'MESSAGE_CREATE' || message.t === 'MESSAGE_UPDATE') {
+        const guildId = message.d.guild_id || message.d.guildId
+        if (guildId) {
+          this.getGuildMembers(guildId).then(members => {
+            if (members) this.broadcast(members, payload)
+            else this.broadcastAll(payload)
+          })
+          return
+        }
+      } else if (message.t === 'VOICE_STATE_UPDATE') {
+        const guildId = message.d.guild_id || message.d.guildId
+        if (guildId) {
+          this.getGuildMembers(guildId).then(members => {
+            if (members) this.broadcast(members, payload)
+          })
+          return
+        }
+      } else if (message.t === 'WEBRTC_SIGNAL') {
+        // Direct to user
+        const targetUserId = message.d.targetUserId
+        if (targetUserId) {
+          this.broadcast([targetUserId], payload)
+          return
+        }
+      }
+      this.broadcastAll(payload)
+    } catch (err) {
+      console.error('Failed to handle pubsub event', err)
+    }
+  }
+
+  private async getGuildMembers(guildId: string): Promise<string[] | null> {
+    try {
+      return await membershipGetGuildMembers(guildId)
+    } catch {
+      return null
+    }
+  }
+
   private async handleMessage(ws: WebSocketClient, message: WSPayload) {
-    // Rate limiting
     if (ws.userId && message.t) {
       const allowed = await wsRateLimit(ws.userId, message.t)
       if (!allowed) {
-        this.send(ws, { 
-          op: WSOpCode.DISPATCH, 
-          t: 'ERROR' as WSEventType, 
-          d: { code: 4008, message: 'Rate limit exceeded' } 
-        })
+        this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 4008, message: 'Rate limit exceeded' } })
         return
       }
     }
@@ -133,562 +220,211 @@ export class GatewayService {
       case WSOpCode.HEARTBEAT:
         this.send(ws, { op: WSOpCode.HEARTBEAT_ACK })
         break
-
       case WSOpCode.IDENTIFY:
         await this.handleIdentify(ws, message.d)
         break
-
       case WSOpCode.VOICE_STATE_UPDATE:
         await this.handleVoiceStateUpdate(ws, message.d)
         break
-
       case WSOpCode.DISPATCH:
         if (!message.t) return
         try {
-          switch (message.t) {
-            case 'MESSAGE_CREATE':
-              await this.handleCreateMessage(ws, message.d)
-              break
-            case 'MESSAGE_UPDATE':
-              await this.handleUpdateMessage(ws, message.d)
-              break
-            case 'MESSAGE_DELETE':
-              await this.handleDeleteMessage(ws, message.d)
-              break
-            case 'MESSAGE_PIN':
-              await this.handlePinMessage(ws, message.d)
-              break
-            case 'MESSAGE_UNPIN':
-              await this.handleUnpinMessage(ws, message.d)
-              break
-            case 'MESSAGE_REACTION':
-              await this.handleReaction(ws, message.d)
-              break
-            default:
-              console.warn('Unhandled client event:', message.t)
+          switch (message.t as string) {
+            case 'MESSAGE_CREATE': return await this.handleCreateMessage(ws, message.d)
+            case 'MESSAGE_UPDATE': return await this.handleUpdateMessage(ws, message.d)
+            case 'MESSAGE_DELETE': return await this.handleDeleteMessage(ws, message.d)
+            case 'MESSAGE_PIN': return await this.handlePinMessage(ws, message.d)
+            case 'MESSAGE_UNPIN': return await this.handleUnpinMessage(ws, message.d)
+            case 'MESSAGE_REACTION': return await this.handleReaction(ws, message.d)
+
+            // New events merged from Socket.IO
+            case 'UPDATE_PRESENCE': return await this.handlePresenceUpdate(ws, message.d)
+            case 'TYPING_START': return await this.handleTyping(ws, message.d, true)
+            case 'TYPING_STOP': return await this.handleTyping(ws, message.d, false)
+            case 'VOICE_JOIN': return await this.handleVoiceJoin(ws, message.d)
+            case 'VOICE_LEAVE': return await this.handleVoiceLeave(ws, message.d)
+            case 'WEBRTC_SIGNAL': return await this.handleWebRTCSignal(ws, message.d)
+
+            default: console.warn('Unhandled client event:', message.t)
           }
         } catch (err) {
           console.error('Error handling client event', err)
-          this.send(ws, { 
-            op: WSOpCode.DISPATCH, 
-            t: 'ERROR' as WSEventType, 
-            d: { code: 5000, message: 'Internal error' } 
-          })
+          this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 5000, message: 'Internal error' } })
         }
         break
     }
   }
 
-  private async handleVoiceStateUpdate(ws: WebSocketClient, data: { guild_id: string; channel_id: string | null; self_mute?: boolean; self_deaf?: boolean }) {
-    if (!ws.userId) return
-
-    const { guild_id, channel_id, self_mute, self_deaf } = data
-
-    // Validate required fields
-    if (!guild_id) {
-      console.warn(`[Gateway] Missing guild_id in VOICE_STATE_UPDATE from user ${ws.userId}`)
-      return
-    }
-    // channel_id can be null if the user leaves a voice channel
-    // if (!channel_id) {
-    //   console.warn(`[Gateway] Missing channel_id in VOICE_STATE_UPDATE from user ${ws.userId}`)
-    //   return
-    // }
-
-    // Validate channel/guild access...
-
-    // Broadcast to guild members
-    // Ideally we fetch guild members from Redis or DB
-    // For MVP, we broadcast to everyone in the guild (if we tracked it) or just naive broadcast
-
-    // Store Voice State in Redis
-    const stateKey = `voice:${guild_id}:${ws.userId}`
-    if (channel_id) {
-      await redis.hmset(stateKey, {
-        channel_id,
-        user_id: ws.userId,
-        session_id: ws.id,
-        self_mute: self_mute || false,
-        self_deaf: self_deaf || false
-      })
-      await redis.expire(stateKey, 86400)
-    } else {
-      // User left voice
-      await redis.del(stateKey)
-    }
-
-    // Emit event to clients
-    this.broadcastToGuild(guild_id, {
-      op: 0,
-      t: 'VOICE_STATE_UPDATE',
-      d: {
-        guild_id,
-        channel_id,
-        user_id: ws.userId,
-        session_id: ws.id,
-        self_mute,
-        self_deaf
-      }
-    })
-  }
-
-  private broadcastToGuild(guildId: string, payload: any) {
-    ; (async () => {
-      try {
-        const members = await membershipGetGuildMembers(guildId)
-        if (members && members.length > 0) {
-          this.broadcast(members, payload)
-          return
-        }
-      } catch (err) {
-        console.warn('Failed to read guild members from Redis, falling back to broadcastAll', err)
-      }
-
-      // Fallback: broadcast to all connected clients (MVP)
-      this.broadcastAll(payload)
-    })()
-  }
-
-  private async getGuildMembers(guildId: string): Promise<string[] | null> {
-    return await membershipGetGuildMembers(guildId)
-  }
-
-  private async handleCreateMessage(ws: WebSocketClient, data: any) {
-    try {
-      const { channelId, content } = data
-      const authorId = ws.userId
-      if (!authorId) {
-        this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 4001, message: 'Not authenticated' } })
-        return
-      }
-
-      // Sanitize content
-      const sanitizedContent = sanitizeMessage(content)
-      if (!sanitizedContent) {
-        this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 4002, message: 'Invalid message content' } })
-        return
-      }
-
-      // AI Moderation
-      const { result: moderationResult } = await moderationService.checkMessage(sanitizedContent, authorId, channelId)
-
-      if (!moderationResult.approved) {
-        console.warn(`[AI Moderation] Prohibited message from ${authorId} in ${channelId}: "${sanitizedContent.substring(0, 50)}..." - Flags: ${moderationResult.flags?.join(', ')}`)
-        this.send(ws, {
-          op: WSOpCode.DISPATCH,
-          t: 'MESSAGE_REJECTED' as WSEventType,
-          d: {
-            code: 4005,
-            message: 'Your message was rejected by the moderation system.',
-            flags: moderationResult.flags,
-            score: moderationResult.score,
-            status: moderationResult.status,
-          },
-        })
-
-        await (ModerationReportModel as any).create({
-          id: `report_${Date.now()}`,
-          channel_id: channelId,
-          guild_id: data.guildId || null,
-          reporter_id: 'system',
-          target_user_id: authorId,
-          content: sanitizedContent,
-          reason: moderationResult.reason,
-          flags: moderationResult.flags,
-          score: moderationResult.score,
-          status: 'pending'
-        })
-
-        return
-      }
-
-      if (moderationResult.status === 'Warning') {
-        const flags = moderationResult.flags || []
-        console.log(`[AI Moderation] Warning message from ${authorId} in ${channelId}: "${sanitizedContent.substring(0, 50)}..." - Flags: ${flags.join(', ')}`)
-      }
-
-      console.log(`[AI Moderation] Message from ${authorId} in ${channelId}: "${sanitizedContent.substring(0, 50)}..." - Status: ${moderationResult.status}`)
-
-      // Bot Interaction
-      if (moderationResult.status !== 'Rejected') {
-        const botContext = {
-          userId: authorId,
-          channelId: channelId,
-          guildId: data.guildId || null,
-          history: []
-        }
-
-        const { botFramework } = await import('../bots/index')
-        const botResponse = await botFramework.handleMessage(sanitizedContent, botContext)
-
-        if (botResponse) {
-          const botMsg = await (MessageModel as any).create({
-            id: `bot_${Date.now()}`,
-            channel_id: channelId,
-            guild_id: data.guildId || null,
-            author: { id: 'oracle-bot-id', username: 'Oracle', bot: true },
-            content: botResponse.content,
-            timestamp: new Date(),
-            metadata: {
-              ...botResponse.metadata,
-              actions: botResponse.actions
-            }
-          })
-
-          const isZeroData = process.env.SOVEREIGNTY_LEVEL === '3'
-          const optimizedMsg = await SovereigntyService.optimizePayload(botMsg, isZeroData)
-
-          await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_CREATE', d: optimizedMsg }))
-        }
-      }
-
-      // Create message
-      const msg = await (MessageModel as any).create({
-        id: Date.now().toString(),
-        channel_id: channelId,
-        guild_id: data.guildId || null,
-        author: { id: authorId },
-        content: sanitizedContent,
-        timestamp: new Date(),
-        moderationFlags: moderationResult.flags,
-        moderationStatus: moderationResult.status,
-        moderationScore: moderationResult.score,
-      })
-
-      const guildId = msg.guild_id || data.guildId
-      try {
-        await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_CREATE', d: msg }))
-      } catch (err) {
-        console.warn('Failed to publish MESSAGE_CREATE to redis', err)
-        if (guildId) {
-          const members = await this.getGuildMembers(guildId)
-          if (members) this.broadcast(members, { op: WSOpCode.DISPATCH, t: 'MESSAGE_CREATE' as WSEventType, d: msg })
-          else this.broadcastAll({ op: WSOpCode.DISPATCH, t: 'MESSAGE_CREATE' as WSEventType, d: msg })
-        } else {
-          this.broadcastAll({ op: WSOpCode.DISPATCH, t: 'MESSAGE_CREATE' as WSEventType, d: msg })
-        }
-      }
-    } catch (err) {
-      console.error('handleCreateMessage error', err)
-      this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 5000, message: 'Internal server error during message processing.' } })
-    }
-  }
-
-  private async handleUpdateMessage(_ws: WebSocketClient, data: any) {
-    try {
-      const { channelId, messageId, content } = data
-      const { MessageModel } = await import('../db')
-      const updated = await MessageModel.findOneAndUpdate({ id: messageId, channel_id: channelId }, { content, edited_timestamp: new Date() }, { new: true })
-      if (updated) {
-        try {
-          await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_UPDATE', d: updated }))
-        } catch (err) {
-          console.warn('Failed to publish MESSAGE_UPDATE to redis', err)
-          const guildId = updated.guild_id || data.guildId
-          const members = guildId ? await this.getGuildMembers(guildId) : null
-          if (members) this.broadcast(members, { op: 0, t: 'MESSAGE_UPDATE', d: updated })
-          else this.broadcastAll({ op: 0, t: 'MESSAGE_UPDATE', d: updated })
-        }
-      }
-    } catch (err) {
-      console.error('handleUpdateMessage error', err)
-    }
-  }
-
-  private async handleDeleteMessage(ws: WebSocketClient, data: any) {
-    try {
-      const { channelId, messageId } = data
-      const userId = ws.userId
-
-      if (!userId) {
-        this.send(ws, { op: 0, t: 'ERROR', d: { code: 4001, message: 'Not authenticated' } })
-        return
-      }
-
-      const messageToDelete = await MessageModel.findOne({ id: messageId, channel_id: channelId })
-
-      if (!messageToDelete) {
-        this.send(ws, { op: 0, t: 'ERROR', d: { code: 4004, message: 'Message not found' } })
-        return
-      }
-
-      // Check if user is the author
-      const isAuthor = (messageToDelete.author as any)?.id === userId
-
-      let canManageMessages = false
-      if (messageToDelete.guild_id) {
-        canManageMessages = await hasPermission(userId, messageToDelete.guild_id, Permissions.MANAGE_MESSAGES)
-      }
-
-      if (!isAuthor && !canManageMessages) {
-        this.send(ws, { op: 0, t: 'ERROR', d: { code: 4003, message: 'Missing permissions to delete message' } })
-        return
-      }
-
-      await MessageModel.deleteOne({ id: messageId, channel_id: channelId })
-
-      // Broadcast delete to members of the channel's guild (best-effort)
-      const guildId = messageToDelete.guild_id || data.guildId
-      try {
-        await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_DELETE', d: { channelId, messageId, guildId } }))
-      } catch (err) {
-        console.warn('Failed to publish MESSAGE_DELETE to redis', err)
-        // Fallback to local broadcasting
-        if (guildId) {
-          const members = await this.getGuildMembers(guildId)
-          if (members) this.broadcast(members, { op: 0, t: 'MESSAGE_DELETE', d: { channelId, messageId } })
-          else this.broadcastAll({ op: 0, t: 'MESSAGE_DELETE', d: { channelId, messageId } })
-        } else {
-          this.broadcastAll({ op: 0, t: 'MESSAGE_DELETE', d: { channelId, messageId } })
-        }
-      }
-    } catch (err) {
-      console.error('handleDeleteMessage error', err)
-      this.send(ws, { op: 0, t: 'ERROR', d: { code: 5000, message: 'Internal server error during message deletion' } })
-    }
-  }
-
-  private async handlePinMessage(_ws: WebSocketClient, data: any) {
-    try {
-      const { channelId, messageId } = data
-      const { MessageModel } = await import('../db')
-      const updated = await MessageModel.findOneAndUpdate({ id: messageId, channel_id: channelId }, { pinned: true }, { new: true })
-      if (updated) {
-        try {
-          await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_PIN', d: { channelId, message: updated, guildId: updated.guild_id } }))
-        } catch (err) {
-          console.warn('Failed to publish MESSAGE_PIN to redis', err)
-          const guildId = updated.guild_id || data.guildId
-          const members = guildId ? await this.getGuildMembers(guildId) : null
-          if (members) this.broadcast(members, { op: 0, t: 'MESSAGE_PIN', d: { channelId, message: updated } })
-          else this.broadcastAll({ op: 0, t: 'MESSAGE_PIN', d: { channelId, message: updated } })
-        }
-      }
-    } catch (err) {
-      console.error('handlePinMessage error', err)
-    }
-  }
-
-  private async handleUnpinMessage(_ws: WebSocketClient, data: any) {
-    try {
-      const { channelId, messageId } = data
-      const { MessageModel } = await import('../db')
-      const updated = await MessageModel.findOneAndUpdate({ id: messageId, channel_id: channelId }, { pinned: false }, { new: true })
-      if (updated) {
-        try {
-          await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_UNPIN', d: { channelId, message: updated, guildId: updated.guild_id } }))
-        } catch (err) {
-          console.warn('Failed to publish MESSAGE_UNPIN to redis', err)
-          const guildId = updated.guild_id || data.guildId
-          const members = guildId ? await this.getGuildMembers(guildId) : null
-          if (members) this.broadcast(members, { op: 0, t: 'MESSAGE_UNPIN', d: { channelId, message: updated } })
-          else this.broadcastAll({ op: 0, t: 'MESSAGE_UNPIN', d: { channelId, message: updated } })
-        }
-      }
-    } catch (err) {
-      console.error('handleUnpinMessage error', err)
-    }
-  }
-
-  private async handleReaction(ws: WebSocketClient, data: any) {
-    try {
-      const { channelId, messageId, emoji, remove } = data
-      const { MessageModel } = await import('../db')
-      const msgDoc = await MessageModel.findOne({ id: messageId, channel_id: channelId })
-      if (!msgDoc) return
-      const msg = msgDoc as any
-
-      const userId = ws.userId
-      if (!userId) return
-
-      const reactions = msg.reactions || []
-      const idx = reactions.findIndex((r: any) => (r.emoji && ((r.emoji.name && r.emoji.name === emoji) || r.emoji === emoji)))
-      if (idx === -1 && !remove) {
-        // add new reaction with users array
-        reactions.push({ emoji: { name: emoji }, users: [userId] })
-      } else if (idx !== -1) {
-        const reaction: any = reactions[idx]
-        const users: string[] = reaction.users || []
-        if (remove) {
-          const newUsers = users.filter((u) => u !== userId)
-          if (newUsers.length === 0) {
-            reactions.splice(idx, 1)
-          } else {
-            reactions[idx].users = newUsers
-          }
-        } else {
-          if (!users.includes(userId)) users.push(userId)
-          reactions[idx].users = users
-        }
-      }
-
-      msg.reactions = reactions
-      await msg.save()
-
-      // Publish event to Redis for cross-instance propagation
-      try {
-        await redis.publish('gateway:events', JSON.stringify({ t: 'MESSAGE_REACTION', d: { channelId, messageId, reactions: msg.reactions, guildId: msg.guild_id } }))
-      } catch (err) {
-        console.warn('Failed to publish MESSAGE_REACTION to redis', err)
-        // Fallback to local broadcast
-        // Fallback to local broadcast
-        const guildId = msg.guild_id
-        const members = guildId ? await this.getGuildMembers(guildId) : null
-        if (members) this.broadcast(members, { op: 0, t: 'MESSAGE_REACTION', d: { channelId, messageId, reactions: msg.reactions } })
-        else this.broadcastAll({ op: 0, t: 'MESSAGE_REACTION', d: { channelId, messageId, reactions: msg.reactions } })
-      }
-    } catch (err) {
-      console.error('handleReaction error', err)
-    }
-  }
+  // --- Handlers ---
 
   private async handleIdentify(ws: WebSocketClient, data: any) {
     const { token } = data
-    if (!token) {
-      ws.close(4004, 'Authentication Failed')
-      return
-    }
+    if (!token) return ws.close(4004, 'Authentication Failed')
 
     let userId: string | null = null
 
     if (token.startsWith('bot_')) {
-      // Bot Authentication
-      const bot = await prisma.bot.findUnique({
-        where: { token },
-        include: { application: true }
-      })
-      if (!bot) {
-        ws.close(4004, 'Invalid Bot Token')
-        return
-      }
-      userId = bot.userId || `bot:${bot.id}`
+      const bot = await prisma.bot.findUnique({ where: { token } })
+      if (!bot) return ws.close(4004, 'Invalid Bot Token')
+      userId = (bot as any).userId || `bot:${bot.id}`
     } else {
-      // User Authentication
-      const payload = AuthService.verifyToken(token)
-      if (!payload) {
-        ws.close(4004, 'Authentication Failed')
-        return
-      }
-      userId = payload.id
+      const payload: any = AuthService.verifyToken(token)
+      if (!payload) return ws.close(4004, 'Authentication Failed')
+      userId = payload.userId || payload.id || null
     }
 
-    ws.userId = userId as string
+    if (!userId) return ws.close(4004, 'Authentication Failed')
 
-    // Store session in Redis
-    if (userId) {
-      await redis.set(`session:${ws.id}`, userId, 'EX', 86400)
-      await redis.sadd(`user_sessions:${userId}`, ws.id)
+    ws.userId = userId
+    await redis.set(`session:${ws.id}`, userId, 'EX', 86400)
+    await redis.sadd(`user_sessions:${userId}`, ws.id)
+
+    const isSovereign = SovereigntyService.isSovereign(userId)
+    const isGhost = isSovereign && (await redis.get(`ghost_mode:${userId}`)) === 'true'
+
+    const onlineData = { userId, status: 'online', lastSeen: Date.now() }
+    await redis.hset('presence', userId, JSON.stringify(onlineData))
+
+    if (!isGhost) {
+      await publishGatewayEvent('PRESENCE_UPDATE', onlineData)
     }
 
-    this.send(ws, {
-      op: WSOpCode.DISPATCH,
-      t: 'READY' as WSEventType,
-      d: {
-        v: 1,
-        user: { id: userId },
-        session_id: ws.id
-      }
+    this.send(ws, { op: WSOpCode.DISPATCH, t: 'READY' as WSEventType, d: { v: 1, user: { id: userId, isSovereign }, session_id: ws.id } })
+  }
+
+  private async handleCreateMessage(ws: WebSocketClient, data: any) {
+    const { channelId, content, guildId } = data
+    const authorId = ws.userId
+    if (!authorId) return this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 4001, message: 'Not authenticated' } })
+
+    const sanitizedContent = sanitizeMessage(content)
+    if (!sanitizedContent) return this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 4002, message: 'Invalid content' } })
+
+    const { result: moderationResult } = await moderationService.checkMessage(sanitizedContent, authorId, channelId)
+
+    if (!moderationResult.approved) {
+      this.send(ws, {
+        op: WSOpCode.DISPATCH, t: 'MESSAGE_REJECTED' as WSEventType,
+        d: { code: 4005, message: 'Rejected', flags: moderationResult.flags }
+      })
+      await (ModerationReportModel as any).create({
+        id: `report_${Date.now()}`, channel_id: channelId, target_user_id: authorId, content: sanitizedContent, status: 'pending'
+      })
+      return
+    }
+
+    const msg = await (MessageModel as any).create({
+      id: Date.now().toString(), channel_id: channelId, guild_id: guildId || null, author: { id: authorId },
+      content: sanitizedContent, timestamp: new Date(), moderationStatus: moderationResult.status
     })
+
+    await publishGatewayEvent('MESSAGE_CREATE', msg, msg.guild_id)
+
+    // Quest Hook: Message Creation
+    questService.trackProgress(authorId, 'send_messages', 1).catch(e => console.warn('Quest update failed:', e))
   }
 
-  private async handleDisconnect(ws: WebSocketClient) {
-    this.clients.delete(ws.id)
-    if (ws.userId) {
-      await redis.set(`session:${ws.id}`, ws.userId, 'EX', 86400)
-      await redis.srem(`user_sessions:${ws.userId}`, ws.id)
+  private async handleUpdateMessage(_ws: WebSocketClient, data: any) {
+    const { channelId, messageId, content, guildId } = data
+    const { MessageModel } = await import('../db')
+    const updated = await MessageModel.findOneAndUpdate({ id: messageId, channel_id: channelId }, { content, edited_timestamp: new Date() }, { new: true })
+    if (updated) await publishGatewayEvent('MESSAGE_UPDATE', updated, updated.guild_id || guildId)
+  }
+
+  private async handleDeleteMessage(ws: WebSocketClient, data: any) {
+    const { channelId, messageId, guildId } = data
+    if (!ws.userId) return
+
+    const msg = await MessageModel.findOne({ id: messageId, channel_id: channelId })
+    if (!msg) return
+
+    const isAuthor = (msg.author as any)?.id === ws.userId
+    const canManage = msg.guild_id ? await hasPermission(ws.userId, msg.guild_id, Permissions.MANAGE_MESSAGES) : false
+
+    if (!isAuthor && !canManage) return this.send(ws, { op: 0, t: 'ERROR', d: { code: 4003, message: 'Missing permissions' } })
+
+    await MessageModel.deleteOne({ id: messageId, channel_id: channelId })
+    await publishGatewayEvent('MESSAGE_DELETE', { channelId, messageId, guildId: msg.guild_id || guildId }, msg.guild_id)
+  }
+
+  private async handlePresenceUpdate(ws: WebSocketClient, data: { status?: string, custom_status?: string, activities?: any[] }) {
+    if (!ws.userId) return
+    const payload = { user_id: ws.userId, status: data.status || 'online', custom_status: data.custom_status }
+    await redis.hset('presence', ws.userId, JSON.stringify(payload))
+    await publishGatewayEvent('PRESENCE_UPDATE', payload)
+  }
+
+  private async handleTyping(ws: WebSocketClient, data: any, isStart: boolean) {
+    if (!ws.userId) return
+    await publishGatewayEvent(isStart ? 'TYPING_START' : 'TYPING_STOP', { channelId: data.channelId, userId: ws.userId }, data.guildId)
+  }
+
+  // --- Voice & WebRTC ---
+
+  private async handleVoiceStateUpdate(ws: WebSocketClient, data: any) {
+    if (!ws.userId || !data.guild_id) return
+    const payload = { ...data, user_id: ws.userId, session_id: ws.id }
+
+    if (data.channel_id) {
+      await redis.hmset(`voice:${data.guild_id}:${ws.userId}`, payload)
+    } else {
+      await redis.del(`voice:${data.guild_id}:${ws.userId}`)
     }
-    console.log(`Disconnected: ${ws.id}`)
+    await publishGatewayEvent('VOICE_STATE_UPDATE', payload, data.guild_id)
   }
 
-  private send(ws: WebSocketClient, payload: any) {
-    if ((ws as any).readyState === (WebSocket as any).OPEN) {
-      // --- Zero-Data Optimization (Sovereignty) ---
-      // For general send, we apply system-level optimization if enabled
-      const isZeroData = process.env.SOVEREIGNTY_LEVEL === '3';
-      const optimizedPayload = SovereigntyService.optimizePayload(payload, isZeroData);
+  private async handleVoiceJoin(ws: WebSocketClient, data: any) {
+    if (!ws.userId || !data.channelId) return
+    await publishGatewayEvent('VOICE_USER_JOINED', { userId: ws.userId, channelId: data.channelId }, data.guildId)
+  }
 
-      (ws as any).send(JSON.stringify(optimizedPayload));
+  private async handleVoiceLeave(ws: WebSocketClient, data: any) {
+    if (!ws.userId || !data.channelId) return
+    await publishGatewayEvent('VOICE_USER_LEFT', { userId: ws.userId, channelId: data.channelId }, data.guildId)
+  }
+
+  private async handleWebRTCSignal(ws: WebSocketClient, data: any) {
+    if (!ws.userId || !data.targetUserId) return
+    // targetUserId lets us route directly in handlePubSubEvent
+    await publishGatewayEvent('WEBRTC_SIGNAL', { senderUserId: ws.userId, targetUserId: data.targetUserId, signal: data.signal })
+  }
+
+  private async handlePinMessage(_ws: WebSocketClient, data: any) {
+    const updated = await MessageModel.findOneAndUpdate({ id: data.messageId, channel_id: data.channelId }, { pinned: true }, { new: true })
+    if (updated) await publishGatewayEvent('MESSAGE_PIN', { channelId: data.channelId, message: updated }, updated.guild_id)
+  }
+
+  private async handleUnpinMessage(_ws: WebSocketClient, data: any) {
+    const updated = await MessageModel.findOneAndUpdate({ id: data.messageId, channel_id: data.channelId }, { pinned: false }, { new: true })
+    if (updated) await publishGatewayEvent('MESSAGE_UNPIN', { channelId: data.channelId, message: updated }, updated.guild_id)
+  }
+
+  private async handleReaction(ws: WebSocketClient, data: any) {
+    if (!ws.userId) return
+    const msg = await MessageModel.findOne({ id: data.messageId, channel_id: data.channelId }) as any
+    if (!msg) return
+
+    const emojiName = data.emoji
+    const idx = (msg.reactions || []).findIndex((r: any) => r.emoji?.name === emojiName || r.emoji === emojiName)
+
+    if (idx === -1 && !data.remove) {
+      msg.reactions = msg.reactions || []
+      msg.reactions.push({ emoji: { name: emojiName }, users: [ws.userId] })
+    } else if (idx !== -1) {
+      let users = msg.reactions[idx].users || []
+      if (data.remove) users = users.filter((u: string) => u !== ws.userId)
+      else if (!users.includes(ws.userId)) users.push(ws.userId)
+
+      if (users.length === 0) msg.reactions.splice(idx, 1)
+      else msg.reactions[idx].users = users
     }
-  }
 
-  public broadcast(userIds: string[], payload: any) {
-    // In a real scaled app, this would publish to Redis PubSub
-    // Here we iterate local clients for simplicity or MVP
-    this.clients.forEach(client => {
-      if (client.userId && userIds.includes(client.userId)) {
-        this.send(client, payload)
-      }
-    })
-  }
+    await msg.save()
+    await publishGatewayEvent('MESSAGE_REACTION', { channelId: data.channelId, messageId: data.messageId, reactions: msg.reactions }, msg.guild_id)
 
-  // Broadcast to all connected clients (MVP)
-  public broadcastAll(payload: any) {
-    this.clients.forEach(client => {
-      this.send(client, payload)
-    })
-  }
-
-  // Handle events received from Redis pubsub and broadcast locally
-  private async handlePubSubEvent(evt: any) {
-    const t = evt.t
-    const d = evt.d
-    try {
-      switch (t) {
-        case 'MESSAGE_CREATE': {
-          const guildId = d.guild_id || d.guildId
-          if (guildId) {
-            const members = await this.getGuildMembers(guildId)
-            if (members) this.broadcast(members, { op: 0, t: 'MESSAGE_CREATE', d })
-            else this.broadcastAll({ op: 0, t: 'MESSAGE_CREATE', d })
-          } else {
-            this.broadcastAll({ op: 0, t: 'MESSAGE_CREATE', d })
-          }
-          break
-        }
-        case 'MESSAGE_UPDATE': {
-          const guildId = d.guild_id || d.guildId
-          if (guildId) {
-            const members = await this.getGuildMembers(guildId)
-            if (members) this.broadcast(members, { op: 0, t: 'MESSAGE_UPDATE', d })
-            else this.broadcastAll({ op: 0, t: 'MESSAGE_UPDATE', d })
-          } else this.broadcastAll({ op: 0, t: 'MESSAGE_UPDATE', d })
-          break
-        }
-        case 'MESSAGE_DELETE': {
-          const guildId = d.guildId || d.guild_id
-          if (guildId) {
-            const members = await this.getGuildMembers(guildId)
-            if (members) this.broadcast(members, { op: 0, t: 'MESSAGE_DELETE', d })
-            else this.broadcastAll({ op: 0, t: 'MESSAGE_DELETE', d })
-          } else this.broadcastAll({ op: 0, t: 'MESSAGE_DELETE', d })
-          break
-        }
-        case 'MESSAGE_PIN':
-        case 'MESSAGE_UNPIN': {
-          const guildId = d.guildId || d.message?.guild_id || d.message?.guildId
-          if (guildId) {
-            const members = await this.getGuildMembers(guildId)
-            if (members) this.broadcast(members, { op: 0, t, d })
-            else this.broadcastAll({ op: 0, t, d })
-          } else this.broadcastAll({ op: 0, t, d })
-          break
-        }
-        case 'MESSAGE_REACTION': {
-          const guildId = d.guildId || d.guild_id
-          if (guildId) {
-            const members = await this.getGuildMembers(guildId)
-            if (members) this.broadcast(members, { op: 0, t, d })
-            else this.broadcastAll({ op: 0, t, d })
-          } else this.broadcastAll({ op: 0, t, d })
-          break
-        }
-        default:
-          // unknown event
-          break
-      }
-    } catch (err) {
-      console.warn('handlePubSubEvent failed', err)
-      this.broadcastAll({ op: 0, t: evt.t, d: evt.d })
+    // Quest Hook: Reaction
+    if (!data.remove) {
+      questService.trackProgress(ws.userId, 'react', 1).catch(e => console.warn('Quest update failed:', e))
     }
   }
 }

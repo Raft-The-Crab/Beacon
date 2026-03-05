@@ -41,21 +41,21 @@ export class SystemAuditService {
     }) {
         try {
             // 1. Persist to Postgres
-            await (prisma as any).auditLog.create({
-                data: {
-                    action: params.action,
-                    userId: params.userId || null,
-                    guildId: params.guildId || null,
-                    targetId: params.targetId || null,
-                    reason: params.reason || '',
-                    changes: params.changes || null,
-                    metadata: {
-                        ip: params.ip,
-                        userAgent: params.userAgent,
-                        ...params.metadata,
+            // We use the common AuditLog model but make guildId optional in practice 
+            // by providing a system guild ID if one isn't provided, or just skipping database persistence
+            // for global events if the schema is too rigid.
+            if (params.guildId || params.userId) {
+                await (prisma as any).auditLog.create({
+                    data: {
+                        action: params.action,
+                        userId: params.userId || 'system',
+                        guildId: params.guildId || 'system-global', // Fallback or sentinel ID
+                        targetId: params.targetId || null,
+                        reason: params.reason || `IP: ${params.ip || 'unknown'} | UA: ${params.userAgent || 'unknown'}`,
+                        changes: params.changes || params.metadata || null,
                     },
-                },
-            });
+                });
+            }
 
             // 2. Push to Redis for real-time security dashboard / alerting
             const event = {

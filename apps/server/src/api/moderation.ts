@@ -1,5 +1,5 @@
-import { Router, Request, Response } from 'express'
-import { authenticate } from '../middleware/auth'
+import { Router, Response } from 'express'
+import { authenticate, AuthRequest } from '../middleware/auth'
 import { moderationService } from '../services/moderation'
 import { ModerationController } from '../controllers/moderation.controller'
 
@@ -15,10 +15,9 @@ router.patch('/reports/:reportId', authenticate, ModerationController.resolveRep
 
 // @route   POST /api/moderation/check
 // @desc    Manual check of content (Dev tool)
-router.post('/check', authenticate, async (req: Request, res: Response) => {
+router.post('/check', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { content, channelId } = req.body
-    // @ts-ignore
     const userId = req.user?.id || 'unknown'
     if (!content) return res.status(400).json({ error: 'content required' })
     const { result, action } = await moderationService.checkMessage(content, userId, channelId)
@@ -30,14 +29,18 @@ router.post('/check', authenticate, async (req: Request, res: Response) => {
 
 // @route   GET /api/moderation/offense-count/:userId
 // @desc    Get offense history for a user
-router.get('/offense-count/:userId', authenticate, async (req: Request, res: Response) => {
+router.get('/offense-count/:userId', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req.params
-    const count = moderationService.getOffenses(userId as string)
+    const count = moderationService.getOffenses(userId)
     res.json({ userId, offenses: count })
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch offense count' })
   }
 })
+
+// @route   POST /api/moderation/rules
+// @desc    Create an automod rule for a guild
+router.post('/rules', authenticate, ModerationController.createRule)
 
 export default router

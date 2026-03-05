@@ -54,11 +54,12 @@ export class AuthController {
 
     static async getMe(req: Request, res: Response) {
         try {
-            const userId = (req as any).user?.id;
+            const userId = req.user?.id;
             if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
             const user = await prisma.user.findUnique({
-                where: { id: userId }
+                where: { id: userId },
+                select: { id: true, username: true, email: true, avatar: true, discriminator: true, badges: true, status: true, customStatus: true }
             });
 
             if (!user) return res.status(404).json({ error: 'User not found' });
@@ -71,7 +72,7 @@ export class AuthController {
 
     static async setup2FA(req: Request, res: Response) {
         try {
-            const userId = (req as any).user?.id;
+            const userId = req.user?.id;
             const user = await prisma.user.findUnique({ where: { id: userId } });
             if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -90,7 +91,7 @@ export class AuthController {
 
     static async verify2FA(req: Request, res: Response) {
         try {
-            const userId = (req as any).user?.id;
+            const userId = req.user?.id;
             const { token, secret } = req.body;
 
             const { TwoFactorService } = await import('../services/twoFactor');
@@ -118,7 +119,7 @@ export class AuthController {
 
     static async disable2FA(req: Request, res: Response) {
         try {
-            const userId = (req as any).user?.id;
+            const userId = req.user?.id;
             const { token } = req.body;
 
             const user = await prisma.user.findUnique({ where: { id: userId } });

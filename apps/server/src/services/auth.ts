@@ -20,7 +20,7 @@ export const LoginSchema = z.object({
 export class AuthService {
   static async register(data: z.infer<typeof RegisterSchema>) {
     if (!prisma) throw new Error('Database not available')
-    
+
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -34,17 +34,42 @@ export class AuthService {
       throw new Error('User already exists')
     }
 
-    const hashedPassword = await bcrypt.hash(data.password, 10)
-    const discriminator = Math.floor(1000 + Math.random() * 9000).toString()
+    const roundsStr = process.env.BCRYPT_ROUNDS || '10';
+    const parsedRounds = parseInt(roundsStr, 10);
+    const rounds = isNaN(parsedRounds) ? 10 : parsedRounds;
+    const hashedPassword = await bcrypt.hash(data.password, rounds)
+
+    // Ensure unique discriminator
+    let discriminator = Math.floor(1000 + Math.random() * 9000).toString()
+    let isUnique = false
+    while (!isUnique) {
+      const exists = await prisma.user.findUnique({
+        where: { username_discriminator: { username: data.username, discriminator } }
+      })
+      if (!exists) isUnique = true
+      else discriminator = Math.floor(1000 + Math.random() * 9000).toString()
+    }
+
+    // Auto-ascend RaftTheCrab
+    let badges: string[] = []
+    let isBeaconPlus = false
+    if (data.username === 'RaftTheCrab') {
+      badges = ['SYSTEM_ADMIN', 'PLATFORM_MODERATOR', 'APP_OWNER', 'BUG_HUNTER', 'EARLY_SUPPORTER', 'BEACON_PLUS']
+      isBeaconPlus = true
+    }
 
     const user = await prisma.user.create({
       data: {
         email: data.email,
         username: data.username,
+        displayName: data.username,
         password: hashedPassword,
         discriminator,
+        badges,
+        isBeaconPlus,
+        beaconPlusSince: isBeaconPlus ? new Date() : null,
         theme: 'auto',
-        developerMode: false
+        developerMode: data.username === 'RaftTheCrab'
       }
     })
 
@@ -60,7 +85,7 @@ export class AuthService {
 
   static async login(data: z.infer<typeof LoginSchema>) {
     if (!prisma) throw new Error('Database not available')
-    
+
     const user = await prisma.user.findUnique({
       where: { email: data.email }
     })
@@ -72,6 +97,21 @@ export class AuthService {
     const validPassword = await bcrypt.compare(data.password, user.password)
     if (!validPassword) {
       throw new Error('Invalid credentials')
+    }
+
+    // Retroactive RaftTheCrab Ascension
+    if (user.username === 'RaftTheCrab' && !user.badges.includes('SYSTEM_ADMIN')) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          badges: ['SYSTEM_ADMIN', 'PLATFORM_MODERATOR', 'APP_OWNER', 'BUG_HUNTER', 'EARLY_SUPPORTER', 'BEACON_PLUS'],
+          isBeaconPlus: true,
+          beaconPlusSince: new Date(),
+          developerMode: true
+        }
+      })
+      user.badges = ['SYSTEM_ADMIN', 'PLATFORM_MODERATOR', 'APP_OWNER', 'BUG_HUNTER', 'EARLY_SUPPORTER', 'BEACON_PLUS']
+      user.isBeaconPlus = true
     }
 
     // Check for 2FA
@@ -123,7 +163,7 @@ export class AuthService {
 
   static async verifyMFA(userId: string, token: string) {
     if (!prisma) throw new Error('Database not available')
-    
+
     const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user || !(user as any).twoFactorSecret) {
       throw new Error('2FA not enabled')

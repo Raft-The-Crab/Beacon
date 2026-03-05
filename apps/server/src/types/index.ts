@@ -287,21 +287,29 @@ export enum PermissionBit {
   KICK_MEMBERS = 1 << 4,
   BAN_MEMBERS = 1 << 5,
   CREATE_INVITE = 1 << 6,
-  MANAGE_NICKNAMES = 1 << 7,
-  MANAGE_MESSAGES = 1 << 8,
-  SEND_MESSAGES = 1 << 9,
-  EMBED_LINKS = 1 << 10,
-  ATTACH_FILES = 1 << 11,
-  ADD_REACTIONS = 1 << 12,
-  USE_EXTERNAL_EMOJIS = 1 << 13,
-  MENTION_EVERYONE = 1 << 14,
-  MANAGE_WEBHOOKS = 1 << 15,
-  VIEW_CHANNELS = 1 << 16,
-  CONNECT_VOICE = 1 << 17,
-  SPEAK_VOICE = 1 << 18,
-  MUTE_MEMBERS = 1 << 19,
-  DEAFEN_MEMBERS = 1 << 20,
-  MOVE_MEMBERS = 1 << 21,
+  CHANGE_NICKNAME = 1 << 7,
+  MANAGE_NICKNAMES = 1 << 8,
+  MANAGE_MESSAGES = 1 << 9,
+  SEND_MESSAGES = 1 << 10,
+  EMBED_LINKS = 1 << 11,
+  ATTACH_FILES = 1 << 12,
+  ADD_REACTIONS = 1 << 13,
+  USE_EXTERNAL_EMOJIS = 1 << 14,
+  MENTION_EVERYONE = 1 << 15,
+  MANAGE_WEBHOOKS = 1 << 16,
+  VIEW_CHANNELS = 1 << 17,
+  SEND_TTS_MESSAGES = 1 << 18,
+  CONNECT_VOICE = 1 << 19,
+  SPEAK_VOICE = 1 << 20,
+  MUTE_MEMBERS = 1 << 21,
+  DEAFEN_MEMBERS = 1 << 22,
+  MOVE_MEMBERS = 1 << 23,
+  USE_VOICE_ACTIVITY = 1 << 24,
+  PRIORITY_SPEAKER = 1 << 25,
+  STREAM = 1 << 26,
+  VIEW_AUDIT_LOG = 1 << 27,
+  READ_MESSAGE_HISTORY = 1 << 28,
+  MODERATE_MEMBERS = 1 << 29,
 }
 
 // ============================================================================
@@ -335,4 +343,53 @@ export interface MessageSearchResult {
   messages: Message[]
   total: number
   hasMore: boolean
+}
+
+// ============================================================================
+// Bot & Interaction Types
+// ============================================================================
+
+export enum InteractionType {
+  PING = 1,
+  APPLICATION_COMMAND = 2,
+  MESSAGE_COMPONENT = 3,
+  APPLICATION_COMMAND_AUTOCOMPLETE = 4,
+  MODAL_SUBMIT = 5,
+}
+
+export interface Interaction {
+  id: string
+  applicationId: string
+  type: InteractionType
+  data?: any
+  guildId?: string
+  channelId?: string
+  member?: Member
+  user?: User
+  token: string
+  version: number
+  message?: Message
+}
+
+export enum InteractionResponseType {
+  PONG = 1,
+  CHANNEL_MESSAGE_WITH_SOURCE = 4,
+  DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5,
+  DEFERRED_UPDATE_MESSAGE = 6,
+  UPDATE_MESSAGE = 7,
+  APPLICATION_COMMAND_AUTOCOMPLETE_RESULT = 8,
+  MODAL = 9,
+}
+
+export interface InteractionResponse {
+  type: InteractionResponseType
+  data?: {
+    tts?: boolean
+    content?: string
+    embeds?: Embed[]
+    allowed_mentions?: any
+    flags?: number
+    components?: any[]
+    attachments?: Attachment[]
+  }
 }

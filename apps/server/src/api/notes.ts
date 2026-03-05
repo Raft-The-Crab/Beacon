@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { authMiddleware } from '../middleware/auth'
+import { authenticate } from '../middleware/auth'
 import { redis } from '../db'
 
 const router = Router()
@@ -26,12 +26,12 @@ interface MusicClip {
 }
 
 // GET /api/notes/:guildId
-router.get('/:guildId', authMiddleware, async (req, res) => {
+router.get('/:guildId', authenticate, async (req, res) => {
   try {
     const { guildId } = req.params
     const notesKey = `notes:${guildId}`
     const notes = await redis.hgetall(notesKey)
-    
+
     const parsed = Object.values(notes).map(n => JSON.parse(n))
     res.json({ notes: parsed })
   } catch (error) {
@@ -40,11 +40,12 @@ router.get('/:guildId', authMiddleware, async (req, res) => {
 })
 
 // POST /api/notes/:guildId
-router.post('/:guildId', authMiddleware, async (req, res) => {
+router.post('/:guildId', authenticate, async (req, res) => {
   try {
     const { guildId } = req.params
     const { title, content } = req.body
-    const userId = (req as any).user.id
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
 
     const note: Note = {
       id: `note_${Date.now()}`,
@@ -66,7 +67,7 @@ router.post('/:guildId', authMiddleware, async (req, res) => {
 })
 
 // PUT /api/notes/:guildId/:noteId
-router.put('/:guildId/:noteId', authMiddleware, async (req, res) => {
+router.put('/:guildId/:noteId', authenticate, async (req, res) => {
   try {
     const { guildId, noteId } = req.params
     const { title, content } = req.body
@@ -87,17 +88,18 @@ router.put('/:guildId/:noteId', authMiddleware, async (req, res) => {
 })
 
 // POST /api/notes/:guildId/:noteId/music
-router.post('/:guildId/:noteId/music', authMiddleware, async (req, res) => {
+router.post('/:guildId/:noteId/music', authenticate, async (req, res) => {
   try {
     const { guildId, noteId } = req.params
     const { title, artist, url } = req.body
-    const userId = (req as any).user.id
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
 
     const noteData = await redis.hget(`notes:${guildId}`, noteId)
     if (!noteData) return res.status(404).json({ error: 'Note not found' })
 
     const note: Note = JSON.parse(noteData)
-    
+
     const clip: MusicClip = {
       id: `clip_${Date.now()}`,
       title,
@@ -118,7 +120,7 @@ router.post('/:guildId/:noteId/music', authMiddleware, async (req, res) => {
 })
 
 // DELETE /api/notes/:guildId/:noteId
-router.delete('/:guildId/:noteId', authMiddleware, async (req, res) => {
+router.delete('/:guildId/:noteId', authenticate, async (req, res) => {
   try {
     const { guildId, noteId } = req.params
     await redis.hdel(`notes:${guildId}`, noteId)

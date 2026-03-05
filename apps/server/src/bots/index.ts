@@ -1,5 +1,5 @@
 import { botFramework } from './bots.js';
-import { oracleBot } from './intelligence.js';
+import { beaconBot } from './intelligence.js';
 
 /**
  * Enhanced Bot Engine for Beacon Server
@@ -8,8 +8,8 @@ import { oracleBot } from './intelligence.js';
 export async function initBotSystem() {
     console.log('[BotSystem] Initializing context-aware agents...');
 
-    // Register Oracle as a built-in intelligent agent
-    botFramework.registerBot(oracleBot);
+    // Register Beacon Bot as a built-in intelligent agent
+    botFramework.registerBot(beaconBot);
 
     console.log('[BotSystem] Active and monitoring Gateway events.');
 }

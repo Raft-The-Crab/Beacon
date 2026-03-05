@@ -1,13 +1,14 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { videoModerationService } from '../services/videoModeration.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-router.post('/check', authenticate, async (req: any, res: any) => {
+router.post('/check', authenticate, async (req: AuthRequest, res: Response) => {
     const { videoUrl } = req.body;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     if (!videoUrl) {
         return res.status(400).json({ error: 'videoUrl is required' });
     }

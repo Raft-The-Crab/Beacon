@@ -1,15 +1,15 @@
-import { Router } from 'express'
-import { authMiddleware } from '../middleware/auth'
+import { Router, Response } from 'express'
+import { authenticate, AuthRequest } from '../middleware/auth'
 import { redis, MessageModel } from '../db'
 
 const router = Router()
 
 // GET /api/analytics/server/:guildId
-router.get('/server/:guildId', authMiddleware, async (req, res) => {
+router.get('/server/:guildId', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { guildId } = req.params
     const { period = '7d' } = req.query
-    
+
     const days = period === '30d' ? 30 : 7
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
@@ -45,8 +45,8 @@ router.get('/server/:guildId', authMiddleware, async (req, res) => {
         totalMessages: messageCount,
         activeUsers: onlineUsers,
         avgMessagesPerDay: Math.round(messageCount / days),
-        peakHours: hourlyActivity.map(h => ({ hour: h._id, messages: h.count })),
-        topChannels: topChannels.map(c => ({ channelId: c._id, messages: c.count }))
+        peakHours: hourlyActivity.map((h: any) => ({ hour: h._id, messages: h.count })),
+        topChannels: topChannels.map((c: any) => ({ channelId: c._id, messages: c.count }))
       }
     })
   } catch (error) {
@@ -56,10 +56,10 @@ router.get('/server/:guildId', authMiddleware, async (req, res) => {
 })
 
 // GET /api/analytics/bot/:botId
-router.get('/bot/:botId', authMiddleware, async (req, res) => {
+router.get('/bot/:botId', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { botId } = req.params
-    
+
     const commandUsage = await redis.hgetall(`bot:${botId}:commands`)
     const errorCount = await redis.get(`bot:${botId}:errors`) || '0'
     const uptime = await redis.get(`bot:${botId}:uptime`) || '0'

@@ -1,25 +1,35 @@
 import mongoose from 'mongoose'
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/beacon'
+const MONGO_SECONDARY = process.env.MONGO_URI_SECONDARY
 
 export const connectMongo = async () => {
   try {
-    if (mongoose.connection.readyState === 1) {
-      console.log('MongoDB already connected')
-      return
-    }
-    
+    if (mongoose.connection.readyState === 1) return
+
+    console.log('🔗 Connecting to primary MongoDB...')
     await mongoose.connect(MONGO_URI, {
       serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      maxPoolSize: 5, // Limit connections for low memory
-      minPoolSize: 1,
-      maxIdleTimeMS: 30000,
+      maxPoolSize: 5,
     })
-    console.log('✅ MongoDB connected successfully')
+    console.log('✅ Connected to primary MongoDB')
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error)
-    throw error
+    console.warn('⚠️ Primary MongoDB failed, trying failover...', error instanceof Error ? error.message : String(error))
+
+    if (MONGO_SECONDARY) {
+      try {
+        await mongoose.connect(MONGO_SECONDARY, {
+          serverSelectionTimeoutMS: 5000,
+          maxPoolSize: 5,
+        })
+        console.log('✅ Connected to secondary MongoDB (Failover active)')
+      } catch (secondaryError) {
+        console.error('❌ Both primary and secondary MongoDB failed')
+        throw secondaryError
+      }
+    } else {
+      throw error
+    }
   }
 }
 

@@ -8,14 +8,20 @@ export class ModerationController {
      */
     static async listReports(req: Request, res: Response) {
         try {
-            // @ts-ignore
             const userId = req.user?.id
-            // Check if user is global admin (basic check for now)
-            const user = await prisma.user.findUnique({ where: { id: userId } })
-            if (!user || user.email !== 'admin@beacon.app') {
-                // return res.status(403).json({ error: 'Admin only' })
-                // For now, let's allow access for testing if developerMode is on
-                if (!user?.developerMode) return res.status(403).json({ error: 'Admin only' })
+            if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+            // Role-based admin check: user must have 'ADMIN' or 'MODERATOR' badge, or be in developer mode
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { badges: true, developerMode: true }
+            })
+            if (!user) return res.status(403).json({ error: 'Forbidden' })
+
+            const badges = (user.badges as string[]) || []
+            const isAdmin = badges.includes('ADMIN') || badges.includes('MODERATOR') || badges.includes('STAFF')
+            if (!isAdmin && !user.developerMode) {
+                return res.status(403).json({ error: 'Insufficient permissions. Admin or Moderator role required.' })
             }
 
             const { status } = req.query
@@ -46,6 +52,38 @@ export class ModerationController {
             res.json(report)
         } catch (error) {
             res.status(500).json({ error: 'Failed to resolve report' })
+        }
+    }
+
+    /**
+     * Create an Automod Rule
+     */
+    static async createRule(req: Request, res: Response) {
+        try {
+            const { guildId, name, eventType, triggerType, actions, triggerMetadata, enabled } = req.body;
+            const userId = req.user?.id;
+
+            // Validate admin/mod perms to create rule
+            // Simplified for now: just mock the DB creation if the prisma table `AutomodRule` doesn't exist
+            // Assuming we are storing this as a JSON field in Guild or have a dedicated Prisma model
+
+            // Mock Response for UI wiring until Prisma schema is strictly available
+            const mockRule = {
+                id: Math.random().toString(36).substring(7),
+                guildId,
+                name,
+                eventType,
+                triggerType,
+                actions,
+                triggerMetadata,
+                enabled,
+                creatorId: userId
+            };
+
+            res.status(201).json(mockRule);
+        } catch (error) {
+            console.error('[CREATE_RULE_ERROR]', error);
+            res.status(500).json({ error: 'Failed to create automod rule' });
         }
     }
 }

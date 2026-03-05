@@ -3,15 +3,18 @@
  * Tracks administrative actions (guild settings, roles, bans, kicks)
  */
 
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { prisma } from '../db';
+import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
+router.use(authenticate);
 
 // Track Audit Log Entry
 export async function createAuditLog(guildId: string, userId: string, action: number, targetId: string, reason: string, changes?: any) {
   try {
-    await (prisma as any).auditLog.create({
+    if (!prisma) return;
+    await prisma.auditLog.create({
       data: {
         guildId,
         userId,
@@ -27,13 +30,12 @@ export async function createAuditLog(guildId: string, userId: string, action: nu
 }
 
 // Get Audit Logs
-router.get('/:guildId', async (req, res) => {
-  const userId = (req as any).user?.id;
+router.get('/:guildId', async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
   const { guildId } = req.params;
 
-  if (!userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!prisma) return res.status(500).json({ error: 'Database not connected' });
 
   // Verify permission
   const guild = await prisma.guild.findFirst({
@@ -44,7 +46,7 @@ router.get('/:guildId', async (req, res) => {
   }
 
   try {
-    const logs = await (prisma as any).auditLog.findMany({
+    const logs = await prisma.auditLog.findMany({
       where: { guildId },
       include: {
         user: {

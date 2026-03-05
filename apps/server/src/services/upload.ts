@@ -1,15 +1,16 @@
-/**
- * File Upload Service - Cloudinary integration
- */
-
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import streamifier from 'streamifier';
+import { AuthRequest } from '../middleware/auth';
 
-cloudinary.config({
+// Primary Config
+const primaryConfig = {
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+};
+
+// Secondary Config (Failover)
+const secondaryUrl = process.env.CLOUDINARY_URL_SECONDARY;
 
 export interface UploadResult {
   url: string;
@@ -23,8 +24,59 @@ export interface UploadResult {
 }
 
 export class FileUploadService {
+  private currentProvider: 'primary' | 'secondary' = 'primary';
+
+  constructor() {
+    this.configurePrimary();
+  }
+
+  private configurePrimary() {
+    cloudinary.config(primaryConfig);
+    this.currentProvider = 'primary';
+  }
+
+  private configureSecondary() {
+    if (secondaryUrl) {
+      cloudinary.config({ cloudinary_url: secondaryUrl });
+      this.currentProvider = 'secondary';
+      console.warn('⚠️ Cloudinary failover: Switched to secondary provider');
+    }
+  }
+
   /**
-   * Upload file to Cloudinary
+   * Internal upload implementation with retry logic
+   */
+  private async executeUpload(
+    buffer: Buffer,
+    options: any
+  ): Promise<UploadApiResponse> {
+    try {
+      return await this.performUpload(buffer, options);
+    } catch (error) {
+      if (this.currentProvider === 'primary' && secondaryUrl) {
+        this.configureSecondary();
+        return await this.performUpload(buffer, options);
+      }
+      throw error;
+    }
+  }
+
+  private performUpload(buffer: Buffer, options: any): Promise<UploadApiResponse> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        options,
+        (error, result) => {
+          if (error) return reject(error);
+          if (!result) return reject(new Error('Upload failed'));
+          resolve(result);
+        }
+      );
+      streamifier.createReadStream(buffer).pipe(uploadStream);
+    });
+  }
+
+  /**
+   * General file upload
    */
   async uploadFile(
     buffer: Buffer,
@@ -33,147 +85,68 @@ export class FileUploadService {
       resource_type?: 'image' | 'video' | 'raw' | 'auto';
       allowed_formats?: string[];
       max_file_size?: number;
+      transformation?: any[];
     } = {}
   ): Promise<UploadResult> {
     const {
-      folder = 'beacon',
+      folder = 'beacon/uploads',
       resource_type = 'auto',
       allowed_formats,
-      max_file_size = 50 * 1024 * 1024 // 50MB default
+      max_file_size = 50 * 1024 * 1024,
+      transformation
     } = options;
 
     if (buffer.length > max_file_size) {
-      throw new Error(`File size exceeds ${max_file_size / 1024 / 1024}MB limit`);
+      throw new Error(`File size exceeds ${max_file_size / (1024 * 1024)}MB limit`);
     }
 
-    return new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder,
-          resource_type,
-          allowed_formats,
-          chunk_size: 6000000 // 6MB chunks
-        },
-        (error, result) => {
-          if (error) return reject(error);
-          if (!result) return reject(new Error('Upload failed'));
-          
-          resolve({
-            url: result.url,
-            secure_url: result.secure_url,
-            public_id: result.public_id,
-            format: result.format,
-            width: result.width,
-            height: result.height,
-            bytes: result.bytes,
-            resource_type: result.resource_type
-          });
-        }
-      );
-
-      streamifier.createReadStream(buffer).pipe(uploadStream);
-    });
-  }
-
-  /**
-   * Upload image with transformations
-   */
-  async uploadImage(
-    buffer: Buffer,
-    options: {
-      folder?: string;
-      maxWidth?: number;
-      maxHeight?: number;
-      quality?: number;
-    } = {}
-  ): Promise<UploadResult> {
-    const {
-      folder = 'beacon/images',
-    } = options;
-
-    return this.uploadFile(buffer, {
+    const result = await this.executeUpload(buffer, {
       folder,
-      resource_type: 'image',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-      max_file_size: 10 * 1024 * 1024 // 10MB for images
+      resource_type,
+      allowed_formats,
+      transformation,
+      chunk_size: 6000000 // 6MB chunks for reliability
     });
+
+    return {
+      url: result.url,
+      secure_url: result.secure_url,
+      public_id: result.public_id,
+      format: result.format,
+      width: result.width,
+      height: result.height,
+      bytes: result.bytes,
+      resource_type: result.resource_type
+    };
   }
 
   /**
-   * Upload avatar with circular crop
+   * User avatar upload (optimized)
    */
   async uploadAvatar(buffer: Buffer, userId: string): Promise<UploadResult> {
-    return new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'beacon/avatars',
-          public_id: `avatar_${userId}`,
-          resource_type: 'image',
-          transformation: [
-            { width: 512, height: 512, crop: 'fill', gravity: 'face' },
-            { radius: 'max' },
-            { quality: 'auto:good', fetch_format: 'auto' }
-          ],
-          allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-          overwrite: true
-        },
-        (error, result) => {
-          if (error) return reject(error);
-          if (!result) return reject(new Error('Avatar upload failed'));
-          
-          resolve({
-            url: result.url,
-            secure_url: result.secure_url,
-            public_id: result.public_id,
-            format: result.format,
-            width: result.width,
-            height: result.height,
-            bytes: result.bytes,
-            resource_type: result.resource_type
-          });
-        }
-      );
-
-      streamifier.createReadStream(buffer).pipe(uploadStream);
+    return this.uploadFile(buffer, {
+      folder: 'beacon/avatars',
+      resource_type: 'image',
+      transformation: [
+        { width: 512, height: 512, crop: 'fill', gravity: 'face' },
+        { quality: 'auto', fetch_format: 'auto' }
+      ],
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp']
     });
   }
 
   /**
-   * Upload guild icon
+   * Guild icon upload
    */
   async uploadGuildIcon(buffer: Buffer, guildId: string): Promise<UploadResult> {
-    return new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'beacon/guilds',
-          public_id: `guild_${guildId}`,
-          resource_type: 'image',
-          transformation: [
-            { width: 512, height: 512, crop: 'fill' },
-            { radius: 'max' },
-            { quality: 'auto:good', fetch_format: 'auto' }
-          ],
-          allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-          overwrite: true
-        },
-        (error, result) => {
-          if (error) return reject(error);
-          if (!result) return reject(new Error('Guild icon upload failed'));
-          
-          resolve({
-            url: result.url,
-            secure_url: result.secure_url,
-            public_id: result.public_id,
-            format: result.format,
-            width: result.width,
-            height: result.height,
-            bytes: result.bytes,
-            resource_type: result.resource_type
-          });
-        }
-      );
-
-      streamifier.createReadStream(buffer).pipe(uploadStream);
+    return this.uploadFile(buffer, {
+      folder: 'beacon/guilds',
+      resource_type: 'image',
+      transformation: [
+        { width: 512, height: 512, crop: 'fill' },
+        { quality: 'auto', fetch_format: 'auto' }
+      ],
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp']
     });
   }
 
@@ -181,29 +154,11 @@ export class FileUploadService {
    * Delete file from Cloudinary
    */
   async deleteFile(publicId: string, resourceType: string = 'image'): Promise<void> {
-    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
-  }
-
-  /**
-   * Get optimized image URL
-   */
-  getOptimizedUrl(
-    publicId: string,
-    options: {
-      width?: number;
-      height?: number;
-      crop?: string;
-      quality?: string;
-      format?: string;
-    } = {}
-  ): string {
-    return cloudinary.url(publicId, {
-      width: options.width,
-      height: options.height,
-      crop: options.crop || 'fill',
-      quality: options.quality || 'auto:good',
-      fetch_format: options.format || 'auto'
-    });
+    try {
+      await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+    } catch (error) {
+      console.error('[UploadService] Delete failed:', error);
+    }
   }
 }
 

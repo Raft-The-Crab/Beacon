@@ -108,6 +108,23 @@ export class WebRTCService {
         });
       });
 
+      // WebRTC Signaling: ICE Connection State
+      socket.on('voice:ice-state', ({ targetUserId, state, channelId }) => {
+        this.io.to(this.getUserSocketId(targetUserId)).emit('voice:ice-state', {
+          fromUserId: socket.data.userId,
+          state,
+          channelId,
+        });
+      });
+
+      // WebRTC Signaling: Reconnect Request
+      socket.on('voice:reconnect', ({ targetUserId, channelId }) => {
+        this.io.to(this.getUserSocketId(targetUserId)).emit('voice:reconnect-request', {
+          fromUserId: socket.data.userId,
+          channelId,
+        });
+      });
+
       // Update voice state (mute, deaf, video, etc.)
       socket.on('voice:update-state', async ({ channelId, userId, guildId, state }) => {
         try {
@@ -137,7 +154,7 @@ export class WebRTCService {
           if (users.has(userId)) {
             users.delete(userId);
             socket.to(`voice:${channelId}`).emit('voice:user-left', { userId, channelId });
-            
+
             // Clear Redis state
             await redis.setVoiceState(userId, socket.data.guildId || '', null, {});
           }

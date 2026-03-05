@@ -1,36 +1,37 @@
-import 'dotenv/config'
-import express from 'express'
-import { createServer } from 'http'
-import cors from 'cors'
-import cookieParser from 'cookie-parser'
-import { connectMongo, prisma, redis } from './db'
-import notesRouter from './api/notes'
-import authRouter from './api/auth'
-import guildRouter from './api/guilds'
-import channelRouter from './api/channels'
-import userRouter from './api/users'
-import appsRouter from './api/apps'
-import friendsRouter from './api/friends'
-import dmRouter from './api/directMessages'
-import webhookRouter from './api/webhooks'
-import auditLogRouter from './api/auditLogs'
-import folderRouter from './api/folders'
-import beacoinRouter from './api/beacoin'
-import messagesRouter from './api/messages'
-import analyticsRouter from './api/analytics'
-import helmet from 'helmet'
-// Moderation moved to Render Worker
+import 'dotenv/config';
+import http from 'http';
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import compression from 'compression';
+
+// Configure global connection pooling
+http.globalAgent.maxSockets = 500;
+
+import { connectMongo, prisma, redis } from './db';
+import { moderationService } from './services/moderation'
+import { priorityQueue } from './services/priorityQueue'
+import { getProfile } from './utils/autoTune'
+import { sanitizeBody } from './utils/sanitize'
+
 import { ipBlockMiddleware, generalLimiter, authLimiter, sanitizeHeaders, csrfProtection, generateCSRFToken } from './middleware/security'
 import { responseWrapper } from './middleware/responseWrapper'
 import { globalErrorHandler, notFoundHandler } from './middleware/error'
 import { requestTimer } from './middleware/performance'
-import { sanitizeBody } from './utils/sanitize'
+
+import apiRouter from './api/index'
+import activityRouter from './routes/activity.routes'
+import uploadRouter from './routes/upload.routes'
+
+const profile = getProfile('clawcloud-api')
 
 if (process.env.NODE_ENV === 'production') {
-    process.env.NODE_OPTIONS = '--max-old-space-size=384 --optimize-for-size'
+    process.env.NODE_OPTIONS = `--max-old-space-size=${profile.heapLimitMB} --optimize-for-size`
 }
 
 const app = express()
+app.use(compression({ level: 6, threshold: 10 * 1024 })) // Gzip compression > 10kb
 app.use(requestTimer)
 
 app.use(helmet({
@@ -40,9 +41,9 @@ app.use(helmet({
             scriptSrc: ["'self'", "'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
             fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-            imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-            mediaSrc: ["'self'", 'blob:', 'https:'],
-            connectSrc: ["'self'", 'wss:', 'https:'],
+            imgSrc: ["'self'", 'data:', 'https:', 'blob:*'],
+            mediaSrc: ["'self'", 'blob:*', 'https:'],
+            connectSrc: ["'self'", 'wss:', 'https:', 'http://localhost:*', 'ws://localhost:*'],
             frameSrc: ["'none'"],
             objectSrc: ["'none'"],
         },
@@ -56,14 +57,14 @@ app.use(ipBlockMiddleware)
 app.use('/api/', generalLimiter)
 app.use(responseWrapper)
 
-const server = createServer(app)
+const server = http.createServer(app)
 const PORT = process.env.PORT || 8080
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'https://beacon.app'],
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173', 'https://beacon.app', 'http://127.0.0.1:5173'],
     credentials: true,
 }))
-app.use(express.json({ limit: '10mb' }))
+app.use(express.json({ limit: profile.jsonLimitMB }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(cookieParser())
 app.use(csrfProtection)
@@ -76,6 +77,7 @@ app.use((req: express.Request, _res: express.Response, next: express.NextFunctio
 
 app.get('/health', async (_req: express.Request, res: express.Response) => {
     try {
+        const mem = process.memoryUsage()
         const postgresStart = Date.now()
         const postgresConnected = !!prisma
         let postgresLatency = -1
@@ -92,14 +94,21 @@ app.get('/health', async (_req: express.Request, res: express.Response) => {
 
         res.json({
             status: 'healthy',
+            service: 'northflank-api',
             timestamp: new Date().toISOString(),
+            memory: {
+                rss: `${Math.round(mem.rss / 1024 / 1024)} MB`,
+                heapUsed: `${Math.round(mem.heapUsed / 1024 / 1024)} MB`,
+            },
             services: {
                 postgres: postgresConnected ? 'connected' : 'unavailable',
                 postgresLatency: postgresLatency > -1 ? `${postgresLatency}ms` : 'N/A',
                 mongodb: 'connected',
-                redis: redisStatus ? 'connected' : 'disconnected',
+                redis: redisStatus ? 'connected' : 'unavailable',
             },
-            version: '1.0.0',
+            version: '2.4.0',
+            autoTune: profile.name,
+            queue: priorityQueue.getStats(),
         })
     } catch (error) {
         res.status(503).json({
@@ -109,42 +118,67 @@ app.get('/health', async (_req: express.Request, res: express.Response) => {
     }
 })
 
-app.use('/api/auth', authLimiter, authRouter)
-app.use('/api/notes', notesRouter)
-app.use('/api/guilds', guildRouter)
-app.use('/api/channels', channelRouter)
-app.use('/api/users', userRouter)
-// /api/media moved to Render worker
-app.use('/api/applications', appsRouter)
-app.use('/api/friends', friendsRouter)
-app.use('/api/dms', dmRouter)
-app.use('/api/webhooks', webhookRouter)
-app.use('/api/audit-logs', auditLogRouter)
-app.use('/api/folders', folderRouter)
-// /api/moderation moved to Render worker
-app.use('/api/messages', messagesRouter)
-app.use('/api/analytics', analyticsRouter)
-app.use('/api', beacoinRouter)
+// Consolidated API Router
+app.use('/api', apiRouter)
 
-app.get('/api/csrf-token', (_req, res) => {
+app.get('/api/version', (req, res) => {
+    res.json({ version: '2.4.0', status: 'healthy', timestamp: new Date().toISOString() })
+})
+
+app.get('/api/csrf-token', (req, res) => {
     const token = generateCSRFToken()
+    const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1'
     res.cookie('csrf_token', token, {
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production' && !isLocalhost,
+        sameSite: isLocalhost ? 'lax' : 'strict',
         maxAge: 3600000
     })
     res.json({ token })
 })
 
-app.get('/api/version', (_req, res) => {
-    res.json({ version: '2.4.0' })
-})
-
+// Duplicate version route removed
 export { app, server }
 
 app.use(notFoundHandler)
 app.use(globalErrorHandler)
+
+/**
+ * Keep-alive self-ping — prevents any platform from sleeping the service.
+ */
+function startKeepAlive(port: number | string) {
+    const url = process.env.NORTHFLANK_PUBLIC_URL || process.env.RAILWAY_PUBLIC_URL
+        ? `${process.env.NORTHFLANK_PUBLIC_URL || process.env.RAILWAY_PUBLIC_URL}/health`
+        : `http://localhost:${port}/health`
+    const INTERVAL = 5 * 60 * 1000
+
+    const ping = async () => {
+        try {
+            const res = await fetch(url)
+            console.log(`[keep-alive] Northflank ping ${res.ok ? '✅' : '⚠️'} (${res.status})`)
+        } catch (e: any) {
+            console.warn(`[keep-alive] ping failed: ${e.message}`)
+        }
+    }
+    setInterval(ping, INTERVAL)
+    console.log(`[keep-alive] Self-pinging every 5 min → ${url}`)
+}
+
+/**
+ * Memory watchdog — logs RSS every 10 min, triggers GC if high.
+ */
+function startMemoryWatchdog() {
+    setInterval(() => {
+        if (global.gc) global.gc()
+        const mem = process.memoryUsage()
+        const rssMB = Math.round(mem.rss / 1024 / 1024)
+        console.log(`[memory] RSS: ${rssMB} MB | Heap: ${Math.round(mem.heapUsed / 1024 / 1024)} MB`)
+        if (rssMB > profile.gcTriggerMB) {
+            console.warn(`[memory] ⚠️ RSS above ${profile.gcTriggerMB} MB, forcing GC`)
+            if (global.gc) global.gc()
+        }
+    }, 10 * 60 * 1000)
+}
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
@@ -165,7 +199,8 @@ process.on('SIGINT', async () => {
 
 const start = async () => {
     try {
-        console.log('🚀 Starting Beacon API Server (Azure)...')
+        console.log('🚀 Starting Beacon API Server (Northflank — Combined)...')
+        console.log(`   Memory limit: ${process.env.NODE_OPTIONS || 'default'}`)
         try { await connectMongo() } catch (e) { console.warn('⚠️  MongoDB connection failed', e) }
         if (prisma) {
             try {
@@ -175,16 +210,33 @@ const start = async () => {
                 console.warn('⚠️  PostgreSQL connection failed:', e)
             }
         }
-        try {
-            await redis.ping()
-            console.log('✅ ClawCloud Redis: Connected')
-        } catch (e) { }
+        // Initialize Redis in background — don't block server startup
+        redis.connect().catch(err => {
+            console.warn('⚠️  Redis connection failed (Continuing in degraded mode):', err.message);
+        });
 
         server.listen(PORT, () => {
             console.log(`\n✨ API running on http://localhost:${PORT}`)
+
+            // Initialize moderation pipeline + priority queue
+            moderationService.init()
+            moderationService.initQueue()
+
+            // Initialize Bot System (Official Beacon Bot)
+            import('./bots/index.js').then(async ({ initBotSystem }) => {
+                await initBotSystem();
+                console.log('✅ Bot System: Ready')
+            }).catch(err => {
+                console.error('❌ Failed to initialize Bot System:', err);
+            });
+
+            console.log('✅ Moderation + Priority Queue + Bot System: Ready')
+
+            startKeepAlive(PORT)
+            startMemoryWatchdog()
         })
     } catch (err) {
-        console.error('❌ Failed to start API API:', err)
+        console.error('❌ Failed to start API:', err)
         process.exit(1)
     }
 }

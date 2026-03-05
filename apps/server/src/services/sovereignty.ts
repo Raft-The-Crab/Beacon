@@ -1,9 +1,29 @@
-/**
- * Beacon Sovereignty Service
- * Handles Zero-Data logic and regional optimizations
- */
+import fs from 'fs'
+import path from 'path'
+
+const DEVELOPERS_PATH = path.join(process.cwd(), 'apps/server/config/developers.json')
 
 export class SovereigntyService {
+    private static developers: string[] = []
+    private static loaded = false
+
+    private static loadDevelopers() {
+        if (this.loaded) return
+        try {
+            if (fs.existsSync(DEVELOPERS_PATH)) {
+                const data = JSON.parse(fs.readFileSync(DEVELOPERS_PATH, 'utf-8'))
+                this.developers = data.developers || []
+            }
+        } catch (err) {
+            console.error('[SOVEREIGNTY] Failed to load developers:', err)
+        }
+        this.loaded = true
+    }
+
+    static isSovereign(userId: string): boolean {
+        this.loadDevelopers()
+        return this.developers.includes(userId)
+    }
     /**
      * Determines if a request should use "Zero-Data" (minimal) mode
      * based on user settings or headers.

@@ -1,13 +1,16 @@
-import { Router } from 'express'
-import { authenticate as requireAuth } from '../middleware/auth'
+import { Router, Response } from 'express'
+import { authenticate as requireAuth, AuthRequest } from '../middleware/auth'
 import { prisma as db } from '../db'
+import { PremiumTier, BeacoinTxType } from '@prisma/client'
 
 const router = Router()
 
 // GET /users/@me/beacoin — get balance + transactions
-router.get('/users/@me/beacoin', requireAuth, async (req: any, res) => {
+router.get('/users/@me/beacoin', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user.id
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!db) return res.status(500).json({ error: 'Database not connected' })
 
     // Upsert wallet
     let wallet = await db.beacoinWallet.findUnique({ where: { userId } })
@@ -23,11 +26,11 @@ router.get('/users/@me/beacoin', requireAuth, async (req: any, res) => {
       take: 50,
     })
 
-    const formatted = transactions.map((t: any) => ({
+    const formatted = transactions.map((t) => ({
       id: t.id,
-      type: t.fromUserId === userId ? (t.type === 'earn' ? 'earn' : 'transfer_out') : 'transfer_in',
+      type: t.fromUserId === userId ? (t.type === 'EARN' ? 'earn' : 'transfer_out') : 'transfer_in',
       amount: t.amount,
-      description: t.description || (t.fromUserId === userId ? `Sent to ${t.toUserId}` : `From ${t.fromUserId}`),
+      description: t.reason || (t.fromUserId === userId ? `Sent to ${t.toUserId}` : `From ${t.fromUserId}`),
       timestamp: t.createdAt,
       fromUserId: t.fromUserId,
       toUserId: t.toUserId,
@@ -41,20 +44,21 @@ router.get('/users/@me/beacoin', requireAuth, async (req: any, res) => {
 })
 
 // POST /users/@me/beacoin/send — transfer coins
-router.post('/users/@me/beacoin/send', requireAuth, async (req: any, res) => {
+router.post('/users/@me/beacoin/send', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
-    const fromUserId = req.user.id
+    const fromUserId = req.user?.id
+    if (!fromUserId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!db) return res.status(500).json({ error: 'Database not connected' })
+
     const { toUserId, amount, note } = req.body
 
     if (!toUserId || !amount || amount <= 0) {
-      res.status(400).json({ error: 'Invalid transfer parameters' })
-      return
+      return res.status(400).json({ error: 'Invalid transfer parameters' })
     }
 
     const fromWallet = await db.beacoinWallet.findUnique({ where: { userId: fromUserId } })
     if (!fromWallet || fromWallet.balance < amount) {
-      res.status(400).json({ error: 'Insufficient balance' })
-      return
+      return res.status(400).json({ error: 'Insufficient balance' })
     }
 
     // Find recipient — by userId or username
@@ -63,8 +67,7 @@ router.post('/users/@me/beacoin/send', requireAuth, async (req: any, res) => {
       toUser = await db.user.findFirst({ where: { username: toUserId } })
     }
     if (!toUser) {
-      res.status(404).json({ error: 'User not found' })
-      return
+      return res.status(404).json({ error: 'User not found' })
     }
 
     // Upsert recipient wallet
@@ -87,19 +90,18 @@ router.post('/users/@me/beacoin/send', requireAuth, async (req: any, res) => {
         fromUserId,
         toUserId: toUser.id,
         amount,
-        type: 'TRANSFER',
-        description: note || `Transfer to ${toUser.username}`,
-      } as any,
-    }) as any
+        type: 'TRANSFER' as BeacoinTxType,
+        reason: note || `Transfer to ${toUser.username}`,
+      },
+    })
 
     res.json({
       success: true,
       transaction: {
         id: transaction.id,
-        // @ts-ignore
         type: 'TRANSFER_OUT',
         amount,
-        description: transaction.description,
+        description: transaction.reason,
         timestamp: transaction.createdAt,
         toUserId: toUser.id,
         toUsername: toUser.username,
@@ -112,22 +114,32 @@ router.post('/users/@me/beacoin/send', requireAuth, async (req: any, res) => {
 })
 
 // POST /users/@me/beacoin/subscribe — purchase Beacon+ with Beacoins
-router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: any, res) => {
+router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user.id
-    const { tier } = req.body
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!db) return res.status(500).json({ error: 'Database not connected' })
+
+    const { tier, couponCode } = req.body
 
     if (!['monthly', 'yearly'].includes(tier)) {
-      res.status(400).json({ error: 'Invalid tier. Must be monthly or yearly.' })
-      return
+      return res.status(400).json({ error: 'Invalid tier. Must be monthly or yearly.' })
     }
 
-    const cost = tier === 'yearly' ? 10000 : 1000
+    let cost = tier === 'yearly' ? 10000 : 1000
+
+    if (couponCode && typeof couponCode === 'string') {
+      let hash = 0
+      for (let i = 0; i < couponCode.length; i++) {
+        hash = Math.imul(31, hash) + couponCode.charCodeAt(i) | 0
+      }
+      const discount = Math.abs(hash) % 100
+      cost = Math.floor(cost * (1 - discount / 100))
+    }
 
     const wallet = await db.beacoinWallet.findUnique({ where: { userId } })
     if (!wallet || wallet.balance < cost) {
-      res.status(400).json({ error: 'Insufficient Beacoins' })
-      return
+      return res.status(400).json({ error: 'Insufficient Beacoins' })
     }
 
     // Deduct coins
@@ -143,24 +155,37 @@ router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: any, res) =
         fromUserId: userId,
         toUserId: userId,
         amount: cost,
-        type: 'SPEND',
-        description: `Beacon+ ${tier} subscription`,
-      } as any,
-    }) as any
+        type: 'SPEND' as BeacoinTxType,
+        reason: `Beacon+ ${tier} subscription`,
+      },
+    })
 
-    // Update user to mark as Beacon+ subscriber (store tier + expiry in user metadata)
+    // Update user to mark as Beacon+ subscriber
     const expiresAt = new Date()
     expiresAt.setMonth(expiresAt.getMonth() + (tier === 'yearly' ? 12 : 1))
 
     await db.user.update({
       where: { id: userId },
       data: {
-        // @ts-ignore - beaconPlus fields added via schema migration
-        beaconPlusTier: tier,
-        beaconPlusExpiresAt: expiresAt,
+        isBeaconPlus: true,
+        beaconPlusSince: new Date(),
       },
-    }).catch(() => {
-      // graceful fallback if schema not yet migrated
+    })
+
+    // Upsert UserPremium
+    await db.userPremium.upsert({
+      where: { userId },
+      create: {
+        userId,
+        tier: PremiumTier.PREMIUM,
+        expiresAt,
+        purchasedWith: cost,
+      },
+      update: {
+        tier: PremiumTier.PREMIUM,
+        expiresAt,
+        purchasedWith: cost,
+      }
     })
 
     res.json({
@@ -171,7 +196,7 @@ router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: any, res) =
         id: transaction.id,
         type: 'spend',
         amount: cost,
-        description: transaction.description,
+        description: transaction.reason,
         timestamp: transaction.createdAt,
       },
     })

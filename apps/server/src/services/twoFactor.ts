@@ -1,4 +1,4 @@
-import speakeasy from 'speakeasy'
+import node2fa from 'node-2fa'
 import QRCode from 'qrcode'
 import { prisma } from '../db'
 
@@ -7,10 +7,14 @@ export class TwoFactorService {
      * Generates a new TOTP secret for a user
      */
     static generateSecret(email: string) {
-        return speakeasy.generateSecret({
-            name: `Beacon (${email})`,
-            issuer: 'Beacon'
+        const result = node2fa.generateSecret({
+            name: 'Beacon',
+            account: email
         })
+        return {
+            base32: result.secret,
+            otpauth_url: result.uri
+        }
     }
 
     /**
@@ -23,13 +27,9 @@ export class TwoFactorService {
     /**
      * Verifies a TOTP token against a secret
      */
-    static verifyToken(secret: string, token: string) {
-        return speakeasy.totp.verify({
-            secret,
-            encoding: 'base32',
-            token,
-            window: 1 // Allow 30 seconds clock skew
-        })
+    static verifyToken(secret: string, token: string): boolean {
+        const result = node2fa.verifyToken(secret, token, 1) // 1 window tolerance
+        return result !== null
     }
 
     /**

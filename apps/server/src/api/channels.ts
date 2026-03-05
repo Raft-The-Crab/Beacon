@@ -1,8 +1,8 @@
 /**
  * Channels API — text channels, voice channels, slowmode, pins, reactions
  */
-import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
+import { Router, Response } from 'express';
+import { authenticate, AuthRequest } from '../middleware/auth';
 import {
   getMessages,
   createMessage,
@@ -16,11 +16,15 @@ import {
 } from '../controllers/message.controller';
 import {
   getChannel,
+  createChannel,
   updateChannel,
   deleteChannel,
   createChannelInvite,
   getChannelInvites,
 } from '../controllers/channel.controller';
+import { requirePermission } from '../middleware/permission';
+import { Permissions } from '../utils/permissions';
+import { redis } from '../services/redis';
 
 const router = Router();
 
@@ -28,9 +32,10 @@ const router = Router();
 router.use(authenticate);
 
 // ─── Channel CRUD ─────────────────────────────────────────────
+router.post('/', requirePermission(Permissions.MANAGE_CHANNELS as any), createChannel);
 router.get('/:channelId', getChannel);
-router.patch('/:channelId', updateChannel);
-router.delete('/:channelId', deleteChannel);
+router.patch('/:channelId', requirePermission(Permissions.MANAGE_CHANNELS as any), updateChannel);
+router.delete('/:channelId', requirePermission(Permissions.MANAGE_CHANNELS as any), deleteChannel);
 
 // ─── Invites ──────────────────────────────────────────────────
 router.get('/:channelId/invites', getChannelInvites);
@@ -53,19 +58,20 @@ router.delete('/:channelId/messages/:messageId/reactions/:emoji/@me', removeReac
 router.delete('/:channelId/messages/:messageId/reactions/:emoji/:userId', removeReaction);
 
 // ─── Typing indicator ─────────────────────────────────────────
-router.post('/:channelId/typing', authenticate, async (req, res) => {
-  const userId = (req as any).user?.id;
+router.post('/:channelId/typing', async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id;
   const { channelId } = req.params;
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const { getIO } = await import('../ws');
-    const io = getIO();
-    io.to(`channel:${channelId}`).emit('TYPING_START', {
-      channelId,
-      userId,
-      timestamp: Date.now(),
-    });
+    await redis.publish('gateway:events', JSON.stringify({
+      t: 'TYPING_START',
+      d: {
+        channelId,
+        userId,
+        timestamp: Date.now(),
+      }
+    }));
     return res.status(204).send();
   } catch {
     return res.status(204).send();

@@ -12,22 +12,22 @@ export class PermissionService {
     // Check cache first
     const cacheKey = `perms:${userId}:${guildId}`
     const cached = await redis.get(cacheKey)
-    
+
     let userPermissions: bigint
-    
+
     if (cached) {
       userPermissions = BigInt(cached)
     } else {
       userPermissions = await this.calculatePermissions(userId, guildId)
-      await redis.setex(cacheKey, this.CACHE_TTL, userPermissions.toString())
+      await redis.set(cacheKey, userPermissions.toString(), 'EX', this.CACHE_TTL)
     }
 
     // Administrator has all permissions
-    if ((userPermissions & PermissionBit.ADMINISTRATOR) === PermissionBit.ADMINISTRATOR) {
+    if ((userPermissions & BigInt(PermissionBit.ADMINISTRATOR)) === BigInt(PermissionBit.ADMINISTRATOR)) {
       return true
     }
 
-    return (userPermissions & permission) === permission
+    return (userPermissions & BigInt(permission)) === BigInt(permission)
   }
 
   private static async calculatePermissions(userId: string, guildId: string): Promise<bigint> {
@@ -38,7 +38,7 @@ export class PermissionService {
     })
 
     if (guild?.ownerId === userId) {
-      return PermissionBit.ADMINISTRATOR
+      return BigInt(PermissionBit.ADMINISTRATOR)
     }
 
     // Get user's roles in the guild

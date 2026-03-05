@@ -1,21 +1,21 @@
-import { Router, Request, Response } from 'express'
+import { Router, Response } from 'express'
 import { MessageModel } from '../db'
-import { authMiddleware } from '../middleware/auth'
+import { authenticate, AuthRequest } from '../middleware/auth'
 import { sanitizeMessage } from '../utils/sanitize'
 import type { PaginatedResponse, MessageSearchQuery } from '@beacon/types'
 
 const router = Router()
 
 // GET /api/messages/:channelId - Paginated messages
-router.get('/:channelId', authMiddleware, async (req: Request, res: Response) => {
+router.get('/:channelId', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { channelId } = req.params
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 100)
     const before = req.query.before as string // Message ID
     const after = req.query.after as string
 
-    const query: any = { channel_id: channelId }
-    
+    const query: Record<string, any> = { channel_id: channelId }
+
     if (before) {
       const beforeMsg = await MessageModel.findOne({ id: before })
       if (beforeMsg) {
@@ -52,13 +52,13 @@ router.get('/:channelId', authMiddleware, async (req: Request, res: Response) =>
 })
 
 // POST /api/messages/search - Search messages
-router.post('/search', authMiddleware, async (req: Request, res: Response) => {
+router.post('/search', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const query: MessageSearchQuery = req.body
     const limit = Math.min(query.limit || 50, 100)
     const offset = query.offset || 0
 
-    const mongoQuery: any = {}
+    const mongoQuery: Record<string, any> = {}
 
     if (query.content) {
       mongoQuery.$text = { $search: sanitizeMessage(query.content) }

@@ -1,29 +1,48 @@
-FROM node:20-alpine
+# --- Stage 1: Build ---
+FROM node:20-alpine AS builder
 
 WORKDIR /app
+RUN apk add --no-cache openssl g++ make python3
 
-# Install system dependencies
-RUN apk add --no-cache openssl
-
-# Copy package files
+# Copy root configurations
 COPY package*.json ./
+COPY packages/types/package.json ./packages/types/
+COPY apps/server/package.json ./apps/server/
 
-# Install dependencies (only production for smaller image)
+# Copy all source files
+COPY packages/types ./packages/types
+COPY apps/server ./apps/server
+
+# Install dependencies for the workspace
 RUN npm install
 
-# Copy source and prisma
-COPY prisma ./prisma
-COPY src ./src
-COPY ai ./ai
-COPY tsconfig.json ./
-COPY server-*.js ./
+# Build shared types
+WORKDIR /app/packages/types
+RUN npm run build || true
 
-# Generate Prisma client
+# Generate Prisma and build Server
+WORKDIR /app/apps/server
 RUN npx prisma generate
-
-# Build
 RUN npm run build
 
-EXPOSE 8080
+# --- Stage 2: Production ---
+FROM node:20-alpine
+WORKDIR /app
+
+RUN apk add --no-cache openssl
+
+# We must copy node_modules from builder to avoid having to run `npm install --omit=dev` which breaks workspaces
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/types ./packages/types
+COPY --from=builder /app/apps/server/node_modules ./apps/server/node_modules
+COPY --from=builder /app/apps/server/dist ./apps/server/dist
+COPY --from=builder /app/apps/server/package*.json ./apps/server/
+COPY --from=builder /app/apps/server/prisma ./apps/server/prisma
+COPY --from=builder /app/apps/server/server-*.js ./apps/server/
+
+WORKDIR /app/apps/server
+RUN npx prisma generate
+
+EXPOSE 8080 8081 8082 4001
 
 CMD ["node", "server-railway.js"]
