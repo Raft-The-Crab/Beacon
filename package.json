@@ -27,6 +27,7 @@
     "prisma:generate": "cd apps/server && npx prisma generate",
     "prisma:migrate": "cd apps/server && npx prisma migrate deploy",
     "prisma:push": "cd apps/server && npx prisma db push",
+    "publish:packages": "npm run install:packages && cd packages/types && npm publish --access public ; cd ../sdk && npm publish --access public",
     "clean": "powershell -Command \"Get-ChildItem -Path . -Include node_modules,dist,build,target -Recurse -Directory | Remove-Item -Recurse -Force\"",
     "test": "echo \"No tests specified\" && exit 0"
   },
