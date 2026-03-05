@@ -1,0 +1,6 @@
+src/
+tsconfig.json
+scripts/
+*.tgz
+.eslintrc*
+.prettierrc*
