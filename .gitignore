@@ -3,52 +3,6 @@
 # DO NOT DISTRIBUTE
 # ==========================================
 
-# ============================================================================
-# BEACON - ULTRA-RESTRICTIVE RELEASE GATE
-# ============================================================================
-# This .gitignore is designed to hide ALL proprietary source code from the 
-# public repository while allowing the minimum necessary for hosting.
-
-# 1. Broad Ignores - HIDE EVERYTHING BY DEFAULT
-/*
-!/.gitignore
-!/README.md
-!/LICENSE
-!/package.json
-!/pnpm-lock.yaml
-!/pnpm-workspace.yaml
-!/DEPLOYMENT_TUTORIAL.md
-!/railyway.json
-
-# 2. Layered Un-ignore Strategy
-!/apps/
-/apps/*
-!/apps/server/
-/apps/server/*
-!/apps/server/server-azure.js
-!/apps/server/server-railway.js
-!/apps/server/server-render.js
-!/apps/server/package.json
-!/apps/server/tsconfig.json
-!/apps/server/Dockerfile
-!/apps/server/prisma/
-!/apps/server/prisma/**
-!/apps/server/src/
-!/apps/server/src/**
-
-# 3. Hide all other proprietary blocks
-/packages/
-/libs/
-/scripts/
-/.github/
-/.agents/
-/.gemini/
-/apps/web/
-/apps/desktop/
-/apps/mobile/
-/apps/server/tests/
-/apps/server/native/
-
 # 4. Standard Node/Dependency Protections
 node_modules/
 dist/
