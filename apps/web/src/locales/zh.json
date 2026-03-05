@@ -1,0 +1,176 @@
+{
+    "common": {
+        "login": "登录",
+        "signup": "注册",
+        "logout": "退出登录",
+        "settings": "设置",
+        "friends": "好友",
+        "servers": "服务器",
+        "search": "搜索",
+        "cancel": "取消",
+        "save": "保存",
+        "welcome": "欢迎回来，{name}！",
+        "new": "新",
+        "get_started_question": "准备好连接了吗？",
+        "join_revolution": "与朋友联系",
+        "learn_how": "了解更多",
+        "navigation": "导航",
+        "community": "社区",
+        "introduction": "介绍",
+        "discovery": "发现",
+        "app_directory": "应用目录",
+        "community_hub": "社区中心",
+        "documentation": "文档",
+        "contact_support": "支持",
+        "open_beacon": "打开 Beacon",
+        "pinned_messages": "已固定的消息",
+        "member_list": "成员列表",
+        "inbox": "收件箱",
+        "help": "帮助"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "为社区和开发者构建的实时通信平台。",
+        "get_started": "开始使用",
+        "read_docs": "阅读文档",
+        "features": {
+            "native": "核心引擎",
+            "native_desc": "高性能语音和消息，延迟极低。",
+            "security": "隐私优先",
+            "security_desc": "加密通信和用户控制的数据。",
+            "sdk": "开发者 API",
+            "sdk_desc": "用于构建机器人和集成的强大工具。"
+        },
+        "status": {
+            "header": "状态",
+            "gateway": "网关：在线",
+            "api": "API：在线",
+            "voice": "语音：在线",
+            "active_nodes": "{count} 个节点"
+        },
+        "footer": {
+            "tos": "条款",
+            "privacy": "隐私",
+            "about": "关于",
+            "support": "支持",
+            "copyright": "© 2026 Beacon。保留所有权利。"
+        }
+    },
+    "app_directory": {
+        "title": "应用目录",
+        "subtitle": "发现适合您服务器的应用和集成。",
+        "search_placeholder": "搜索应用、机器人、集成...",
+        "categories": {
+            "all": "全部",
+            "gaming": "游戏",
+            "social": "社交",
+            "productivity": "生产力",
+            "automation": "AI 和自动化"
+        },
+        "items": {
+            "add_to_server": "添加到服务器",
+            "verified": "已验证",
+            "official": "官方",
+            "partner": "合作伙伴"
+        }
+    },
+    "user_profile": {
+        "about_me": "关于我",
+        "member_since": "加入时间",
+        "roles": "角色",
+        "message": "发送消息",
+        "add_friend": "添加好友",
+        "more": "更多",
+        "joined_at": "加入于 {date}"
+    },
+    "docs": {
+        "title": "Beacon 开发者文档",
+        "subtitle": "构建强大机器人和集成所需的一切。",
+        "search_placeholder": "搜索文档...",
+        "on_this_page": "本页内容",
+        "categories": {
+            "getting_started": "快速入门",
+            "api_reference": "API 参考",
+            "gateway": "网关和事件",
+            "sdk": "SDK 教程",
+            "bot_commands": "机器人命令"
+        },
+        "build_section": {
+            "title": "您可以构建什么？",
+            "bots": "机器人和自动化",
+            "bots_desc": "自动审核、实用命令、投票和小游戏。",
+            "oauth": "OAuth2 集成",
+            "oauth_desc": "让用户使用 Beacon 账户安全登录您的网站。",
+            "webhooks": "自定义 Webhooks",
+            "webhooks_desc": "将外部服务的通知推送到任何频道。"
+        },
+        "popular_topics": "热门话题",
+        "topics": {
+            "create_app": "如何创建您的第一个应用程序",
+            "rest_api": "REST API：发送和接收消息",
+            "websocket": "WebSocket：订阅网关事件",
+            "sdk_guide": "SDK：斜杠命令和交互式组件",
+            "bot_features": "Beacon 机器人：内置命令和丰富响应"
+        }
+    },
+    "marketplace": {
+        "title": "购物到爽。",
+        "subtitle": "解锁 Beacon 的全部功能或装饰您的个人资料。",
+        "beacoin_balance": "{count} Beacoins",
+        "success_title": "购买成功！",
+        "success_desc": "您的高级功能现已激活。",
+        "return_to_shop": "返回商店",
+        "tabs": {
+            "plus": "Beacon+",
+            "decorations": "头像装饰",
+            "effects": "个人资料特效"
+        },
+        "plus": {
+            "monthly": "每月",
+            "yearly": "每年",
+            "save_badge": "省 16%",
+            "features": {
+                "animated": "动态头像和个人资料横幅",
+                "emojis": "到处使用自定义表情",
+                "uploads": "更大的文件上传（500MB）",
+                "streaming": "高清流媒体和屏幕共享",
+                "badge": "独家 Beacon+ 徽章",
+                "bonus": "每月 Beacoin 奖励（100 枚）"
+            },
+            "purchase": "购买",
+            "insufficient": "Beacoins 不足",
+            "processing": "处理中..."
+        },
+        "cosmetics": {
+            "owned": "已拥有",
+            "equipped": "已装备",
+            "unequip": "卸下",
+            "equip": "装备",
+            "unlock": "解锁",
+            "too_poor": "余额不足",
+            "gift": "赠送"
+        }
+    },
+    "discovery": {
+        "title": "在 Beacon 上找到您的社区",
+        "subtitle": "从游戏到音乐，从学习到社交，这里有适合您的地方。",
+        "search_placeholder": "探索社区",
+        "featured": "推荐社区",
+        "no_results": "未找到与 \"{query}\" 匹配的社区",
+        "clear_search": "清除搜索",
+        "join_server": "加入服务器",
+        "online": "{count} 在线",
+        "members": "{count} 成员",
+        "join_success": "欢迎加入",
+        "join_error": "加入服务器失败"
+    },
+    "community": {
+        "title": "发现您的下一个家。",
+        "subtitle": "从游戏到学习小组，找到适合您的社区。",
+        "featured": "推荐社区",
+        "join": "加入社区",
+        "cta": "没找到您想要的？",
+        "cta_desc": "立即创建您自己的服务器并邀请您的朋友！",
+        "create_server": "创建服务器"
+    }
+}

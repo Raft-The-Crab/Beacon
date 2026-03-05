@@ -1,0 +1,29 @@
+# --- Stage 1: Build ---
+FROM node:20-alpine AS builder
+WORKDIR /app
+RUN apk add --no-cache openssl
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npx prisma generate
+RUN npm run build
+
+# --- Stage 2: Production ---
+FROM node:20-alpine
+WORKDIR /app
+RUN apk add --no-cache openssl
+
+# Copy only necessary files
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/server-clawcloud.js ./
+
+# Install ONLY production dependencies
+RUN npm install --omit=dev
+RUN npx prisma generate
+
+EXPOSE 8080
+
+# Use optimized production wrapper for ClawCloud (API Server)
+CMD ["node", "server-clawcloud.js"]

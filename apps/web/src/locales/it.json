@@ -1,0 +1,82 @@
+{
+    "common": {
+        "login": "Accedi",
+        "signup": "Registrati",
+        "logout": "Esci",
+        "settings": "Impostazioni",
+        "friends": "Amici",
+        "servers": "Server",
+        "search": "Cerca",
+        "cancel": "Annulla",
+        "save": "Salva",
+        "welcome": "Bentornato, {name}!",
+        "new": "NUOVO",
+        "get_started_question": "Pronto a connetterti?",
+        "join_revolution": "Connettiti con gli amici",
+        "learn_how": "Scopri di più",
+        "navigation": "NAVIGAZIONE",
+        "community": "COMUNITÀ",
+        "introduction": "Introduzione",
+        "discovery": "Scoperta",
+        "app_directory": "Directory App",
+        "community_hub": "Hub della Community",
+        "documentation": "Documentazione",
+        "contact_support": "Supporto",
+        "open_beacon": "Apri Beacon"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "Una piattaforma di comunicazione in tempo realereal-time costruita per comunità e sviluppatori.",
+        "get_started": "Inizia",
+        "read_docs": "Leggi Docs",
+        "features": {
+            "native": "Motore Core",
+            "native_desc": "Voce e messaggistica ad alte prestazioni con latenza minima.",
+            "security": "Privacy al Primo Posto",
+            "security_desc": "Comunicazioni crittografate e dati controllati dall'utente.",
+            "sdk": "API per Sviluppatori",
+            "sdk_desc": "Potenti strumenti per creare bot e integrazioni."
+        },
+        "status": {
+            "header": "Stato",
+            "gateway": "Gateway: Online",
+            "api": "API: Online",
+            "voice": "Voce: Online",
+            "active_nodes": "{count} Nodi"
+        },
+        "footer": {
+            "tos": "Termini",
+            "privacy": "Privacy",
+            "about": "Informazioni",
+            "support": "Supporto",
+            "copyright": "© 2026 Beacon. Tutti i diritti riservati."
+        }
+    },
+    "app_directory": {
+        "title": "Directory App",
+        "subtitle": "Scopri app e integrazioni per i tuoi server.",
+        "search_placeholder": "Cerca app, bot, integrazioni...",
+        "categories": {
+            "all": "Tutto",
+            "gaming": "Giochi",
+            "social": "Social",
+            "productivity": "Produttività",
+            "automation": "IA e Automazione"
+        },
+        "items": {
+            "add_to_server": "Aggiungi al Server",
+            "verified": "Verificato",
+            "official": "Ufficiale",
+            "partner": "Partner"
+        }
+    },
+    "user_profile": {
+        "about_me": "SU DI ME",
+        "member_since": "MEMBRO DAL",
+        "roles": "RUOLI",
+        "message": "Messaggio",
+        "add_friend": "Aggiungi Amico",
+        "more": "Altro",
+        "joined_at": "Membro dal {date}"
+    }
+}

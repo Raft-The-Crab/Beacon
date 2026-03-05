@@ -1,0 +1,176 @@
+{
+    "common": {
+        "login": "로그인",
+        "signup": "가입하기",
+        "logout": "로그아웃",
+        "settings": "설정",
+        "friends": "친구",
+        "servers": "서버",
+        "search": "검색",
+        "cancel": "취소",
+        "save": "저장",
+        "welcome": "다시 오신 것을 환영합니다, {name}님!",
+        "new": "새로운",
+        "get_started_question": "연결할 준비가 되셨나요?",
+        "join_revolution": "친구와 연결하기",
+        "learn_how": "더 알아보기",
+        "navigation": "탐색",
+        "community": "커뮤니티",
+        "introduction": "소개",
+        "discovery": "탐색",
+        "app_directory": "앱 디렉토리",
+        "community_hub": "커뮤니티 허브",
+        "documentation": "문서",
+        "contact_support": "지원",
+        "open_beacon": "Beacon 열기",
+        "pinned_messages": "고정된 메시지",
+        "member_list": "멤버 목록",
+        "inbox": "받은 편지함",
+        "help": "도움말"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "커뮤니티와 개발자를 위해 구축된 실시간 통신 플랫폼입니다.",
+        "get_started": "시작하기",
+        "read_docs": "문서 읽기",
+        "features": {
+            "native": "코어 엔진",
+            "native_desc": "최소한의 지연 시간으로 고성능 음성 및 메시징을 제공합니다.",
+            "security": "개인정보 보호 우선",
+            "security_desc": "암호화된 통신 및 사용자 제어 데이터.",
+            "sdk": "개발자 API",
+            "sdk_desc": "봇 및 통합 구축을 위한 강력한 도구."
+        },
+        "status": {
+            "header": "상태",
+            "gateway": "게이트웨이: 온라인",
+            "api": "API: 온라인",
+            "voice": "음성: 온라인",
+            "active_nodes": "{count}개 노드"
+        },
+        "footer": {
+            "tos": "약관",
+            "privacy": "개인정보",
+            "about": "정보",
+            "support": "지원",
+            "copyright": "© 2026 Beacon. All rights reserved."
+        }
+    },
+    "app_directory": {
+        "title": "앱 디렉토리",
+        "subtitle": "서버를 위한 앱과 통합을 찾아보세요.",
+        "search_placeholder": "앱, 봇, 통합 검색...",
+        "categories": {
+            "all": "전체",
+            "gaming": "게임",
+            "social": "소셜",
+            "productivity": "생산성",
+            "automation": "AI 및 자동화"
+        },
+        "items": {
+            "add_to_server": "서버에 추가",
+            "verified": "인증됨",
+            "official": "공식",
+            "partner": "파트너"
+        }
+    },
+    "user_profile": {
+        "about_me": "내 소개",
+        "member_since": "가입일",
+        "roles": "역할",
+        "message": "메시지",
+        "add_friend": "친구 추가",
+        "more": "더 보기",
+        "joined_at": "{date}부터 회원"
+    },
+    "docs": {
+        "title": "Beacon 개발자 문서",
+        "subtitle": "Beacon에서 강력한 봇과 통합을 구축하는 데 필요한 모든 것.",
+        "search_placeholder": "문서 검색...",
+        "on_this_page": "이 페이지에서",
+        "categories": {
+            "getting_started": "시작하기",
+            "api_reference": "API 참조",
+            "gateway": "게이트웨이 및 이벤트",
+            "sdk": "SDK 튜토리얼",
+            "bot_commands": "봇 명령어"
+        },
+        "build_section": {
+            "title": "무엇을 만들 수 있나요?",
+            "bots": "봇 및 자동화",
+            "bots_desc": "자동 관리, 유틸리티 명령어, 투표 및 미니 게임.",
+            "oauth": "OAuth2 통합",
+            "oauth_desc": "사용자가 Beacon 계정으로 안전하게 로그인할 수 있게 하세요.",
+            "webhooks": "커스텀 Webhooks",
+            "webhooks_desc": "외부 서비스 알림을 모든 채널로 직접 전송하세요."
+        },
+        "popular_topics": "인기 주제",
+        "topics": {
+            "create_app": "첫 애플리케이션 만드는 방법",
+            "rest_api": "REST API: 메시지 송수신",
+            "websocket": "WebSocket: 게이트웨이 이벤트 구독",
+            "sdk_guide": "SDK: 슬래시 명령어 및 인터랙티브 컴포넌트",
+            "bot_features": "Beacon Bot: 내장 명령어 및 리치 응답"
+        }
+    },
+    "marketplace": {
+        "title": "쇼핑을 즐기세요.",
+        "subtitle": "Beacon의 모든 기능을 열거나 프로필을 꾸미세요.",
+        "beacoin_balance": "{count} Beacoins",
+        "success_title": "구매 성공!",
+        "success_desc": "프리미엄 기능이 활성화되었습니다.",
+        "return_to_shop": "상점으로 돌아가기",
+        "tabs": {
+            "plus": "Beacon+",
+            "decorations": "아바타 장식",
+            "effects": "프로필 효과"
+        },
+        "plus": {
+            "monthly": "월간",
+            "yearly": "연간",
+            "save_badge": "16% 절약",
+            "features": {
+                "animated": "애니메이션 아바타 및 프로필 배너",
+                "emojis": "모든 곳에서 커스텀 이모지",
+                "uploads": "더 큰 파일 업로드 (500MB)",
+                "streaming": "HD 스트리밍 및 화면 공유",
+                "badge": "독점 Beacon+ 배지",
+                "bonus": "월간 Beacoin 보너스 (100개)"
+            },
+            "purchase": "구매",
+            "insufficient": "Beacoins 부족",
+            "processing": "처리 중..."
+        },
+        "cosmetics": {
+            "owned": "보유",
+            "equipped": "착용 중",
+            "unequip": "해제",
+            "equip": "착용",
+            "unlock": "해금",
+            "too_poor": "잔액 부족",
+            "gift": "선물"
+        }
+    },
+    "discovery": {
+        "title": "Beacon에서 커뮤니티를 찾아보세요",
+        "subtitle": "게임에서 음악, 학습까지 당신을 위한 공간이 있습니다.",
+        "search_placeholder": "커뮤니티 탐색",
+        "featured": "추천 커뮤니티",
+        "no_results": "\"{query}\"에 해당하는 커뮤니티를 찾을 수 없습니다",
+        "clear_search": "검색 지우기",
+        "join_server": "서버 참가",
+        "online": "{count}명 온라인",
+        "members": "{count}명 멤버",
+        "join_success": "에 오신 것을 환영합니다",
+        "join_error": "서버 참가 실패"
+    },
+    "community": {
+        "title": "다음 보금자리를 찾아보세요.",
+        "subtitle": "게임에서 스터디 그룹까지, 나에게 맞는 커뮤니티를 찾아보세요.",
+        "featured": "추천 커뮤니티",
+        "join": "커뮤니티 참가",
+        "cta": "원하는 것을 찾지 못하셨나요?",
+        "cta_desc": "오늘 내 서버를 만들고 친구를 초대하세요!",
+        "create_server": "서버 만들기"
+    }
+}

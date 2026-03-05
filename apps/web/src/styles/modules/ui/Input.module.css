@@ -1,0 +1,107 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+}
+
+.label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-left: var(--space-2xs);
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 var(--space-lg);
+  background: var(--bg-secondary);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  font-family: var(--font-family);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  will-change: transform, border-color;
+  transform: translateZ(0);
+}
+
+.input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--beacon-brand);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 0 0 3px var(--beacon-brand-muted);
+  transform: translateY(-1px);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+
+.input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hasIcon {
+  padding-left: 48px;
+}
+
+.icon {
+  position: absolute;
+  left: 16px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input:focus+.icon {
+  color: var(--beacon-brand);
+  transform: none;
+}
+
+.hasError .input {
+  border-color: var(--status-error);
+  background: rgba(250, 119, 124, 0.05);
+}
+
+.hasError .input:focus {
+  box-shadow: 0 0 0 3px rgba(250, 119, 124, 0.15);
+}
+
+.error {
+  font-size: var(--font-size-xs);
+  color: var(--status-error);
+  font-weight: 600;
+  margin-left: var(--space-2xs);
+  margin-top: var(--space-2xs);
+}
+
+.textarea {
+  min-height: 96px;
+  padding: var(--space-sm) var(--space-md);
+  resize: vertical;
+  line-height: 1.6;
+  align-self: stretch;
+}
+
+.inputWrapper:has(.textarea) {
+  align-items: flex-start;
+}

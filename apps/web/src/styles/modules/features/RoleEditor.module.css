@@ -1,0 +1,228 @@
+.container {
+    display: flex;
+    height: 100%;
+    background: var(--bg-primary);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+}
+
+.hierarchySidebar {
+    width: 260px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebarHeader {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.sidebarHeader h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+}
+
+.roleList {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.roleItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+    background: transparent;
+}
+
+.roleItem:hover {
+    background: var(--bg-modifier-hover);
+}
+
+.roleItem.selected {
+    background: var(--bg-modifier-selected);
+}
+
+.roleItem.dragging {
+    opacity: 0.5;
+    border: 1px dashed var(--primary);
+}
+
+.roleIndicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.roleName {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-normal);
+}
+
+.editorMain {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.editorScroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+.editorHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.rolePrimaryInfo {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.roleColorCircle {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-xl);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.roleMetadata {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.actionButtons {
+    display: flex;
+    gap: 1rem;
+}
+
+.section {
+    margin-bottom: 3rem;
+}
+
+.section h4 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.5px;
+}
+
+.settingCard {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.settingLabel {
+    font-weight: 600;
+    color: var(--text-normal);
+    margin-bottom: 0.25rem;
+}
+
+.settingDesc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.permissionGroup {
+    margin-bottom: 2rem;
+}
+
+.groupTitle {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.permissionRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.permLabel {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-normal);
+}
+
+.permDesc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.permSwitch {
+    width: 44px;
+    height: 24px;
+    background: #3f4147;
+    border-radius: var(--radius-xl);
+    padding: 3px;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+}
+
+.permSwitch.active {
+    background: var(--primary);
+}
+
+.switchHandle {
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.permSwitch.active .switchHandle {
+    transform: translateX(20px);
+}
+
+.emptyState {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    gap: 1.5rem;
+    text-align: center;
+    padding: 3rem;
+}

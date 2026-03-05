@@ -1,0 +1,95 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.compact {
+    gap: 4px;
+}
+
+.activityItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: var(--bg-modifier-accent, rgba(255, 255, 255, 0.05));
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.activityItem:hover {
+    transform: translateY(-1px);
+    background: var(--bg-modifier-hover, rgba(255, 255, 255, 0.08));
+}
+
+.compact .activityItem {
+    padding: 4px 6px;
+    border: none;
+    background: transparent;
+}
+
+.iconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-xs);
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.spotifyIcon {
+    color: #1DB954;
+    filter: drop-shadow(0 0 4px rgba(29, 185, 84, 0.4));
+}
+
+.gameIcon {
+    color: var(--beacon-brand, #5865f2);
+    filter: drop-shadow(0 0 4px rgba(88, 101, 242, 0.4));
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.activityHeader {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted, #8e9297);
+    letter-spacing: 0.02em;
+}
+
+.activityName {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white, #ffffff);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activityDetails,
+.activityState {
+    font-size: 11px;
+    color: var(--text-normal, #dcddde);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.actionBtn {
+    color: var(--text-muted, #8e9297);
+    transition: color 0.2s;
+}
+
+.actionBtn:hover {
+    color: var(--white, #ffffff);
+}

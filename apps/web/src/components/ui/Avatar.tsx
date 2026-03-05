@@ -1,0 +1,142 @@
+﻿import React from 'react'
+import { useAuthStore, PresenceStatus } from '../../stores/useAuthStore'
+import { getSimulatedFrameForUser, useProfileArtStore } from '../../stores/useProfileArtStore'
+import styles from '../../styles/modules/ui/Avatar.module.css'
+
+interface AvatarProps {
+  src?: string | null
+  alt?: string
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  status?: PresenceStatus | 'offline'
+  onClick?: () => void
+  username?: string
+  frameUrl?: string | null
+  frameGradient?: string | null
+  frameAnimation?: string | null
+  avatarDecorationId?: string | null
+}
+
+const statusColors: Record<string, string> = {
+  online: '#23a559',
+  idle: '#f0b232',
+  dnd: '#f23f43',
+  invisible: '#80848e',
+  offline: '#80848e',
+}
+
+// Generate a stable gradient from a string (no external service)
+function stringToGradient(str: string): { bg: string; text: string } {
+  const palettes = [
+    { bg: 'linear-gradient(135deg, #5865f2 0%, #7289da 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #23a559 0%, #2da652 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #f0b232 0%, #e67e22 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #f23f43 0%, #c0392b 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #1abc9c 0%, #16a085 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #e91e8c 0%, #c2185b 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, #ff6b35 0%, #e55116 100%)', text: '#fff' },
+  ]
+  if (!str) return palettes[0]
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i)
+    hash |= 0
+  }
+  return palettes[Math.abs(hash) % palettes.length]
+}
+
+function getInitials(name?: string | null): string {
+  if (!name || name.trim() === '') return '?'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return name.substring(0, 2).toUpperCase()
+}
+
+export const Avatar = React.memo(function Avatar({
+  src,
+  alt = '',
+  size = 'md',
+  status,
+  username,
+  frameUrl,
+  frameGradient,
+  frameAnimation,
+  avatarDecorationId
+}: AvatarProps) {
+  const currentUser = useAuthStore(state => state.user)
+  const { arts, equippedFrame } = useProfileArtStore()
+
+  const isOtherUser = username && username !== currentUser?.username && username !== 'You'
+  const simulatedArt = isOtherUser ? getSimulatedFrameForUser(username) : null
+  const currentUserArt = !isOtherUser ? arts.find(a => a.id === equippedFrame) : null
+
+  const finalFrameUrl = frameUrl !== undefined ? frameUrl : (simulatedArt?.imageUrl || currentUserArt?.imageUrl)
+  const finalFrameGradient = frameGradient !== undefined ? frameGradient : (simulatedArt?.preview || currentUserArt?.preview)
+  const finalFrameAnimation = frameAnimation !== undefined ? frameAnimation : (simulatedArt?.animation || currentUserArt?.animation)
+
+  const displayName = username || alt || ''
+  const { bg, text } = stringToGradient(displayName)
+  const initials = getInitials(displayName)
+
+  // Avatar Decoration parsing (MOCK DATA mapped to CSS vars as a demo)
+  const getDecorationColor = (id?: string | null) => {
+    if (id === 'dec_1') return '#00f5ff'
+    if (id === 'dec_2') return '#f0b232'
+    if (id === 'dec_3') return '#949cf7'
+    if (id === 'dec_4') return '#ff4757'
+    return null
+  }
+  const decColor = getDecorationColor(avatarDecorationId)
+
+  const showImage = !!src && !src.includes('dicebear') && !src.includes('api.dicebear')
+  const hasFrame = !!(finalFrameUrl || finalFrameGradient)
+
+  return (
+    <div
+      className={`${styles.avatar} ${styles[size]} ${hasFrame ? styles.framed : ''} ${decColor ? styles.hasDecoration : ''}`}
+    >
+      {/* Profile Art Frame */}
+      {hasFrame && (
+        <div className={`${styles.frameRing} ${finalFrameAnimation ? styles[`anim-${finalFrameAnimation}`] : ''}`}>
+          {finalFrameUrl ? (
+            <img src={finalFrameUrl} alt="frame" className={styles.frameImage} />
+          ) : finalFrameGradient ? (
+            <div className={styles.frameGradient} style={{ background: finalFrameGradient }} />
+          ) : null}
+        </div>
+      )}
+
+      {/* Avatar Decoration (Shop System) */}
+      {decColor && (
+        <div className={styles.avatarDecoration} style={{ borderColor: decColor, boxShadow: `0 0 20px ${decColor}40` }} />
+      )}
+
+      <div className={styles.inner}>
+        {showImage ? (
+          <img
+            src={src!}
+            alt={alt}
+            className={styles.image}
+            onError={(e) => {
+              const target = e.currentTarget
+              target.style.display = 'none'
+            }}
+          />
+        ) : (
+          <div
+            className={styles.placeholder}
+            style={{ background: bg, color: text }}
+          >
+            {initials}
+          </div>
+        )}
+      </div>
+      {status && status !== 'invisible' && (
+        <span
+          className={styles.status}
+          style={{ backgroundColor: statusColors[status] ?? statusColors.offline }}
+        />
+      )}
+    </div>
+  )
+})

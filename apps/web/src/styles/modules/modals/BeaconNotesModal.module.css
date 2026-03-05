@@ -1,0 +1,217 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.label {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.presenceGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.presenceBtn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 14px;
+    text-align: left;
+}
+
+.presenceBtn:hover {
+    background: var(--bg-hover);
+    border-color: var(--beacon-brand);
+    color: var(--text-primary);
+}
+
+.activePresence {
+    background: var(--bg-active) !important;
+    border-color: var(--beacon-brand) !important;
+    color: var(--text-primary) !important;
+}
+
+.presenceDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.activeIcon {
+    margin-left: auto;
+    color: var(--beacon-brand);
+}
+
+.statusInputArea {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    position: relative;
+}
+
+.emojiPickerPopup {
+    position: absolute;
+    top: 56px;
+    left: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+}
+
+.emojiBtn {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.emojiBtn:hover {
+    background: var(--bg-hover);
+    transform: none;
+}
+
+.miniSmile {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+
+.textField {
+    flex: 1;
+}
+
+.musicHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.musicPreview {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-xl);
+    margin-top: 8px;
+    border: 1px solid var(--glass-border);
+}
+
+.musicThumb {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-2xs);
+    object-fit: cover;
+}
+
+.musicInfo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.musicTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.musicArtist {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.scrubberSection {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.scrubberHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.durationToggles {
+    display: flex;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-xs);
+    padding: 2px;
+    border: 1px solid var(--glass-border);
+}
+
+.toggleBtn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    border-radius: var(--radius-2xs);
+    transition: all 0.2s;
+}
+
+.activeToggle {
+    background: var(--beacon-brand);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+}

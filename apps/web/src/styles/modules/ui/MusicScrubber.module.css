@@ -1,0 +1,135 @@
+.container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.timeInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.timeInfo strong {
+    color: var(--beacon-brand);
+}
+
+.limitBadge {
+    background: var(--beacon-brand-alpha);
+    color: var(--beacon-brand);
+    padding: 4px 8px;
+    border-radius: var(--radius-2xs);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.timelineWrapper {
+    height: 60px;
+    position: relative;
+    cursor: crosshair;
+    padding: 10px 0;
+}
+
+.timeline {
+    position: relative;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+}
+
+.tick {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tick span {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+.playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    transition: left 0.1s ease-out;
+}
+
+.playheadLine {
+    width: 2px;
+    height: 100%;
+    background: var(--beacon-brand);
+    box-shadow: 0 0 10px var(--beacon-brand);
+}
+
+.playheadKnob {
+    position: absolute;
+    top: -4px;
+    left: -6px;
+    width: 14px;
+    height: 14px;
+    background: var(--beacon-brand);
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.window {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    background: var(--beacon-brand-alpha);
+    opacity: 0.3;
+    pointer-events: none;
+    border-right: 2px solid var(--beacon-brand);
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.previewBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    padding: 8px 16px;
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.previewBtn:hover {
+    background: var(--bg-hover);
+    border-color: var(--beacon-brand);
+}
+
+.hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+}

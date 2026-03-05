@@ -1,0 +1,73 @@
+{
+    "common": {
+        "login": "Log In",
+        "signup": "Sign Up",
+        "logout": "Log Out",
+        "settings": "Settings",
+        "friends": "Friends",
+        "servers": "Servers",
+        "search": "Search",
+        "cancel": "Cancel",
+        "save": "Save",
+        "welcome": "Welcome back, {name}!",
+        "new": "NEW",
+        "get_started_question": "Handa ka na bang kumonekta?",
+        "join_revolution": "Kumonekta sa mga kaibigan",
+        "learn_how": "Alamin ang higit pa",
+        "navigation": "NAVIGATION",
+        "community": "COMMUNITY",
+        "introduction": "Introduction",
+        "discovery": "Discovery",
+        "app_directory": "App Directory",
+        "community_hub": "Community Hub",
+        "documentation": "Documentation",
+        "contact_support": "Support",
+        "open_beacon": "Buksan ang Beacon"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "Isang real-time communication platform para sa mga komunidad at developers.",
+        "get_started": "Magsimula Na",
+        "read_docs": "Basahin ang Docs",
+        "features": {
+            "native": "Core Engine",
+            "native_desc": "High-performance voice at messaging na may minimal latency.",
+            "security": "Privacy First",
+            "security_desc": "Encrypted communications at user-controlled data.",
+            "sdk": "Developer API",
+            "sdk_desc": "Tools para sa paggawa ng bots at integrations."
+        },
+        "status": {
+            "header": "Status",
+            "gateway": "Gateway: Online",
+            "api": "API: Online",
+            "voice": "Voice: Online",
+            "active_nodes": "{count} Nodes"
+        },
+        "footer": {
+            "tos": "Terms",
+            "privacy": "Privacy",
+            "about": "About",
+            "support": "Support",
+            "copyright": "© 2026 Beacon. All rights reserved."
+        }
+    },
+    "app_directory": {
+        "title": "App Directory",
+        "subtitle": "Mag-discover ng apps at integrations para sa iyong mga server.",
+        "search_placeholder": "Maghanap ng apps, bots, integrations...",
+        "categories": {
+            "all": "Lahat",
+            "gaming": "Gaming",
+            "social": "Social",
+            "productivity": "Productivity",
+            "automation": "AI & Automation"
+        },
+        "items": {
+            "add_to_server": "I-add sa Server",
+            "verified": "Verified",
+            "official": "Official",
+            "partner": "Partner"
+        }
+    }
+}

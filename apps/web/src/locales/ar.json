@@ -1,0 +1,82 @@
+{
+    "common": {
+        "login": "تسجيل الدخول",
+        "signup": "إنشاء حساب",
+        "logout": "تسجيل الخروج",
+        "settings": "الإعدادات",
+        "friends": "الأصدقاء",
+        "servers": "الخوادم",
+        "search": "بحث",
+        "cancel": "إلغاء",
+        "save": "حفظ",
+        "welcome": "مرحباً بعودتك، {name}!",
+        "new": "جديد",
+        "get_started_question": "جاهز للاتصال؟",
+        "join_revolution": "تواصل مع الأصدقاء",
+        "learn_how": "تعرف على المزيد",
+        "navigation": "التنقل",
+        "community": "المجتمع",
+        "introduction": "مقدمة",
+        "discovery": "استكشاف",
+        "app_directory": "دليل التطبيقات",
+        "community_hub": "مركز المجتمع",
+        "documentation": "الوثائق",
+        "contact_support": "الدعم",
+        "open_beacon": "فتح Beacon"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "منصة تواصل فورية بنيت للمجتمعات والمطورين.",
+        "get_started": "ابدأ الآن",
+        "read_docs": "اقرأ الوثائق",
+        "features": {
+            "native": "المحرك الأساسي",
+            "native_desc": "صوت ورسائل عالية الأداء بأقل وقت استجابة.",
+            "security": "الخصوصية أولاً",
+            "security_desc": "اتصالات مشفرة وبيانات تحت تحكم المستخدم.",
+            "sdk": "واجهة برمجة المطورين",
+            "sdk_desc": "أدوات قوية لبناء الروبوتات والتكاملات."
+        },
+        "status": {
+            "header": "الحالة",
+            "gateway": "البوابة: متصل",
+            "api": "واجهة البرمجة: متصل",
+            "voice": "الصوت: متصل",
+            "active_nodes": "{count} عقدة"
+        },
+        "footer": {
+            "tos": "الشروط",
+            "privacy": "الخصوصية",
+            "about": "حول",
+            "support": "الدعم",
+            "copyright": "© 2026 Beacon. جميع الحقوق محفوظة."
+        }
+    },
+    "app_directory": {
+        "title": "دليل التطبيقات",
+        "subtitle": "اكتشف التطبيقات والتكاملات لخوادمك.",
+        "search_placeholder": "ابحث عن التطبيقات، الروبوتات...",
+        "categories": {
+            "all": "الكل",
+            "gaming": "الألعاب",
+            "social": "اجتماعي",
+            "productivity": "إنتاجية",
+            "automation": "الذكاء الاصطناعي والأتمتة"
+        },
+        "items": {
+            "add_to_server": "إضافة إلى الخادم",
+            "verified": "موثق",
+            "official": "رسمي",
+            "partner": "شريك"
+        }
+    },
+    "user_profile": {
+        "about_me": "عني",
+        "member_since": "عضو منذ",
+        "roles": "الأدوار",
+        "message": "رسالة",
+        "add_friend": "إضافة صديق",
+        "more": "المزيد",
+        "joined_at": "عضو منذ {date}"
+    }
+}

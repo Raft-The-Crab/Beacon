@@ -1,0 +1,251 @@
+import { useEffect, useRef, useState } from 'react'
+import { wsClient } from '../services/websocket'
+import { useAuthStore } from '../stores/useAuthStore'
+
+interface PeerConnection {
+    connection: RTCPeerConnection
+    stream: MediaStream
+}
+
+interface WebRTCState {
+    localStream: MediaStream | null
+    peers: Record<string, PeerConnection>
+    joinChannel: (channelId: string) => Promise<void>
+    leaveChannel: (channelId: string) => void
+    toggleAudio: () => void
+    toggleVideo: () => void
+}
+
+const ICE_SERVERS = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' }
+    ]
+}
+
+export function useWebRTC(channelId: string | null): WebRTCState {
+    const { user } = useAuthStore()
+
+    // Used for logging/debugging connection intent
+    if (channelId) {
+        // console.debug(`useWebRTC initialized for channel: ${channelId}`)
+    }
+
+    const [localStream, setLocalStream] = useState<MediaStream | null>(null)
+    const [peers, setPeers] = useState<Record<string, PeerConnection>>({})
+
+    const peersRef = useRef<Record<string, PeerConnection>>({})
+    const streamRef = useRef<MediaStream | null>(null)
+
+    // Request native microphone/camera access
+    const initializeMedia = async (video: boolean = false) => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true },
+                video
+            })
+            setLocalStream(stream)
+            streamRef.current = stream
+            return stream
+        } catch (err) {
+            console.error('Failed to get local stream', err)
+            return null
+        }
+    }
+
+    const createPeerConnection = (targetUserId: string, isInitiator: boolean) => {
+        if (peersRef.current[targetUserId]) return peersRef.current[targetUserId].connection
+
+        const pc = new RTCPeerConnection(ICE_SERVERS)
+
+        // Add local tracks to connection
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => {
+                pc.addTrack(track, streamRef.current!)
+            })
+        }
+
+        // Handle incoming remote tracks
+        pc.ontrack = (event) => {
+            setPeers(prev => ({
+                ...prev,
+                [targetUserId]: {
+                    connection: pc,
+                    stream: event.streams[0]
+                }
+            }))
+            peersRef.current[targetUserId] = { connection: pc, stream: event.streams[0] }
+        }
+
+        // Handle ICE candidates
+        pc.onicecandidate = (event) => {
+            const socket = wsClient.getSocket() as any
+            if (event.candidate && wsClient.isConnected() && socket) {
+                socket.emit('WEBRTC_SIGNAL', {
+                    targetUserId,
+                    signal: { type: 'candidate', candidate: event.candidate }
+                })
+            }
+        }
+
+        // If we are the initiator, create the offer
+        if (isInitiator) {
+            pc.createOffer()
+                .then(offer => pc.setLocalDescription(offer))
+                .then(() => {
+                    const socket = wsClient.getSocket() as any
+                    if (socket) {
+                        socket.emit('WEBRTC_SIGNAL', {
+                            targetUserId,
+                            signal: pc.localDescription
+                        })
+                    }
+                })
+        }
+
+        // Cleanup on disconnect
+        pc.onconnectionstatechange = () => {
+            if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                const newPeers = { ...peersRef.current }
+                delete newPeers[targetUserId]
+                peersRef.current = newPeers
+                setPeers(newPeers)
+            }
+        }
+
+        return pc
+    }
+
+    const joinChannel = async (id: string, guildId?: string) => {
+        const stream = await initializeMedia(false)
+        if (!stream) return
+
+        // Announce presence via WS
+        const socket = wsClient.getSocket() as any
+        if (socket) {
+            socket.emit('VOICE_JOIN', { channelId: id, guildId })
+        }
+    }
+
+    const leaveChannel = (id: string, guildId?: string) => {
+        const socket = wsClient.getSocket() as any
+        if (socket) {
+            socket.emit('VOICE_LEAVE', { channelId: id, guildId })
+        }
+
+        // Close all peer connections
+        Object.values(peersRef.current).forEach(peer => peer.connection.close())
+        peersRef.current = {}
+        setPeers({})
+
+        // Stop all local tracks
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(t => t.stop())
+            streamRef.current = null
+            setLocalStream(null)
+        }
+    }
+
+    useEffect(() => {
+        const socket = wsClient.getSocket() as any
+        if (!socket || !user) return
+
+        // Another user joined, initiate connection to them
+        const onUserJoined = async ({ userId }: { userId: string }) => {
+            if (userId === user.id) return
+            createPeerConnection(userId, true) // We are the initiator
+        }
+
+        // Handle incoming WebRTC signaling data
+        const onSignal = async ({ senderUserId, signal }: { senderUserId: string, signal: any }) => {
+            if (senderUserId === user.id) return
+
+            let pc = peersRef.current[senderUserId]?.connection
+
+            if (!pc && signal.type === 'offer') {
+                pc = createPeerConnection(senderUserId, false)
+            }
+
+            if (!pc) return
+
+            if (signal.type === 'offer') {
+                await pc.setRemoteDescription(new RTCSessionDescription(signal))
+                const answer = await pc.createAnswer()
+                await pc.setLocalDescription(answer)
+                socket.emit('WEBRTC_SIGNAL', { targetUserId: senderUserId, signal: pc.localDescription })
+            } else if (signal.type === 'answer') {
+                await pc.setRemoteDescription(new RTCSessionDescription(signal))
+            } else if (signal.type === 'candidate') {
+                await pc.addIceCandidate(new RTCIceCandidate(signal.candidate))
+            }
+        }
+
+        const onUserLeft = ({ userId }: { userId: string }) => {
+            if (peersRef.current[userId]) {
+                peersRef.current[userId].connection.close()
+                const newPeers = { ...peersRef.current }
+                delete newPeers[userId]
+                peersRef.current = newPeers
+                setPeers(newPeers)
+            }
+        }
+
+        socket.on('VOICE_USER_JOINED', onUserJoined)
+        socket.on('VOICE_USER_LEFT', onUserLeft)
+        socket.on('WEBRTC_SIGNAL', onSignal)
+
+        return () => {
+            socket.off('VOICE_USER_JOINED', onUserJoined)
+            socket.off('VOICE_USER_LEFT', onUserLeft)
+            socket.off('WEBRTC_SIGNAL', onSignal)
+        }
+    }, [user])
+
+    const toggleAudio = () => {
+        if (streamRef.current) {
+            const audioTrack = streamRef.current.getAudioTracks()[0]
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled
+                // Update local store or announce to socket if needed
+            }
+        }
+    }
+
+    const toggleVideo = async () => {
+        if (!streamRef.current) return
+
+        const videoTrack = streamRef.current.getVideoTracks()[0]
+        if (videoTrack) {
+            // If we already have a track, toggle it off
+            videoTrack.stop()
+            streamRef.current.removeTrack(videoTrack)
+
+            // We'd potentially want to tell peers we dropped video by renegotiating
+        } else {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+                const newTrack = stream.getVideoTracks()[0]
+                streamRef.current.addTrack(newTrack)
+
+                // Add to all existing peer connections
+                Object.values(peersRef.current).forEach(({ connection }) => {
+                    connection.addTrack(newTrack, streamRef.current!)
+                })
+
+                // Force renegotiation will happen implicitly or we might need to manually trigger createOffer
+                setLocalStream(new MediaStream(streamRef.current.getTracks()))
+            } catch (err) {
+                console.error('Failed to get video', err)
+            }
+        }
+    }
+
+    return {
+        localStream,
+        peers,
+        joinChannel,
+        leaveChannel,
+        toggleAudio,
+        toggleVideo
+    }
+}

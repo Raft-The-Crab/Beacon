@@ -1,0 +1,82 @@
+{
+    "common": {
+        "login": "Đăng nhập",
+        "signup": "Đăng ký",
+        "logout": "Đăng xuất",
+        "settings": "Cài đặt",
+        "friends": "Bạn bè",
+        "servers": "Máy chủ",
+        "search": "Tìm kiếm",
+        "cancel": "Hủy",
+        "save": "Lưu",
+        "welcome": "Chào mừng bạn trở lại, {name}!",
+        "new": "MỚI",
+        "get_started_question": "Sẵn sàng kết nối?",
+        "join_revolution": "Kết nối với bạn bè",
+        "learn_how": "Tìm hiểu thêm",
+        "navigation": "ĐIỀU HƯỚNG",
+        "community": "CỘNG ĐỒNG",
+        "introduction": "Giới thiệu",
+        "discovery": "Khám phá",
+        "app_directory": "Danh mục ứng dụng",
+        "community_hub": "Trung tâm cộng đồng",
+        "documentation": "Tài liệu",
+        "contact_support": "Hỗ trợ",
+        "open_beacon": "Mở Beacon"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "Một nền tảng giao tiếp thời gian thực được xây dựng cho cộng đồng và nhà phát triển.",
+        "get_started": "Bắt đầu",
+        "read_docs": "Đọc tài liệu",
+        "features": {
+            "native": "Công cụ cốt lõi",
+            "native_desc": "Thoại và nhắn tin hiệu suất cao với độ trễ tối thiểu.",
+            "security": "Quyền riêng tư là trên hết",
+            "security_desc": "Giao tiếp được mã hóa và dữ liệu do người dùng kiểm soát.",
+            "sdk": "API cho nhà phát triển",
+            "sdk_desc": "Các công cụ mạnh mẽ để xây dựng bot và tích hợp."
+        },
+        "status": {
+            "header": "Trạng thái",
+            "gateway": "Cửa ngõ: Trực tuyến",
+            "api": "API: Trực tuyến",
+            "voice": "Thoại: Trực tuyến",
+            "active_nodes": "{count} Nút"
+        },
+        "footer": {
+            "tos": "Điều khoản",
+            "privacy": "Quyền riêng tư",
+            "about": "Giới thiệu",
+            "support": "Hỗ trợ",
+            "copyright": "© 2026 Beacon. Bảo lưu mọi quyền."
+        }
+    },
+    "app_directory": {
+        "title": "Danh mục ứng dụng",
+        "subtitle": "Khám phá các ứng dụng và tích hợp cho máy chủ của bạn.",
+        "search_placeholder": "Tìm kiếm ứng dụng, bot, tích hợp...",
+        "categories": {
+            "all": "Tất cả",
+            "gaming": "Trò chơi",
+            "social": "Mạng xã hội",
+            "productivity": "Năng suất",
+            "automation": "AI & Tự động hóa"
+        },
+        "items": {
+            "add_to_server": "Thêm vào máy chủ",
+            "verified": "Đã xác minh",
+            "official": "Chính thức",
+            "partner": "Đối tác"
+        }
+    },
+    "user_profile": {
+        "about_me": "GIỚI THIỆU",
+        "member_since": "THÀNH VIÊN TỪ",
+        "roles": "VAI TRÒ",
+        "message": "Tin nhắn",
+        "add_friend": "Thêm bạn bè",
+        "more": "Thêm",
+        "joined_at": "Thành viên từ {date}"
+    }
+}

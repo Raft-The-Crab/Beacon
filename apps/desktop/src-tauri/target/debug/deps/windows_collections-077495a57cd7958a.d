@@ -1,0 +1,9 @@
+C:\Users\mysti.KIM-JONG-UN\Desktop\Beacon\apps\desktop\src-tauri\target\debug\deps\windows_collections-077495a57cd7958a.d: C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\lib.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\bindings.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\../readme.md
+
+C:\Users\mysti.KIM-JONG-UN\Desktop\Beacon\apps\desktop\src-tauri\target\debug\deps\libwindows_collections-077495a57cd7958a.rlib: C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\lib.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\bindings.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\../readme.md
+
+C:\Users\mysti.KIM-JONG-UN\Desktop\Beacon\apps\desktop\src-tauri\target\debug\deps\libwindows_collections-077495a57cd7958a.rmeta: C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\lib.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\bindings.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\../readme.md
+
+C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\lib.rs:
+C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\bindings.rs:
+C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\windows-collections-0.2.0\src\../readme.md:

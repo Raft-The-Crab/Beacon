@@ -1,0 +1,9 @@
+.container {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(circle at top left, rgba(88, 101, 242, 0.05), transparent 40%),
+        radial-gradient(circle at bottom right, rgba(148, 156, 247, 0.05), transparent 40%);
+}

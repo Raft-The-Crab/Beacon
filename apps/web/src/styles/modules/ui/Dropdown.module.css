@@ -1,0 +1,133 @@
+.container {
+  position: relative;
+}
+
+.trigger {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  margin-top: var(--space-sm);
+  min-width: 240px;
+  background: var(--bg-primary);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  /* Hyper-rounded */
+  box-shadow: var(--shadow-xl);
+  z-index: 9999;
+  animation: slideUp 0.4s var(--ease-out);
+  /* Buttery elastic */
+  overflow: hidden;
+  overflow-y: auto;
+  max-height: 250px;
+  padding: var(--space-xs);
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  /* Hardware Acceleration */
+}
+
+/* Custom Scrollbar for Dropdown Menu */
+.menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menu::-webkit-scrollbar-thumb {
+  background: var(--bg-modifier-hover);
+  border-radius: 10px;
+}
+
+.menu::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-modifier-active);
+}
+
+.left {
+  left: 0;
+}
+
+.right {
+  right: 0;
+}
+
+.item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xl);
+  /* Softer items */
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  text-align: left;
+}
+
+.item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  transform: translateX(4px);
+}
+
+.item.default:active {
+  background: var(--bg-active);
+}
+
+.item.danger {
+  color: var(--status-error);
+}
+
+.item.danger:hover {
+  background: rgba(250, 119, 124, 0.1);
+  color: #ff5d66;
+}
+
+.itemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.itemLabel {
+  flex: 1;
+}
+
+.divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 4px 8px;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

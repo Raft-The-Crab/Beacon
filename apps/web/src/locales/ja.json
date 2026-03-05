@@ -1,0 +1,176 @@
+{
+    "common": {
+        "login": "ログイン",
+        "signup": "サインアップ",
+        "logout": "ログアウト",
+        "settings": "設定",
+        "friends": "フレンド",
+        "servers": "サーバー",
+        "search": "検索",
+        "cancel": "キャンセル",
+        "save": "保存",
+        "welcome": "おかえりなさい、{name}さん！",
+        "new": "NEW",
+        "get_started_question": "繋がる準備はできていますか？",
+        "join_revolution": "友達と繋がる",
+        "learn_how": "詳しくはこちら",
+        "navigation": "ナビゲーション",
+        "community": "コミュニティ",
+        "introduction": "はじめに",
+        "discovery": "ディスカバリー",
+        "app_directory": "アプリ一覧",
+        "community_hub": "コミュニティハブ",
+        "documentation": "ドキュメント",
+        "contact_support": "サポート",
+        "open_beacon": "Beaconを開く",
+        "pinned_messages": "ピン留めされたメッセージ",
+        "member_list": "メンバーリスト",
+        "inbox": "受信ボックス",
+        "help": "ヘルプ"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "コミュニティと開発者のためのリアルタイムコミュニケーションプラットフォーム。",
+        "get_started": "始める",
+        "read_docs": "ドキュメントを読む",
+        "features": {
+            "native": "コアエンジン",
+            "native_desc": "最低限のレイテンシで高性能な音声とメッセージング。",
+            "security": "プライバシー優先",
+            "security_desc": "暗号化された通信とユーザー主導のデータ管理。",
+            "sdk": "開発者API",
+            "sdk_desc": "ボットや統合を構築するための強力なツール。"
+        },
+        "status": {
+            "header": "ステータス",
+            "gateway": "ゲートウェイ：オンライン",
+            "api": "API：オンライン",
+            "voice": "音声：オンライン",
+            "active_nodes": "{count} ノード"
+        },
+        "footer": {
+            "tos": "利用規約",
+            "privacy": "プライバシー",
+            "about": "について",
+            "support": "サポート",
+            "copyright": "© 2026 Beacon. 全著作権所有。"
+        }
+    },
+    "app_directory": {
+        "title": "アプリ一覧",
+        "subtitle": "サーバー向けのアプリと統合を見つけましょう。",
+        "search_placeholder": "アプリ、ボット、統合を検索...",
+        "categories": {
+            "all": "すべて",
+            "gaming": "ゲーム",
+            "social": "ソーシャル",
+            "productivity": "生産性",
+            "automation": "AIと自動化"
+        },
+        "items": {
+            "add_to_server": "サーバーに追加",
+            "verified": "認証済み",
+            "official": "公式",
+            "partner": "パートナー"
+        }
+    },
+    "user_profile": {
+        "about_me": "自己紹介",
+        "member_since": "参加日",
+        "roles": "ロール",
+        "message": "メッセージ",
+        "add_friend": "フレンドに追加",
+        "more": "詳細",
+        "joined_at": "{date}からのメンバー"
+    },
+    "docs": {
+        "title": "Beacon 開発者ドキュメント",
+        "subtitle": "Beaconで強力なボットや統合を構築するために必要なすべて。",
+        "search_placeholder": "ドキュメントを検索...",
+        "on_this_page": "このページの内容",
+        "categories": {
+            "getting_started": "はじめに",
+            "api_reference": "APIリファレンス",
+            "gateway": "ゲートウェイとイベント",
+            "sdk": "SDKチュートリアル",
+            "bot_commands": "ボットコマンド"
+        },
+        "build_section": {
+            "title": "何が作れますか？",
+            "bots": "ボットと自動化",
+            "bots_desc": "自動モデレーション、ユーティリティコマンド、投票、ミニゲーム。",
+            "oauth": "OAuth2統合",
+            "oauth_desc": "ユーザーがBeaconアカウントでログインできるようにする。",
+            "webhooks": "カスタムWebhooks",
+            "webhooks_desc": "外部サービスの通知をチャンネルに直接送信。"
+        },
+        "popular_topics": "人気のトピック",
+        "topics": {
+            "create_app": "最初のアプリケーションの作り方",
+            "rest_api": "REST API：メッセージの送受信",
+            "websocket": "WebSocket：ゲートウェイイベントの購読",
+            "sdk_guide": "SDK：スラッシュコマンドとインタラクティブコンポーネント",
+            "bot_features": "Beacon Bot：組み込みコマンドとリッチレスポンス"
+        }
+    },
+    "marketplace": {
+        "title": "お買い物を楽しんで。",
+        "subtitle": "Beaconの全機能を解放するか、プロフィールをデコレートしよう。",
+        "beacoin_balance": "{count} Beacoins",
+        "success_title": "購入成功！",
+        "success_desc": "プレミアム機能が有効になりました。",
+        "return_to_shop": "ショップに戻る",
+        "tabs": {
+            "plus": "Beacon+",
+            "decorations": "アバターデコレーション",
+            "effects": "プロフィールエフェクト"
+        },
+        "plus": {
+            "monthly": "毎月",
+            "yearly": "毎年",
+            "save_badge": "16%お得",
+            "features": {
+                "animated": "アニメーションアバターとプロフィールバナー",
+                "emojis": "どこでもカスタム絵文字",
+                "uploads": "大容量ファイルアップロード（500MB）",
+                "streaming": "HDストリーミングと画面共有",
+                "badge": "限定 Beacon+ バッジ",
+                "bonus": "毎月Beacoinボーナス（100枚）"
+            },
+            "purchase": "購入",
+            "insufficient": "Beacoinsが不足しています",
+            "processing": "処理中..."
+        },
+        "cosmetics": {
+            "owned": "所持済み",
+            "equipped": "装備中",
+            "unequip": "外す",
+            "equip": "装備",
+            "unlock": "アンロック",
+            "too_poor": "残高不足",
+            "gift": "ギフト"
+        }
+    },
+    "discovery": {
+        "title": "Beaconでコミュニティを見つけよう",
+        "subtitle": "ゲームから音楽、学習まで、あなたのための場所があります。",
+        "search_placeholder": "コミュニティを探す",
+        "featured": "注目のコミュニティ",
+        "no_results": "\"{query}\" に一致するコミュニティが見つかりません",
+        "clear_search": "検索をクリア",
+        "join_server": "サーバーに参加",
+        "online": "{count} オンライン",
+        "members": "{count} メンバー",
+        "join_success": "へようこそ",
+        "join_error": "サーバーへの参加に失敗しました"
+    },
+    "community": {
+        "title": "次のホームを見つけよう。",
+        "subtitle": "ゲームから勉強グループまで、あなたに合ったコミュニティを。",
+        "featured": "注目のコミュニティ",
+        "join": "コミュニティに参加",
+        "cta": "お探しのものが見つかりませんでしたか？",
+        "cta_desc": "今すぐ自分のサーバーを作って、友達を招待しましょう！",
+        "create_server": "サーバーを作る"
+    }
+}

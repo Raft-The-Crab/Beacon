@@ -1,0 +1,82 @@
+{
+    "common": {
+        "login": "Inloggen",
+        "signup": "Aanmelden",
+        "logout": "Uitloggen",
+        "settings": "Instellingen",
+        "friends": "Vrienden",
+        "servers": "Servers",
+        "search": "Zoeken",
+        "cancel": "Annuleren",
+        "save": "Opslaan",
+        "welcome": "Welkom terug, {name}!",
+        "new": "NIEUW",
+        "get_started_question": "Klaar om te verbinden?",
+        "join_revolution": "Maak contact met vrienden",
+        "learn_how": "Meer informatie",
+        "navigation": "NAVIGATIE",
+        "community": "GEMEENSCHAP",
+        "introduction": "Inleiding",
+        "discovery": "Ontdekken",
+        "app_directory": "App-overzicht",
+        "community_hub": "Community-hub",
+        "documentation": "Documentatie",
+        "contact_support": "Ondersteuning",
+        "open_beacon": "Open Beacon"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "Een real-time communicatieplatform gebouwd voor gemeenschappen en ontwikkelaars.",
+        "get_started": "Aan de slag",
+        "read_docs": "Lees documentatie",
+        "features": {
+            "native": "Core Engine",
+            "native_desc": "Hoogwaardige spraak en berichten met minimale vertraging.",
+            "security": "Privacy Voorop",
+            "security_desc": "Versleutelde communicatie en door de gebruiker gecontroleerde gegevens.",
+            "sdk": "Ontwikkelaars-API",
+            "sdk_desc": "Krachtige tools voor het bouwen van bots en integraties."
+        },
+        "status": {
+            "header": "Status",
+            "gateway": "Gateway: Online",
+            "api": "API: Online",
+            "voice": "Voice: Online",
+            "active_nodes": "{count} Nodes"
+        },
+        "footer": {
+            "tos": "Voorwaarden",
+            "privacy": "Privacy",
+            "about": "Over ons",
+            "support": "Ondersteuning",
+            "copyright": "© 2026 Beacon. Alle rechten voorbehouden."
+        }
+    },
+    "app_directory": {
+        "title": "App-overzicht",
+        "subtitle": "Ontdek apps en integraties voor je servers.",
+        "search_placeholder": "Zoek apps, bots, integraties...",
+        "categories": {
+            "all": "Alle",
+            "gaming": "Gamen",
+            "social": "Sociaal",
+            "productivity": "Productiviteit",
+            "automation": "AI & Automatisering"
+        },
+        "items": {
+            "add_to_server": "Toevoegen aan server",
+            "verified": "Geverifieerd",
+            "official": "Officieel",
+            "partner": "Partner"
+        }
+    },
+    "user_profile": {
+        "about_me": "OVER MIJ",
+        "member_since": "LID SINDS",
+        "roles": "ROLLEN",
+        "message": "Bericht",
+        "add_friend": "Vriend toevoegen",
+        "more": "Meer",
+        "joined_at": "Lid sinds {date}"
+    }
+}

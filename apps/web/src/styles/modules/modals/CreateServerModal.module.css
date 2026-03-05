@@ -1,0 +1,169 @@
+.stepChoose {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 8px;
+  text-align: center;
+}
+
+.stepCustomize {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 8px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.templateList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.templateBtn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--bg-surface-soft);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+  color: var(--text-primary);
+}
+
+.templateBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateX(4px);
+}
+
+.templateIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(88, 101, 242, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--beacon-brand);
+  flex-shrink: 0;
+}
+
+.templateInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.templateLabel {
+  font-weight: 700;
+  color: #fff;
+  font-size: 15px;
+}
+
+.templateDesc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--glass-border);
+}
+
+.customBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--bg-surface-soft);
+  border: 1px dashed var(--glass-border);
+  border-radius: 12px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.customBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--beacon-brand);
+  color: var(--beacon-brand);
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 0;
+  align-self: flex-start;
+}
+
+.backBtn:hover {
+  color: var(--text-primary);
+}
+
+.iconSection {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}

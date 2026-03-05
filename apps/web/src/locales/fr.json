@@ -1,0 +1,176 @@
+{
+    "common": {
+        "login": "Connexion",
+        "signup": "S'inscrire",
+        "logout": "Déconnexion",
+        "settings": "Paramètres",
+        "friends": "Amis",
+        "servers": "Serveurs",
+        "search": "Rechercher",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "welcome": "Bon retour, {name} !",
+        "new": "NOUVEAU",
+        "get_started_question": "Prêt à vous connecter ?",
+        "join_revolution": "Connectez-vous avec des amis",
+        "learn_how": "En savoir plus",
+        "navigation": "NAVIGATION",
+        "community": "COMMUNAUTÉ",
+        "introduction": "Introduction",
+        "discovery": "Découverte",
+        "app_directory": "Répertoire d'applications",
+        "community_hub": "Pôle communautaire",
+        "documentation": "Documentation",
+        "contact_support": "Assistance",
+        "open_beacon": "Ouvrir Beacon",
+        "pinned_messages": "Messages épinglés",
+        "member_list": "Liste des membres",
+        "inbox": "Boîte de réception",
+        "help": "Aide"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "Une plateforme de communication en temps réel conçue pour les communautés et les développeurs.",
+        "get_started": "Commencer",
+        "read_docs": "Lire la doc",
+        "features": {
+            "native": "Moteur de base",
+            "native_desc": "Voix et messagerie haute performance avec une latence minimale.",
+            "security": "La vie privée d'abord",
+            "security_desc": "Communications cryptées et données contrôlées par l'utilisateur.",
+            "sdk": "API pour développeurs",
+            "sdk_desc": "Des outils puissants pour créer des bots et des intégrations."
+        },
+        "status": {
+            "header": "Statut",
+            "gateway": "Passerelle : En ligne",
+            "api": "API : En ligne",
+            "voice": "Voix : En ligne",
+            "active_nodes": "{count} Nœuds"
+        },
+        "footer": {
+            "tos": "Conditions",
+            "privacy": "Confidentialité",
+            "about": "À propos",
+            "support": "Assistance",
+            "copyright": "© 2026 Beacon. Tous droits réservés."
+        }
+    },
+    "app_directory": {
+        "title": "Répertoire d'applications",
+        "subtitle": "Découvrez des applications et des intégrations pour vos serveurs.",
+        "search_placeholder": "Rechercher des applications, des bots...",
+        "categories": {
+            "all": "Tout",
+            "gaming": "Jeux",
+            "social": "Social",
+            "productivity": "Productivité",
+            "automation": "IA et automatisation"
+        },
+        "items": {
+            "add_to_server": "Ajouter au serveur",
+            "verified": "Vérifié",
+            "official": "Officiel",
+            "partner": "Partenaire"
+        }
+    },
+    "user_profile": {
+        "about_me": "À PROPOS DE MOI",
+        "member_since": "MEMBRE DEPUIS",
+        "roles": "RÔLES",
+        "message": "Message",
+        "add_friend": "Ajouter en ami",
+        "more": "Plus",
+        "joined_at": "Membre depuis {date}"
+    },
+    "docs": {
+        "title": "Docs Développeur Beacon",
+        "subtitle": "Tout ce dont vous avez besoin pour construire des bots puissants et des intégrations sur Beacon.",
+        "search_placeholder": "Rechercher dans la documentation...",
+        "on_this_page": "SUR CETTE PAGE",
+        "categories": {
+            "getting_started": "Premiers pas",
+            "api_reference": "Référence API",
+            "gateway": "Passerelle & Événements",
+            "sdk": "Tutoriel SDK",
+            "bot_commands": "Commandes Bot"
+        },
+        "build_section": {
+            "title": "Que pouvez-vous construire ?",
+            "bots": "Bots & Automatisations",
+            "bots_desc": "Modération automatique, commandes utilitaires, sondages et mini-jeux.",
+            "oauth": "Intégrations OAuth2",
+            "oauth_desc": "Permettre aux utilisateurs de se connecter avec leur compte Beacon.",
+            "webhooks": "Webhooks personnalisés",
+            "webhooks_desc": "Envoyez des notifications de services externes directement dans vos canaux."
+        },
+        "popular_topics": "Sujets populaires",
+        "topics": {
+            "create_app": "Comment créer votre première application",
+            "rest_api": "API REST : Envoyer et recevoir des messages",
+            "websocket": "WebSocket : S'abonner aux événements de la passerelle",
+            "sdk_guide": "SDK : Commandes slash et composants interactifs",
+            "bot_features": "Bot Beacon : Commandes intégrées et réponses enrichies"
+        }
+    },
+    "marketplace": {
+        "title": "Faites du shopping.",
+        "subtitle": "Débloquez la puissance complète de Beacon ou embellissez votre profil.",
+        "beacoin_balance": "{count} Beacoins",
+        "success_title": "Achat réussi !",
+        "success_desc": "Vos fonctionnalités premium sont maintenant actives.",
+        "return_to_shop": "Retour à la boutique",
+        "tabs": {
+            "plus": "Beacon+",
+            "decorations": "Décorations d'avatar",
+            "effects": "Effets de profil"
+        },
+        "plus": {
+            "monthly": "Mensuel",
+            "yearly": "Annuel",
+            "save_badge": "Économisez 16%",
+            "features": {
+                "animated": "Avatar animé & bannière de profil",
+                "emojis": "Emojis personnalisés partout",
+                "uploads": "Téléchargements de fichiers plus volumineux (500 Mo)",
+                "streaming": "Streaming HD et partage d'écran",
+                "badge": "Badge Beacon+ exclusif",
+                "bonus": "Bonus mensuel de Beacoins (100 pièces)"
+            },
+            "purchase": "Acheter",
+            "insufficient": "Beacoins insuffisants",
+            "processing": "Traitement..."
+        },
+        "cosmetics": {
+            "owned": "Possédé",
+            "equipped": "Équipé",
+            "unequip": "Déséquiper",
+            "equip": "Équiper",
+            "unlock": "Débloquer",
+            "too_poor": "Trop pauvre",
+            "gift": "Offrir"
+        }
+    },
+    "discovery": {
+        "title": "Trouvez votre communauté sur Beacon",
+        "subtitle": "Du gaming à la musique, en passant par l'apprentissage, il y a une place pour vous.",
+        "search_placeholder": "Explorer les communautés",
+        "featured": "Communautés en vedette",
+        "no_results": "Aucune communauté trouvée pour \"{query}\"",
+        "clear_search": "Effacer la recherche",
+        "join_server": "Rejoindre le serveur",
+        "online": "{count} En ligne",
+        "members": "{count} Membres",
+        "join_success": "Bienvenue sur",
+        "join_error": "Impossible de rejoindre le serveur"
+    },
+    "community": {
+        "title": "Trouvez votre prochaine maison.",
+        "subtitle": "Du gaming aux groupes d'étude, trouvez la communauté qui vous convient.",
+        "featured": "Communautés en vedette",
+        "join": "Rejoindre la communauté",
+        "cta": "Vous ne trouvez pas ce que vous cherchez ?",
+        "cta_desc": "Créez votre propre serveur et invitez vos amis aujourd'hui !",
+        "create_server": "Créer un serveur"
+    }
+}

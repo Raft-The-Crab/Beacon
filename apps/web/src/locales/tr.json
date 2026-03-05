@@ -1,0 +1,82 @@
+{
+    "common": {
+        "login": "Giriş Yap",
+        "signup": "Kaydol",
+        "logout": "Çıkış Yap",
+        "settings": "Ayarlar",
+        "friends": "Arkadaşlar",
+        "servers": "Sunucular",
+        "search": "Ara",
+        "cancel": "İptal",
+        "save": "Kaydet",
+        "welcome": "Tekrar hoş geldin, {name}!",
+        "new": "YENİ",
+        "get_started_question": "Bağlanmaya hazır mısın?",
+        "join_revolution": "Arkadaşlarınla bağlantı kur",
+        "learn_how": "Daha fazla bilgi al",
+        "navigation": "NAVİGASYON",
+        "community": "TOPLULUK",
+        "introduction": "Giriş",
+        "discovery": "Keşfet",
+        "app_directory": "Uygulama Dizini",
+        "community_hub": "Topluluk Merkezi",
+        "documentation": "Dokümantasyon",
+        "contact_support": "Destek",
+        "open_beacon": "Beacon'ı Aç"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "Topluluklar ve geliştiriciler için oluşturulmuş gerçek zamanlı bir iletişim platformu.",
+        "get_started": "Başla",
+        "read_docs": "Dokümanları Oku",
+        "features": {
+            "native": "Çekirdek Motor",
+            "native_desc": "Minimum gecikmeyle yüksek performanslı ses ve mesajlaşma.",
+            "security": "Önce Gizlilik",
+            "security_desc": "Şifreli iletişim ve kullanıcı kontrollü veriler.",
+            "sdk": "Geliştirici API'si",
+            "sdk_desc": "Botlar ve entegrasyonlar oluşturmak için güçlü araçlar."
+        },
+        "status": {
+            "header": "Durum",
+            "gateway": "Geçit: Çevrimiçi",
+            "api": "API: Çevrimiçi",
+            "voice": "Ses: Çevrimiçi",
+            "active_nodes": "{count} Düğüm"
+        },
+        "footer": {
+            "tos": "Koşullar",
+            "privacy": "Gizlilik",
+            "about": "Hakkında",
+            "support": "Destek",
+            "copyright": "© 2026 Beacon. Tüm hakları saklıdır."
+        }
+    },
+    "app_directory": {
+        "title": "Uygulama Dizini",
+        "subtitle": "Sunucularınız için uygulamaları ve entegrasyonları keşfedin.",
+        "search_placeholder": "Uygulamaları, botları ara...",
+        "categories": {
+            "all": "Hepsi",
+            "gaming": "Oyun",
+            "social": "Sosyal",
+            "productivity": "Verimlilik",
+            "automation": "Yapay Zeka ve Otomasyon"
+        },
+        "items": {
+            "add_to_server": "Sunucuya Ekle",
+            "verified": "Doğrulanmış",
+            "official": "Resmi",
+            "partner": "Partner"
+        }
+    },
+    "user_profile": {
+        "about_me": "HAKKIMDA",
+        "member_since": "ÜYELİK TARİHİ",
+        "roles": "ROLLER",
+        "message": "Mesaj",
+        "add_friend": "Arkadaş Ekle",
+        "more": "Daha Fazla",
+        "joined_at": "{date} tarihinden beri üye"
+    }
+}

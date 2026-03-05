@@ -1,0 +1,102 @@
+.badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+.sm .badge {
+    width: 16px;
+    height: 16px;
+}
+
+.md .badge {
+    width: 20px;
+    height: 20px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 2px;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: default;
+    flex-shrink: 0;
+}
+
+.badge:hover {
+    transform: scale(1.2);
+}
+
+/* Badge variants */
+.owner {
+    color: #f0b232;
+    background: rgba(240, 178, 50, 0.15);
+}
+
+.admin {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.15);
+}
+
+.moderator {
+    color: #43b581;
+    background: rgba(67, 181, 129, 0.15);
+}
+
+.beaconPlus {
+    color: #7b2ff7;
+    background: rgba(123, 47, 247, 0.15);
+}
+
+.bot {
+    color: #5865f2;
+    background: rgba(88, 101, 242, 0.15);
+}
+
+.earlySup {
+    color: #ff73fa;
+    background: rgba(255, 115, 250, 0.15);
+}
+
+.bugHunter {
+    color: #43b581;
+    background: rgba(67, 181, 129, 0.15);
+}
+
+.serverOwner {
+    color: #f0b232;
+    background: rgba(240, 178, 50, 0.15);
+}
+
+/* BOT tag pill */
+.botTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #5865f2;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: var(--radius-2xs);
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+    line-height: 1.4;
+    text-transform: uppercase;
+}
+
+/* Animations */
+.spinShimmer {
+    animation: beacon-spin-slow 6s linear infinite;
+    transform-origin: center;
+}
+
+@keyframes beacon-spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}

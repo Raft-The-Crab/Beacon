@@ -1,0 +1,175 @@
+{
+    "common": {
+        "login": "Log In",
+        "signup": "Sign Up",
+        "logout": "Log Out",
+        "settings": "Settings",
+        "friends": "Friends",
+        "servers": "Servers",
+        "search": "Search",
+        "cancel": "Cancel",
+        "save": "Save",
+        "welcome": "Welcome back, {name}!",
+        "new": "NEW",
+        "get_started_question": "Ready to connect?",
+        "join_revolution": "Connect with friends",
+        "learn_how": "Learn more",
+        "navigation": "NAVIGATION",
+        "community": "COMMUNITY",
+        "introduction": "Introduction",
+        "discovery": "Discovery",
+        "app_directory": "App Directory",
+        "community_hub": "Community Hub",
+        "documentation": "Documentation",
+        "contact_support": "Support",
+        "open_beacon": "Open Beacon",
+        "pinned_messages": "Pinned Messages",
+        "member_list": "Member List",
+        "inbox": "Inbox",
+        "help": "Help"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "A real-time communication platform built for communities and developers.",
+        "get_started": "Get Started",
+        "read_docs": "Read Docs",
+        "features": {
+            "native": "Core Engine",
+            "native_desc": "High-performance voice and messaging with minimal latency.",
+            "security": "Privacy First",
+            "security_desc": "Encrypted communications and user-controlled data.",
+            "sdk": "Developer API",
+            "sdk_desc": "Powerful tools for building bots and integrations."
+        },
+        "status": {
+            "header": "Status",
+            "gateway": "Gateway: Online",
+            "api": "API: Online",
+            "voice": "Voice: Online",
+            "active_nodes": "{count} Nodes"
+        },
+        "footer": {
+            "tos": "Terms",
+            "privacy": "Privacy",
+            "about": "About",
+            "support": "Support",
+            "copyright": "© 2026 Beacon. All rights reserved."
+        }
+    },
+    "app_directory": {
+        "title": "App Directory",
+        "subtitle": "Discover apps and integrations for your servers.",
+        "search_placeholder": "Search apps, bots, integrations...",
+        "categories": {
+            "all": "All",
+            "gaming": "Gaming",
+            "social": "Social",
+            "productivity": "Productivity",
+            "automation": "AI & Automation"
+        },
+        "items": {
+            "add_to_server": "Add to Server",
+            "verified": "Verified",
+            "official": "Official",
+            "partner": "Partner"
+        }
+    },
+    "user_profile": {
+        "about_me": "ABOUT ME",
+        "member_since": "MEMBER SINCE",
+        "roles": "ROLES",
+        "message": "Message",
+        "add_friend": "Add Friend",
+        "more": "More",
+        "joined_at": "Member since {date}"
+    },
+    "docs": {
+        "title": "Beacon Developer Docs",
+        "subtitle": "Everything you need to build powerful bots, deep integrations, and custom apps on Beacon.",
+        "search_placeholder": "Search documentation...",
+        "on_this_page": "ON THIS PAGE",
+        "categories": {
+            "getting_started": "Getting Started",
+            "api_reference": "API Reference",
+            "gateway": "Gateway & Events",
+            "sdk": "SDK Tutorial",
+            "bot_commands": "Bot Commands"
+        },
+        "build_section": {
+            "title": "What can you build?",
+            "bots": "Bots & Automations",
+            "bots_desc": "Auto-moderation, utility commands, polls, and interactive mini-games.",
+            "oauth": "OAuth2 Integrations",
+            "oauth_desc": "Let users log in to your third-party site with their Beacon account securely.",
+            "webhooks": "Custom Webhooks",
+            "webhooks_desc": "Push notifications from external services directly into any channel."
+        },
+        "popular_topics": "Popular Topics",
+        "topics": {
+            "create_app": "How to create your first application",
+            "rest_api": "REST API: Sending and receiving messages",
+            "websocket": "WebSocket: Subscribing to Gateway events",
+            "sdk_guide": "SDK: Slash commands and interactive components",
+            "bot_features": "Beacon Bot: Built-in commands and rich responses"
+        }
+    },
+    "marketplace": {
+        "title": "Shop till you drop.",
+        "subtitle": "Unlock the Full Power of Beacon or adorn your profile with dazzling Avatar Decorations.",
+        "beacoin_balance": "{count} Beacoins",
+        "success_title": "Purchase Successful!",
+        "success_desc": "Your premium features are now active. Head over to your profile to equip your cosmetics.",
+        "return_to_shop": "Return to Shop",
+        "tabs": {
+            "plus": "Beacon+",
+            "decorations": "Avatar Decorations",
+            "effects": "Profile Effects"
+        },
+        "plus": {
+            "monthly": "Monthly",
+            "yearly": "Yearly",
+            "save_badge": "Save 16%",
+            "features": {
+                "animated": "Animated Avatar & Profile Banner",
+                "emojis": "Custom Emojis Everywhere",
+                "uploads": "Larger File Uploads (500MB)",
+                "streaming": "HD Streaming & Screen Share",
+                "badge": "Exclusive Beacon+ Badge",
+                "bonus": "Monthly Beacoin Bonus (100 coins)"
+            },
+            "purchase": "Purchase",
+            "insufficient": "Insufficient Beacoins",
+            "processing": "Processing..."
+        },
+        "cosmetics": {
+            "owned": "Owned",
+            "equipped": "Equipped",
+            "unequip": "Unequip",
+            "equip": "Equip",
+            "unlock": "Unlock",
+            "too_poor": "Too poor",
+            "gift": "Gift"
+        }
+    },
+    "discovery": {
+        "title": "Find your community on Beacon",
+        "subtitle": "From gaming, to music, to learning, there's a place for you.",
+        "search_placeholder": "Explore communities",
+        "featured": "Featured Communities",
+        "no_results": "No communities found matching \"{query}\"",
+        "clear_search": "Clear Search",
+        "join_server": "Join Server",
+        "online": "{count} Online",
+        "members": "{count} Members",
+        "verified_server": "Verified Server"
+    },
+    "community": {
+        "title": "Discover your next home.",
+        "subtitle": "From gaming to study groups, find the community that's right for you.",
+        "featured": "Featured Communities",
+        "join": "Join Community",
+        "cta": "Don't see what you're looking for?",
+        "cta_desc": "Create your own server and invite your friends today!",
+        "create_server": "Create a Server"
+    }
+}

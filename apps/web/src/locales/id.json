@@ -1,0 +1,82 @@
+{
+    "common": {
+        "login": "Masuk",
+        "signup": "Daftar",
+        "logout": "Keluar",
+        "settings": "Pengaturan",
+        "friends": "Teman",
+        "servers": "Server",
+        "search": "Cari",
+        "cancel": "Batal",
+        "save": "Simpan",
+        "welcome": "Selamat datang kembali, {name}!",
+        "new": "BARU",
+        "get_started_question": "Siap untuk terhubung?",
+        "join_revolution": "Terhubung dengan teman",
+        "learn_how": "Pelajari lebih lanjut",
+        "navigation": "NAVIGASI",
+        "community": "KOMUNITAS",
+        "introduction": "Pendahuluan",
+        "discovery": "Penemuan",
+        "app_directory": "Direktori Aplikasi",
+        "community_hub": "Pusat Komunitas",
+        "documentation": "Dokumentasi",
+        "contact_support": "Dukungan",
+        "open_beacon": "Buka Beacon"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "Platform komunikasi real-time yang dibangun untuk komunitas dan pengembang.",
+        "get_started": "Mulai",
+        "read_docs": "Baca Dokumen",
+        "features": {
+            "native": "Mesin Utama",
+            "native_desc": "Suara dan pesan performa tinggi dengan latensi minimal.",
+            "security": "Privasi Utama",
+            "security_desc": "Komunikasi terenkripsi dan data yang dikendalikan pengguna.",
+            "sdk": "API Pengembang",
+            "sdk_desc": "Alat canggih untuk membangun bot dan integrasi."
+        },
+        "status": {
+            "header": "Status",
+            "gateway": "Gateway: Online",
+            "api": "API: Online",
+            "voice": "Suara: Online",
+            "active_nodes": "{count} Node"
+        },
+        "footer": {
+            "tos": "Ketentuan",
+            "privacy": "Privasi",
+            "about": "Tentang",
+            "support": "Dukungan",
+            "copyright": "© 2026 Beacon. Seluruh hak cipta dilindungi undang-undang."
+        }
+    },
+    "app_directory": {
+        "title": "Direktori Aplikasi",
+        "subtitle": "Temukan aplikasi dan integrasi untuk server Anda.",
+        "search_placeholder": "Cari aplikasi, bot, integrasi...",
+        "categories": {
+            "all": "Semua",
+            "gaming": "Game",
+            "social": "Sosial",
+            "productivity": "Produktivitas",
+            "automation": "AI & Otomasi"
+        },
+        "items": {
+            "add_to_server": "Tambah ke Server",
+            "verified": "Terverifikasi",
+            "official": "Resmi",
+            "partner": "Mitra"
+        }
+    },
+    "user_profile": {
+        "about_me": "TENTANG SAYA",
+        "member_since": "ANGGOTA SEJAK",
+        "roles": "PERAN",
+        "message": "Pesan",
+        "add_friend": "Tambah Teman",
+        "more": "Lainnya",
+        "joined_at": "Anggota sejak {date}"
+    }
+}

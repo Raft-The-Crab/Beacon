@@ -1,0 +1,176 @@
+{
+    "common": {
+        "login": "वेतन",
+        "signup": "साइन अप करें",
+        "logout": "लॉग आउट",
+        "settings": "सेटिंग्स",
+        "friends": "मित्र",
+        "servers": "सर्वर",
+        "search": "खोजें",
+        "cancel": "रद्द करें",
+        "save": "सहेजें",
+        "welcome": "वापस स्वागत है, {name}!",
+        "new": "नया",
+        "get_started_question": "जुड़ने के लिए तैयार हैं?",
+        "join_revolution": "दोस्तों से जुड़ें",
+        "learn_how": "अधिक जानें",
+        "navigation": "नेविगेशन",
+        "community": "समुदाय",
+        "introduction": "परिचय",
+        "discovery": "खोज",
+        "app_directory": "ऐप निर्देशिका",
+        "community_hub": "समुदाय हब",
+        "documentation": "दस्तावेज़ीकरण",
+        "contact_support": "सहायता",
+        "open_beacon": "Beacon खोलें",
+        "pinned_messages": "पिन किए गए संदेश",
+        "member_list": "सदस्य सूची",
+        "inbox": "इनबॉक्स",
+        "help": "सहायता"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "समुदायों और डेवलपर्स के लिए निर्मित एक रियल-टाइम संचार प्लेटफ़ॉर्म।",
+        "get_started": "शुरू करें",
+        "read_docs": "डॉक्स पढ़ें",
+        "features": {
+            "native": "कोर इंजन",
+            "native_desc": "न्यूनतम विलंबता के साथ उच्च-प्रदर्शन वॉयस और मैसेजिंग।",
+            "security": "गोपनीयता पहले",
+            "security_desc": "एन्क्रिप्टेड संचार और उपयोगकर्ता-नियंत्रित डेटा।",
+            "sdk": "डेवलपर API",
+            "sdk_desc": "बॉट और इंटीग्रेशन बनाने के लिए शक्तिशाली टूल्स।"
+        },
+        "status": {
+            "header": "स्थिति",
+            "gateway": "गेटवे: ऑनलाइन",
+            "api": "API: ऑनलाइन",
+            "voice": "वॉयस: ऑनलाइन",
+            "active_nodes": "{count} नोड्स"
+        },
+        "footer": {
+            "tos": "शर्तें",
+            "privacy": "गोपनीयता",
+            "about": "के बारे में",
+            "support": "सहायता",
+            "copyright": "© 2026 Beacon. सर्वाधिकार सुरक्षित।"
+        }
+    },
+    "app_directory": {
+        "title": "ऐप निर्देशिका",
+        "subtitle": "अपने सर्वर के लिए ऐप्स और इंटीग्रेशन खोजें।",
+        "search_placeholder": "ऐप्स, बॉट, इंटीग्रेशन खोजें...",
+        "categories": {
+            "all": "सभी",
+            "gaming": "गेमिंग",
+            "social": "सोशल",
+            "productivity": "उत्पादकता",
+            "automation": "AI और स्वचालन"
+        },
+        "items": {
+            "add_to_server": "सर्वर में जोड़ें",
+            "verified": "सत्यापित",
+            "official": "आधिकारिक",
+            "partner": "पार्टनर"
+        }
+    },
+    "user_profile": {
+        "about_me": "मेरे बारे में",
+        "member_since": "कब से सदस्य",
+        "roles": "भूमिकाएं",
+        "message": "संदेश",
+        "add_friend": "मित्र जोड़ें",
+        "more": "अधिक",
+        "joined_at": "{date} से सदस्य"
+    },
+    "docs": {
+        "title": "Beacon डेवलपर डॉक्स",
+        "subtitle": "Beacon पर शक्तिशाली बॉट और इंटीग्रेशन बनाने के लिए सब कुछ।",
+        "search_placeholder": "दस्तावेज़ीकरण खोजें...",
+        "on_this_page": "इस पृष्ठ पर",
+        "categories": {
+            "getting_started": "शुरुआत करना",
+            "api_reference": "API संदर्भ",
+            "gateway": "गेटवे और इवेंट",
+            "sdk": "SDK ट्यूटोरियल",
+            "bot_commands": "बॉट कमांड"
+        },
+        "build_section": {
+            "title": "आप क्या बना सकते हैं?",
+            "bots": "बॉट्स और स्वचालन",
+            "bots_desc": "ऑटो-मॉडरेशन, उपयोगिता कमांड, पोल और मिनी-गेम्स।",
+            "oauth": "OAuth2 इंटीग्रेशन",
+            "oauth_desc": "उपयोगकर्ताओं को अपने Beacon खाते से लॉग इन करने दें।",
+            "webhooks": "कस्टम Webhooks",
+            "webhooks_desc": "बाहरी सेवाओं की सूचनाएं सीधे किसी भी चैनल में पुश करें।"
+        },
+        "popular_topics": "लोकप्रिय विषय",
+        "topics": {
+            "create_app": "अपना पहला एप्लिकेशन कैसे बनाएं",
+            "rest_api": "REST API: संदेश भेजना और प्राप्त करना",
+            "websocket": "WebSocket: गेटवे इवेंट की सदस्यता लेना",
+            "sdk_guide": "SDK: स्लैश कमांड और इंटरएक्टिव घटक",
+            "bot_features": "Beacon Bot: बिल्ट-इन कमांड और रिच रिस्पोंस"
+        }
+    },
+    "marketplace": {
+        "title": "खरीदारी करें।",
+        "subtitle": "Beacon की पूरी शक्ति अनलॉक करें या अपनी प्रोफ़ाइल सजाएं।",
+        "beacoin_balance": "{count} Beacoins",
+        "success_title": "खरीद सफल!",
+        "success_desc": "आपकी प्रीमियम सुविधाएं अब सक्रिय हैं।",
+        "return_to_shop": "शॉप पर वापस जाएं",
+        "tabs": {
+            "plus": "Beacon+",
+            "decorations": "अवतार सजावट",
+            "effects": "प्रोफ़ाइल इफेक्ट्स"
+        },
+        "plus": {
+            "monthly": "मासिक",
+            "yearly": "वार्षिक",
+            "save_badge": "16% बचाएं",
+            "features": {
+                "animated": "एनिमेटेड अवतार और प्रोफ़ाइल बैनर",
+                "emojis": "हर जगह कस्टम इमोजी",
+                "uploads": "बड़े फ़ाइल अपलोड (500MB)",
+                "streaming": "HD स्ट्रीमिंग और स्क्रीन शेयर",
+                "badge": "एक्सक्लूसिव Beacon+ बैज",
+                "bonus": "मासिक Beacoin बोनस (100 सिक्के)"
+            },
+            "purchase": "खरीदें",
+            "insufficient": "अपर्याप्त Beacoins",
+            "processing": "प्रोसेसिंग..."
+        },
+        "cosmetics": {
+            "owned": "स्वामित्व में",
+            "equipped": "सुसज्जित",
+            "unequip": "हटाएं",
+            "equip": "लगाएं",
+            "unlock": "अनलॉक करें",
+            "too_poor": "अपर्याप्त बैलेंस",
+            "gift": "उपहार दें"
+        }
+    },
+    "discovery": {
+        "title": "Beacon पर अपना समुदाय खोजें",
+        "subtitle": "गेमिंग से संगीत तक, सीखने से लेकर सोशल तक, आपके लिए एक जगह है।",
+        "search_placeholder": "समुदाय खोजें",
+        "featured": "विशेष समुदाय",
+        "no_results": "\"{query}\" से मेल खाते कोई समुदाय नहीं मिले",
+        "clear_search": "खोज साफ़ करें",
+        "join_server": "सर्वर से जुड़ें",
+        "online": "{count} ऑनलाइन",
+        "members": "{count} सदस्य",
+        "join_success": "में आपका स्वागत है",
+        "join_error": "सर्वर से जुड़ने में विफल"
+    },
+    "community": {
+        "title": "अपना अगला घर खोजें।",
+        "subtitle": "गेमिंग से स्टडी ग्रुप तक, वह समुदाय खोजें जो आपके लिए सही हो।",
+        "featured": "विशेष समुदाय",
+        "join": "समुदाय में शामिल हों",
+        "cta": "आप जो खोज रहे हैं वह नहीं मिला?",
+        "cta_desc": "आज अपना सर्वर बनाएं और अपने दोस्तों को आमंत्रित करें!",
+        "create_server": "सर्वर बनाएं"
+    }
+}

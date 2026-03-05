@@ -1,0 +1,87 @@
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: var(--radius-xl);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.clickable:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.clickable:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.selected {
+    background: rgba(88, 101, 242, 0.15);
+    border-color: rgba(88, 101, 242, 0.3);
+    color: #8b9dff;
+}
+
+.selected:hover {
+    background: rgba(88, 101, 242, 0.2);
+}
+
+.icon {
+    flex-shrink: 0;
+    color: inherit;
+    opacity: 0.7;
+}
+
+.customIcon {
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-2xs);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.more {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    font-weight: 500;
+}
+
+.addCustomBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.addCustomBtn:hover {
+    border-color: rgba(88, 101, 242, 0.4);
+    color: #8b9dff;
+    background: rgba(88, 101, 242, 0.08);
+}
