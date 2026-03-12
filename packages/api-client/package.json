@@ -1,6 +1,6 @@
 {
   "name": "@beacon/api-client",
-  "version": "3.0.1",
+  "version": "1.0.0",
   "description": "Official Bot SDK for Beacon — build powerful, event-driven bots with ease",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

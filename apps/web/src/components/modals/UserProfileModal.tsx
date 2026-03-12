@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { MessageCircle, UserPlus, UserX, X, Loader2 } from 'lucide-react'
+import { MessageCircle, UserPlus, UserX, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useUserListStore } from '../../stores/useUserListStore'
@@ -27,6 +27,7 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
+  const [profileNote, setProfileNote] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
   const isFriend = friends.some(f => f.id === userId)
@@ -34,7 +35,8 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
   // Profile art
   const { arts } = useProfileArtStore()
-  const isSelf = currentUser?.id === userId
+  const isSelf = !!currentUser && (currentUser.id === userId || currentUser.id === user?.id)
+  const canUseSocialActions = !!currentUser && !!user && !isSelf
 
   const frameArt = user?.avatarDecorationId ? arts.find((a: ProfileArt) => a.id === user.avatarDecorationId) : null
   const bannerArt = user?.banner ? (arts.find((a: ProfileArt) => a.id === user.banner) || ({ preview: `url(${user.banner}) center/cover no-repeat` } as any)) : null
@@ -54,6 +56,13 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
             ...response.data,
             joinedAt: response.data.createdAt || new Date().toISOString(),
           })
+
+          const noteRes = await apiClient.request('GET', `/notes/profile/${userId}`)
+          if (noteRes.success && noteRes.data?.note) {
+            setProfileNote(noteRes.data.note)
+          } else {
+            setProfileNote(null)
+          }
         } else {
           setError('User not found')
         }
@@ -71,6 +80,11 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
   const handleAddFriend = async () => {
     if (!user) return
+
+    if (isSelf) {
+      showToast('You cannot add yourself as a friend', 'warning')
+      return
+    }
 
     try {
       addFriend({
@@ -113,9 +127,14 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
   const handleMessage = async () => {
     if (!user) return
 
+    if (isSelf) {
+      showToast('Open your own DM list from Home instead', 'info')
+      return
+    }
+
     try {
       // Create DM channel with this user
-      await createDMChannel({
+      const dmChannelId = await createDMChannel({
         id: user.id,
         username: user.username,
         avatar: user.avatar,
@@ -123,8 +142,8 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
       })
 
       // Navigate to MessagingHome and set the active channel
-      setActiveChannel(user.id)
-      navigate('/app')
+      setActiveChannel(dmChannelId)
+      navigate('/channels/@me')
       onClose()
     } catch (err) {
       showToast('Failed to open conversation', 'error')
@@ -184,31 +203,45 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
             </h1>
             <UserBadges badges={user.badges} isBot={user.bot} size="md" />
             {user.customStatus && <p className={styles.customStatus}>{user.customStatus}</p>}
+            {profileNote && (profileNote.text || profileNote.musicMetadata?.title) && (
+              <div className={styles.noteBubble}>
+                <div className={styles.noteEmoji}>{profileNote.emoji || '✨'}</div>
+                <div className={styles.noteContent}>
+                  {profileNote.text && <p className={styles.noteText}>{profileNote.text}</p>}
+                  {profileNote.musicMetadata?.title && (
+                    <p className={styles.noteMusic}>Listening to {profileNote.musicMetadata.title}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          {currentUser?.id !== userId && (
+          {canUseSocialActions && (
             <div className={styles.actions}>
               <Button variant="primary" onClick={handleMessage} fullWidth>
                 <MessageCircle size={18} />
                 Message
               </Button>
-              <div className={styles.buttonGroup}>
-                <Button
-                  variant={isFriend ? 'secondary' : 'primary'}
-                  onClick={isFriend ? handleRemoveFriend : handleAddFriend}
-                  fullWidth
-                >
-                  {isFriend ? <UserX size={18} /> : <UserPlus size={18} />}
-                  {isFriend ? 'Remove Friend' : 'Add Friend'}
-                </Button>
-                <Button
-                  variant={isBlocked ? 'danger' : 'secondary'}
-                  onClick={handleToggleBlock}
-                  size="sm"
-                >
-                  <X size={18} />
-                </Button>
-              </div>
+              {!user.bot && (
+                <div className={styles.buttonGroup}>
+                  <Button
+                    variant={isFriend ? 'secondary' : 'primary'}
+                    onClick={isFriend ? handleRemoveFriend : handleAddFriend}
+                    fullWidth
+                  >
+                    {isFriend ? <UserX size={18} /> : <UserPlus size={18} />}
+                    {isFriend ? 'Remove Friend' : 'Add Friend'}
+                  </Button>
+                  <Button
+                    variant={isBlocked ? 'danger' : 'secondary'}
+                    onClick={handleToggleBlock}
+                    fullWidth
+                  >
+                    <UserX size={18} />
+                    {isBlocked ? 'Unblock' : 'Block'}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

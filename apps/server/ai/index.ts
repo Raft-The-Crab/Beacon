@@ -73,6 +73,25 @@ class ClawCloudAI {
       return false;
     }
   }
+
+  async extractAudio(url: string): Promise<{ success: boolean; url?: string; title?: string; error?: string }> {
+    try {
+      const response = await axios.post(`${this.clawCloudUrl}/extract`, {
+        url
+      }, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 20000
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('[ClawCloud AI] Extraction error:', error);
+      return { success: false, error: 'Extraction service unavailable' };
+    }
+  }
 }
 
 class UserTracker {
@@ -101,41 +120,53 @@ class UserTracker {
 class LocalDecisionEngine {
   private userTracker = new UserTracker();
 
-  async makeDecision(aiResponse: AIResponse, context: any, userId?: string): Promise<ModerationResult> {
+  private contains(content: string, keywords: string[]): boolean {
+    const lower = content.toLowerCase();
+    return keywords.some(k => lower.includes(k));
+  }
+
+  async makeDecision(aiResponse: AIResponse, context: any, userId?: string, content?: string): Promise<ModerationResult> {
     const warningCount = userId ? this.userTracker.getWarningCount(userId) : 0;
+    const msg = content || '';
 
     let severity: ModerationResult['severity'] = 'safe';
     let action: ModerationResult['action'] = 'none';
     let reason = 'Content allowed';
     let approved = true;
 
-    if (aiResponse.categories.includes('csam') && aiResponse.confidence > 0.8) {
-      action = 'immediate_ban_and_ip_ban';
-      severity = 'critical';
-      reason = 'CSAM detected';
-      approved = false;
-    } else if (aiResponse.categories.includes('illegal') && aiResponse.confidence > 0.8 && !aiResponse.is_joke) {
-      action = 'immediate_ban_and_ip_ban';
-      severity = 'critical';
-      reason = 'Illegal activity detected';
-      approved = false;
-    } else if (aiResponse.categories.includes('minor_meeting') && aiResponse.confidence > 0.7) {
-      action = 'account_risk_flag';
-      severity = 'high';
-      reason = 'Suspicious minor interaction';
-      approved = false;
-    } else if ((aiResponse.categories.includes('csam') || aiResponse.categories.includes('illegal')) && aiResponse.is_joke) {
-      if (warningCount >= 2) {
+    // 1. Critical Blocks (CSAM, Illegal, Doxxing)
+    const isCSAM = aiResponse.categories.includes('csam') || this.contains(msg, ['child sexual', 'minor meet', 'underage explicit']);
+    const isIllegal = aiResponse.categories.includes('illegal') || this.contains(msg, ['sell drugs', 'buy cocaine', 'how to make bomb']);
+    const isDoxxing = this.contains(msg, ['ssn', 'social security', 'lives at']);
+
+    if ((isCSAM || isIllegal || isDoxxing) && !aiResponse.is_joke) {
+      if (aiResponse.confidence > 0.7 || isCSAM) {
         action = 'immediate_ban_and_ip_ban';
         severity = 'critical';
-        reason = 'Repeated inappropriate jokes';
+        reason = isCSAM ? 'CSAM detected' : isIllegal ? 'Illegal activity detected' : 'Doxxing attempt';
         approved = false;
-      } else {
+      }
+    } 
+    // 2. Jokes & Dark Humor (Allowed but warned if extreme)
+    else if (aiResponse.is_joke || this.contains(msg, ['lol', 'jk', 'lmao', '😂'])) {
+      if (aiResponse.illegal_score > 0.9 && warningCount >= 2) {
+        action = 'immediate_ban_and_ip_ban';
+        severity = 'critical';
+        reason = 'Repeated inappropriate jokes after warnings';
+        approved = false;
+      } else if (aiResponse.illegal_score > 0.8) {
         action = 'warning';
         severity = 'medium';
         reason = 'Inappropriate joke - warning issued';
         approved = true;
       }
+    }
+    // 3. Flagging (Toxicity, NSFW)
+    else if (aiResponse.illegal_score > 0.6) {
+      action = 'account_risk_flag';
+      severity = 'high';
+      reason = 'Content flagged for manual review';
+      approved = false;
     }
 
     // Track warnings
@@ -212,7 +243,7 @@ class ModerationQueue {
       const aiResponse = await this.ai.analyze(request.content, request.type);
 
       // Step 2: Local Decision Making
-      const decision = await this.decisionEngine.makeDecision(aiResponse, request.context, request.userId);
+      const decision = await this.decisionEngine.makeDecision(aiResponse, request.context, request.userId, request.content);
 
       // Step 3: Return to App
       (request as any).resolve(decision);
@@ -245,6 +276,10 @@ export const aiSystem = {
 
   fineTune: (trainingData: Array<{ input: string; output: any }>) => {
     return clawCloudAI.fineTune(trainingData);
+  },
+
+  extractAudio: (url: string) => {
+    return clawCloudAI.extractAudio(url);
   }
 };
 

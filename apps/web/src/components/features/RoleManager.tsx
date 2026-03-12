@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react'
 import { Shield, Plus, Edit2, Trash2, Users, ChevronDown, ChevronUp, Copy } from 'lucide-react'
-import { Button, Input, Modal } from '../ui'
+import { Button, Input, Modal, RoleColorPicker } from '../ui'
 import { IconPicker } from '../ui/IconPicker'
 import { RoleTemplateSelector } from './RoleTemplateSelector'
 import { useRolesStore, Role, Permission } from '../../stores/useRolesStore'
@@ -249,11 +249,9 @@ export function RoleManager({ serverId }: RoleManagerProps) {
               <div className={styles.settingGroup}>
                 <label className={styles.label}>Role Color</label>
                 <div className={styles.colorPicker}>
-                  <input
-                    type="color"
+                  <RoleColorPicker
                     value={selectedRole.color}
-                    onChange={(e) => {
-                      const newColor = e.currentTarget.value
+                    onChange={(newColor) => {
                       updateRole(serverId, selectedRole.id, { color: newColor })
                       setSelectedRole({ ...selectedRole, color: newColor })
                     }}
@@ -362,10 +360,9 @@ export function RoleManager({ serverId }: RoleManagerProps) {
           </div>
           <div className={styles.modalField}>
             <label>Role Color</label>
-            <input
-              type="color"
+            <RoleColorPicker
               value={newRoleColor}
-              onChange={(e) => setNewRoleColor(e.currentTarget.value)}
+              onChange={setNewRoleColor}
             />
           </div>
           <div className={styles.modalActions}>

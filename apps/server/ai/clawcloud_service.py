@@ -46,7 +46,7 @@ class ClawCloudAI:
             model_path = os.path.join(os.path.dirname(__file__), 'models', 'beacon-ai.onnx')
             
             opts = ort.SessionOptions()
-            opts.intra_op_num_threads = 1 # Optimize for 1vCPU
+            opts.intra_op_num_threads = 1 # Optimize for 0.5vCPU
             opts.inter_op_num_threads = 1
             opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
             
@@ -59,18 +59,17 @@ class ClawCloudAI:
             
             # Use lightweight tokenizer
             self.tokenizer = Tokenizer.from_pretrained('distilbert-base-uncased')
-            print(f"[ClawCloud AI] Model loaded (600MB allocated)")
+            print(f"[ClawCloud AI] Model loaded (500MB target)")
             
         except Exception as e:
             print(f"[ClawCloud AI] Model load error: {e}")
             self.session = None
     
     def analyze_text(self, content):
-        # Initial AI analysis
-        ai_result = self._run_ai_inference(content)
-        
-        # Polish/Filter with SWI-Prolog Logic Engine
-        return self._run_prolog_decision(ai_result, content)
+        # AI analysis - decisions now handled by Railway
+        result = self._run_ai_inference(content)
+        gc.collect() # Aggressive recovery
+        return result
 
     def _run_ai_inference(self, content):
         if not self.session:
@@ -94,46 +93,22 @@ class ClawCloudAI:
                 illegal_score = float(outputs[0][0][0])
                 categories = []
                 
+                # Basic categorical flagging for the Decision Engine
+                if illegal_score > 0.8:
+                    categories.append('illegal')
+                
                 return {
                     'illegal_score': illegal_score,
                     'categories': categories,
-                    'confidence': illegal_score if illegal_score > 0.5 else 0.1
+                    'confidence': illegal_score if illegal_score > 0.5 else 0.1,
+                    'is_joke': 'lol' in content.lower() or 'jk' in content.lower()
                 }
             except Exception as e:
                 print(f"[ClawCloud AI] Inference error: {e}")
                 return self._fallback_ai_score()
 
-    def _run_prolog_decision(self, ai_data, context):
-        try:
-            query = {
-                "illegal_score": ai_data['illegal_score'],
-                "categories": ai_data['categories'],
-                "confidence": ai_data['confidence'],
-                "context": context[:100]
-            }
-            
-            # Call SWI-Prolog executable
-            proc = subprocess.Popen(
-                ['swipl', '-q', '-s', self.prolog_engine, '-g', 'run_decision_loop', '-t', 'halt'],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            
-            stdout, _ = proc.communicate(input=json.dumps(query))
-            decision = json.loads(stdout.strip())
-            
-            return {
-                **ai_data,
-                "moderation": decision
-            }
-        except Exception as e:
-            print(f"[ClawCloud] Prolog Bridge error: {e}")
-            return {**ai_data, "moderation": {"action": "allow", "reason": "logic_engine_offline"}}
-
     def _fallback_ai_score(self):
-        return {'illegal_score': 0.1, 'categories': [], 'confidence': 0.1}
+        return {'illegal_score': 0.1, 'categories': [], 'confidence': 0.1, 'is_joke': False}
 
 class MediaProcessor:
     def __init__(self):
@@ -185,6 +160,49 @@ class MediaProcessor:
 # Initialize services
 ai_service = ClawCloudAI()
 media_processor = MediaProcessor()
+
+@app.route('/extract', methods=['POST'])
+def extract_audio():
+    try:
+        data = request.get_json()
+        url = data.get('url', '')
+        if not url:
+            return jsonify({'success': False, 'error': 'No URL provided'}), 400
+        
+        # Use yt-dlp to get direct audio stream URL and metadata
+        # We use --print to get exactly what we need in a stable order
+        cmd = [
+            'yt-dlp',
+            '--quiet',
+            '--no-warnings',
+            '--print', '%(title)s',
+            '--print', '%(url)s',
+            '--print', '%(thumbnail)s',
+            '-f', 'bestaudio/best',
+            url
+        ]
+        
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, stderr = process.communicate()
+        
+        if process.returncode != 0:
+            logging.error(f"[ClawCloud] yt-dlp error: {stderr}")
+            return jsonify({'success': False, 'error': 'Extraction failed - link may be invalid or restricted'}), 500
+        
+        lines = stdout.strip().split('\n')
+        if len(lines) < 2:
+             return jsonify({'success': False, 'error': 'Could not extract audio link'}), 500
+        
+        return jsonify({
+            'success': True,
+            'title': lines[0],
+            'url': lines[1],
+            'thumbnail': lines[2] if len(lines) > 2 else None
+        })
+        
+    except Exception as e:
+        logging.error(f"[ClawCloud] Extraction exception: {e}")
+        return jsonify({'success': False, 'error': 'Internal server error during extraction'}), 500
 
 @app.route('/analyze', methods=['POST'])
 def analyze():

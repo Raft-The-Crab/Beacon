@@ -36,6 +36,11 @@ function saveRecent(item: Omit<SearchResult, 'icon' | 'action'>) {
   } catch { }
 }
 
+function isVoiceLikeChannel(channel: any) {
+  const t = String(channel?.type || '').toLowerCase()
+  return t === 'voice' || channel?.type === 2 || t === 'stage' || channel?.type === 13
+}
+
 export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -64,7 +69,14 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
           ...r,
           icon: r.type === 'channel' ? <Hash size={16} /> : r.type === 'server' ? <Server size={16} /> : <Users size={16} />,
           action: () => {
-            if (r.type === 'channel' && currentServer) navigate(`/channels/${currentServer.id}/${r.id}`)
+            if (r.type === 'channel' && currentServer) {
+              const ch = (currentServer.channels as any[])?.find((channel: any) => channel.id === r.id)
+              if (ch && isVoiceLikeChannel(ch)) {
+                navigate(`/voice?guildId=${currentServer.id}&channelId=${ch.id}&name=${encodeURIComponent(ch.name || 'Voice Channel')}`)
+              } else {
+                navigate(`/channels/${currentServer.id}/${r.id}`)
+              }
+            }
             else if (r.type === 'server') navigate(`/channels/${r.id}`)
             else if (r.type === 'dm') navigate(`/dms/${r.id}`)
             onClose()
@@ -83,12 +95,19 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
               label: `#${ch.name}`,
               sublabel: currentServer.name,
               icon: <Hash size={16} />,
-              action: () => { navigate(`/channels/${currentServer.id}/${ch.id}`); onClose() }
+              action: () => {
+                if (isVoiceLikeChannel(ch)) {
+                  navigate(`/voice?guildId=${currentServer.id}&channelId=${ch.id}&name=${encodeURIComponent(ch.name || 'Voice Channel')}`)
+                } else {
+                  navigate(`/channels/${currentServer.id}/${ch.id}`)
+                }
+                onClose()
+              }
             })
           }
         }
       }
-      return results
+      return searchResults
     }
 
     // Search servers
@@ -113,7 +132,7 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
     if (currentServer?.channels) {
       for (const ch of (currentServer.channels as any[])) {
         if (ch.name?.toLowerCase().includes(lower)) {
-          const isVoice = ch.type === 2 || String(ch.type).toLowerCase() === 'voice'
+          const isVoice = isVoiceLikeChannel(ch)
           searchResults.push({
             id: ch.id,
             type: 'channel',
@@ -121,7 +140,11 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
             sublabel: currentServer.name,
             icon: isVoice ? <Volume2 size={16} /> : <Hash size={16} />,
             action: () => {
-              navigate(`/channels/${currentServer.id}/${ch.id}`)
+              if (isVoice) {
+                navigate(`/voice?guildId=${currentServer.id}&channelId=${ch.id}&name=${encodeURIComponent(ch.name || 'Voice Channel')}`)
+              } else {
+                navigate(`/channels/${currentServer.id}/${ch.id}`)
+              }
               saveRecent({ id: ch.id, type: 'channel', label: `#${ch.name}`, sublabel: currentServer.name })
               onClose()
             }
@@ -135,14 +158,19 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
       if (server.id === currentServer?.id) continue
       for (const ch of (server.channels || [])) {
         if ((ch as any).name?.toLowerCase().includes(lower)) {
+          const isVoice = isVoiceLikeChannel(ch)
           searchResults.push({
             id: (ch as any).id,
             type: 'channel',
             label: `#${(ch as any).name}`,
             sublabel: server.name,
-            icon: <Hash size={16} />,
+            icon: isVoice ? <Volume2 size={16} /> : <Hash size={16} />,
             action: () => {
-              navigate(`/channels/${server.id}/${(ch as any).id}`)
+              if (isVoice) {
+                navigate(`/voice?guildId=${server.id}&channelId=${(ch as any).id}&name=${encodeURIComponent((ch as any).name || 'Voice Channel')}`)
+              } else {
+                navigate(`/channels/${server.id}/${(ch as any).id}`)
+              }
               saveRecent({ id: (ch as any).id, type: 'channel', label: `#${(ch as any).name}`, sublabel: server.name })
               onClose()
             }

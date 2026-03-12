@@ -86,7 +86,7 @@ export interface MusicMetadata {
   platform: 'spotify' | 'youtube' | 'unknown'
 }
 
-export type UserBadge = 'owner' | 'admin' | 'moderator' | 'beacon_plus' | 'bot' | 'early_supporter' | 'bug_hunter' | 'server_owner'
+export type UserBadge = 'owner' | 'admin' | 'moderator' | 'beacon_plus' | 'bot' | 'early_supporter' | 'bug_hunter' | 'server_owner' | 'verified'
 
 export interface User {
   id: string

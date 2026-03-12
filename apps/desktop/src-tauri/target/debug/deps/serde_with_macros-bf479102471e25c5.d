@@ -1,8 +1,0 @@
-C:\Users\mysti.KIM-JONG-UN\Desktop\Beacon\apps\desktop\src-tauri\target\debug\deps\serde_with_macros-bf479102471e25c5.d: C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\lib.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\apply.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\lazy_bool.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\utils.rs
-
-C:\Users\mysti.KIM-JONG-UN\Desktop\Beacon\apps\desktop\src-tauri\target\debug\deps\serde_with_macros-bf479102471e25c5.dll: C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\lib.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\apply.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\lazy_bool.rs C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\utils.rs
-
-C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\lib.rs:
-C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\apply.rs:
-C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\lazy_bool.rs:
-C:\Users\mysti.KIM-JONG-UN\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_with_macros-3.17.0\src\utils.rs:

@@ -1,4 +1,4 @@
-import { useUIStore } from '../stores/useUIStore'
+import { useUIStore, type CreateChannelType } from '../stores/useUIStore'
 
 export function openUserProfileModal(userId: string) {
   const { setShowUserProfile, setSelectedUser } = useUIStore.getState()
@@ -51,10 +51,9 @@ export function openCreateServerModal() {
   setShowCreateServer(true)
 }
 
-export function openCreateChannelModal(_type?: string, _parentId?: string) {
-  const { setShowCreateChannel } = useUIStore.getState()
-  // Note: If you want to store type/parentId in store, you'd add state for it.
-  // For now, we just open the modal.
+export function openCreateChannelModal(type?: CreateChannelType, parentId?: string) {
+  const { setShowCreateChannel, setCreateChannelContext } = useUIStore.getState()
+  setCreateChannelContext(type, parentId)
   setShowCreateChannel(true)
 }
 

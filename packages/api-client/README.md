@@ -239,7 +239,7 @@ const random = client.guilds.random();
 
 ## API Reference
 
-Full API docs available at **[the official documentation portal](https://beacon.app/developers/docs)**
+Full API docs available at **[the official documentation portal](https://beacon.qzz.io/developers/docs)**
 
 ---
 

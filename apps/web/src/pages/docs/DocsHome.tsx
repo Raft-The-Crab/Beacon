@@ -136,7 +136,7 @@ interface DocLinkProps {
 function DocLink({ icon, title, description, to, color }: DocLinkProps) {
     return (
         <Link to={to} className={`${styles.card} premium-glass-card ${styles[color]}`}>
-            <div className={styles.cardIcon} style={{ background: 'rgba(255, 255, 255, 0.05)', borderRadius: 16 }}>{icon}</div>
+            <div className={styles.cardIcon} style={{ background: 'rgba(255, 255, 255, 0.05)', borderRadius: "var(--radius-lg)" }}>{icon}</div>
             <div className={styles.cardContent}>
                 <h3 style={{ fontSize: 22, fontWeight: 900, marginBottom: 8 }}>{title}</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.5 }}>{description}</p>

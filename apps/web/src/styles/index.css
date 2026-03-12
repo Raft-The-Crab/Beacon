@@ -1,6 +1,33 @@
+@import "tailwindcss";
+
 /* Import Global Styles */
 @import './globals.css';
 @import './animations.css';
+
+@theme {
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-brand: var(--beacon-brand);
+}
+
+@layer components {
+  .tw-glass {
+    @apply border border-white/10 bg-white/5 backdrop-blur-xl;
+  }
+
+  .tw-surface {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+
+  .tw-muted {
+    color: var(--text-muted);
+  }
+}
 
 /* Root Element Styling */
 html, body, #root {

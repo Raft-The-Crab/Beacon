@@ -61,7 +61,7 @@ const server = http.createServer(app)
 const PORT = process.env.PORT || 8080
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173', 'https://beacon.app', 'http://127.0.0.1:5173'],
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173', 'https://beacon.qzz.io', 'http://127.0.0.1:5173'],
     credentials: true,
 }))
 app.use(express.json({ limit: profile.jsonLimitMB }))
@@ -94,7 +94,7 @@ app.get('/health', async (_req: express.Request, res: express.Response) => {
 
         res.json({
             status: 'healthy',
-            service: 'northflank-api',
+            service: 'beacon-api',
             timestamp: new Date().toISOString(),
             memory: {
                 rss: `${Math.round(mem.rss / 1024 / 1024)} MB`,
@@ -131,7 +131,7 @@ app.get('/api/csrf-token', (req, res) => {
     res.cookie('csrf_token', token, {
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production' && !isLocalhost,
-        sameSite: isLocalhost ? 'lax' : 'strict',
+        sameSite: 'lax',
         maxAge: 3600000
     })
     res.json({ token })
@@ -147,15 +147,19 @@ app.use(globalErrorHandler)
  * Keep-alive self-ping — prevents any platform from sleeping the service.
  */
 function startKeepAlive(port: number | string) {
-    const url = process.env.NORTHFLANK_PUBLIC_URL || process.env.RAILWAY_PUBLIC_URL
-        ? `${process.env.NORTHFLANK_PUBLIC_URL || process.env.RAILWAY_PUBLIC_URL}/health`
+    const publicUrl =
+        process.env.CLAWCLOUD_PUBLIC_URL ||
+        process.env.CLAWCLOUD_URL ||
+        process.env.RAILWAY_PUBLIC_URL
+    const url = publicUrl
+        ? `${publicUrl}/health`
         : `http://localhost:${port}/health`
     const INTERVAL = 5 * 60 * 1000
 
     const ping = async () => {
         try {
             const res = await fetch(url)
-            console.log(`[keep-alive] Northflank ping ${res.ok ? '✅' : '⚠️'} (${res.status})`)
+            console.log(`[keep-alive] Service ping ${res.ok ? '✅' : '⚠️'} (${res.status})`)
         } catch (e: any) {
             console.warn(`[keep-alive] ping failed: ${e.message}`)
         }
@@ -199,7 +203,7 @@ process.on('SIGINT', async () => {
 
 const start = async () => {
     try {
-        console.log('🚀 Starting Beacon API Server (Northflank — Combined)...')
+        console.log('🚀 Starting Beacon API Server (Railway/ClawCloud — Combined)...')
         console.log(`   Memory limit: ${process.env.NODE_OPTIONS || 'default'}`)
         try { await connectMongo() } catch (e) { console.warn('⚠️  MongoDB connection failed', e) }
         if (prisma) {

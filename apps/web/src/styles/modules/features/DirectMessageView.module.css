@@ -3,6 +3,8 @@
   flex-direction: column;
   height: 100%;
   background: var(--bg-primary);
+  position: relative;
+  overflow: visible;
 }
 
 .header {
@@ -11,8 +13,12 @@
   justify-content: space-between;
   padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  background: color-mix(in srgb, var(--bg-secondary) 88%, transparent);
+  backdrop-filter: blur(14px);
   min-height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .userInfo {
@@ -48,10 +54,13 @@
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-lg);
+  padding: var(--space-lg) var(--space-lg) calc(var(--space-lg) + 4px);
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  background:
+    radial-gradient(circle at 15% -20%, color-mix(in srgb, var(--beacon-brand) 10%, transparent), transparent 35%),
+    var(--bg-primary);
 }
 
 .messages::-webkit-scrollbar {
@@ -109,9 +118,13 @@
 }
 
 .inputContainer {
-  padding: var(--space-lg);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
   border-top: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  background: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: visible;
+  z-index: 12;
 }
 
 .editMode {
@@ -133,5 +146,19 @@
 @media (max-width: 768px) {
   .container {
     height: calc(100dvh - 60px);
+  }
+
+  .header {
+    padding: 10px 12px;
+    min-height: 56px;
+  }
+
+  .messages {
+    padding: 10px 10px 14px;
+    gap: 10px;
+  }
+
+  .inputContainer {
+    padding: 8px 10px 10px;
   }
 }

@@ -45,7 +45,7 @@ export function ServerInviteModal({ serverName, isOpen, onClose }: ServerInviteM
 
     if (!isOpen) return null
 
-    const inviteLink = `https://beacon.app/invite/${inviteCode}`
+    const inviteLink = `https://beacon.qzz.io/invite/${inviteCode}`
 
     const handleCopy = () => {
         navigator.clipboard.writeText(inviteLink)
@@ -59,8 +59,8 @@ export function ServerInviteModal({ serverName, isOpen, onClose }: ServerInviteM
     }
 
     return (
-        <div className={styles.overlay} onClick={onClose}>
-            <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <div className={`app-modal-overlay ${styles.overlay}`} onClick={onClose}>
+            <div className={`app-modal-shell ${styles.modal}`} onClick={e => e.stopPropagation()}>
                 <div className={styles.header}>
                     <h2>Invite friends to <strong>{serverName}</strong></h2>
                     <button className={styles.closeBtn} onClick={onClose}>

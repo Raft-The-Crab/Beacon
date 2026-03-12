@@ -3,7 +3,7 @@
         "login": "Iniciar sesión",
         "signup": "Registrarse",
         "logout": "Cerrar sesión",
-        "settings": "Configuración",
+        "settings": "Ajustes",
         "friends": "Amigos",
         "servers": "Servidores",
         "search": "Buscar",
@@ -11,42 +11,42 @@
         "save": "Guardar",
         "welcome": "¡Bienvenido de nuevo, {name}!",
         "new": "NUEVO",
-        "get_started_question": "¿Listo para conectarte?",
-        "join_revolution": "Conecta con amigos",
-        "learn_how": "Saber más",
+        "get_started_question": "¿Listo para conectar?",
+        "join_revolution": "Conéctate con amigos",
+        "learn_how": "Aprende más",
         "navigation": "NAVEGACIÓN",
         "community": "COMUNIDAD",
         "introduction": "Introducción",
         "discovery": "Descubrimiento",
-        "app_directory": "Directorio de apps",
-        "community_hub": "Centro comunitario",
+        "app_directory": "Directorio de aplicaciones",
+        "community_hub": "Centro de la comunidad",
         "documentation": "Documentación",
         "contact_support": "Soporte",
         "open_beacon": "Abrir Beacon",
-        "pinned_messages": "Mensajes anclados",
+        "pinned_messages": "Mensajes fijados",
         "member_list": "Lista de miembros",
         "inbox": "Bandeja de entrada",
         "help": "Ayuda"
     },
     "landing": {
         "title": "Beacon",
-        "subtitle": "Una plataforma de comunicación en tiempo real para comunidades y desarrolladores.",
-        "get_started": "Comenzar",
-        "read_docs": "Leer docs",
+        "subtitle": "Una plataforma de comunicación en tiempo real construida para comunidades y desarrolladores.",
+        "get_started": "Empezar",
+        "read_docs": "Leer documentación",
         "features": {
-            "native": "Motor central",
+            "native": "Motor Central",
             "native_desc": "Voz y mensajería de alto rendimiento con latencia mínima.",
-            "security": "Privacidad primero",
+            "security": "Privacidad Primero",
             "security_desc": "Comunicaciones cifradas y datos controlados por el usuario.",
-            "sdk": "API de desarrolladores",
+            "sdk": "API para Desarrolladores",
             "sdk_desc": "Herramientas potentes para construir bots e integraciones."
         },
         "status": {
             "header": "Estado",
-            "gateway": "Puerta de enlace: En línea",
-            "api": "API: En línea",
-            "voice": "Voz: En línea",
-            "active_nodes": "{count} nodos"
+            "gateway": "Puerta de enlace: Online",
+            "api": "API: Online",
+            "voice": "Voz: Online",
+            "active_nodes": "{count} Nodos"
         },
         "footer": {
             "tos": "Términos",
@@ -57,15 +57,15 @@
         }
     },
     "app_directory": {
-        "title": "Directorio de apps",
-        "subtitle": "Descubre apps e integraciones para tus servidores.",
-        "search_placeholder": "Buscar apps, bots...",
+        "title": "Directorio de Aplicaciones",
+        "subtitle": "Descubre aplicaciones e integraciones para tus servidores.",
+        "search_placeholder": "Buscar aplicaciones, bots, integraciones...",
         "categories": {
-            "all": "Todos",
+            "all": "Todo",
             "gaming": "Juegos",
             "social": "Social",
             "productivity": "Productividad",
-            "automation": "IA y automatización"
+            "automation": "IA y Automatización"
         },
         "items": {
             "add_to_server": "Añadir al servidor",
@@ -84,93 +84,92 @@
         "joined_at": "Miembro desde {date}"
     },
     "docs": {
-        "title": "Docs de Desarrollador Beacon",
-        "subtitle": "Todo lo que necesitas para construir potentes bots e integraciones en Beacon.",
+        "title": "Documentación de Desarrolladores de Beacon",
+        "subtitle": "Todo lo que necesitas para construir potentes bots, integraciones profundas y aplicaciones personalizadas en Beacon.",
         "search_placeholder": "Buscar en la documentación...",
         "on_this_page": "EN ESTA PÁGINA",
         "categories": {
             "getting_started": "Primeros pasos",
-            "api_reference": "Referencia API",
-            "gateway": "Gateway y Eventos",
-            "sdk": "Tutorial SDK",
-            "bot_commands": "Comandos de Bot"
+            "api_reference": "Referencia de la API",
+            "gateway": "Puerta de enlace y eventos",
+            "sdk": "Tutorial del SDK",
+            "bot_commands": "Comandos de bot"
         },
         "build_section": {
             "title": "¿Qué puedes construir?",
             "bots": "Bots y Automatizaciones",
-            "bots_desc": "Auto-moderación, comandos de utilidad, encuestas y mini-juegos.",
+            "bots_desc": "Automoderación, comandos de utilidad, encuestas y minijuegos interactivos.",
             "oauth": "Integraciones OAuth2",
-            "oauth_desc": "Permite que los usuarios inicien sesión con su cuenta Beacon.",
+            "oauth_desc": "Permite que los usuarios inicien sesión en tu sitio de terceros con su cuenta de Beacon de forma segura.",
             "webhooks": "Webhooks Personalizados",
-            "webhooks_desc": "Envía notificaciones de servicios externos directamente a canales."
+            "webhooks_desc": "Notificaciones push de servicios externos directamente en cualquier canal."
         },
-        "popular_topics": "Temas populares",
+        "popular_topics": "Temas Populares",
         "topics": {
             "create_app": "Cómo crear tu primera aplicación",
-            "rest_api": "REST API: Enviar y recibir mensajes",
-            "websocket": "WebSocket: Suscribirse a eventos del Gateway",
-            "sdk_guide": "SDK: Comandos slash y componentes interactivos",
+            "rest_api": "API REST: Enviando y recibiendo mensajes",
+            "websocket": "WebSocket: Suscribirse a eventos de la puerta de enlace",
+            "sdk_guide": "SDK: Comandos de barra y componentes interactivos",
             "bot_features": "Beacon Bot: Comandos integrados y respuestas enriquecidas"
         }
     },
     "marketplace": {
-        "title": "De compras.",
-        "subtitle": "Desbloquea el poder completo de Beacon o adorna tu perfil.",
+        "title": "Compra hasta el cansancio.",
+        "subtitle": "Desbloquea todo el poder de Beacon o adorna tu perfil con deslumbrantes Decoraciones de Avatar.",
         "beacoin_balance": "{count} Beacoins",
-        "success_title": "¡Compra exitosa!",
-        "success_desc": "Tus funciones premium ya están activas.",
+        "success_title": "¡Compra Exitosa!",
+        "success_desc": "Tus funciones premium ya están activas. Dirígete a tu perfil para equipar tus cosméticos.",
         "return_to_shop": "Volver a la tienda",
         "tabs": {
             "plus": "Beacon+",
-            "decorations": "Decoraciones de avatar",
-            "effects": "Efectos de perfil"
+            "decorations": "Decoraciones de Avatar",
+            "effects": "Efectos de Perfil"
         },
         "plus": {
             "monthly": "Mensual",
             "yearly": "Anual",
-            "save_badge": "Ahorra 16%",
+            "save_badge": "Ahorra un 16%",
             "features": {
                 "animated": "Avatar animado y banner de perfil",
                 "emojis": "Emojis personalizados en todas partes",
-                "uploads": "Archivos más grandes (500MB)",
-                "streaming": "Streaming HD y pantalla compartida",
-                "badge": "Insignia exclusiva Beacon+",
-                "bonus": "Bonus mensual de Beacoins (100 monedas)"
+                "uploads": "Subidas de archivos más grandes (500MB)",
+                "streaming": "Streaming en HD y compartir pantalla",
+                "badge": "Insignia exclusiva de Beacon+",
+                "bonus": "Bono mensual de Beacoins (100 monedas)"
             },
             "purchase": "Comprar",
-            "insufficient": "Beacoins insuficientes",
+            "insufficient": "Beacoins Insuficientes",
             "processing": "Procesando..."
         },
         "cosmetics": {
-            "owned": "Poseído",
+            "owned": "En propiedad",
             "equipped": "Equipado",
-            "unequip": "Quitar",
+            "unequip": "Desequipar",
             "equip": "Equipar",
             "unlock": "Desbloquear",
-            "too_poor": "Sin fondos",
+            "too_poor": "Demasiado pobre",
             "gift": "Regalar"
         }
     },
     "discovery": {
         "title": "Encuentra tu comunidad en Beacon",
-        "subtitle": "De los juegos a la música y el aprendizaje, hay un lugar para ti.",
+        "subtitle": "Desde juegos, música, hasta aprendizaje, hay un lugar para ti.",
         "search_placeholder": "Explorar comunidades",
         "featured": "Comunidades destacadas",
-        "no_results": "No se encontraron comunidades para \"{query}\"",
+        "no_results": "No se encontraron comunidades que coincidan con \"{query}\"",
         "clear_search": "Limpiar búsqueda",
         "join_server": "Unirse al servidor",
-        "online": "{count} en línea",
-        "members": "{count} miembros",
-        "join_success": "Bienvenido a",
-        "join_error": "Error al unirse al servidor"
+        "online": "{count} En línea",
+        "members": "{count} Miembros",
+        "verified_server": "Servidor verificado"
     },
     "community": {
         "title": "Descubre tu próximo hogar.",
-        "subtitle": "De los juegos a los grupos de estudio, encuentra la comunidad adecuada.",
+        "subtitle": "Desde juegos hasta grupos de estudio, encuentra la comunidad adecuada para ti.",
         "featured": "Comunidades destacadas",
         "join": "Unirse a la comunidad",
-        "cta": "¿No encuentras lo que buscas?",
-        "cta_desc": "¡Crea tu propio servidor e invita a tus amigos hoy!",
+        "cta": "¿No ves lo que buscas?",
+        "cta_desc": "¡Crea tu propio servidor e invita a tus amigos hoy mismo!",
         "create_server": "Crear un servidor"
     }
 }

@@ -1,0 +1,274 @@
+[
+  {
+    "code": "STARTER500",
+    "kind": "coins",
+    "value": 500,
+    "active": true,
+    "description": "Starter Beacoin bonus",
+    "expiresAt": "2026-06-01T00:00:00.000Z"
+  },
+  {
+    "code": "BEACON-X9FL2MR5QN8VW1ZP4KY7JT3BA0SE6HG9UD2MC5WQ8RV4XN",
+    "kind": "coins",
+    "value": 250,
+    "active": true,
+    "description": "Exploration Bonus",
+    "expiresAt": "2026-04-15T23:59:59.000Z"
+  },
+  {
+    "code": "BEACON-M4VP7KR2NL9XW5ZQ1JY8TG3BA0SE6FH9UD4MC7WN1VP2RS",
+    "kind": "coins",
+    "value": 875,
+    "active": true,
+    "description": "High-Tier Reward",
+    "expiresAt": "2026-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACON-Q1WN8VP4KR7ZL2XW5MY9JT0BA3SE6FG9UD2HC5RV8NL4XM",
+    "kind": "coins",
+    "value": 420,
+    "active": true,
+    "description": "Mid-Level Boost",
+    "expiresAt": "2026-08-20T12:00:00.000Z"
+  },
+  {
+    "code": "BEACON999",
+    "kind": "coins",
+    "value": 150,
+    "active": true,
+    "description": "Small Care Package",
+    "expiresAt": "2026-05-10T00:00:00.000Z"
+  },
+  {
+    "code": "BEACON-Z5XP9KR1NL4VW7ZQ2MY0JT8BA3SE6FH9UG2DC5WN8RV1XM",
+    "kind": "coins",
+    "value": 990,
+    "active": true,
+    "description": "Elite Beacoin Drop",
+    "expiresAt": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "code": "BEACONDROP001",
+    "kind": "coins",
+    "value": 120,
+    "active": true,
+    "description": "Beacon quick drop",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONDROP777",
+    "kind": "coins",
+    "value": 777,
+    "active": true,
+    "description": "Beacon lucky stash",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONMINT250",
+    "kind": "coins",
+    "value": 250,
+    "active": true,
+    "description": "Beacon mint bundle",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONWARP500",
+    "kind": "coins",
+    "value": 500,
+    "active": true,
+    "description": "Beacon warp bonus",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONNOVA333",
+    "kind": "coins",
+    "value": 333,
+    "active": true,
+    "description": "Beacon nova drop",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "PICKLEMOON120",
+    "kind": "coins",
+    "value": 120,
+    "active": true,
+    "description": "Pickle moon reward",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BANANAFUSE420",
+    "kind": "coins",
+    "value": 420,
+    "active": true,
+    "description": "Banana fuse bonus",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "FROSTWHALE210",
+    "kind": "coins",
+    "value": 210,
+    "active": true,
+    "description": "Frost whale gift",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "VOIDPEPPER680",
+    "kind": "coins",
+    "value": 680,
+    "active": true,
+    "description": "Void pepper payout",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "CLOUDRAGE190",
+    "kind": "coins",
+    "value": 190,
+    "active": true,
+    "description": "Cloud rage pocket coins",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "SUSHILASER300",
+    "kind": "coins",
+    "value": 300,
+    "active": true,
+    "description": "Sushi laser bonus",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONBUBBLE145",
+    "kind": "coins",
+    "value": 145,
+    "active": true,
+    "description": "Beacon bubble drop",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONCRATE610",
+    "kind": "coins",
+    "value": 610,
+    "active": true,
+    "description": "Beacon crate reward",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONLIME275",
+    "kind": "coins",
+    "value": 275,
+    "active": true,
+    "description": "Beacon lime coins",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONSPIN360",
+    "kind": "coins",
+    "value": 360,
+    "active": true,
+    "description": "Beacon spin stash",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "NACHODRIFT240",
+    "kind": "coins",
+    "value": 240,
+    "active": true,
+    "description": "Nacho drift stack",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "RANDOMMOJO530",
+    "kind": "coins",
+    "value": 530,
+    "active": true,
+    "description": "Random mojo reward",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "JELLYMINT205",
+    "kind": "coins",
+    "value": 205,
+    "active": true,
+    "description": "Jelly mint bundle",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "EMBERTOAST410",
+    "kind": "coins",
+    "value": 410,
+    "active": true,
+    "description": "Ember toast cache",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "PIXELRUMOR150",
+    "kind": "coins",
+    "value": 150,
+    "active": true,
+    "description": "Pixel rumor coins",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONNOTES390",
+    "kind": "coins",
+    "value": 390,
+    "active": true,
+    "description": "Beacon notes promo",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONWINK260",
+    "kind": "coins",
+    "value": 260,
+    "active": true,
+    "description": "Beacon wink reward",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONMIX880",
+    "kind": "coins",
+    "value": 880,
+    "active": true,
+    "description": "Beacon mix jackpot",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "PANDAPULSE230",
+    "kind": "coins",
+    "value": 230,
+    "active": true,
+    "description": "Panda pulse stash",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "GRAPESTORM340",
+    "kind": "coins",
+    "value": 340,
+    "active": true,
+    "description": "Grape storm payout",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "TINYCOMET175",
+    "kind": "coins",
+    "value": 175,
+    "active": true,
+    "description": "Tiny comet bonus",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "SUNSETRUSH450",
+    "kind": "coins",
+    "value": 450,
+    "active": true,
+    "description": "Sunset rush reward",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONPLUSGIFT1M",
+    "kind": "beacon_plus",
+    "value": 1,
+    "active": true,
+    "description": "Unlocks Beacon+ for one month",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  }
+]

@@ -1,0 +1,71 @@
+{
+    "common": {
+        "login": "Zaloguj się",
+        "signup": "Zarejestruj się",
+        "logout": "Wyloguj się",
+        "settings": "Ustawienia",
+        "friends": "Znajomi",
+        "servers": "Serwery",
+        "search": "Szukaj",
+        "cancel": "Anuluj",
+        "save": "Zapisz",
+        "welcome": "Witaj ponownie, {name}!",
+        "new": "NOWE",
+        "get_started_question": "Gotowy na połączenie?",
+        "join_revolution": "Połącz się ze znajomymi",
+        "learn_how": "Dowiedz się więcej",
+        "navigation": "NAWIGACJA",
+        "community": "SPOŁECZNOŚĆ",
+        "introduction": "Wprowadzenie",
+        "discovery": "Odkrywaj",
+        "app_directory": "Katalog aplikacji",
+        "community_hub": "Centrum społeczności",
+        "documentation": "Dokumentacja",
+        "contact_support": "Wsparcie",
+        "open_beacon": "Otwórz Beacon",
+        "pinned_messages": "Przypięte wiadomości",
+        "member_list": "Lista członków",
+        "inbox": "Skrzynka odbiorcza",
+        "help": "Pomoc"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "Platforma komunikacyjna w czasie rzeczywistym zbudowana dla społeczności i programistów.",
+        "get_started": "Rozpocznij",
+        "read_docs": "Czytaj dokumentację",
+        "features": {
+            "native": "Rdzeń silnika",
+            "native_desc": "Wysoka wydajność głosu i wiadomości z minimalnym opóźnieniem.",
+            "security": "Prywatność przede wszystkim",
+            "security_desc": "Szyfrowana komunikacja i dane kontrolowane przez użytkownika.",
+            "sdk": "API dla programistów",
+            "sdk_desc": "Potężne narzędzia do budowania botów i integracji."
+        },
+        "status": {
+            "header": "Status",
+            "gateway": "Brama: Online",
+            "api": "API: Online",
+            "voice": "Głos: Online",
+            "active_nodes": "{count} Węzłów"
+        },
+        "footer": {
+            "tos": "Regulamin",
+            "privacy": "Prywatność",
+            "about": "O nas",
+            "support": "Wsparcie",
+            "copyright": "© 2026 Beacon. Wszelkie prawa zastrzeżone."
+        }
+    },
+    "discovery": {
+        "title": "Znajdź swoją społeczność na Beacon",
+        "subtitle": "Od gier, przez muzykę, po naukę – znajdzie się miejsce dla każdego.",
+        "search_placeholder": "Eksploruj społeczności",
+        "featured": "Polecane społeczności",
+        "no_results": "Nie znaleziono społeczności pasujących do \"{query}\"",
+        "clear_search": "Wyczyść wyszukiwanie",
+        "join_server": "Dołącz do serwera",
+        "online": "{count} Online",
+        "members": "{count} Członków",
+        "verified_server": "Zweryfikowany serwer"
+    }
+}

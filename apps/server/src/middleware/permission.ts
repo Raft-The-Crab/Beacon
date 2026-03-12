@@ -6,9 +6,17 @@ export function requirePermission(permission: bigint) {
     return async (req: Request, res: Response, next: NextFunction) => {
         const userId = req.user?.id;
         const { guildId, channelId } = req.params;
-        const targetGuildId = guildId || req.body.guildId;
+        let targetGuildId = guildId || req.body.guildId;
 
         if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+        if (!targetGuildId && channelId) {
+            const channel = await prisma.channel.findUnique({
+                where: { id: channelId },
+                select: { guildId: true }
+            });
+            targetGuildId = channel?.guildId || undefined;
+        }
+
         if (!targetGuildId) return res.status(400).json({ error: 'Missing guild contextual ID' });
 
         try {

@@ -380,8 +380,40 @@ export class GuildController {
     static async createInvite(req: Request, res: Response) {
         try {
             const { guildId } = req.params as { guildId: string };
-            // Simple invite: 7 day expiry, infinite uses
-            const code = Math.random().toString(36).substring(2, 10);
+            const userId = req.user?.id;
+
+            // Validate inputs
+            if (!guildId || typeof guildId !== 'string') {
+                return res.status(400).json({ error: 'Invalid or missing guild ID' });
+            }
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            // Check if guild exists and user is a member
+            const guild = await prisma.guild.findUnique({
+                where: { id: guildId },
+                include: { members: { where: { userId } } }
+            });
+
+            if (!guild) {
+                return res.status(404).json({ error: 'Guild not found' });
+            }
+
+            if (guild.members.length === 0) {
+                return res.status(403).json({ error: 'You must be a member of this guild to create invites' });
+            }
+
+            // Check permissions
+            const member = guild.members[0];
+            const hasPermission = member.roles?.includes('MANAGE_SERVER') || member.roles?.includes('ADMIN') || guild.ownerId === userId;
+            
+            if (!hasPermission) {
+                return res.status(403).json({ error: 'You lack permission to create invites' });
+            }
+
+            // Create invite with unique code
+            const code = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
             const expiresAt = new Date();
             expiresAt.setDate(expiresAt.getDate() + 7);
 
@@ -389,12 +421,17 @@ export class GuildController {
                 data: {
                     code,
                     guildId,
-                    expiresAt
+                    expiresAt,
+                    createdBy: userId
                 } as any
             });
 
+            // Clear cache
+            await CacheService.del(`guild:${guildId}:invites`);
+
             res.json(invite);
         } catch (error) {
+            console.error('Create invite error:', error);
             res.status(500).json({ error: 'Failed to create invite' });
         }
     }
@@ -498,6 +535,50 @@ export class GuildController {
             res.json(updated);
         } catch (error) {
             res.status(500).json({ error: 'Failed to set vanity URL' });
+        }
+    }
+
+    static async leaveGuild(req: Request, res: Response) {
+        try {
+            const { id: guildId } = req.params as { id: string };
+            const userId = req.user?.id;
+            if (!userId) {
+                res.status(401).json({ error: 'Unauthorized' });
+                return;
+            }
+
+            const guild = await prisma.guild.findUnique({ where: { id: guildId }, select: { id: true, ownerId: true } });
+            if (!guild) {
+                res.status(404).json({ error: 'Guild not found' });
+                return;
+            }
+
+            if (guild.ownerId === userId) {
+                res.status(400).json({ error: 'Server owners cannot leave without transferring ownership first' });
+                return;
+            }
+
+            const membership = await prisma.guildMember.findUnique({
+                where: { userId_guildId: { userId, guildId } },
+                select: { userId: true }
+            });
+
+            if (!membership) {
+                res.status(404).json({ error: 'You are not a member of this server' });
+                return;
+            }
+
+            await prisma.guildMember.delete({
+                where: { userId_guildId: { userId, guildId } }
+            });
+
+            await CacheService.del(`guild:${guildId}`);
+            SocketService.emitToRoom(guildId, 'GUILD_MEMBER_REMOVE', { guildId, userId });
+
+            res.json({ success: true });
+        } catch (error) {
+            console.error('[LEAVE_GUILD]', error);
+            res.status(500).json({ error: 'Failed to leave server' });
         }
     }
 

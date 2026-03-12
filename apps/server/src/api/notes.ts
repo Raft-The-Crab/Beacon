@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { authenticate } from '../middleware/auth'
 import { redis } from '../db'
+import { aiSystem } from '../../ai'
 
 const router = Router()
 
@@ -25,6 +26,105 @@ interface MusicClip {
   addedBy: string
 }
 
+interface ProfileNote {
+  userId: string
+  text: string
+  emoji: string
+  musicUrl: string | null
+  musicMetadata: {
+    title?: string
+    artist?: string
+    thumbnail?: string
+    platform?: 'spotify' | 'youtube' | 'unknown'
+    start?: number
+    duration?: number
+  } | null
+  updatedAt: string
+}
+
+function buildDefaultProfileNote(userId: string): ProfileNote {
+  return {
+    userId,
+    text: '',
+    emoji: '✨',
+    musicUrl: null,
+    musicMetadata: null,
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+// GET /api/notes/profile/me
+router.get('/profile/me', authenticate, async (req, res) => {
+  try {
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+    const raw = await redis.hget('profile_notes', userId)
+    if (!raw) {
+      return res.json({ note: buildDefaultProfileNote(userId) })
+    }
+
+    try {
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+      return res.json({ note: parsed })
+    } catch (parseError) {
+      console.error('Failed to parse profile note JSON for user:', userId, raw)
+      // Fallback to default instead of crashing the UI
+      return res.json({ note: buildDefaultProfileNote(userId) })
+    }
+  } catch (error) {
+    console.error('Notes Profile GET Error:', error)
+    return res.json({ note: buildDefaultProfileNote(req.user?.id || 'unknown') })
+  }
+})
+
+// GET /api/notes/profile/:userId
+router.get('/profile/:userId', authenticate, async (req, res) => {
+  try {
+    const { userId } = req.params
+    if (!userId) return res.status(400).json({ error: 'userId is required' })
+
+    const raw = await redis.hget('profile_notes', userId)
+    if (!raw) {
+      return res.json({ note: buildDefaultProfileNote(userId) })
+    }
+
+    try {
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+      return res.json({ note: parsed })
+    } catch (parseError) {
+      console.error('Failed to parse profile note for user:', userId)
+      return res.json({ note: buildDefaultProfileNote(userId) })
+    }
+  } catch (error) {
+    return res.json({ note: buildDefaultProfileNote(req.params.userId || 'unknown') })
+  }
+})
+
+// PUT /api/notes/profile/me
+router.put('/profile/me', authenticate, async (req, res) => {
+  try {
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+    const { text, emoji, musicUrl, musicMetadata } = req.body || {}
+
+    const note: ProfileNote = {
+      userId,
+      text: typeof text === 'string' ? text.slice(0, 140) : '',
+      emoji: typeof emoji === 'string' && emoji.trim() ? emoji.slice(0, 16) : '✨',
+      musicUrl: typeof musicUrl === 'string' && musicUrl.trim() ? musicUrl.trim() : null,
+      musicMetadata: musicMetadata && typeof musicMetadata === 'object' ? musicMetadata : null,
+      updatedAt: new Date().toISOString(),
+    }
+
+    await redis.hset('profile_notes', userId, JSON.stringify(note))
+    return res.json({ note })
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to update profile note' })
+  }
+})
+
 // GET /api/notes/:guildId
 router.get('/:guildId', authenticate, async (req, res) => {
   try {
@@ -32,7 +132,7 @@ router.get('/:guildId', authenticate, async (req, res) => {
     const notesKey = `notes:${guildId}`
     const notes = await redis.hgetall(notesKey)
 
-    const parsed = Object.values(notes).map(n => JSON.parse(n))
+    const parsed = Object.values(notes).map(n => JSON.parse(n as string))
     res.json({ notes: parsed })
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch notes' })
@@ -100,11 +200,23 @@ router.post('/:guildId/:noteId/music', authenticate, async (req, res) => {
 
     const note: Note = JSON.parse(noteData)
 
+    let finalUrl = url
+    let finalTitle = title
+
+    // Try to extract audio if it's a URL (yt-dlp handles many platforms)
+    if (url.startsWith('http')) {
+      const extraction = await aiSystem.extractAudio(url)
+      if (extraction.success && extraction.url) {
+        finalUrl = extraction.url
+        finalTitle = extraction.title || finalTitle
+      }
+    }
+
     const clip: MusicClip = {
       id: `clip_${Date.now()}`,
-      title,
+      title: finalTitle,
       artist,
-      url,
+      url: finalUrl,
       duration: 30,
       addedBy: userId
     }

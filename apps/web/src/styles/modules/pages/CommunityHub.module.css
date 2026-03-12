@@ -4,7 +4,7 @@
 
 .hero {
     position: relative;
-    height: 350px;
+    height: clamp(250px, 40vh, 350px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -28,14 +28,14 @@
 }
 
 .heroContent h1 {
-    font-size: 3.5rem;
+    font-size: clamp(2rem, 6vw, 3.5rem);
     font-weight: 900;
     margin-bottom: 1rem;
     letter-spacing: -0.02em;
 }
 
 .heroContent p {
-    font-size: 1.25rem;
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
     color: rgba(255, 255, 255, 0.8);
 }
 
@@ -52,7 +52,7 @@
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
     gap: 2rem;
 }
 

@@ -1,7 +1,15 @@
+function normalizeApiBaseUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim().replace(/\/+$/, '')
+  if (!trimmed) return '/api'
+  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`
+}
+
 // Backend API Configuration
 export const API_CONFIG = {
   // Production API URL (Railway deployment)
-  BASE_URL: import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || 'https://api.beacon.qzz.io'),
+  BASE_URL: import.meta.env.DEV
+    ? '/api'
+    : normalizeApiBaseUrl(import.meta.env.VITE_API_URL || 'https://api.beacon.qzz.io'),
 
   // WebSocket Gateway URL
   WS_URL: import.meta.env.VITE_WS_URL || 'wss://gateway.beacon.qzz.io',

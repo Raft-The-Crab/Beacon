@@ -9,14 +9,42 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
   width: clamp(320px, 95vw, 480px);
+  max-height: 90vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .banner {
   height: 160px;
+  aspect-ratio: 3 / 1;
   background: var(--accent-gradient);
   width: 100%;
   position: relative;
   overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .banner {
+    height: 120px;
+  }
 }
 
 .banner::after {
@@ -96,6 +124,45 @@
   font-weight: 500;
 }
 
+.noteBubble {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  background: rgba(88, 101, 242, 0.18);
+  border: 1px solid rgba(88, 101, 242, 0.35);
+}
+
+.noteEmoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.noteContent {
+  min-width: 0;
+}
+
+.noteText {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.noteMusic {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .actions {
   display: flex;
   flex-direction: column;
@@ -105,6 +172,13 @@
 .buttonGroup {
   display: flex;
   gap: 12px;
+}
+
+.botHint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .body {
@@ -188,6 +262,44 @@
 
   .avatarWrapper {
     margin-bottom: 16px;
+  }
+
+  .buttonGroup {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: 100%;
+    max-height: 100dvh;
+    border-radius: var(--radius-lg);
+  }
+
+  .banner {
+    height: 100px;
+  }
+
+  .profileCard {
+    padding: 0 20px 20px;
+  }
+
+  .profileHeader {
+    margin-top: -40px;
+  }
+
+  .avatarWrapper {
+    width: 80px;
+    height: 80px;
+  }
+
+  .username {
+    font-size: 24px;
+    gap: 8px;
+  }
+
+  .body {
+    padding: 20px;
   }
 }
 

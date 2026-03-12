@@ -17,6 +17,7 @@ export function GiftingModal({ item, onClose }: GiftingModalProps) {
     const [message, setMessage] = useState('')
     const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
     const [errorMessage, setErrorMessage] = useState('')
+    const [sendAnimation, setSendAnimation] = useState<'idle' | 'launch' | 'success'>('idle')
 
     const { sendGift } = useShopStore()
 
@@ -34,19 +35,26 @@ export function GiftingModal({ item, onClose }: GiftingModalProps) {
     const handleSend = async () => {
         if (!selectedFriend) return
         setStatus('sending')
+        setSendAnimation('launch')
         try {
-            await sendGift(selectedFriend.id, item.id, item.type, message)
+            await sendGift(selectedFriend.id, item.id ?? null, item.type, message, item.tier)
+            setSendAnimation('success')
             setStatus('success')
             setTimeout(onClose, 2000)
         } catch (err: any) {
             setStatus('error')
+            setSendAnimation('idle')
             setErrorMessage(err.message)
         }
     }
 
+    const priceLabel = item?.type === 'SUBSCRIPTION'
+        ? `${item?.price?.toLocaleString?.() ?? item?.price ?? 1250} Beacoins`
+        : `${item?.price?.toLocaleString?.() ?? item?.price ?? 0} Beacoins`
+
     return (
-        <div className={styles.overlay}>
-            <div className={styles.modal}>
+        <div className={`app-modal-overlay ${styles.overlay}`}>
+            <div className={`app-modal-shell ${styles.modal}`}>
                 <div className={styles.header}>
                     <div className={styles.title}>
                         <Gift size={20} className={styles.giftIcon} />
@@ -57,7 +65,7 @@ export function GiftingModal({ item, onClose }: GiftingModalProps) {
 
                 <div className={styles.content}>
                     {status === 'success' ? (
-                        <div className={styles.success}>
+                        <div className={`${styles.success} ${styles.successAnimated}`}>
                             <Send size={48} />
                             <h3>Gift Sent!</h3>
                             <p>Your gift has been sent to {selectedFriend.username}.</p>
@@ -77,16 +85,21 @@ export function GiftingModal({ item, onClose }: GiftingModalProps) {
                                 </form>
 
                                 <div className={styles.results}>
-                                    {results.map(f => (
-                                        <div
-                                            key={f.id}
-                                            className={`${styles.resultItem} ${selectedFriend?.id === f.id ? styles.selected : ''}`}
-                                            onClick={() => setSelectedFriend(f)}
-                                        >
-                                            <img src={f.avatar || '/default-avatar.png'} alt="" />
-                                            <span>{f.username}#{f.discriminator}</span>
-                                        </div>
-                                    ))}
+                                    {results.length === 0 ? (
+                                        <div className={styles.noResults}>No friends found</div>
+                                    ) : (
+                                        results.map(f => (
+                                            <button
+                                                key={f.id}
+                                                type="button"
+                                                className={`${styles.resultItem} ${selectedFriend?.id === f.id ? styles.selected : ''}`}
+                                                onClick={() => setSelectedFriend(f)}
+                                            >
+                                                <img src={f.avatar || '/default-avatar.png'} alt={f.username} />
+                                                <span>{f.username}#{f.discriminator}</span>
+                                            </button>
+                                        ))
+                                    )}
                                 </div>
                             </div>
 
@@ -102,14 +115,14 @@ export function GiftingModal({ item, onClose }: GiftingModalProps) {
 
                             {status === 'error' && <div className={styles.error}>{errorMessage}</div>}
 
-                            <div className={styles.footer}>
+                            <div className={`${styles.footer} ${sendAnimation === 'launch' ? styles.footerLaunching : ''}`}>
                                 <Button variant="secondary" onClick={onClose}>Cancel</Button>
                                 <Button
                                     variant="primary"
                                     disabled={!selectedFriend || status === 'sending'}
                                     onClick={handleSend}
                                 >
-                                    {status === 'sending' ? 'Sending...' : `Send Gift (${item.price || 'Beacon+'})`}
+                                    {status === 'sending' ? 'Sending...' : `Send Gift (${priceLabel})`}
                                 </Button>
                             </div>
                         </>

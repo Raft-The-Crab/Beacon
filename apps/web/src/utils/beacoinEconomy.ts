@@ -2,7 +2,7 @@
 
 export const BEACOIN_PRICES = {
   // Beacon+ Subscription (Includes ALL premium features)
-  BEACON_PLUS: 750, // 1.5 months - Includes everything below
+  BEACON_PLUS: 1250, // Monthly Beacon+ base price
   
   // Server Boosting
   SERVER_BOOST: 50, // per boost
@@ -43,7 +43,7 @@ export const BEACOIN_EARNING = {
 }
 
 // Max earnings per month: ~600 Beacoins
-// Beacon+ costs 750 coins = 1.25 months of earning
+// Beacon+ costs 1250 coins (monthly base)
 
 export interface BeaconPlusFeatures {
   // Screen Sharing & Streaming

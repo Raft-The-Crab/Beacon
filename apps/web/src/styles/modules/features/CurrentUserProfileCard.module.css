@@ -1,0 +1,180 @@
+.triggerWrapper {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    cursor: pointer;
+}
+
+.popover {
+    position: fixed;
+    width: 330px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    z-index: 1000;
+    overflow: hidden;
+    transform-origin: bottom left;
+}
+
+.banner {
+    height: 60px;
+    width: 100%;
+}
+
+.avatarSection {
+    position: absolute;
+    top: 24px;
+    left: 16px;
+    border: 5px solid var(--bg-tertiary);
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+}
+
+.body {
+    padding: 48px 16px 16px 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.nameRow {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+}
+
+.username {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.discriminator {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 8px 0;
+}
+
+.noteBubble {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 8px;
+}
+
+.noteEmoji {
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.noteTextWrap {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.noteText,
+.noteMusic {
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.noteMusic {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.actionRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    text-align: left;
+}
+
+.actionRow:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.actionRow.danger {
+    color: #ed4245;
+}
+
+.actionRow.danger:hover {
+    background: rgba(237, 66, 69, 0.1);
+}
+
+.statusSection {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.statusBtn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.statusBtn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.statusDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.online {
+    background: #23a559;
+}
+
+.idle {
+    background: #f0b232;
+}
+
+.dnd {
+    background: #f23f43;
+}
+
+.invisible {
+    background: #80848e;
+}

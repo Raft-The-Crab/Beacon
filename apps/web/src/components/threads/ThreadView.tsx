@@ -24,7 +24,7 @@ export const ThreadView: React.FC<{ channelId: string }> = ({ channelId: _channe
   const [showArchived, setShowArchived] = useState(false);
 
   const createThread = async (name: string, messageId: string) => {
-    // TODO: API call
+    // API call integration pending
     const thread: Thread = {
       id: Date.now().toString(),
       name,

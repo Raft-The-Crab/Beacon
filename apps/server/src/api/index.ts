@@ -19,6 +19,7 @@ import interactionsRouter from './interactions'
 import questRouter from './quests'
 import giftingRouter from './gifting'
 import activityRouter from '../routes/activity.routes'
+import notesRouter from './notes'
 import uploadRouter from '../routes/upload.routes'
 import { authenticate } from '../middleware/auth'
 import { isSovereign } from '../middleware/sovereign'
@@ -34,6 +35,7 @@ router.use('/dms', dmRouter)
 router.use('/folders', folderRouter)
 router.use('/webhooks', webhookRouter)
 router.use('/audit-logs', auditLogRouter)
+router.use('/', beacoinRouter) // legacy path support: /users/@me/beacoin/*
 router.use('/beacoin', beacoinRouter)
 router.use('/notifications', notificationsRouter)
 router.use('/moderation', moderationRouter)
@@ -46,6 +48,7 @@ router.use('/interactions', interactionsRouter)
 router.use('/quests', questRouter)
 router.use('/gifting', giftingRouter)
 router.use('/activities', activityRouter)
+router.use('/notes', notesRouter)
 router.use('/upload', uploadRouter)
 
 export default router

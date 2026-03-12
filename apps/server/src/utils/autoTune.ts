@@ -8,7 +8,7 @@
  * - Prolog bypass threshold
  * - GC trigger threshold
  * 
- * Works on any platform — Northflank, Railway, or local dev.
+ * Works on Railway, ClawCloud, or local dev.
  */
 
 interface TuningProfile {
@@ -79,7 +79,7 @@ function generateProfile(availableMB: number, serviceName: string): TuningProfil
             keepAliveIntervalMs: 5 * 60 * 1000,
         }
     } else if (usableMB >= 180) {
-        // Tight — Northflank sandbox (~256 MB) or similar
+        // Tight — small container sandbox (~256 MB) or similar
         return {
             name: `tight (${availableMB} MB detected)`,
             heapLimitMB: Math.min(usableMB - 40, 192),

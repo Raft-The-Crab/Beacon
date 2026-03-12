@@ -5,15 +5,15 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: var(--space-md) var(--space-xs);
-  background: transparent;
+  padding: 16px 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%);
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .headerIcon {
@@ -23,7 +23,11 @@
 }
 
 .title {
-  font-size: 13px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -42,8 +46,9 @@
 
 .scrollArea {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 8px 0;
+  padding-right: 4px;
 }
 
 .scrollArea::-webkit-scrollbar {
@@ -60,11 +65,17 @@
 }
 
 .group {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.groupList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .groupLabel {
-  padding: 24px 8px 12px;
+  padding: 0 8px 10px;
   font-size: 11px;
   font-weight: 800;
   color: var(--text-muted);
@@ -81,21 +92,19 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 10px 14px;
-  border-radius: var(--radius-xl);
+  padding: 11px 12px;
+  border-radius: 18px;
   cursor: pointer;
-  transition: all 0.25s var(--ease-out);
+  transition: all 0.2s ease;
   border: 1px solid transparent;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.02);
   text-align: left;
 }
 
 .memberRow:hover {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  border-color: var(--glass-border);
-  transform: translateX(6px);
-  box-shadow: var(--shadow-md);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateX(2px);
 }
 
 .avatarWrap {
@@ -144,20 +153,16 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .memberName {
   font-size: 13.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-weight: 700;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 0.15s;
-}
-
-.memberRow:hover .memberName {
-  color: var(--text-primary);
 }
 
 .customStatus {
@@ -189,9 +194,13 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 40px 20px;
+  padding: 48px 20px;
   color: var(--text-muted);
   font-size: 13px;
+  text-align: center;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .emptyIcon {
@@ -201,11 +210,12 @@
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Tablet ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 @media (max-width: 1024px) {
   .memberList {
-    width: 200px;
+    width: 220px;
+    padding: 14px 10px;
   }
 
   .memberRow {
-    padding: 5px 10px;
+    padding: 10px;
   }
 
   .avatar {

@@ -28,6 +28,7 @@ router.delete('/:guildId/invites/:inviteCode', authenticate, requirePermission(P
 // Boosting & Vanity
 router.post('/:id/boost', authenticate, GuildController.boostGuild)
 router.post('/:id/vanity', authenticate, GuildController.updateVanityUrl)
+router.delete('/:id/leave', authenticate, GuildController.leaveGuild)
 
 // Sounds
 router.post('/:guildId/sounds', authenticate, GuildController.createSound)

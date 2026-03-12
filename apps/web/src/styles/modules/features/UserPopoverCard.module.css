@@ -3,14 +3,13 @@
     position: fixed;
     z-index: 1000;
     width: 300px;
-    background: var(--bg-secondary);
+    background: color-mix(in srgb, var(--bg-secondary) 86%, rgba(5, 10, 20, 0.8));
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-2xl);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     overflow: hidden;
-    position: relative;
 }
 
 /* Animation handled by Framer Motion in TSX */

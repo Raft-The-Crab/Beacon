@@ -24,10 +24,20 @@ const SLOWMODE_PRESETS = [
   { label: '6h', value: 21600 },
 ];
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+function normalizeApiBaseUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim().replace(/\/+$/, '');
+  if (!trimmed) return '/api';
+  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
+}
+
+const API_BASE = normalizeApiBaseUrl(
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  '/api'
+);
 
 function getToken() {
-  return localStorage.getItem('token') || '';
+  return localStorage.getItem('beacon_token') || localStorage.getItem('accessToken') || '';
 }
 
 function formatDuration(seconds: number): string {

@@ -1,4 +1,5 @@
-﻿import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { X, Upload, Trash2, Plus, Shield, Users, Globe, Ban, Lock, BarChart2, Webhook, FileText } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUIStore } from '../stores/useUIStore'
@@ -35,9 +36,11 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; group: string }[]
 ]
 
 export function ServerSettings() {
+  const navigate = useNavigate()
+  const { serverId: routeServerId } = useParams<{ serverId: string }>()
   const { showServerSettings, setShowServerSettings } = useUIStore()
-  const { currentServer, updateGuild, deleteGuild } = useServerStore()
-  const user = useAuthStore((s) => s.user)
+  const { currentServer, updateGuild, deleteGuild, setCurrentServer, fetchGuild } = useServerStore()
+  const user = useAuthStore((s: any) => s.user)
   const toast = useToast()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [name, setName] = useState(currentServer?.name || '')
@@ -50,6 +53,27 @@ export function ServerSettings() {
   const [loadingInvites, setLoadingInvites] = useState(false)
   const [bans, setBans] = useState<any[]>([])
   const [loadingBans, setLoadingBans] = useState(false)
+
+  const isRouteMode = !!routeServerId
+  const isOpen = isRouteMode || showServerSettings
+
+  useEffect(() => {
+    if (!routeServerId) return
+    if (!currentServer || currentServer.id !== routeServerId) {
+      setCurrentServer(routeServerId)
+      fetchGuild(routeServerId).catch(() => {
+        // Ignore fetch errors here; the UI below will show empty state feedback.
+      })
+    }
+  }, [routeServerId, currentServer, setCurrentServer, fetchGuild])
+
+  const closeSettings = () => {
+    if (isRouteMode) {
+      navigate(`/channels/${routeServerId}`)
+      return
+    }
+    setShowServerSettings(false)
+  }
 
   // Fetch logic based on active tab
   useEffect(() => {
@@ -72,7 +96,7 @@ export function ServerSettings() {
     if (!currentServer) return
     const res = await apiClient.deleteInvite(currentServer.id, code)
     if (res.success) {
-      setInvites(prev => prev.filter(inv => inv.code !== code))
+      setInvites(prev => prev.filter((inv: any) => inv.code !== code))
       toast.success('Invite revoked')
     } else {
       toast.error('Failed to revoke invite')
@@ -83,14 +107,43 @@ export function ServerSettings() {
     if (!currentServer) return
     const res = await apiClient.unbanMember(currentServer.id, userId)
     if (res.success) {
-      setBans(prev => prev.filter(b => b.userId !== userId))
+      setBans(prev => prev.filter((b: any) => b.userId !== userId))
       toast.success('User unbanned')
     } else {
       toast.error('Failed to unban user')
     }
   }
 
-  if (!showServerSettings || !currentServer) return null
+  if (!isOpen) return null
+
+  if (!currentServer) {
+    return (
+      <div className={styles.overlay} onClick={closeSettings}>
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className={styles.container}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className={styles.content}>
+            <div className={styles.contentHeader}>
+              <div className={styles.headerTitle}>
+                <h2>Server Settings</h2>
+              </div>
+              <button className={`${styles.closeButton} glass-hover`} onClick={closeSettings}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.emptyState}>
+              <h3>Loading server...</h3>
+              <p>If this server does not exist, go back and select another server.</p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
 
   const handleSave = async () => {
     if (currentServer && name !== currentServer.name) {
@@ -108,7 +161,7 @@ export function ServerSettings() {
     if (confirm(`Are you sure you want to delete "${currentServer.name}"? This cannot be undone.`)) {
       try {
         await deleteGuild(currentServer.id)
-        setShowServerSettings(false)
+        closeSettings()
         toast.success('Server deleted.')
       } catch {
         toast.error('Failed to delete server.')
@@ -137,8 +190,14 @@ export function ServerSettings() {
   const groups = ['Settings', 'Community', 'Integrations']
 
   return (
-    <div className={styles.overlay} onClick={() => setShowServerSettings(false)}>
-      <div className={styles.container} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay} onClick={closeSettings}>
+      <motion.div 
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className={styles.container} 
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Sidebar */}
         <div className={styles.sidebar}>
           <div className={styles.sidebarHeader}>
@@ -178,12 +237,15 @@ export function ServerSettings() {
         {/* Content */}
         <div className={styles.content}>
           <div className={styles.contentHeader}>
-            <h2 className="premium-text-glow">
-              {TABS.find((t) => t.id === activeTab)?.icon}
-              {TABS.find((t) => t.id === activeTab)?.label}
-            </h2>
-            <button className={`${styles.closeButton} glass-hover`} onClick={() => setShowServerSettings(false)}>
-              <X size={22} />
+            <div className={styles.headerTitle}>
+              <h2 className="premium-text-glow">
+                {TABS.find((t) => t.id === activeTab)?.label}
+              </h2>
+              <div className={styles.headerDot} />
+              <span className={styles.serverNameBadge}>{currentServer.name}</span>
+            </div>
+            <button className={`${styles.closeButton} glass-hover`} onClick={closeSettings}>
+              <X size={20} />
             </button>
           </div>
 
@@ -244,21 +306,21 @@ export function ServerSettings() {
                       </div>
 
                       <div className={styles.infoRow}>
-                        <div className={`${styles.infoItem} glass-panel`}>
+                        <div className={styles.infoItem}>
                           <span className={styles.infoLabel}>Server ID</span>
                           <code className={styles.infoValue}>{currentServer.id}</code>
                         </div>
-                        <div className={`${styles.infoItem} glass-panel`}>
+                        <div className={styles.infoItem}>
                           <span className={styles.infoLabel}>Owner</span>
                           <span className={styles.infoValue}>{currentServer.ownerId}</span>
                         </div>
-                        <div className={`${styles.infoItem} glass-panel`}>
+                        <div className={styles.infoItem}>
                           <span className={styles.infoLabel}>Created</span>
                           <span className={styles.infoValue}>{new Date(currentServer.createdAt).toLocaleDateString()}</span>
                         </div>
-                        <div className={`${styles.infoItem} glass-panel`}>
+                        <div className={styles.infoItem}>
                           <span className={styles.infoLabel}>Members</span>
-                          <span className={styles.infoValue}>{currentServer.memberCount ?? currentServer.members?.length ?? '—'}</span>
+                          <span className={styles.infoValue}>{currentServer.memberCount ?? currentServer.members?.length ?? '—'} Unit</span>
                         </div>
                       </div>
                     </div>
@@ -357,12 +419,12 @@ export function ServerSettings() {
                     <div className={`${styles.inviteCreate} glass-panel`}>
                       <div className={styles.inviteInfo}>
                         <span>Permanent invite link</span>
-                        <code className={styles.inviteCode}>beacon.app/invite/{currentServer.id.slice(0, 8)}</code>
+                        <code className={styles.inviteCode}>beacon.qzz.io/invite/{currentServer.id.slice(0, 8)}</code>
                       </div>
                       <button
                         className={styles.copyBtn}
                         onClick={() => {
-                          navigator.clipboard.writeText(`https://beacon.app/invite/${currentServer.id.slice(0, 8)}`)
+                          navigator.clipboard.writeText(`https://beacon.qzz.io/invite/${currentServer.id.slice(0, 8)}`)
                           toast.success('Invite link copied!')
                         }}
                       >
@@ -381,7 +443,7 @@ export function ServerSettings() {
                       </div>
                     ) : (
                       <div className={styles.memberList}>
-                        {invites.map(inv => (
+                        {invites.map((inv: any) => (
                           <div key={inv.code} className={`${styles.memberRow} glass-hover`}>
                             <div className={styles.memberInfo}>
                               <span className={styles.memberName}>{inv.code}</span>
@@ -418,7 +480,7 @@ export function ServerSettings() {
                       </div>
                     ) : (
                       <div className={styles.memberList}>
-                        {bans.map(ban => (
+                        {bans.map((ban: any) => (
                           <div key={ban.userId} className={`${styles.memberRow} glass-hover`}>
                             <Avatar
                               src={ban.user?.avatar && !ban.user.avatar.includes('dicebear') ? ban.user.avatar : undefined}
@@ -518,7 +580,7 @@ export function ServerSettings() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

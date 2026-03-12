@@ -19,7 +19,11 @@ interface WebRTCState {
 const ICE_SERVERS = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:global.stun.twilio.com:3478' }
+        { urls: 'stun:global.stun.twilio.com:3478' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        // Add TURN servers for production (requires credentials)
+        // { urls: 'turn:your-turn-server.com:3478', username: 'user', credential: 'pass' }
     ]
 }
 
@@ -41,14 +45,29 @@ export function useWebRTC(channelId: string | null): WebRTCState {
     const initializeMedia = async (video: boolean = false) => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
-                audio: { echoCancellation: true, noiseSuppression: true },
-                video
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                },
+                video: video ? {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    frameRate: { ideal: 30 }
+                } : false
             })
             setLocalStream(stream)
             streamRef.current = stream
+            console.log('✅ Media stream initialized:', { audio: true, video })
             return stream
-        } catch (err) {
-            console.error('Failed to get local stream', err)
+        } catch (err: any) {
+            console.error('❌ Failed to get local stream:', err.message)
+            // Show user-friendly error
+            if (err.name === 'NotAllowedError') {
+                console.warn('Microphone/camera permission denied')
+            } else if (err.name === 'NotFoundError') {
+                console.warn('No microphone/camera found')
+            }
             return null
         }
     }
@@ -117,13 +136,23 @@ export function useWebRTC(channelId: string | null): WebRTCState {
     }
 
     const joinChannel = async (id: string, guildId?: string) => {
-        const stream = await initializeMedia(false)
-        if (!stream) return
+        try {
+            const stream = await initializeMedia(false)
+            if (!stream) {
+                console.error('Cannot join channel: no media stream')
+                return
+            }
 
-        // Announce presence via WS
-        const socket = wsClient.getSocket() as any
-        if (socket) {
-            socket.emit('VOICE_JOIN', { channelId: id, guildId })
+            // Announce presence via WS
+            const socket = wsClient.getSocket() as any
+            if (socket && wsClient.isConnected()) {
+                socket.emit('VOICE_JOIN', { channelId: id, guildId })
+                console.log('🔊 Joined voice channel:', id)
+            } else {
+                console.error('Cannot join: WebSocket not connected')
+            }
+        } catch (err) {
+            console.error('Failed to join voice channel:', err)
         }
     }
 

@@ -7,7 +7,7 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 120px 24px;
+    padding: clamp(60px, 15vh, 120px) clamp(16px, 3vw, 24px);
     overflow-y: auto;
 }
 
@@ -17,14 +17,17 @@
     background: rgba(14, 15, 17, 0.75);
     border-radius: var(--radius-2xl);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
     box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
-    padding: 80px;
+    padding: clamp(40px, 8vw, 80px);
     display: flex;
     flex-direction: column;
-    gap: 64px;
+    gap: clamp(40px, 8vw, 64px);
     animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-low-bandwidth="false"] .content {
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
 }
 
 .header {
@@ -33,7 +36,7 @@
 }
 
 .title {
-    font-size: 4rem;
+    font-size: clamp(2.5rem, 7vw, 4rem);
     font-weight: 900;
     letter-spacing: -0.04em;
     background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.6) 100%);
@@ -59,7 +62,7 @@
 }
 
 .body h2 {
-    font-size: 2.25rem;
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
     font-weight: 800;
     color: #fff;
     margin-top: 80px;

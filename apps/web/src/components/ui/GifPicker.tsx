@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Search, Loader } from 'lucide-react'
 import { giphyService, type GiphyGif } from '../../services/giphy'
 import { Input } from './Input'
@@ -7,15 +8,17 @@ import styles from '../../styles/modules/ui/GifPicker.module.css'
 interface GifPickerProps {
   onSelect: (gifUrl: string) => void
   onClose: () => void
+  anchorElement?: HTMLElement | null
 }
 
-export function GifPicker({ onSelect, onClose }: GifPickerProps) {
+export function GifPicker({ onSelect, onClose, anchorElement }: GifPickerProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [gifs, setGifs] = useState<GiphyGif[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedGif, setSelectedGif] = useState<GiphyGif | null>(null)
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pickerRef = useRef<HTMLDivElement>(null)
+  const [portalPosition, setPortalPosition] = useState<{ top: number; left: number } | null>(null)
 
   useEffect(() => {
     loadTrending()
@@ -43,6 +46,41 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
       loadTrending()
     }
   }, [searchQuery])
+
+  useEffect(() => {
+    if (!anchorElement) {
+      setPortalPosition(null)
+      return
+    }
+
+    const updatePosition = () => {
+      if (!pickerRef.current) return
+      const anchorRect = anchorElement.getBoundingClientRect()
+      const pickerRect = pickerRef.current.getBoundingClientRect()
+      const viewportPadding = 8
+      const gap = 8
+
+      let left = anchorRect.right - pickerRect.width
+      left = Math.max(viewportPadding, Math.min(left, window.innerWidth - pickerRect.width - viewportPadding))
+
+      let top = anchorRect.top - pickerRect.height - gap
+      if (top < viewportPadding) {
+        top = Math.min(anchorRect.bottom + gap, window.innerHeight - pickerRect.height - viewportPadding)
+      }
+
+      setPortalPosition({ top, left })
+    }
+
+    const raf = requestAnimationFrame(updatePosition)
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [anchorElement])
 
   const loadTrending = async () => {
     setLoading(true)
@@ -73,8 +111,23 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
     onSelect(gif.images.original.url)
   }
 
-  return (
-    <div className={styles.container} ref={pickerRef}>
+  const pickerContent = (
+    <div
+      className={styles.container}
+      ref={pickerRef}
+      style={
+        portalPosition
+          ? {
+              position: 'fixed',
+              top: portalPosition.top,
+              left: portalPosition.left,
+              right: 'auto',
+              bottom: 'auto',
+              marginBottom: 0,
+            }
+          : undefined
+      }
+    >
       <div className={styles.header}>
         <div className={styles.searchBox}>
           <Search size={18} className={styles.searchIcon} />
@@ -130,4 +183,10 @@ export function GifPicker({ onSelect, onClose }: GifPickerProps) {
       </div>
     </div>
   )
+
+  if (anchorElement && typeof document !== 'undefined') {
+    return createPortal(pickerContent, document.body)
+  }
+
+  return pickerContent
 }

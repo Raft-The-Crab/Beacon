@@ -68,6 +68,8 @@ export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
 let toastId = 0
 let listeners: Set<(toasts: ToastMessage[]) => void> = new Set()
 let toasts: ToastMessage[] = []
+const recentToasts = new Map<string, number>()
+const DEDUP_WINDOW_MS = 2000
 
 export const useToast = () => {
   const [toastList, setToastList] = useState<ToastMessage[]>([])
@@ -78,6 +80,19 @@ export const useToast = () => {
   }, [])
 
   const show = (message: string, type: ToastType = 'info', duration?: number) => {
+    // Deduplicate: skip if same message+type was shown within 2s
+    const dedupKey = `${type}:${message}`
+    const now = Date.now()
+    const lastShown = recentToasts.get(dedupKey)
+    if (lastShown && now - lastShown < DEDUP_WINDOW_MS) return
+    recentToasts.set(dedupKey, now)
+    // Cleanup old entries periodically
+    if (recentToasts.size > 50) {
+      for (const [key, ts] of recentToasts) {
+        if (now - ts > DEDUP_WINDOW_MS) recentToasts.delete(key)
+      }
+    }
+
     const id = String(toastId++)
     const newToast: ToastMessage = { id, message, type, duration }
     toasts = [...toasts, newToast]

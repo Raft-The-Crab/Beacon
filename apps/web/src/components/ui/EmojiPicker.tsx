@@ -1,4 +1,5 @@
 ﻿import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Search } from 'lucide-react'
 import { Input } from './Input'
 import { useReactionsStore } from '../../stores/useReactionsStore'
@@ -7,6 +8,7 @@ import styles from '../../styles/modules/ui/EmojiPicker.module.css'
 interface EmojiPickerProps {
   onSelect: (emoji: string, isSuper?: boolean) => void
   onClose: () => void
+  anchorElement?: HTMLElement | null
 }
 
 const EMOJI_CATEGORIES = {
@@ -21,11 +23,12 @@ const EMOJI_CATEGORIES = {
   'Flags': ['🏳️', '🏴', '🏴‍☠️', '🏁', '🚩', '🏳️‍🌈', '🏳️‍⚧️', '🇺🇳', '🇦🇫', '🇦🇽', '🇦🇱', '🇩🇿', '🇦🇸', '🇦🇩', '🇦🇴', '🇦🇮', '🇦🇶', '🇦🇬', '🇦🇷', '🇦🇲', '🇦🇼', '🇦🇺', '🇦🇹', '🇦🇿', '🇧🇸', '🇧🇭', '🇧🇩', '🇧🇧', '🇧🇾', '🇧🇪', '🇧🇿', '🇧🇯', '🇧🇲', '🇧🇹', '🇧🇴', '🇧🇦', '🇧🇼', '🇧🇷', '🇮🇴', '🇻🇬', '🇧🇳', '🇧🇬', '🇧🇫', '🇧🇮', '🇰🇭', '🇨🇲', '🇨🇦', '🇮🇨', '🇨🇻', '🇧🇶', '🇰🇾', '🇨🇫', '🇹🇩', '🇨🇱', '🇨🇳', '🇨🇽', '🇨🇨', '🇨🇴', '🇰🇲', '🇨🇬', '🇨🇩', '🇨🇰', '🇨🇷', '🇨🇮', '🇭🇷', '🇨🇺', '🇨🇼', '🇨🇾', '🇨🇿', '🇩🇰', '🇩🇯', '🇩🇲', '🇩🇴', '🇪🇨', '🇪🇬', '🇸🇻', '🇬🇶', '🇪🇷', '🇪🇪', '🇸🇿', '🇪🇹', '🇪🇺', '🇫🇰', '🇫🇴', '🇫🇯', '🇫🇮', '🇫🇷', '🇬🇫', '🇵🇫', '🇹🇫', '🇬🇦', '🇬🇲', '🇬🇪', '🇩🇪', '🇬🇭', '🇬🇮', '🇬🇷', '🇬🇱', '🇬🇩', '🇬🇵', '🇬🇺', '🇬🇹', '🇬🇬', '🇬🇳', '🇬🇼', '🇬🇾', '🇭🇹', '🇭🇳', '🇭🇰', '🇭🇺', '🇮🇸', '🇮🇳', '🇮🇩', '🇮🇷', '🇮🇶', '🇮🇪', '🇮🇲', '🇮🇱', '🇮🇹', '🇯🇲', '🇯🇵', '🎌', '🇯🇪', '🇯🇴', '🇰🇿', '🇰🇪', '🇰🇮', '🇽🇰', '🇰🇼', '🇰🇬', '🇱🇦', '🇱🇻', '🇱🇧', '🇱🇸', '🇱🇷', '🇱🇾', '🇱🇮', '🇱🇹', '🇱🇺', '🇲🇴', '🇲🇬', '🇲🇼', '🇲🇾', '🇲🇻', '🇲🇱', '🇲🇹', '🇲🇭', '🇲🇶', '🇲🇷', '🇲🇺', '🇾🇹', '🇲🇽', '🇫🇲', '🇲🇩', '🇲🇨', '🇲🇳', '🇲🇪', '🇲🇸', '🇲🇦', '🇲🇿', '🇲🇲', '🇳🇦', '🇳🇷', '🇳🇵', '🇳🇱', '🇳🇨', '🇳🇿', '🇳🇮', '🇳🇪', '🇳🇬', '🇳🇺', '🇳🇫', '🇰🇵', '🇲🇰', '🇲🇵', '🇳🇴', '🇴🇲', '🇵🇰', '🇵🇼', '🇵🇸', '🇵🇦', '🇵🇬', '🇵🇾', '🇵🇪', '🇵🇭', '🇵🇳', '🇵🇱', '🇵🇹', '🇵🇷', '🇶🇦', '🇷🇪', '🇷🇴', '🇷🇺', '🇷🇼', '🇼🇸', '🇸🇲', '🇸🇹', '🇸🇦', '🇸🇳', '🇷🇸', '🇸🇨', '🇸🇱', '🇸🇬', '🇸🇽', '🇸🇰', '🇸🇮', '🇬🇸', '🇸🇧', '🇸🇴', '🇿🇦', '🇰🇷', '🇸🇸', '🇪🇸', '🇱🇰', '🇧🇱', '🇸🇭', '🇰🇳', '🇱🇨', '🇵🇲', '🇻🇨', '🇸🇩', '🇸🇷', '🇸🇪', '🇨🇭', '🇸🇾', '🇹🇼', '🇹🇯', '🇹🇿', '🇹🇭', '🇹🇱', '🇹🇬', '🇹🇰', '🇹🇴', '🇹🇹', '🇹🇳', '🇹🇷', '🇹🇲', '🇹🇨', '🇹🇻', '🇻🇮', '🇺🇬', '🇺🇦', '🇦🇪', '🇬🇧', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🏴󠁧󠁢󠁳󠁣󠁴󠁿', '🏴󠁧󠁢󠁷󠁬󠁳󠁿', '🇺🇸', '🇺🇾', '🇺🇿', '🇻🇺', '🇻🇦', '🇻🇪', '🇻🇳', '🇼🇫', '🇪🇭', '🇾🇪', '🇿🇲', '🇿🇼'],
 }
 
-export function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
+export function EmojiPicker({ onSelect, onClose, anchorElement }: EmojiPickerProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string>('Smileys & Emotion')
   const [isSuperMode, setIsSuperMode] = useState(false)
   const pickerRef = useRef<HTMLDivElement>(null)
+  const [portalPosition, setPortalPosition] = useState<{ top: number; left: number } | null>(null)
   const { customReactions } = useReactionsStore()
 
   useEffect(() => {
@@ -38,6 +41,41 @@ export function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [onClose])
+
+  useEffect(() => {
+    if (!anchorElement) {
+      setPortalPosition(null)
+      return
+    }
+
+    const updatePosition = () => {
+      if (!pickerRef.current) return
+      const anchorRect = anchorElement.getBoundingClientRect()
+      const pickerRect = pickerRef.current.getBoundingClientRect()
+      const viewportPadding = 8
+      const gap = 8
+
+      let left = anchorRect.right - pickerRect.width
+      left = Math.max(viewportPadding, Math.min(left, window.innerWidth - pickerRect.width - viewportPadding))
+
+      let top = anchorRect.top - pickerRect.height - gap
+      if (top < viewportPadding) {
+        top = Math.min(anchorRect.bottom + gap, window.innerHeight - pickerRect.height - viewportPadding)
+      }
+
+      setPortalPosition({ top, left })
+    }
+
+    const raf = requestAnimationFrame(updatePosition)
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [anchorElement])
 
   const filteredEmojis = Object.entries(EMOJI_CATEGORIES).reduce((acc, [category, emojis]) => {
     if (searchQuery) {
@@ -59,8 +97,23 @@ export function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
     onClose()
   }
 
-  return (
-    <div className={styles.container} ref={pickerRef}>
+  const pickerContent = (
+    <div
+      className={styles.container}
+      ref={pickerRef}
+      style={
+        portalPosition
+          ? {
+              position: 'fixed',
+              top: portalPosition.top,
+              left: portalPosition.left,
+              right: 'auto',
+              bottom: 'auto',
+              marginBottom: 0,
+            }
+          : undefined
+      }
+    >
       <div className={styles.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Select Reaction</div>
@@ -137,4 +190,10 @@ export function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
       </div>
     </div>
   )
+
+  if (anchorElement && typeof document !== 'undefined') {
+    return createPortal(pickerContent, document.body)
+  }
+
+  return pickerContent
 }

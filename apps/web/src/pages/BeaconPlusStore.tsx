@@ -1,29 +1,58 @@
 import { useState, useEffect } from 'react'
-import { Crown, Coins, Sparkles, Shield, Zap, ShoppingBag, Palette, Paintbrush } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
+import { Crown, Coins, Sparkles, Shield, Zap, ShoppingBag, Palette, Paintbrush, AlertCircle } from 'lucide-react'
 import { useBeacoinStore } from '../stores/useBeacoinStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useShopStore } from '../stores/useShopStore'
 import { useTranslationStore } from '../stores/useTranslationStore'
+import { api } from '../lib/api'
 import { Button } from '../components/ui'
+import { CelebrationAnimation } from '../components/animations/CelebrationAnimation'
 import { GiftingModal } from '../components/modals/GiftingModal'
 import styles from '../styles/modules/pages/BeaconPlusStore.module.css'
 
 const PLANS = {
-    monthly: { cost: 1000, label: 'mo' },
+    monthly: { cost: 1250, label: 'mo' },
     yearly: { cost: 10000, label: 'yr' },
+}
+
+interface CosmeticWithDetails {
+    id: string
+    name: string
+    price: number
+    color?: string
+    description?: string
+    type?: 'avatar' | 'profile' | 'theme'
+    bannerColor?: string
+    accentColor?: string
+}
+
+function CosmeticLoadingSkeleton() {
+    return (
+        <div className={styles.cosmeticCard} style={{ pointerEvents: 'none', opacity: 0.6 }}>
+            <div className={`${styles.cosmeticPreview} ${styles.skeleton}`} style={{ height: 180 }} />
+            <div className={`${styles.cosmeticInfo}`} style={{ padding: 24 }}>
+                <div className={`${styles.skeleton}`} style={{ height: 24, marginBottom: 12, width: '70%' }} />
+                <div className={`${styles.skeleton}`} style={{ height: 16, marginBottom: 20, width: '40%' }} />
+                <div className={`${styles.skeleton}`} style={{ height: 40, borderRadius: 'var(--radius-md)' }} />
+            </div>
+        </div>
+    )
 }
 
 export function BeaconPlusStore() {
     const { t } = useTranslationStore()
-    const [activeTab, setActiveTab] = useState<'plus' | 'decorations' | 'effects'>('plus')
+    const [activeTab, setActiveTab] = useState<'plus' | 'decorations' | 'effects' | 'themes'>('plus')
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly')
     const [purchasing, setPurchasing] = useState<string | false>(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
+    const [successType, setSuccessType] = useState<'plus' | 'cosmetic' | null>(null)
+    const [searchQuery, setSearchQuery] = useState('')
 
-    const { balance, purchaseSubscription } = useBeacoinStore()
+    const { balance, isLoading: walletLoading, purchaseSubscription, fetchWallet } = useBeacoinStore()
     const { user } = useAuthStore()
-    const { ownedCosmetics, marketplace, purchaseCosmetic, equipCosmetic, fetchOwned, fetchMarketplace } = useShopStore()
+    const { ownedCosmetics, marketplace, isLoading: shopLoading, error: shopError, purchaseCosmetic, equipCosmetic, fetchOwned, fetchMarketplace } = useShopStore()
     const [gifting, setGifting] = useState<any>(null)
 
     // Coupon State
@@ -31,49 +60,95 @@ export function BeaconPlusStore() {
     const [couponCode, setCouponCode] = useState('')
     const [discount, setDiscount] = useState(0)
 
-    const handleApplyCoupon = () => {
+    const tr = (key: string, fallback: string, variables?: Record<string, any>) => {
+        const translated = t(key, variables)
+        return translated === key ? fallback : translated
+    }
+
+    const handleApplyCoupon = async () => {
         if (!couponInput.trim()) {
             setDiscount(0)
             setCouponCode('')
+            setError('')
             return
         }
-        const code = couponInput.toUpperCase()
-        let hash = 0
-        for (let i = 0; i < code.length; i++) {
-            hash = Math.imul(31, hash) + code.charCodeAt(i) | 0
+
+        const code = couponInput.toUpperCase().trim()
+        try {
+            const { data } = await api.post('/users/@me/beacoin/coupon/validate', { code })
+            if (data?.kind !== 'percent') {
+                setDiscount(0)
+                setCouponCode('')
+                setError('This code can only be used in Redeem Code settings.')
+                return
+            }
+
+            setError('')
+            setDiscount(Number(data.value) || 0)
+            setCouponCode(data.code || code)
+        } catch (err: any) {
+            setDiscount(0)
+            setCouponCode('')
+            setError(err?.response?.data?.error || 'Invalid or expired coupon code.')
         }
-        const sale = Math.abs(hash) % 100
-        setDiscount(sale)
-        setCouponCode(code)
     }
 
     const getEffectivePrice = (price: number) => Math.floor(price * (1 - discount / 100))
 
     const FEATURES = [
-        { icon: <Sparkles size={16} />, label: t('marketplace.plus.features.animated') },
-        { icon: <Zap size={16} />, label: t('marketplace.plus.features.emojis') },
-        { icon: <Zap size={16} />, label: t('marketplace.plus.features.uploads') },
-        { icon: <Shield size={16} />, label: t('marketplace.plus.features.streaming') },
-        { icon: <Crown size={16} />, label: t('marketplace.plus.features.badge') },
-        { icon: <Coins size={16} />, label: t('marketplace.plus.features.bonus') },
+        { icon: <Sparkles size={16} />, label: tr('marketplace.plus.features.animated', 'Animated Avatar & Profile Banner') },
+        { icon: <Zap size={16} />, label: tr('marketplace.plus.features.emojis', 'Custom Emojis Everywhere') },
+        { icon: <Zap size={16} />, label: tr('marketplace.plus.features.uploads', 'Larger File Uploads (500MB)') },
+        { icon: <Shield size={16} />, label: tr('marketplace.plus.features.streaming', 'HD Streaming & Screen Share') },
+        { icon: <Crown size={16} />, label: tr('marketplace.plus.features.badge', 'Exclusive Beacon+ Badge') },
+        { icon: <Coins size={16} />, label: tr('marketplace.plus.features.bonus', 'Monthly Beacoin Bonus (100 coins)') },
     ]
 
     useEffect(() => {
-        if (user) {
-            fetchOwned()
-            fetchMarketplace()
+        if (!user?.id) return
+        void fetchWallet()
+    }, [user?.id, fetchWallet])
+
+    useEffect(() => {
+        if (!user?.id) return
+
+        if (!ownedCosmetics.length) {
+            void fetchOwned()
         }
-    }, [user, fetchOwned, fetchMarketplace])
+        if (!marketplace.decorations.length && !marketplace.effects.length) {
+            void fetchMarketplace()
+        }
+    }, [
+        user?.id,
+        ownedCosmetics.length,
+        marketplace.decorations.length,
+        marketplace.effects.length,
+        fetchOwned,
+        fetchMarketplace,
+    ])
 
     const cost = getEffectivePrice(PLANS[selectedPlan].cost)
+    const hasBeaconPlus = Boolean((user as any)?.isBeaconPlus)
+    const giftDiscountPercent = hasBeaconPlus ? 25 : 0
+    const giftCost = Math.floor(cost * (1 - giftDiscountPercent / 100))
+    const loadingStoreData = walletLoading || shopLoading
+    const loadingPlusCheckout = walletLoading
     const canAfford = balance >= cost
+    const canAffordGift = balance >= giftCost
+    const effectiveError = error || shopError || ''
 
     const handlePurchasePlus = async () => {
-        if (!user || !canAfford || purchasing) return
+        if (!user || purchasing) return
+        if (!canAfford) {
+            const needed = Math.max(0, cost - balance)
+            setError(`You need ${needed.toLocaleString()} more Beacoins for this plan.`)
+            return
+        }
         setError('')
         setPurchasing('plus')
         try {
             await purchaseSubscription(selectedPlan, couponCode || undefined)
+            setSuccessType('plus')
             setSuccess(true)
         } catch (err: any) {
             setError(err?.message || 'Purchase failed. Please try again.')
@@ -82,15 +157,20 @@ export function BeaconPlusStore() {
         }
     }
 
-    const handleActionItem = async (item: { id: string, price: number, type: string }) => {
-        const isOwned = ownedCosmetics.some(c => c.cosmeticId === item.id)
+    const handleActionItem = async (item: CosmeticWithDetails) => {
+        const isOwned = ownedCosmetics.some((c: any) => c.cosmeticId === item.id)
         if (isOwned) {
             try {
-                const isEquipped = (user as any)?.avatarDecorationId === item.id || (user as any)?.profileEffectId === item.id
+                const itemType = item.type as any
+                const isEquipped = itemType === 'theme'
+                    ? (user as any)?.profileThemeId === item.id
+                    : itemType === 'avatar'
+                    ? (user as any)?.avatarDecorationId === item.id
+                    : (user as any)?.profileEffectId === item.id
                 if (isEquipped) {
-                    await equipCosmetic(null, item.type as any)
+                    await equipCosmetic(null, itemType)
                 } else {
-                    await equipCosmetic(item.id, item.type as any)
+                    await equipCosmetic(item.id, itemType)
                 }
             } catch (err: any) {
                 setError(err.message)
@@ -99,11 +179,17 @@ export function BeaconPlusStore() {
         }
 
         const effectiveItemPrice = getEffectivePrice(item.price)
-        if (!user || balance < effectiveItemPrice || purchasing) return
+        if (!user || purchasing) return
+        if (balance < effectiveItemPrice) {
+            const needed = effectiveItemPrice - balance
+            setError(`You need ${needed.toLocaleString()} more Beacoins to unlock ${item.type === 'avatar' ? 'this decoration' : 'this effect'}.`)
+            return
+        }
         setError('')
         setPurchasing(item.id)
         try {
             await purchaseCosmetic(item.id, couponCode || undefined)
+            setSuccessType('cosmetic')
             setSuccess(true)
         } catch (err: any) {
             setError(err.message || 'Failed to buy item.')
@@ -112,17 +198,37 @@ export function BeaconPlusStore() {
         }
     }
 
+    const currentItems = activeTab === 'decorations' ? marketplace.decorations : activeTab === 'effects' ? marketplace.effects : activeTab === 'themes' ? marketplace.themes : []
+    const filteredItems = currentItems.filter((item: any) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
     if (success) {
+        const isPlusSuccess = successType === 'plus'
         return (
             <div className={styles.container}>
-                <div className={`${styles.successScreen} premium-hero-section`}>
+                <AnimatePresence>
+                    {isPlusSuccess && <CelebrationAnimation key="celebration" />}
+                </AnimatePresence>
+                <div className={styles.successScreen}>
                     <div className="atmos-bg">
                         <div className="atmos-orb" style={{ background: 'var(--beacon-brand)', opacity: 0.2 }} />
                     </div>
-                    <Sparkles size={80} className={`${styles.successIcon} premium-gradient-text`} style={{ filter: 'drop-shadow(0 0 30px var(--beacon-brand))' }} />
-                    <h1 className="premium-hero-heading" style={{ fontSize: 56 }}>{t('marketplace.success_title')}</h1>
-                    <p className="premium-hero-subtitle">{t('marketplace.success_desc')}</p>
-                    <Button variant="primary" size="lg" onClick={() => setSuccess(false)}>{t('marketplace.return_to_shop')}</Button>
+                    <div className={styles.successBadge}>
+                        {isPlusSuccess ? <Crown size={80} className={styles.successIcon} /> : <Sparkles size={80} className={styles.successIcon} />}
+                    </div>
+                    <h1 className={styles.successTitle}>
+                        {isPlusSuccess ? 'Beacon+ Activated!' : 'Purchase Successful!'}
+                    </h1>
+                    <p className={styles.successMessage}>
+                        {isPlusSuccess
+                            ? `Your ${selectedPlan === 'yearly' ? 'yearly' : 'monthly'} Beacon+ perks are now live.`
+                            : 'Your premium features are now active. Head over to your profile to equip your cosmetics.'}
+                    </p>
+                    <Button variant="primary" size="lg" onClick={() => { setSuccess(false); setSuccessType(null) }}>
+                        {tr('marketplace.return_to_shop', 'Return to Shop')}
+                    </Button>
                 </div>
             </div>
         )
@@ -130,155 +236,239 @@ export function BeaconPlusStore() {
 
     return (
         <div className={styles.container}>
-            <header className={`${styles.hero} premium-hero-section`}>
+            <header className={styles.hero}>
                 <div className="atmos-bg">
                     <div className="atmos-orb" style={{ top: '-10%', right: '-10%', background: 'var(--beacon-brand)' }} />
                     <div className="atmos-orb" style={{ bottom: '-10%', left: '-10%', background: '#949cf7', animationDelay: '-12s' }} />
                 </div>
                 <div className={styles.heroContent}>
-                    <div className="premium-badge">
+                    <div className={styles.badge}>
                         <ShoppingBag size={14} />
                         <span>Beacon Marketplace</span>
                     </div>
-                    <h1 className="premium-hero-heading accent-text">{t('marketplace.title')}</h1>
-                    <p className="premium-hero-subtitle">{t('marketplace.subtitle')}</p>
-                    <div className={`${styles.balanceDisplay} premium-glass-card`} style={{ padding: '12px 24px', borderRadius: 99, display: 'inline-flex', gap: 12, alignItems: 'center' }}>
-                        <Coins size={22} color="#f0b232" style={{ filter: 'drop-shadow(0 0 10px rgba(240, 178, 50, 0.4))' }} />
-                        <span style={{ fontWeight: 800, fontSize: 18, letterSpacing: '0.05em' }}>
-                            {t('marketplace.beacoin_balance', { count: balance.toLocaleString() })}
-                        </span>
+                    <h1 className={styles.heroTitle}>{tr('marketplace.title', 'Shop till you drop.')}</h1>
+                    <p className={styles.heroSubtitle}>{tr('marketplace.subtitle', 'Unlock the full power of Beacon and customize your profile.')}</p>
+                    <div className={styles.balanceDisplay}>
+                        <Coins size={22} />
+                        <span>{balance.toLocaleString()} Beacoins</span>
                     </div>
                 </div>
             </header>
 
-            <div style={{ marginTop: -28, position: 'relative', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                <div className="premium-glass-card" style={{ padding: 6, borderRadius: 20, display: 'inline-flex', gap: 4 }}>
-                    <button className={`${styles.tabBtn} ${activeTab === 'plus' ? styles.activeTab : ''}`} onClick={() => setActiveTab('plus')}>
-                        <Crown size={16} /> {t('marketplace.tabs.plus')}
+            <div className={styles.controlsDock}>
+                <div className={styles.tabsShell}>
+                    <button type="button" className={`${styles.tabBtn} ${activeTab === 'plus' ? styles.activeTab : ''}`} onClick={() => setActiveTab('plus')}>
+                        <Crown size={16} /> {tr('marketplace.tabs.plus', 'Beacon+')}
                     </button>
-                    <button className={`${styles.tabBtn} ${activeTab === 'decorations' ? styles.activeTab : ''}`} onClick={() => setActiveTab('decorations')}>
-                        <Paintbrush size={16} /> {t('marketplace.tabs.decorations')}
+                    <button type="button" className={`${styles.tabBtn} ${activeTab === 'decorations' ? styles.activeTab : ''}`} onClick={() => setActiveTab('decorations')}>
+                        <Paintbrush size={16} /> {tr('marketplace.tabs.decorations', 'Avatar Decorations')}
                     </button>
-                    <button className={`${styles.tabBtn} ${activeTab === 'effects' ? styles.activeTab : ''}`} onClick={() => setActiveTab('effects')}>
-                        <Palette size={16} /> {t('marketplace.tabs.effects')}
+                    <button type="button" className={`${styles.tabBtn} ${activeTab === 'effects' ? styles.activeTab : ''}`} onClick={() => setActiveTab('effects')}>
+                        <Palette size={16} /> {tr('marketplace.tabs.effects', 'Profile Effects')}
+                    </button>
+                    <button type="button" className={`${styles.tabBtn} ${activeTab === 'themes' ? styles.activeTab : ''}`} onClick={() => setActiveTab('themes')}>
+                        <Paintbrush size={16} /> {tr('marketplace.tabs.themes', 'Profile Themes')}
                     </button>
                 </div>
 
-                <div className="premium-glass-card" style={{ padding: '4px 6px', borderRadius: 20, display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+                <div className={styles.couponShell}>
                     <input
                         type="text"
                         placeholder="Coupon Code"
                         value={couponInput}
                         onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                        style={{ background: 'transparent', border: 'none', color: '#fff', padding: '8px 16px', outline: 'none', width: 220, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}
+                        className={styles.couponInput}
                     />
-                    <Button variant={couponCode && discount > 0 ? "primary" : "secondary"} size="sm" onClick={handleApplyCoupon} style={{ borderRadius: 16, fontWeight: 800 }}>
+                    <Button variant={couponCode && discount > 0 ? "primary" : "secondary"} size="sm" onClick={handleApplyCoupon} style={{ borderRadius: "var(--radius-lg)", fontWeight: 800 }}>
                         {couponCode ? `${discount}% OFF` : 'Apply'}
                     </Button>
                 </div>
             </div>
 
-            <main className={`${styles.shopContent} vista-transition`}>
+            <main className={styles.shopContent}>
                 {activeTab === 'plus' && (
-                    <div className={styles.plans}>
-                        <div className={`${styles.toggle} premium-glass-card`} style={{ borderRadius: 99, padding: 4 }}>
-                            <button className={`${styles.toggleBtn} ${selectedPlan === 'monthly' ? styles.active : ''}`} onClick={() => setSelectedPlan('monthly')}>
-                                {t('marketplace.plus.monthly')}
+                    <div className={styles.plansSection}>
+                        <div className={styles.toggle}>
+                            <button type="button" className={`${styles.toggleBtn} ${selectedPlan === 'monthly' ? styles.active : ''}`} onClick={() => setSelectedPlan('monthly')}>
+                                {tr('marketplace.plus.monthly', 'Monthly')}
                             </button>
-                            <button className={`${styles.toggleBtn} ${selectedPlan === 'yearly' ? styles.active : ''}`} onClick={() => setSelectedPlan('yearly')}>
-                                {t('marketplace.plus.yearly')} <span className={styles.saveBadge}>{t('marketplace.plus.save_badge')}</span>
+                            <button type="button" className={`${styles.toggleBtn} ${selectedPlan === 'yearly' ? styles.active : ''}`} onClick={() => setSelectedPlan('yearly')}>
+                                {tr('marketplace.plus.yearly', 'Yearly')} <span className={styles.saveBadge}>{tr('marketplace.plus.save_badge', 'Save 16%')}</span>
                             </button>
                         </div>
 
-                        <div className={`${styles.card} premium-glass-card shimmer`} style={{ maxWidth: 500, margin: '0 auto' }}>
-                            <div className={styles.cardHeader} style={{ background: 'linear-gradient(135deg, rgba(114, 137, 218, 0.1), transparent)', padding: '48px 40px' }}>
-                                <Crown size={48} className="premium-gradient-text" style={{ marginBottom: 24 }} />
-                                <h2 style={{ fontSize: 32, fontWeight: 900, marginBottom: 8 }}>Beacon+</h2>
+                        <div className={styles.card}>
+                            <div className={styles.cardHeader}>
+                                <Crown size={48} className={styles.cardIcon} />
+                                <h2>Beacon+</h2>
                                 <div className={styles.price}>
-                                    <span style={{ fontSize: 44, fontWeight: 900, color: '#fff' }}>{cost.toLocaleString()}</span>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                            <Coins size={16} style={{ color: '#f0b232' }} />
-                                            <span style={{ fontSize: 13, fontWeight: 800, color: '#f0b232' }}>BEACOINS</span>
+                                    <span className={styles.amount}>{cost.toLocaleString()}</span>
+                                    <div className={styles.priceMeta}>
+                                        <div className={styles.coinLabel}>
+                                            <Coins size={16} />
+                                            <span>BEACOINS</span>
                                         </div>
-                                        <span className={styles.period} style={{ fontSize: 16 }}>/ {PLANS[selectedPlan].label}</span>
+                                        <span className={styles.period}>/ {PLANS[selectedPlan].label}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div style={{ padding: '0 40px 40px' }}>
-                                <ul className={styles.features} style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, marginBottom: 32 }}>
-                                    {FEATURES.map((f) => (
-                                        <li key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                            <span className={styles.featureIcon} style={{ background: 'rgba(114, 137, 218, 0.15)', padding: 8, borderRadius: 10, color: 'var(--beacon-brand)' }}>{f.icon}</span>
-                                            <span style={{ fontWeight: 600, fontSize: 15 }}>{f.label}</span>
+                            <div className={styles.cardBody}>
+                                <ul className={styles.features}>
+                                    {FEATURES.map((f: any) => (
+                                        <li key={f.label}>
+                                            <span className={styles.featureIcon}>{f.icon}</span>
+                                            <span>{f.label}</span>
                                         </li>
                                     ))}
                                 </ul>
 
-                                {error && <div className={styles.errorBanner}>{error}</div>}
+                                {effectiveError && (
+                                    <div className={styles.errorBanner}>
+                                        <AlertCircle size={14} />
+                                        {effectiveError}
+                                    </div>
+                                )}
 
                                 <Button
                                     variant="primary"
                                     size="lg"
                                     className={styles.subBtn}
-                                    style={{ width: '100%', height: 56, fontSize: 18, fontWeight: 800, borderRadius: 16 }}
                                     onClick={handlePurchasePlus}
-                                    disabled={!!purchasing || !canAfford}
+                                    disabled={!!purchasing || loadingPlusCheckout}
                                 >
-                                    {purchasing === 'plus' ? t('marketplace.plus.processing') : canAfford ? t('marketplace.plus.purchase') : t('marketplace.plus.insufficient')}
+                                    {purchasing === 'plus'
+                                        ? tr('marketplace.plus.processing', 'Processing...')
+                                        : loadingPlusCheckout
+                                            ? 'Loading store...'
+                                            : canAfford
+                                                ? tr('marketplace.plus.purchase', 'Purchase')
+                                                : tr('marketplace.plus.insufficient', 'Insufficient Beacoins')}
                                 </Button>
+
+                                <div className={styles.plusGiftPanel}>
+                                    <div className={styles.plusGiftMeta}>
+                                        <span className={styles.plusGiftTitle}>Gift Beacon+ to a friend</span>
+                                        <span className={styles.plusGiftPrice}>
+                                            {giftCost.toLocaleString()} Beacoins
+                                            {giftDiscountPercent > 0 && <em>({giftDiscountPercent}% owner discount)</em>}
+                                        </span>
+                                    </div>
+                                    <Button
+                                        variant="secondary"
+                                        size="md"
+                                        className={styles.plusGiftBtn}
+                                        onClick={() => setGifting({
+                                            id: null,
+                                            type: 'SUBSCRIPTION',
+                                            tier: selectedPlan,
+                                            name: `Beacon+ ${selectedPlan === 'yearly' ? 'Yearly' : 'Monthly'}`,
+                                            price: giftCost,
+                                        })}
+                                        disabled={!!purchasing || loadingPlusCheckout || !canAffordGift}
+                                    >
+                                        {canAffordGift ? 'Gift Beacon+' : `Need ${(giftCost - balance).toLocaleString()} more`}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {(activeTab === 'decorations' || activeTab === 'effects') && (
-                    <div className={`${styles.cosmeticGrid} premium-grid`}>
-                        {(activeTab === 'decorations' ? marketplace.decorations : marketplace.effects).map(item => {
-                            const isOwned = ownedCosmetics.some(c => c.cosmeticId === item.id)
-                            const isEquipped = (user as any)?.[activeTab === 'decorations' ? 'avatarDecorationId' : 'profileEffectId'] === item.id
-                            const accentColor = item.color || (activeTab === 'decorations' ? '#5865f2' : '#7b2ff7')
+                {(activeTab === 'decorations' || activeTab === 'effects' || activeTab === 'themes') && (
+                    <div className={styles.cosmeticSection}>
+                        <div className={styles.cosmeticControls}>
+                            <input
+                                type="text"
+                                placeholder={`Search ${activeTab}...`}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className={styles.searchInput}
+                            />
+                        </div>
 
-                            return (
-                                <div key={item.id} className={`${styles.cosmeticCard} premium-glass-card`} style={{ '--accent': accentColor } as any}>
-                                    <div className={styles.cosmeticPreview} style={{ background: activeTab === 'effects' ? `radial-gradient(circle at center, ${accentColor}20, transparent)` : 'transparent', height: 180 }}>
-                                        <div className={activeTab === 'decorations' ? styles.previewAvatar : styles.previewProfile}>
-                                            <div className={activeTab === 'decorations' ? styles.animatedRing : styles.particleField} style={{ background: activeTab === 'effects' ? accentColor : 'transparent', borderColor: activeTab === 'decorations' ? accentColor : 'transparent', boxShadow: `0 0 20px ${accentColor}80` }} />
-                                        </div>
-                                    </div>
-                                    <div className={styles.cosmeticInfo} style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                        <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{item.name}</h3>
-                                        <div className={styles.cosmeticPrice} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, fontSize: 14, fontWeight: 700 }}>
-                                            {isOwned ? (
-                                                <span style={{ color: '#43b581', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <Shield size={14} fill="currentColor" /> {t('marketplace.cosmetics.owned')}
-                                                </span>
+                        {effectiveError && (
+                            <div className={styles.errorBanner} style={{ marginBottom: 20 }}>
+                                <AlertCircle size={14} />
+                                {effectiveError}
+                            </div>
+                        )}
+
+                        <div className={styles.cosmeticGrid}>
+                            {shopLoading && Array.from({ length: 4 }).map((_, i) => <CosmeticLoadingSkeleton key={i} />)}
+                            
+                            {!shopLoading && filteredItems.length === 0 && (
+                                <div className={styles.emptyState}>
+                                    <Palette size={48} />
+                                    <h3>No items found</h3>
+                                    <p>Try a different search or check back later for new items.</p>
+                                </div>
+                            )}
+
+                            {!shopLoading && filteredItems.map((item: CosmeticWithDetails) => {
+                                const isOwned = ownedCosmetics.some((c: any) => c.cosmeticId === item.id)
+                                const isEquipped = activeTab === 'themes' 
+                                    ? (user as any)?.profileThemeId === item.id 
+                                    : activeTab === 'decorations'
+                                    ? (user as any)?.avatarDecorationId === item.id
+                                    : (user as any)?.profileEffectId === item.id
+                                const itemType = activeTab === 'themes' ? 'theme' : activeTab === 'decorations' ? 'avatar' : 'profile'
+                                const accentColor = activeTab === 'themes' ? item.accentColor : item.color || (activeTab === 'decorations' ? '#5865f2' : '#7b2ff7')
+                                const effectiveItemPrice = getEffectivePrice(item.price)
+
+                                return (
+                                    <div key={item.id} className={styles.cosmeticCard} style={{ '--accent': accentColor } as any}>
+                                        <div className={styles.cosmeticPreview} style={{ background: activeTab === 'themes' ? item.bannerColor : activeTab === 'effects' ? `radial-gradient(circle at center, ${accentColor}20, transparent)` : 'transparent' }}>
+                                            {activeTab === 'themes' ? (
+                                                <div style={{ width: '100%', height: '100%', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                                                    <div style={{ fontSize: '12px', fontWeight: 600, opacity: 0.8 }}>Theme Preview</div>
+                                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                                        <div style={{ width: '40px', height: '40px', backgroundColor: item.bannerColor, borderRadius: '8px', border: '2px solid rgba(255,255,255,0.3)' }} />
+                                                        <div style={{ width: '40px', height: '40px', backgroundColor: item.accentColor, borderRadius: '8px', border: '2px solid rgba(255,255,255,0.3)' }} />
+                                                    </div>
+                                                </div>
                                             ) : (
-                                                <>
-                                                    <Coins size={14} color="#f0b232" />
-                                                    <span style={{ color: '#f0b232' }}>{getEffectivePrice(item.price).toLocaleString()}</span>
-                                                    {discount > 0 && <span style={{ textDecoration: 'line-through', opacity: 0.5 }}>{item.price}</span>}
-                                                </>
+                                                <div className={activeTab === 'decorations' ? styles.previewAvatar : styles.previewProfile}>
+                                                    <div className={activeTab === 'decorations' ? styles.animatedRing : styles.particleField} style={{ background: activeTab === 'effects' ? accentColor : 'transparent', borderColor: activeTab === 'decorations' ? accentColor : 'transparent', boxShadow: `0 0 20px ${accentColor}80` }} />
+                                                </div>
                                             )}
                                         </div>
-                                        <div className={styles.actions} style={{ marginTop: 'auto', display: 'flex', gap: 8 }}>
-                                            <Button
-                                                variant={isEquipped ? 'secondary' : 'primary'}
-                                                style={{ flex: 1, height: 40, fontWeight: 700 }}
-                                                onClick={() => handleActionItem({ ...item, type: activeTab === 'decorations' ? 'avatar' : 'profile' })}
-                                                disabled={!!purchasing || (!isOwned && balance < getEffectivePrice(item.price))}
-                                            >
-                                                {purchasing === item.id ? '...' : isEquipped ? t('marketplace.cosmetics.unequip') : isOwned ? t('marketplace.cosmetics.equip') : balance >= getEffectivePrice(item.price) ? t('marketplace.cosmetics.unlock') : t('marketplace.cosmetics.too_poor')}
-                                            </Button>
-                                            <Button variant="secondary" style={{ width: 64, height: 40 }} onClick={() => setGifting({ ...item, type: 'COSMETIC' })}>
-                                                {t('marketplace.cosmetics.gift')}
-                                            </Button>
+                                        <div className={styles.cosmeticInfo}>
+                                            <h3>{item.name}</h3>
+                                            {item.description && <p className={styles.cosmeticDesc}>{item.description}</p>}
+                                            <div className={styles.cosmeticPrice}>
+                                                {isOwned ? (
+                                                    <span className={styles.owned}>
+                                                        <Shield size={14} /> {tr('marketplace.cosmetics.owned', 'Owned')}
+                                                    </span>
+                                                ) : (
+                                                    <>
+                                                        <Coins size={14} />
+                                                        <span>{effectiveItemPrice.toLocaleString()}</span>
+                                                        {discount > 0 && <span className={styles.originalPrice}>{item.price}</span>}
+                                                    </>
+                                                )}
+                                            </div>
+                                            <div className={styles.actions}>
+                                                <Button
+                                                    variant={isEquipped ? 'secondary' : 'primary'}
+                                                    onClick={() => handleActionItem({ ...item, type: itemType as any })}
+                                                    disabled={!!purchasing || loadingStoreData}
+                                                    style={{ flex: 1 }}
+                                                >
+                                                    {purchasing === item.id ? '...' : isEquipped ? tr('marketplace.cosmetics.unequip', 'Unequip') : isOwned ? tr('marketplace.cosmetics.equip', 'Equip') : balance >= effectiveItemPrice ? tr('marketplace.cosmetics.unlock', 'Unlock') : tr('marketplace.cosmetics.too_poor', 'Too poor')}
+                                                </Button>
+                                                {activeTab !== 'themes' && (
+                                                    <Button variant="secondary" onClick={() => setGifting({ ...item, type: 'COSMETIC' })}>
+                                                        {tr('marketplace.cosmetics.gift', 'Gift')}
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )
-                        })}
+                                )
+                            })}
+                        </div>
                     </div>
                 )}
             </main>

@@ -10,6 +10,18 @@ interface ServerFolder {
   isCollapsed: boolean;
 }
 
+function normalizeFolder(folder: any): ServerFolder {
+  const serverIds = Array.isArray(folder?.serverIds)
+    ? folder.serverIds
+    : (Array.isArray(folder?.guildIds) ? folder.guildIds : [])
+
+  return {
+    ...folder,
+    serverIds,
+    isCollapsed: false,
+  }
+}
+
 interface ServerState {
   servers: Server[];
   folders: ServerFolder[];
@@ -72,7 +84,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
       ]);
       set({
         servers: guilds,
-        folders: folders.map(f => ({ ...f, isCollapsed: false }))
+        folders: (folders as any[]).map(normalizeFolder)
       });
       if (guilds.length > 0 && !get().currentServerId) {
         get().setCurrentServer(guilds[0].id);
@@ -85,7 +97,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
   fetchFolders: async () => {
     try {
       const { data } = await api.get<ServerFolder[]>('/folders');
-      set({ folders: data.map(f => ({ ...f, isCollapsed: false })) });
+      set({ folders: (data as any[]).map(normalizeFolder) });
     } catch (error) {
       console.error('Failed to fetch folders', error);
     }
@@ -225,6 +237,13 @@ export const useServerStore = create<ServerState>((set, get) => ({
     }
     const server = get().servers.find(s => s.id === serverId) || null;
     set({ currentServerId: serverId, currentServer: server });
+
+    // Guild list payloads can be lightweight; hydrate full guild details on selection.
+    const hasChannels = Array.isArray((server as any)?.channels) && (server as any).channels.length > 0
+    const hasMembers = Array.isArray((server as any)?.members) && (server as any).members.length > 0
+    if (!hasChannels || !hasMembers) {
+      void get().fetchGuild(serverId)
+    }
   },
 
   boostGuild: async (guildId) => {
@@ -285,8 +304,8 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   createFolder: async (name, serverIds, color = '#5865f2') => {
     try {
-      const { data } = await api.post('/folders', { name, serverIds, color });
-      set(state => ({ folders: [...state.folders, { ...data, isCollapsed: false }] }));
+      const { data } = await api.post('/folders', { name, guildIds: serverIds, color });
+      set(state => ({ folders: [...state.folders, normalizeFolder(data)] }));
     } catch (error) {
       console.error(error);
     }
@@ -303,8 +322,8 @@ export const useServerStore = create<ServerState>((set, get) => ({
       const folder = get().folders.find(f => f.id === folderId);
       if (!folder) return;
       const newServerIds = [...folder.serverIds, serverId];
-      const { data } = await api.post('/folders', { id: folderId, name: folder.name, serverIds: newServerIds, color: folder.color });
-      set(state => ({ folders: state.folders.map(f => f.id === folderId ? { ...f, serverIds: data.serverIds } : f) }));
+      const { data } = await api.post('/folders', { id: folderId, name: folder.name, guildIds: newServerIds, color: folder.color });
+      set(state => ({ folders: state.folders.map(f => f.id === folderId ? normalizeFolder(data) : f) }));
     } catch (error) {
       console.error(error);
     }
@@ -315,8 +334,8 @@ export const useServerStore = create<ServerState>((set, get) => ({
       const folder = get().folders.find(f => f.id === folderId);
       if (!folder) return;
       const newServerIds = folder.serverIds.filter(id => id !== serverId);
-      const { data } = await api.post('/folders', { id: folderId, name: folder.name, serverIds: newServerIds, color: folder.color });
-      set(state => ({ folders: state.folders.map(f => f.id === folderId ? { ...f, serverIds: data.serverIds } : f) }));
+      const { data } = await api.post('/folders', { id: folderId, name: folder.name, guildIds: newServerIds, color: folder.color });
+      set(state => ({ folders: state.folders.map(f => f.id === folderId ? normalizeFolder(data) : f) }));
     } catch (error) {
       console.error(error);
     }

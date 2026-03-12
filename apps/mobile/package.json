@@ -1,16 +1,16 @@
 {
   "name": "@beacon/mobile",
-  "version": "2.3.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "cap sync && cap open android",
     "build": "cap sync && cap copy android",
-    "build:apk": "npm run build && cd android && ./gradlew assembleRelease",
-    "build:bundle": "npm run build && cd android && ./gradlew bundleRelease",
-    "build:debug": "npm run build && cd android && ./gradlew assembleDebug",
+    "build:apk": "npm run build && cd android && gradlew.bat assembleRelease",
+    "build:bundle": "npm run build && cd android && gradlew.bat bundleRelease",
+    "build:debug": "npm run build && cd android && gradlew.bat assembleDebug",
     "sync": "cap sync android",
     "open": "cap open android",
-    "clean": "cd android && ./gradlew clean && cd .. && rm -rf node_modules dist",
+    "clean": "cd android && gradlew.bat clean",
     "lint": "eslint src --ext ts,tsx"
   },
   "dependencies": {

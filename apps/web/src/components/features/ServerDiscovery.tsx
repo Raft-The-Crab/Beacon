@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Search, Users, TrendingUp, Compass, ArrowRight, Gamepad2, Music, Code, Palette, BookOpen, Globe } from 'lucide-react'
+import { apiClient } from '../../services/apiClient'
 import styles from '../../styles/modules/features/ServerDiscovery.module.css'
 
 export interface DiscoverableServer {
@@ -26,9 +27,6 @@ const CATEGORIES = [
     { id: 'international', label: 'International', icon: <Globe size={18} /> },
 ]
 
-// Empty servers until discovery API is implemented
-// const DEMO_SERVERS: DiscoverableServer[] = []
-
 function formatCount(n: number): string {
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
     if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
@@ -45,12 +43,9 @@ export function ServerDiscovery({ onJoin }: { onJoin?: (guildId: string) => void
         const fetchServers = async () => {
             setLoading(true)
             try {
-                const res = await fetch(`/api/guilds/discovery?category=${activeCategory}&query=${searchQuery}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                })
-                if (res.ok) {
-                    const data = await res.json()
-                    setServers(data)
+                const res = await apiClient.request('GET', `/guilds/discovery?category=${activeCategory}&query=${searchQuery}`)
+                if (res.success) {
+                    setServers(res.data)
                 }
             } catch (err) {
                 console.error('Failed to fetch discovery', err)
@@ -59,15 +54,11 @@ export function ServerDiscovery({ onJoin }: { onJoin?: (guildId: string) => void
             }
         }
 
-        // Debounce search query
-        const timeoutId = setTimeout(() => {
-            fetchServers()
-        }, 300)
-
+        const timeoutId = setTimeout(fetchServers, 300)
         return () => clearTimeout(timeoutId)
     }, [searchQuery, activeCategory])
 
-    const featuredServers = servers.filter(s => s.featured)
+    const featuredServers = servers.filter((s: DiscoverableServer) => s.featured)
 
     return (
         <div className={styles.discovery}>
@@ -81,7 +72,7 @@ export function ServerDiscovery({ onJoin }: { onJoin?: (guildId: string) => void
                         type="text"
                         placeholder="Explore communities..."
                         value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                         className={styles.searchInput}
                     />
                 </div>
@@ -95,7 +86,7 @@ export function ServerDiscovery({ onJoin }: { onJoin?: (guildId: string) => void
                         Featured Communities
                     </h2>
                     <div className={styles.featuredGrid}>
-                        {featuredServers.map(server => (
+                        {featuredServers.map((server: DiscoverableServer) => (
                             <div key={server.id} className={styles.featuredCard} style={{ background: server.banner }}>
                                 <div className={styles.featuredOverlay}>
                                     <span className={styles.featuredIcon}>{server.icon}</span>
@@ -114,7 +105,7 @@ export function ServerDiscovery({ onJoin }: { onJoin?: (guildId: string) => void
 
             {/* Category tabs */}
             <div className={styles.categories}>
-                {CATEGORIES.map(cat => (
+                {CATEGORIES.map((cat: any) => (
                     <button
                         key={cat.id}
                         className={`${styles.categoryBtn} ${activeCategory === cat.id ? styles.activeCategory : ''}`}
@@ -130,7 +121,7 @@ export function ServerDiscovery({ onJoin }: { onJoin?: (guildId: string) => void
             <div className={styles.serverGrid}>
                 {loading ? (
                     <div style={{ color: 'var(--text-muted)', textAlign: 'center', gridColumn: '1 / -1', padding: '40px' }}>Loading communities...</div>
-                ) : servers.map(server => (
+                ) : servers.map((server: DiscoverableServer) => (
                     <div key={server.id} className={styles.serverCard}>
                         <div className={styles.serverBanner} style={{ background: server.banner || 'var(--bg-hover)' }}>
                             <span className={styles.serverEmoji}>{server.icon || '🚀'}</span>

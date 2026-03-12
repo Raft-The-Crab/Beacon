@@ -129,9 +129,16 @@
 }
 
 .percentage {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--beacon-brand);
+  background: rgba(88, 101, 242, 0.15);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  min-width: 45px;
+  text-align: center;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 8px rgba(88, 101, 242, 0.3);
 }
 
 .votersPreview {

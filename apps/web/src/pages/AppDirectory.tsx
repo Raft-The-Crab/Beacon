@@ -20,7 +20,7 @@ export function AppDirectory() {
     const [activeCategory, setActiveCategory] = useState('All')
     const [searchQuery, setSearchQuery] = useState('')
 
-    const filtered = APPS.filter(app => {
+    const filtered = APPS.filter((app: any) => {
         const matchesCat = activeCategory === 'All' || app.category === activeCategory
         const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) || app.desc.toLowerCase().includes(searchQuery.toLowerCase())
         return matchesCat && matchesSearch
@@ -40,7 +40,7 @@ export function AppDirectory() {
                 <h1 className="premium-hero-heading accent-text">{t('app_directory.title')}</h1>
                 <p className="premium-hero-subtitle">{t('app_directory.subtitle')}</p>
 
-                <div className="premium-glass-card" style={{ borderRadius: 20, padding: '10px 24px', maxWidth: 600, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div className="premium-glass-card" style={{ borderRadius: "var(--radius-xl)", padding: '10px 24px', maxWidth: 600, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Search size={20} style={{ opacity: 0.5 }} />
                     <input
                         type="text"
@@ -55,14 +55,14 @@ export function AppDirectory() {
             <main className="vista-transition" style={{ maxWidth: 1400, margin: '0 auto', padding: '0 40px 80px' }}>
                 {/* Category Filter */}
                 <div style={{ marginTop: -28, marginBottom: 48, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <div className="premium-glass-card" style={{ padding: 6, borderRadius: 20, display: 'inline-flex', gap: 4 }}>
-                        {CATEGORIES.map(cat => (
+                    <div className="premium-glass-card" style={{ padding: 6, borderRadius: "var(--radius-xl)", display: 'inline-flex', gap: 4 }}>
+                        {CATEGORIES.map((cat: string) => (
                             <button
                                 key={cat}
                                 onClick={() => setActiveCategory(cat)}
                                 style={{
                                     padding: '10px 20px',
-                                    borderRadius: 14,
+                                    borderRadius: "var(--radius-md)",
                                     fontSize: 14,
                                     fontWeight: 700,
                                     border: 'none',
@@ -80,14 +80,14 @@ export function AppDirectory() {
 
                 {/* Apps Grid */}
                 <div className="premium-grid">
-                    {filtered.map(app => (
+                    {filtered.map((app: any) => (
                         <div key={app.name} className="premium-glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
                             <div style={{ height: 100, background: app.gradient, borderRadius: '32px 32px 0 0', position: 'relative', display: 'flex', alignItems: 'flex-end', padding: 20 }}>
-                                <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', marginBottom: -32, border: '3px solid rgba(255,255,255,0.2)' }}>
+                                <div style={{ width: 64, height: 64, borderRadius: "var(--radius-xl)", background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', marginBottom: -32, border: '3px solid rgba(255,255,255,0.2)' }}>
                                     {app.icon}
                                 </div>
                                 {app.official && (
-                                    <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 800, color: '#fff' }}>
+                                    <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: "var(--radius-sm)", display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 800, color: '#fff' }}>
                                         <CheckCircle size={12} fill="var(--beacon-brand)" color="white" />
                                         {t('app_directory.items.official')}
                                     </div>
@@ -101,7 +101,7 @@ export function AppDirectory() {
                                 <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, flex: 1 }}>{app.desc}</p>
                                 <Button
                                     variant="primary"
-                                    style={{ width: '100%', height: 44, borderRadius: 12, fontWeight: 800, marginTop: 8 }}
+                                    style={{ width: '100%', height: 44, borderRadius: "var(--radius-md)", fontWeight: 800, marginTop: 8 }}
                                 >
                                     {t('app_directory.items.add_to_server')}
                                 </Button>
@@ -121,16 +121,16 @@ export function AppDirectory() {
                         We are hand-picking the highest quality plugins to ensure the Beacon experience remains premium and secure.
                     </p>
                     <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginBottom: 40 }}>
-                        <div className="premium-glass-card" style={{ padding: '20px 32px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div className="premium-glass-card" style={{ padding: '20px 32px', borderRadius: "var(--radius-xl)", display: 'flex', alignItems: 'center', gap: 12 }}>
                             <Code size={24} style={{ color: 'var(--beacon-brand)' }} />
                             <span style={{ fontWeight: 800 }}>Verified SDK</span>
                         </div>
-                        <div className="premium-glass-card" style={{ padding: '20px 32px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div className="premium-glass-card" style={{ padding: '20px 32px', borderRadius: "var(--radius-xl)", display: 'flex', alignItems: 'center', gap: 12 }}>
                             <Laptop size={24} style={{ color: 'var(--beacon-brand)' }} />
                             <span style={{ fontWeight: 800 }}>Native Performance</span>
                         </div>
                     </div>
-                    <Button variant="primary" size="lg" style={{ height: 56, paddingInline: 48, fontSize: 18, fontWeight: 800, borderRadius: 16 }}>
+                    <Button variant="primary" size="lg" style={{ height: 56, paddingInline: 48, fontSize: 18, fontWeight: 800, borderRadius: "var(--radius-lg)" }}>
                         Join Developer Preview
                     </Button>
                 </div>

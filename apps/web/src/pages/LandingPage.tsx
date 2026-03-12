@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Shield, Zap, Cpu, Globe, Rocket, MessageCircle, Star, Github, Users } from 'lucide-react'
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout'
 import { Tooltip } from '../components/ui'
@@ -66,7 +66,23 @@ export function LandingPage() {
             <option value="en">English</option>
             <option value="fil">Filipino</option>
             <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="zh">中文</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
             <option value="es">Español</option>
+            <option value="it">Italiano</option>
+            <option value="pt">Português</option>
+            <option value="nl">Nederlands</option>
+            <option value="ru">Русский</option>
+            <option value="ar">العربية</option>
+            <option value="hi">हिन्दी</option>
+            <option value="tr">Türkçe</option>
+            <option value="th">ไทย</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="id">Bahasa Indonesia</option>
+            <option value="pl">Polski</option>
+            <option value="sv">Svenska</option>
           </select>
         </div>
       </div>
@@ -103,7 +119,7 @@ export function LandingPage() {
       <div className={styles.heroWrapper}>
 
         <div className={styles.hero}>
-          <h1 className={styles.title}>
+          <h1 className={`${styles.title} premium-hero-heading`}>
             Beacon
           </h1>
           <p className={styles.subtitle}>

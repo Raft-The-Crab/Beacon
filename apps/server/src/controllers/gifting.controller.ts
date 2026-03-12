@@ -3,7 +3,7 @@ import { prisma } from '../db';
 import { AuthRequest } from '../middleware/auth';
 
 export const sendGift = async (req: AuthRequest, res: Response) => {
-    const { recipientId, cosmeticId, type, message } = req.body;
+    const { recipientId, cosmeticId, type, message, tier } = req.body;
     const senderId = req.user?.id;
 
     if (!senderId) return res.status(401).json({ error: 'Unauthorized' });
@@ -13,27 +13,49 @@ export const sendGift = async (req: AuthRequest, res: Response) => {
         if (!prisma) throw new Error('Database not connected');
 
         await prisma.$transaction(async (tx) => {
-            // 1. Get sender balance
+            // 1. Load sender and wallet data
             const sender = await tx.user.findUnique({ where: { id: senderId } });
             if (!sender) throw new Error('Sender not found');
 
+            const senderWallet = await tx.beacoinWallet.upsert({
+                where: { userId: senderId },
+                create: { userId: senderId, balance: 0, lifetime: 0 },
+                update: {},
+            })
+
             let price = 0;
+            let subscriptionTier: 'monthly' | 'yearly' = tier === 'yearly' ? 'yearly' : 'monthly'
             if (type === 'COSMETIC' && cosmeticId) {
                 // Fetch cosmetic price
                 const effect = await tx.profileEffect.findUnique({ where: { id: cosmeticId } });
                 const decoration = await tx.avatarDecoration.findUnique({ where: { id: cosmeticId } });
                 price = (effect?.price || decoration?.price) || 0;
             } else if (type === 'SUBSCRIPTION') {
-                price = 999; // Default Beacon+ price
+                const basePrice = subscriptionTier === 'yearly' ? 10000 : 1250
+                const discountMultiplier = sender.isBeaconPlus ? 0.75 : 1
+                price = Math.floor(basePrice * discountMultiplier)
             }
 
-            if (sender.beacoins < price) throw new Error('Insufficient Beacoins');
+            if (senderWallet.balance < price) throw new Error('Insufficient Beacoins');
 
             // 2. Deduct balance
-            await tx.user.update({
-                where: { id: senderId },
-                data: { beacoins: { decrement: price } }
-            });
+            await tx.beacoinWallet.update({
+                where: { userId: senderId },
+                data: { balance: { decrement: price } }
+            })
+
+            await tx.beacoinTransaction.create({
+                data: {
+                    walletId: senderWallet.id,
+                    fromUserId: senderId,
+                    toUserId: recipientId,
+                    amount: price,
+                    type: 'SPEND',
+                    reason: type === 'SUBSCRIPTION'
+                        ? `Gifted Beacon+ ${subscriptionTier} subscription`
+                        : 'Gifted cosmetic',
+                },
+            })
 
             // 3. Create gift record
             await tx.gift.create({
@@ -58,10 +80,28 @@ export const sendGift = async (req: AuthRequest, res: Response) => {
                     }
                 });
             } else if (type === 'SUBSCRIPTION') {
+                const expiresAt = new Date()
+                expiresAt.setMonth(expiresAt.getMonth() + (subscriptionTier === 'yearly' ? 12 : 1))
+
                 await tx.user.update({
                     where: { id: recipientId },
                     data: { isBeaconPlus: true, beaconPlusSince: new Date() }
                 });
+
+                await tx.userPremium.upsert({
+                    where: { userId: recipientId },
+                    create: {
+                        userId: recipientId,
+                        tier: 'PREMIUM',
+                        expiresAt,
+                        purchasedWith: price,
+                    },
+                    update: {
+                        tier: 'PREMIUM',
+                        expiresAt,
+                        purchasedWith: price,
+                    },
+                })
             }
         });
 

@@ -25,6 +25,7 @@ export function CreateServerModal({ isOpen, onClose }: CreateServerModalProps) {
   const [serverName, setServerName] = useState('')
   const [serverIcon, setServerIcon] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [_selectedTemplate, setSelectedTemplate] = useState<string>('')
   const { createGuild } = useServerStore()
   const { setShowCreateServer } = useUIStore()
@@ -32,14 +33,17 @@ export function CreateServerModal({ isOpen, onClose }: CreateServerModalProps) {
   const handleCreate = () => {
     if (!serverName.trim() || isLoading) return
     setIsLoading(true)
+    setError(null)
     createGuild(serverName, serverIcon).then(() => {
       setShowCreateServer(false)
       onClose()
       setIsLoading(false)
       setStep('choose')
       setServerName('')
+      setError(null)
     }).catch(err => {
       console.error(err)
+      setError(err?.message || 'Failed to create server. Please try again.')
       setIsLoading(false)
     })
   }
@@ -113,6 +117,12 @@ export function CreateServerModal({ isOpen, onClose }: CreateServerModalProps) {
           placeholder="Enter server name"
         />
       </div>
+
+      {error && (
+        <div style={{ padding: '12px', background: 'rgba(242, 63, 67, 0.1)', border: '1px solid rgba(242, 63, 67, 0.3)', borderRadius: '8px', color: 'var(--status-error)', fontSize: '14px', marginTop: '12px' }}>
+          {error}
+        </div>
+      )}
 
       <div className={styles.footer}>
         <Button variant="secondary" onClick={handleClose}>Cancel</Button>

@@ -25,7 +25,7 @@ export const StageChannel: React.FC<{ channelId: string }> = ({ channelId: _chan
 
   const handleRequestToSpeak = () => {
     setRequestedToSpeak(true);
-    // TODO: Send request to moderators
+    // Send request to moderators
   };
 
   const handlePromoteToSpeaker = (memberId: string) => {

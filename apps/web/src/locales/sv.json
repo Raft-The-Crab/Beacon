@@ -1,0 +1,71 @@
+{
+    "common": {
+        "login": "Logga in",
+        "signup": "Registrera dig",
+        "logout": "Logga ut",
+        "settings": "Inställningar",
+        "friends": "Vänner",
+        "servers": "Servrar",
+        "search": "Sök",
+        "cancel": "Avbryt",
+        "save": "Spara",
+        "welcome": "Välkommen tillbaka, {name}!",
+        "new": "NYTT",
+        "get_started_question": "Redo att ansluta?",
+        "join_revolution": "Anslut med vänner",
+        "learn_how": "Läs mer",
+        "navigation": "NAVIGERING",
+        "community": "GEMENSKAP",
+        "introduction": "Introduktion",
+        "discovery": "Upptäck",
+        "app_directory": "App-katalog",
+        "community_hub": "Gemenskapshubb",
+        "documentation": "Dokumentation",
+        "contact_support": "Support",
+        "open_beacon": "Öppna Beacon",
+        "pinned_messages": "Fästa meddelanden",
+        "member_list": "Medlemslista",
+        "inbox": "Inkorg",
+        "help": "Hjälp"
+    },
+    "landing": {
+        "title": "Beacon",
+        "subtitle": "En kommunikationsplattform i realtid byggd för gemenskaper och utvecklare.",
+        "get_started": "Kom igång",
+        "read_docs": "Läs dokumentation",
+        "features": {
+            "native": "Kärnmotor",
+            "native_desc": "Högpresterande röst och meddelanden med minimal latens.",
+            "security": "Integritet först",
+            "security_desc": "Krypterad kommunikation och användarkontrollerad data.",
+            "sdk": "Utvecklar-API",
+            "sdk_desc": "Kraftfulla verktyg för att bygga bottar och integrationer."
+        },
+        "status": {
+            "header": "Status",
+            "gateway": "Gateway: Online",
+            "api": "API: Online",
+            "voice": "Voice: Online",
+            "active_nodes": "{count} Noder"
+        },
+        "footer": {
+            "tos": "Villkor",
+            "privacy": "Integritet",
+            "about": "Om oss",
+            "support": "Support",
+            "copyright": "© 2026 Beacon. Alla rättigheter förbehållna."
+        }
+    },
+    "discovery": {
+        "title": "Hitta din gemenskap på Beacon",
+        "subtitle": "Från spel, till musik, till lärande – det finns en plats för dig.",
+        "search_placeholder": "Utforska gemenskaper",
+        "featured": "Utvalda gemenskaper",
+        "no_results": "Inga gemenskaper hittades för \"{query}\"",
+        "clear_search": "Rensa sökning",
+        "join_server": "Gå med i server",
+        "online": "{count} Online",
+        "members": "{count} Medlemmar",
+        "verified_server": "Verifierad server"
+    }
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "code": "WELCOME10",
+    "kind": "percent",
+    "value": 10,
+    "active": true,
+    "description": "Welcome discount",
+    "expiresAt": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "code": "BEACON20",
+    "kind": "percent",
+    "value": 20,
+    "active": true,
+    "description": "Beacon seasonal discount",
+    "expiresAt": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "code": "NITRO30",
+    "kind": "percent",
+    "value": 30,
+    "active": true,
+    "description": "Limited premium discount",
+    "expiresAt": "2026-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "STARTER500",
+    "kind": "coins",
+    "value": 500,
+    "active": true,
+    "description": "Starter Beacoin bonus",
+    "expiresAt": "2027-01-01T00:00:00.000Z"
+  }
+]

@@ -23,7 +23,7 @@ export async function ipBlockMiddleware(req: Request, res: Response, next: NextF
         ip,
         metadata: { path: req.path }
       });
-      res.status(403).json({ error: 'Your IP has been blocked. Contact support@beacon.app to appeal.' })
+      res.status(403).json({ error: 'Your IP has been blocked. Contact support@beacon.qzz.io to appeal.' })
       return
     }
   } catch {
@@ -174,10 +174,29 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
     return next()
   }
 
+  // Bearer-token API clients are not cookie-authenticated, so CSRF protection
+  // is not required and can cause false negatives on valid requests.
+  const authorization = req.headers.authorization || ''
+  if (authorization.toLowerCase().startsWith('bearer ')) {
+    return next()
+  }
+
+  // Auth bootstrap endpoints are called before the client has a CSRF cookie.
+  const path = req.path.toLowerCase()
+  if (
+    path.endsWith('/api/auth/login') ||
+    path.endsWith('/api/auth/register') ||
+    path.endsWith('/api/auth/mfa/verify') ||
+    path.endsWith('/api/auth/refresh') ||
+    path.endsWith('/api/csrf-token')
+  ) {
+    return next()
+  }
+
   const token = req.headers[CSRF_HEADER] as string
   const cookieToken = req.cookies?.[CSRF_COOKIE]
 
-  // Enforce CSRF in ALL environments — require both header and cookie to match
+  // Enforce CSRF for mutation requests — require both header and cookie to match.
   if (!token || !cookieToken || token !== cookieToken) {
     console.warn(`[CSRF] 403 Forbidden on ${req.method} ${req.path}. Header: ${!!token}, Cookie: ${!!cookieToken}, Match: ${token === cookieToken}`)
     res.status(403).json({ error: 'Invalid CSRF token' })

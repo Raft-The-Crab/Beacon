@@ -43,14 +43,20 @@ export const useTranslationStore = create<TranslationState>()(
             t: (key: string, variables?: Record<string, any>) => {
                 const { language, locales } = get()
                 const data = locales[language] || locales['en']
+                const english = locales['en']
 
-                // Navigate nested keys: "common.login"
-                const keys = key.split('.')
-                let value = data
-                for (const k of keys) {
-                    value = value?.[k]
-                    if (!value) break
+                const resolvePath = (source: any): string | undefined => {
+                    const keys = key.split('.')
+                    let value = source
+                    for (const k of keys) {
+                        value = value?.[k]
+                        if (value === undefined || value === null) break
+                    }
+                    return typeof value === 'string' ? value : undefined
                 }
+
+                // First try active language, then fallback to English per key.
+                let value = resolvePath(data) ?? resolvePath(english)
 
                 if (typeof value !== 'string') return variables?.defaultValue || key
 

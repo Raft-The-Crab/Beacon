@@ -15,10 +15,10 @@ sleep 2
 redis-cli ping
 
 echo "[ClawCloud] Services starting with memory allocation:"
-echo "  - AI Model: 600MB"
-echo "  - Media Processing: 200MB" 
-echo "  - Redis Cache: 140MB"
-echo "  - Total: 940MB/1GB"
+echo "  - AI Model (ONNX): 650MB"
+echo "  - Media Processing: 250MB" 
+echo "  - Redis Cache: 150MB"
+echo "  - Total: 1050MB / 1112MB (Safe Margin)"
 
 # Start the main AI service
 python clawcloud_service.py

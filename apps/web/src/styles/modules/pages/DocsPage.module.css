@@ -4,11 +4,11 @@
 .article {
     max-width: 880px;
     margin: 0 auto;
-    padding: 40px 0 80px;
+    padding: 40px 20px 80px;
 }
 
 .article h1 {
-    font-size: 3rem;
+    font-size: clamp(2rem, 5vw, 3rem);
     font-weight: 900;
     margin-bottom: 24px;
     letter-spacing: -0.04em;

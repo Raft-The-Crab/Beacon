@@ -14,7 +14,7 @@ export function InviteView() {
     // Generate the invite link
     // If vanityUrl exists, use it. Otherwise use inviteCode + .inv
     const inviteCode = currentServer.vanityUrl || `Beacon-${currentServer.id.substring(0, 8)}.inv`
-    const inviteLink = `https://beacon.app/invite/${inviteCode}`
+    const inviteLink = `https://beacon.qzz.io/invite/${inviteCode}`
 
     const handleCopy = () => {
         navigator.clipboard.writeText(inviteLink)

@@ -1,30 +1,19 @@
 /* GroupDMModal ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â uses design system CSS variables for soft rounded minimalistic look */
 
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(var(--glass-blur, 12px));
-  -webkit-backdrop-filter: blur(var(--glass-blur, 12px));
-  z-index: 400;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  --modal-z-index: 400;
+  --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+  --modal-overlay-blur: 12px;
   padding: 24px;
-  animation: fadeIn 0.2s ease-out;
 }
 
 .modal {
-  background: var(--bg-secondary);
-  border: 1px solid var(--glass-border);
+  --modal-width: 100%;
+  --modal-max-width: 480px;
+  --modal-max-height: 80vh;
   border-radius: var(--radius-lg, 32px);
-  box-shadow: var(--shadow-glass);
-  width: 100%;
-  max-width: 480px;
-  max-height: 80vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 /* Header */

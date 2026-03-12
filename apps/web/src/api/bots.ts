@@ -12,12 +12,12 @@ export interface Bot {
 
 const getHeaders = () => ({
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('token')}`
+    'Authorization': `Bearer ${localStorage.getItem('beacon_token') || localStorage.getItem('token') || ''}`
 })
 
 export const botsApi = {
     create: async (data: { name: string; applicationId: string }) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${data.applicationId}/bot`, {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${data.applicationId}/bot`, {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify(data)
@@ -30,7 +30,7 @@ export const botsApi = {
     },
 
     get: async (applicationId: string) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${applicationId}/bot`, {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${applicationId}/bot`, {
             headers: getHeaders()
         })
         if (!res.ok) throw new Error('Failed to fetch bot details')
@@ -38,7 +38,7 @@ export const botsApi = {
     },
 
     list: async (applicationId: string) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${applicationId}`, {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${applicationId}`, {
             headers: getHeaders()
         })
         if (!res.ok) throw new Error('Failed to fetch application bots')
@@ -47,7 +47,7 @@ export const botsApi = {
     },
 
     update: async (applicationId: string, data: Partial<{ name: string; avatar: string }>) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${applicationId}/bot`, {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${applicationId}/bot`, {
             method: 'PATCH',
             headers: getHeaders(),
             body: JSON.stringify(data)
@@ -60,7 +60,7 @@ export const botsApi = {
     },
 
     regenerateToken: async (applicationId: string) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${applicationId}/bot/token`, {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${applicationId}/bot/token`, {
             method: 'POST',
             headers: getHeaders()
         })
@@ -72,7 +72,7 @@ export const botsApi = {
     },
 
     delete: async (applicationId: string) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${applicationId}/bot`, {
+        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${applicationId}/bot`, {
             method: 'DELETE',
             headers: getHeaders()
         })

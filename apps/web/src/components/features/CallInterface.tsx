@@ -1,7 +1,6 @@
 ﻿import { useState, useRef, useEffect } from 'react'
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Settings, Monitor, Users, Maximize2 } from 'lucide-react'
-import { Avatar, Button, Tooltip } from '../ui'
-import styles from '../../styles/modules/features/CallInterface.module.css'
+import { Avatar, Tooltip } from '../ui'
 
 export interface CallParticipant {
   id: string
@@ -61,58 +60,54 @@ export function CallInterface({
     }
   }
 
+  const controlBase = 'inline-flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-zinc-100 transition hover:-translate-y-0.5 hover:bg-white/10'
+
   return (
-    <div className={styles.container} ref={containerRef}>
-      {/* Video Grid */}
-      <div className={styles.videoGrid}>
+    <div className="relative flex h-full min-h-140 flex-col overflow-hidden rounded-2xl bg-(--bg-primary) text-white" ref={containerRef}>
+      <div className="grid flex-1 auto-rows-fr grid-cols-1 gap-4 overflow-auto p-4 md:grid-cols-2">
         {callType === 'video' ? (
           <>
-            {/* Local video */}
-            <div className={styles.videoTile}>
+            <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-(--bg-secondary) shadow-xl">
               {isVideoOn ? (
                 <video
                   ref={localVideoRef}
                   autoPlay
                   muted
                   playsInline
-                  className={styles.video}
+                  className="h-full w-full object-cover"
                 />
               ) : (
-                <div className={styles.videoPlaceholder}>
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-linear-to-br from-zinc-900 to-zinc-800">
                   <Avatar src={undefined} alt="You" size="xl" />
-                  <span className={styles.username}>You</span>
+                  <span className="text-lg font-bold tracking-tight">You</span>
                 </div>
               )}
               {isMuted && (
-                <div className={styles.mutedIndicator}>
+                <div className="absolute bottom-3 left-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-black/45 text-rose-400 backdrop-blur">
                   <MicOff size={16} />
                 </div>
               )}
             </div>
 
-            {/* Remote participants */}
             {participants.map((participant) => (
               <div
                 key={participant.id}
-                className={`${styles.videoTile} ${
-                  participant.isSpeaking ? styles.speaking : ''
-                }`}
+                className={`relative aspect-video overflow-hidden rounded-2xl border bg-(--bg-secondary) shadow-xl ${participant.isSpeaking ? 'border-(--beacon-brand) ring-2 ring-indigo-400/35' : 'border-white/10'}`}
               >
                 {participant.isVideoOn ? (
-                  <div className={styles.remoteVideo}>
-                    {/* In real app, would display remote video stream */}
-                    <div className={styles.videoPlaceholder}>
+                  <div className="h-full w-full">
+                    <div className="flex h-full items-center justify-center bg-linear-to-br from-zinc-900 to-zinc-800">
                       <span>📹 Video Stream</span>
                     </div>
                   </div>
                 ) : (
-                  <div className={styles.videoPlaceholder}>
+                  <div className="flex h-full flex-col items-center justify-center gap-3 bg-linear-to-br from-zinc-900 to-zinc-800">
                     <Avatar src={participant.avatar} alt={participant.username} size="xl" />
-                    <span className={styles.username}>{participant.username}</span>
+                    <span className="text-lg font-bold tracking-tight">{participant.username}</span>
                   </div>
                 )}
                 {participant.isMuted && (
-                  <div className={styles.mutedIndicator}>
+                  <div className="absolute bottom-3 left-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-black/45 text-rose-400 backdrop-blur">
                     <MicOff size={16} />
                   </div>
                 )}
@@ -120,59 +115,55 @@ export function CallInterface({
             ))}
           </>
         ) : (
-          /* Voice call - show avatars */
-          <div className={styles.voiceParticipants}>
-            <div className={`${styles.voiceParticipant} ${isMuted ? '' : styles.speaking}`}>
+          <div className="col-span-full flex flex-wrap items-center justify-center gap-6 p-6">
+            <div className={`relative flex min-w-36 flex-col items-center gap-3 rounded-2xl border bg-zinc-900/70 p-5 ${isMuted ? 'border-white/15' : 'border-(--beacon-brand) ring-2 ring-indigo-400/25'}`}>
               <Avatar src={undefined} alt="You" size="xl" />
-              <span className={styles.participantName}>You</span>
-              {isMuted && <MicOff size={20} className={styles.mutedIcon} />}
+              <span className="text-sm font-semibold">You</span>
+              {isMuted && <MicOff size={18} className="absolute right-2 top-2 text-rose-400" />}
             </div>
             {participants.map((participant) => (
               <div
                 key={participant.id}
-                className={`${styles.voiceParticipant} ${
-                  participant.isSpeaking ? styles.speaking : ''
-                }`}
+                className={`relative flex min-w-36 flex-col items-center gap-3 rounded-2xl border bg-zinc-900/70 p-5 ${participant.isSpeaking ? 'border-(--beacon-brand) ring-2 ring-indigo-400/25' : 'border-white/15'}`}
               >
                 <Avatar
                   src={participant.avatar}
                   alt={participant.username}
                   size="xl"
                 />
-                <span className={styles.participantName}>{participant.username}</span>
-                {participant.isMuted && <MicOff size={20} className={styles.mutedIcon} />}
+                <span className="text-sm font-semibold">{participant.username}</span>
+                {participant.isMuted && <MicOff size={18} className="absolute right-2 top-2 text-rose-400" />}
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Participants sidebar */}
       {showParticipants && (
-        <div className={styles.participantsSidebar}>
-          <div className={styles.sidebarHeader}>
-            <h3>Participants ({participants.length + 1})</h3>
+        <div className="absolute right-0 top-0 z-20 flex h-full w-72 flex-col border-l border-white/10 bg-zinc-950/90 backdrop-blur-xl">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400">Participants ({participants.length + 1})</h3>
             <button
-              className={styles.closeButton}
+              className="text-zinc-400 transition hover:text-zinc-100"
               onClick={() => setShowParticipants(false)}
             >
               ✕
             </button>
           </div>
-          <div className={styles.participantsList}>
-            <div className={styles.participantItem}>
+          <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
+            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
               <Avatar src={undefined} alt="You" size="sm" />
-              <span>You</span>
+              <span className="flex-1 text-sm">You</span>
               {isMuted && <MicOff size={16} />}
             </div>
             {participants.map((participant) => (
-              <div key={participant.id} className={styles.participantItem}>
+              <div key={participant.id} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                 <Avatar
                   src={participant.avatar}
                   alt={participant.username}
                   size="sm"
                 />
-                <span>{participant.username}</span>
+                <span className="flex-1 text-sm">{participant.username}</span>
                 {participant.isMuted && <MicOff size={16} />}
               </div>
             ))}
@@ -180,83 +171,70 @@ export function CallInterface({
         </div>
       )}
 
-      {/* Call controls */}
-      <div className={styles.controls}>
-        <div className={styles.controlsGroup}>
+      <div className="flex items-center justify-between border-t border-white/10 bg-black/35 px-4 py-3 backdrop-blur-xl">
+        <div className="flex gap-2">
           <Tooltip content={isMuted ? 'Unmute' : 'Mute'} position="top">
-            <Button
-              variant={isMuted ? 'danger' : 'secondary'}
-              size="lg"
+            <button
               onClick={onToggleMute}
-              className={styles.controlButton}
+              className={`${controlBase} ${isMuted ? 'border-rose-400/50 bg-rose-500/25 text-rose-200' : ''}`}
             >
               {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
-            </Button>
+            </button>
           </Tooltip>
 
           {callType === 'video' && (
             <Tooltip content={isVideoOn ? 'Stop Video' : 'Start Video'} position="top">
-              <Button
-                variant={isVideoOn ? 'secondary' : 'danger'}
-                size="lg"
+              <button
                 onClick={onToggleVideo}
-                className={styles.controlButton}
+                className={`${controlBase} ${!isVideoOn ? 'border-rose-400/50 bg-rose-500/25 text-rose-200' : ''}`}
               >
                 {isVideoOn ? <Video size={24} /> : <VideoOff size={24} />}
-              </Button>
+              </button>
             </Tooltip>
           )}
 
           <Tooltip content="Screen Share" position="top">
-            <Button
-              variant={isScreenSharing ? 'primary' : 'secondary'}
-              size="lg"
+            <button
               onClick={onToggleScreenShare}
-              className={styles.controlButton}
+              className={`${controlBase} ${isScreenSharing ? 'border-indigo-300/40 bg-indigo-500/25 text-indigo-100' : ''}`}
             >
               <Monitor size={24} />
-            </Button>
+            </button>
           </Tooltip>
 
           <Tooltip content="Settings" position="top">
-            <Button variant="secondary" size="lg" className={styles.controlButton}>
+            <button className={controlBase}>
               <Settings size={24} />
-            </Button>
+            </button>
           </Tooltip>
 
           <Tooltip content="Participants" position="top">
-            <Button
-              variant={showParticipants ? 'primary' : 'secondary'}
-              size="lg"
+            <button
               onClick={() => setShowParticipants(!showParticipants)}
-              className={styles.controlButton}
+              className={`${controlBase} ${showParticipants ? 'border-indigo-300/40 bg-indigo-500/25 text-indigo-100' : ''}`}
             >
               <Users size={24} />
-            </Button>
+            </button>
           </Tooltip>
 
           <Tooltip content="Fullscreen" position="top">
-            <Button
-              variant="secondary"
-              size="lg"
+            <button
               onClick={toggleFullscreen}
-              className={styles.controlButton}
+              className={controlBase}
             >
               <Maximize2 size={24} />
-            </Button>
+            </button>
           </Tooltip>
         </div>
 
         <Tooltip content="End Call" position="top">
-          <Button
-            variant="danger"
-            size="lg"
+          <button
             onClick={onEndCall}
-            className={styles.endCallButton}
+            className="inline-flex h-12 items-center gap-2 rounded-xl border border-rose-400/40 bg-rose-500/85 px-4 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-rose-500"
           >
             <PhoneOff size={24} />
             <span>End Call</span>
-          </Button>
+          </button>
         </Tooltip>
       </div>
     </div>

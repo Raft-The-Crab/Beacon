@@ -4,7 +4,7 @@ import styles from '../styles/modules/pages/SafetyHub.module.css'
 
 export function SafetyHub() {
     return (
-        <div className={styles.container}>
+        <div className={`app-page-shell ${styles.container}`}>
             <div className={styles.hero}>
                 <div className={styles.heroContent}>
                     <div className={styles.safetyBadge}>

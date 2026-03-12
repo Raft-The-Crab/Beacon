@@ -175,7 +175,7 @@ export function AdminDashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {logs.map(log => (
+                                {logs.map((log: ModerationLog) => (
                                     <tr key={log.id}>
                                         <td>
                                             <span className={`${styles.actionBadge} ${styles[log.action.toLowerCase()]}`}>

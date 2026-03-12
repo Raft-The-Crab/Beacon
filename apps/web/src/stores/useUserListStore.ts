@@ -2,6 +2,21 @@ import { create } from 'zustand'
 import type { User, PresenceStatus } from '@beacon/types'
 import { api } from '../lib/api'
 
+async function fetchFriendsList() {
+  try {
+    const { data } = await api.get('/users/me/friends')
+    return data
+  } catch {
+    try {
+      const { data } = await api.get('/users/@me/friends')
+      return data
+    } catch {
+      const { data } = await api.get('/friends')
+      return data
+    }
+  }
+}
+
 export interface Friend extends User {
   status: PresenceStatus
   lastSeen?: string
@@ -37,11 +52,11 @@ export const useUserListStore = create<UserListState>((set, get) => ({
 
   fetchFriends: async () => {
     try {
-      const { data } = await api.get('/friends')
-      // Map backend friendship objects to Friend interface
-      const friendsList = data.map((f: any) => ({
-        ...f.friend,
-        status: f.friend.status || 'offline'
+      const data = await fetchFriendsList()
+      const friendsList = (Array.isArray(data) ? data : []).map((friend: any) => ({
+        ...friend,
+        discriminator: friend?.discriminator || '0000',
+        status: friend?.status || 'offline'
       }))
       set({ friends: friendsList })
     } catch (e) {
@@ -51,10 +66,11 @@ export const useUserListStore = create<UserListState>((set, get) => ({
 
   eagerLoad: async () => {
     try {
-      const { data } = await api.get('/friends')
-      const friendsList = data.map((f: any) => ({
-        ...f.friend,
-        status: f.friend.status || 'offline'
+      const data = await fetchFriendsList()
+      const friendsList = (Array.isArray(data) ? data : []).map((friend: any) => ({
+        ...friend,
+        discriminator: friend?.discriminator || '0000',
+        status: friend?.status || 'offline'
       }))
       set({ friends: friendsList })
     } catch (e) {

@@ -24,4 +24,5 @@ export { Card } from './Card'
 export { Icon } from './Icon'
 export { UserBadges, BotTag } from './UserBadges'
 export { ServerTag, ServerTags } from './ServerTags'
+export { RoleColorPicker } from './RoleColorPicker'
 

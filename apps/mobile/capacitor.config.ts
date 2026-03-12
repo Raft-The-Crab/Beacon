@@ -4,39 +4,63 @@ const config: CapacitorConfig = {
   appId: 'chat.beacon.app',
   appName: 'Beacon',
   webDir: '../web/dist',
-  bundledWebRuntime: false,
+  
   server: {
     androidScheme: 'https',
-    cleartext: true
+    cleartext: false,
+    hostname: 'beacon.qzz.io',
+    iosScheme: 'https',
   },
+  
   android: {
     buildOptions: {
       keystorePath: undefined,
       keystorePassword: undefined,
       keystoreAlias: undefined,
       keystoreAliasPassword: undefined,
-      releaseType: 'APK'
+      releaseType: 'AAB', // Android App Bundle for production
+      signingType: 'apksigner',
     },
     minWebViewVersion: 55,
-    allowMixedContent: true
+    allowMixedContent: false,
+    backgroundColor: '#313338',
   },
+  
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1000,
-      backgroundColor: '#0f0f1e',
+      launchShowDuration: 800,
+      backgroundColor: '#313338',
       androidScaleType: 'CENTER_CROP',
-      showSpinner: false
+      androidSplashResourceName: 'splash',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
     },
     Keyboard: {
-      resize: 'body',
+      resize: 'native',
       style: 'dark',
-      resizeOnFullScreen: true
+      resizeOnFullScreen: true,
     },
     StatusBar: {
       style: 'dark',
-      backgroundColor: '#0f0f1e'
-    }
-  }
+      backgroundColor: '#313338',
+      overlay: false,
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
+    LocalNotifications: {
+      smallIcon: 'ic_stat_icon_config_sample',
+      iconColor: '#5865F2',
+      sound: 'beep.wav',
+    },
+  },
+  
+  ios: {
+    contentInset: 'automatic',
+    scrollEnabled: true,
+    backgroundColor: '#313338',
+  },
 }
 
 export default config

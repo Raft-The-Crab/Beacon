@@ -1,10 +1,10 @@
 .container {
-    padding: 32px;
+    padding: clamp(24px, 5vw, 32px);
     background: var(--bg-primary);
     color: var(--text-primary);
-    width: clamp(300px, 95vw, 480px);
+    width: 100%;
     text-align: center;
-    border-radius: var(--radius-xl);
+    border-radius: 16px;
     overflow: hidden;
 }
 
@@ -16,8 +16,8 @@
 }
 
 .iconCircle {
-    width: 64px;
-    height: 64px;
+    width: clamp(48px, 12vw, 64px);
+    height: clamp(48px, 12vw, 64px);
     background: var(--beacon-brand);
     border-radius: var(--radius-xl);
     display: flex;
@@ -30,7 +30,7 @@
 }
 
 .header h2 {
-    font-size: 24px;
+    font-size: clamp(20px, 5vw, 24px);
     font-weight: 800;
     margin: 0 0 8px;
     letter-spacing: -0.02em;
@@ -58,10 +58,10 @@
     background: var(--bg-tertiary);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-xl);
-    padding: 14px 16px;
+    padding: clamp(12px, 2.5vw, 14px) clamp(12px, 3vw, 16px);
     padding-right: 44px;
     color: var(--text-primary);
-    font-size: 16px;
+    font-size: clamp(14px, 3.5vw, 16px);
     outline: none;
     transition: all var(--transition-fast);
 }
@@ -82,6 +82,8 @@
 .footer {
     display: flex;
     gap: 12px;
+    justify-content: center;
+    align-items: center;
 }
 
 .cancelBtn {
@@ -90,9 +92,9 @@
     border: none;
     color: var(--text-primary);
     font-weight: 700;
-    font-size: 14px;
+    font-size: clamp(13px, 3vw, 14px);
     cursor: pointer;
-    padding: 12px;
+    padding: clamp(10px, 2.5vw, 12px);
     border-radius: var(--radius-xl);
     transition: background 0.2s;
 }
@@ -101,15 +103,20 @@
     background: var(--bg-modifier-hover);
 }
 
+.cancelBtn:focus-visible {
+    outline: 2px solid var(--beacon-brand);
+    outline-offset: 2px;
+}
+
 .sendBtn {
     flex: 2;
     background: var(--beacon-brand);
     color: #fff;
     border: none;
-    padding: 12px;
+    padding: clamp(10px, 2.5vw, 12px);
     border-radius: var(--radius-xl);
     font-weight: 800;
-    font-size: 14px;
+    font-size: clamp(13px, 3vw, 14px);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -122,6 +129,11 @@
     background: var(--beacon-brand-hover);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+}
+
+.sendBtn:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 2px;
 }
 
 .sendBtn:disabled {

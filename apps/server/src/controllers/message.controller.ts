@@ -310,7 +310,29 @@ export async function addReaction(req: Request, res: Response) {
       update: { isSuper }, // allow upgrading a normal reaction to super
     });
 
-    await publishGatewayEvent('MESSAGE_REACTION_ADD', { messageId, channelId, userId, emoji: decodedEmoji, isSuper });
+    // Fetch all reactions for this message to send complete array
+    const allReactions = await prisma.reaction.findMany({
+      where: { messageId },
+    });
+
+    // Group by emoji
+    const reactionsMap = new Map<string, { emoji: string; users: string[]; isSuper: boolean }>();
+    for (const r of allReactions) {
+      if (!reactionsMap.has(r.emoji)) {
+        reactionsMap.set(r.emoji, { emoji: r.emoji, users: [], isSuper: false });
+      }
+      const group = reactionsMap.get(r.emoji)!;
+      group.users.push(r.userId);
+      if (r.isSuper) group.isSuper = true;
+    }
+
+    const reactions = Array.from(reactionsMap.values()).map(r => ({
+      emoji: { name: r.emoji },
+      users: r.users,
+      isSuper: r.isSuper,
+    }));
+
+    await publishGatewayEvent('MESSAGE_REACTION_ADD', { messageId, channelId, userId, emoji: decodedEmoji, isSuper, reactions });
 
     return res.status(204).send();
   } catch (err) {
@@ -335,7 +357,29 @@ export async function removeReaction(req: Request, res: Response) {
       where: { messageId, userId, emoji: decodedEmoji },
     });
 
-    await publishGatewayEvent('MESSAGE_REACTION_REMOVE', { messageId, channelId, userId, emoji: decodedEmoji });
+    // Fetch remaining reactions for this message
+    const allReactions = await prisma.reaction.findMany({
+      where: { messageId },
+    });
+
+    // Group by emoji
+    const reactionsMap = new Map<string, { emoji: string; users: string[]; isSuper: boolean }>();
+    for (const r of allReactions) {
+      if (!reactionsMap.has(r.emoji)) {
+        reactionsMap.set(r.emoji, { emoji: r.emoji, users: [], isSuper: false });
+      }
+      const group = reactionsMap.get(r.emoji)!;
+      group.users.push(r.userId);
+      if (r.isSuper) group.isSuper = true;
+    }
+
+    const reactions = Array.from(reactionsMap.values()).map(r => ({
+      emoji: { name: r.emoji },
+      users: r.users,
+      isSuper: r.isSuper,
+    }));
+
+    await publishGatewayEvent('MESSAGE_REACTION_REMOVE', { messageId, channelId, userId, emoji: decodedEmoji, reactions });
 
     return res.status(204).send();
   } catch (err) {

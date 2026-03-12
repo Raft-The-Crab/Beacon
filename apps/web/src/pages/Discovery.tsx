@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Search, Compass, Shield } from 'lucide-react'
 import { Button } from '../components/ui'
 import { useServerStore } from '../stores/useServerStore'
@@ -55,9 +55,9 @@ export function Discovery() {
         }
     }
 
-    const filteredGuilds = guilds.filter(g => {
+    const filteredGuilds = guilds.filter((g: any) => {
         const matchesSearch = g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            g.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
+            g.tags.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase()))
         const matchesCategory = activeCategory === 'All' || g.tags.includes(activeCategory)
         return matchesSearch && matchesCategory
     })
@@ -76,34 +76,32 @@ export function Discovery() {
                         <Compass size={14} />
                         <span>{t('common.discovery')}</span>
                     </div>
-                    <h1 className="premium-hero-heading accent-text">{t('discovery.title')}</h1>
-                    <p className="premium-hero-subtitle">{t('discovery.subtitle')}</p>
+                    <h1 className="premium-hero-heading">{t('discovery.title')}</h1>
+                    <p>{t('discovery.subtitle')}</p>
 
-                    <div className={`${styles.searchBar} premium-glass-card`} style={{ padding: '8px 24px', borderRadius: 24, maxWidth: 640, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Search size={22} className={styles.searchIcon} style={{ opacity: 0.5 }} />
+                    <div className={styles.searchContainer}>
+                        <Search className={styles.searchIcon} size={20} />
                         <input
                             type="text"
                             placeholder={t('discovery.search_placeholder')}
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                             className={styles.searchInput}
-                            style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: 18, width: '100%', outline: 'none', padding: '12px 0' }}
                         />
                     </div>
                 </div>
             </header>
-
             <main className={`${styles.content} vista-transition`} style={{ maxWidth: 1400, margin: '0 auto', padding: '0 40px 80px' }}>
                 <div className={styles.sectionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48, marginTop: -32 }}>
-                    <div className={styles.tabs} style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.03)', padding: 6, borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
-                        {categories.map(cat => (
+                    <div className={styles.tabs} style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.03)', padding: 6, borderRadius: "var(--radius-lg)", border: '1px solid rgba(255,255,255,0.05)' }}>
+                        {categories.map((cat: string) => (
                             <button
                                 key={cat}
                                 className={`${styles.tabBtn} ${activeCategory === cat ? styles.activeTab : ''}`}
                                 onClick={() => setActiveCategory(cat)}
                                 style={{
                                     padding: '10px 20px',
-                                    borderRadius: 12,
+                                    borderRadius: "var(--radius-md)",
                                     fontSize: 14,
                                     fontWeight: 700,
                                     transition: 'all 0.2s',
@@ -121,8 +119,8 @@ export function Discovery() {
 
                 {loading ? (
                     <div className="premium-grid">
-                        {[1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="premium-glass-card shimmer" style={{ height: 320, borderRadius: 24 }} />
+                        {[1, 2, 3, 4, 5, 6].map((i: number) => (
+                            <div key={i} className="premium-glass-card shimmer" style={{ height: 320, borderRadius: "var(--radius-xl)" }} />
                         ))}
                     </div>
                 ) : filteredGuilds.length === 0 ? (
@@ -135,7 +133,7 @@ export function Discovery() {
                     </div>
                 ) : (
                     <div className="premium-grid">
-                        {filteredGuilds.map(guild => (
+                        {filteredGuilds.map((guild: any) => (
                             <div key={guild.id} className="premium-glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
                                 <div
                                     className={styles.cardBanner}
@@ -146,7 +144,7 @@ export function Discovery() {
                                     }}
                                 >
                                     {guild.verified && (
-                                        <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', padding: 6, borderRadius: 8 }}>
+                                        <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', padding: 6, borderRadius: "var(--radius-sm)" }}>
                                             <Shield size={16} fill="var(--beacon-brand)" color="white" />
                                         </div>
                                     )}
@@ -156,7 +154,7 @@ export function Discovery() {
                                         <div style={{
                                             width: 64,
                                             height: 64,
-                                            borderRadius: 20,
+                                            borderRadius: "var(--radius-xl)",
                                             background: 'var(--bg-secondary)',
                                             border: '4px solid var(--bg-primary)',
                                             marginTop: -48,
@@ -172,7 +170,7 @@ export function Discovery() {
                                         <div style={{ flex: 1 }}>
                                             <h3 style={{ fontSize: 18, fontWeight: 900, marginBottom: 2 }}>{guild.name}</h3>
                                             <div style={{ display: 'flex', gap: 6 }}>
-                                                {guild.tags.slice(0, 2).map(tag => (
+                                                {guild.tags.slice(0, 2).map((tag: string) => (
                                                     <span key={tag} style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', opacity: 0.5 }}>{tag}</span>
                                                 ))}
                                             </div>
@@ -193,7 +191,7 @@ export function Discovery() {
                                     </div>
                                     <Button
                                         variant="primary"
-                                        style={{ width: '100%', height: 44, borderRadius: 12, fontWeight: 800 }}
+                                        style={{ width: '100%', height: 44, borderRadius: "var(--radius-md)", fontWeight: 800 }}
                                         onClick={() => handleJoin(guild.id, guild.name)}
                                     >
                                         {t('discovery.join_server')}

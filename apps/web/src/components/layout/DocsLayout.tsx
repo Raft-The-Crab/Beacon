@@ -35,7 +35,7 @@ export function DocsLayout({ children }: DocsLayoutProps) {
     const sidebar = (
         <div className={styles.docsNav}>
             <div className={styles.searchContainer}>
-                <div className={`${styles.searchWrapper} premium-glass-card`} style={{ borderRadius: 12 }}>
+                <div className={`${styles.searchWrapper} premium-glass-card`} style={{ borderRadius: "var(--radius-md)" }}>
                     <SearchIcon className={styles.searchIcon} size={16} />
                     <input type="text" placeholder={t('docs.search_placeholder')} className={styles.searchInput} />
                 </div>

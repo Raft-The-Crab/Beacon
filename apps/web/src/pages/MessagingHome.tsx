@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from 'react-router-dom'
 import { Virtuoso } from "react-virtuoso"
 import {
   Users,
@@ -8,53 +9,41 @@ import {
   Crown,
   Coins,
   Search,
-  Moon,
-  Settings,
-  HelpCircle,
   Menu,
-  Wifi,
-  WifiOff,
+  HelpCircle,
 } from "lucide-react"
 import { useDMStore } from "../stores/useDMStore"
-import { useAuthStore } from "../stores/useAuthStore"
 import { useUserListStore } from "../stores/useUserListStore"
 import { useUIStore } from "../stores/useUIStore"
 import { useBeacoinStore } from "../stores/useBeacoinStore"
-import { openUserSettingsModal } from "../utils/modals"
+
 import { Avatar, Tooltip, Modal } from "../components/ui"
 import { ChatArea } from "../components/chat/ChatArea"
 import { useToast } from "../components/ui"
-import { NotificationBell } from "../components/features/NotificationInbox"
+import { WorkspaceLayout } from "../components/layout/WorkspaceLayout"
+import { CreateDMModal } from "../components/features/CreateDMModal"
+import { AddFriendModal } from "../components/features/AddFriendModal"
 import { BeacoinWallet } from "../components/features/BeacoinWallet"
-import { BeaconPlusStore } from "./BeaconPlusStore"
 import { ServerBoosting } from "../components/features/ServerBoosting"
 import { InviteView } from "../components/features/InviteView"
-import { AddFriendModal } from "../components/features/AddFriendModal"
-import { CreateDMModal } from "../components/features/CreateDMModal"
-import { WorkspaceLayout } from "../components/layout/WorkspaceLayout"
-import { AuraOrbs } from "../components/ui/AuraOrbs"
-import { useLowBandwidthStore } from "../stores/useLowBandwidthStore"
-import { BeaconNotesModal } from "../components/modals/BeaconNotesModal"
-import { useProfileArtStore } from "../stores/useProfileArtStore"
 import { ServerDiscovery } from "../components/features/ServerDiscovery"
 import { ActivityPanel } from "../components/features/ActivityPanel"
 import { OnboardingFlow } from "../components/features/OnboardingFlow"
+import { CurrentUserControls } from "../components/features/CurrentUserControls"
+import { AuraOrbs } from "../components/ui/AuraOrbs"
+import { NotificationBell } from "../components/features/NotificationInbox"
 import { UserPopoverCard } from "../components/features/UserPopoverCard"
 import styles from "../styles/modules/pages/MessagingHome.module.css"
 
 type FriendTab = "online" | "all" | "pending" | "blocked"
 
-const THEMES: string[] = ['dark', 'glass', 'oled', 'light', 'neon', 'midnight']
-
 export function MessagingHome() {
   const { channels, setActiveChannel, activeChannel } = useDMStore()
-  const { user } = useAuthStore()
-  const { friends, blockedUsers } = useUserListStore()
-  const { balance, fetchWallet } = useBeacoinStore()
-  const [currentTab, setCurrentTab] = useState<FriendTab>("online")
+  const navigate = useNavigate()
+  const { friends, blockedUsers, fetchFriends } = useUserListStore()
+  const [currentTab, setCurrentTab] = useState<FriendTab>("all")
   const [friendSearch, setFriendSearch] = useState("")
   const [showWallet, setShowWallet] = useState(false)
-  const [showStore, setShowStore] = useState(false)
   const [showBoosting, setShowBoosting] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
   const [showAddFriend, setShowAddFriend] = useState(false)
@@ -63,10 +52,8 @@ export function MessagingHome() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const { show } = useToast()
   const ui = useUIStore()
-  const { enabled: lowBandwidth, toggle: toggleLowBandwidth } = useLowBandwidthStore()
-  const [showNotes, setShowNotes] = useState(false)
-  const { arts, equippedFrame } = useProfileArtStore()
-  const equippedFrameArt = arts.find(a => a.id === equippedFrame)
+
+  const { fetchWallet } = useBeacoinStore()
 
   useEffect(() => {
     const handleOpenBoost = () => setShowBoosting(true)
@@ -82,6 +69,12 @@ export function MessagingHome() {
   useEffect(() => {
     fetchWallet()
   }, [fetchWallet])
+
+  useEffect(() => {
+    if (friends.length === 0) {
+      void fetchFriends()
+    }
+  }, [friends.length, fetchFriends])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -169,7 +162,7 @@ export function MessagingHome() {
 
         <button
           className={`${styles.navButton} ${styles.premiumButton} `}
-          onClick={() => setShowStore(true)}
+          onClick={() => navigate('/plus')}
         >
           <Crown size={20} color="#f0b232" />
           <span>Beacon+</span>
@@ -182,12 +175,7 @@ export function MessagingHome() {
 
         <button className={styles.navButton} onClick={() => setShowWallet(true)}>
           <Coins size={20} />
-          <span>Shop</span>
-        </button>
-
-        <button className={styles.navButton} onClick={() => setShowOnboarding(true)}>
-          <HelpCircle size={20} />
-          <span>Server Onboarding</span>
+          <span>Beacoins</span>
         </button>
       </div>
 
@@ -228,62 +216,7 @@ export function MessagingHome() {
         )}
       </div>
 
-      {/* User Area — always pinned to bottom */}
-      <div className={styles.userArea}>
-        <div className={styles.userPanel} onClick={() => setShowNotes(true)}>
-          <Avatar
-            username={user?.username || "Guest"}
-            src={user?.avatar ?? undefined}
-            status={user?.status as any || "online"}
-            size="sm"
-            frameUrl={equippedFrameArt?.imageUrl}
-            frameGradient={!equippedFrameArt?.imageUrl ? equippedFrameArt?.preview : undefined}
-          />
-          <div className={styles.userInfo}>
-            <div className={styles.userName}>{user?.username || "Guest"}</div>
-            <div className={styles.userStatusRow}>
-              {/* @ts-ignore */}
-              {user?.statusEmoji && <span className={styles.miniEmoji}>{user.statusEmoji}</span>}
-              <div className={styles.userStatusText}>
-                {/* @ts-ignore */}
-                {user?.statusText || getStatusLabel(user?.status)}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.userControls}>
-          <Tooltip content="Beacoins" position="top">
-            <button className={styles.beacoinBtn} onClick={() => setShowWallet(true)}>
-              <Coins size={13} />
-              <span>{balance.toLocaleString()}</span>
-            </button>
-          </Tooltip>
-          <Tooltip content={lowBandwidth ? "Low Bandwidth: ON" : "Low Bandwidth: OFF"} position="top">
-            <button
-              className={`${styles.iconCtrlBtn} ${lowBandwidth ? styles.iconCtrlBtnActive : ""} `}
-              onClick={toggleLowBandwidth}
-            >
-              {lowBandwidth ? <WifiOff size={16} /> : <Wifi size={16} />}
-            </button>
-          </Tooltip>
-          <Tooltip content="Settings" position="top">
-            <button className={styles.iconCtrlBtn} onClick={() => openUserSettingsModal()}>
-              <Settings size={16} />
-            </button>
-          </Tooltip>
-          <Tooltip content="Switch Theme" position="top">
-            <button
-              className={styles.iconCtrlBtn}
-              onClick={() => {
-                const next = THEMES[(THEMES.indexOf(ui.theme) + 1) % THEMES.length]
-                ui.setTheme(next as any)
-              }}
-            >
-              <Moon size={16} />
-            </button>
-          </Tooltip>
-        </div>
-      </div>
+      <CurrentUserControls />
     </div>
   )
 
@@ -410,33 +343,28 @@ export function MessagingHome() {
         )}
 
         {showWallet && <BeacoinWallet onClose={() => setShowWallet(false)} />}
-        <Modal isOpen={showStore} onClose={() => setShowStore(false)} size="xl" noPadding hideHeader>
-          <div style={{ position: 'relative', width: '100%', height: '80vh', display: 'flex', flexDirection: 'column' }}>
+        <Modal isOpen={showBoosting} onClose={() => setShowBoosting(false)} size="md" noPadding={true}>
+          <ServerBoosting onClose={() => setShowBoosting(false)} />
+        </Modal>
+        <Modal isOpen={showInvite} onClose={() => setShowInvite(false)} size="md" noPadding={true}>
+          <InviteView />
+        </Modal>
+        <Modal isOpen={showAddFriend} onClose={() => setShowAddFriend(false)} size="md" noPadding={true}>
+          <AddFriendModal onClose={() => setShowAddFriend(false)} />
+        </Modal>
+        <Modal isOpen={showCreateDM} onClose={() => setShowCreateDM(false)} size="sm" noPadding={true}>
+          <CreateDMModal onClose={() => setShowCreateDM(false)} />
+        </Modal>
+
+        <Modal isOpen={showDiscover} onClose={() => setShowDiscover(false)} size="lg" noPadding={true} hideHeader={true}>
+          <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', position: 'relative' }}>
             <button
-              onClick={() => setShowStore(false)}
+              onClick={() => setShowDiscover(false)}
               className="glass-hover"
               style={{ position: 'absolute', top: 16, right: 16, zIndex: 100, width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.5)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               ✕
             </button>
-            <BeaconPlusStore />
-          </div>
-        </Modal>
-        <Modal isOpen={showBoosting} onClose={() => setShowBoosting(false)} size="md">
-          <ServerBoosting onClose={() => setShowBoosting(false)} />
-        </Modal>
-        <Modal isOpen={showInvite} onClose={() => setShowInvite(false)} size="md">
-          <InviteView />
-        </Modal>
-        <Modal isOpen={showAddFriend} onClose={() => setShowAddFriend(false)} size="md">
-          <AddFriendModal onClose={() => setShowAddFriend(false)} />
-        </Modal>
-        <Modal isOpen={showCreateDM} onClose={() => setShowCreateDM(false)} size="sm">
-          <CreateDMModal onClose={() => setShowCreateDM(false)} />
-        </Modal>
-
-        <Modal isOpen={showDiscover} onClose={() => setShowDiscover(false)} size="lg" title="Discover Servers">
-          <div style={{ height: '70vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)' }}>
             <ServerDiscovery />
           </div>
         </Modal>
@@ -451,8 +379,6 @@ export function MessagingHome() {
             show('Welcome to the server!', 'success')
           }}
         />
-
-        <BeaconNotesModal isOpen={showNotes} onClose={() => setShowNotes(false)} />
       </WorkspaceLayout>
     </div>
   )

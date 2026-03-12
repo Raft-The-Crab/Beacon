@@ -61,7 +61,6 @@ export const Avatar = React.memo(function Avatar({
   frameUrl,
   frameGradient,
   frameAnimation,
-  avatarDecorationId
 }: AvatarProps) {
   const currentUser = useAuthStore(state => state.user)
   const { arts, equippedFrame } = useProfileArtStore()
@@ -78,22 +77,12 @@ export const Avatar = React.memo(function Avatar({
   const { bg, text } = stringToGradient(displayName)
   const initials = getInitials(displayName)
 
-  // Avatar Decoration parsing (MOCK DATA mapped to CSS vars as a demo)
-  const getDecorationColor = (id?: string | null) => {
-    if (id === 'dec_1') return '#00f5ff'
-    if (id === 'dec_2') return '#f0b232'
-    if (id === 'dec_3') return '#949cf7'
-    if (id === 'dec_4') return '#ff4757'
-    return null
-  }
-  const decColor = getDecorationColor(avatarDecorationId)
-
   const showImage = !!src && !src.includes('dicebear') && !src.includes('api.dicebear')
   const hasFrame = !!(finalFrameUrl || finalFrameGradient)
 
   return (
     <div
-      className={`${styles.avatar} ${styles[size]} ${hasFrame ? styles.framed : ''} ${decColor ? styles.hasDecoration : ''}`}
+      className={`${styles.avatar} ${styles[size]} ${hasFrame ? styles.framed : ''}`}
     >
       {/* Profile Art Frame */}
       {hasFrame && (
@@ -106,10 +95,6 @@ export const Avatar = React.memo(function Avatar({
         </div>
       )}
 
-      {/* Avatar Decoration (Shop System) */}
-      {decColor && (
-        <div className={styles.avatarDecoration} style={{ borderColor: decColor, boxShadow: `0 0 20px ${decColor}40` }} />
-      )}
 
       <div className={styles.inner}>
         {showImage ? (

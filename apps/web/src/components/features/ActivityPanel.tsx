@@ -3,7 +3,6 @@ import { Avatar } from '../ui'
 import styles from '../../styles/modules/features/ActivityPanel.module.css'
 import { useUserListStore } from '../../stores/useUserListStore'
 import { usePresenceStore } from '../../stores/usePresenceStore'
-import { QuestTracker } from './QuestTracker'
 
 
 // ACTIVITY_ICONS is defined but not used in the current JSX.
@@ -39,9 +38,6 @@ export function ActivityPanel() {
 
     return (
         <div className={styles.panel}>
-            {/* Inject Beacon Quests System */}
-            <QuestTracker />
-
             <h3 className={styles.title}>Active Now</h3>
 
             {withActivity.length === 0 ? (

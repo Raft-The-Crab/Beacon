@@ -5,10 +5,10 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Modal } from '../components/ui/Modal'
 import { useToast } from '../components/ui/Toast'
-import { API_CONFIG } from '../config/api'
 import { BotConsole } from '../components/dev/BotConsole'
 import { ComponentShowcase } from '../components/dev/ComponentShowcase'
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout'
+import { apiClient } from '../services/apiClient'
 // Tooltip removed as it was unused
 import styles from '../styles/modules/pages/DeveloperPortal.module.css'
 
@@ -39,13 +39,8 @@ export function DeveloperPortal() {
 
   const fetchApps = async () => {
     try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      const data = await res.json()
-      if (res.ok) {
+      const { success, data } = await apiClient.request('GET', '/applications')
+      if (success && data) {
         setApps(data)
       } else {
         showToast(data.error || 'Failed to fetch applications', 'error')
@@ -68,16 +63,8 @@ export function DeveloperPortal() {
     }
 
     try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ name: newAppName })
-      })
-      const data = await res.json()
-      if (res.ok) {
+      const { success, data } = await apiClient.request('POST', '/applications', { name: newAppName })
+      if (success && data) {
         setApps([...apps, data])
         setNewAppName('')
         setIsModalOpen(false)
@@ -230,18 +217,9 @@ export function DeveloperPortal() {
                               e.stopPropagation();
                               if (confirm('Delete this application? This will permanently remove all associated bots.')) {
                                 try {
-                                  const res = await fetch(`${API_CONFIG.BASE_URL}/api/applications/${app.id}`, {
-                                    method: 'DELETE',
-                                    headers: {
-                                      'Authorization': `Bearer ${localStorage.getItem('token')}`
-                                    }
-                                  })
-                                  if (res.ok) {
-                                    setApps(apps.filter(a => a.id !== app.id))
-                                    showToast(`${app.name} deleted`, 'success')
-                                  } else {
-                                    showToast('Failed to delete application', 'error')
-                                  }
+                                  await apiClient.request('DELETE', `/applications/${app.id}`)
+                                  setApps(apps.filter(a => a.id !== app.id))
+                                  showToast(`${app.name} deleted`, 'success')
                                 } catch {
                                   showToast('Failed to delete application', 'error')
                                 }
@@ -254,12 +232,7 @@ export function DeveloperPortal() {
                       </div>
                     ))}
 
-                    <div className={styles.appCard} style={{ borderStyle: 'dashed', background: 'transparent' }} onClick={() => setIsModalOpen(true)}>
-                      <div className={styles.appCardContent} style={{ marginTop: 0, padding: 40 }}>
-                        <Plus size={32} style={{ color: 'var(--text-muted)', marginBottom: 12 }} />
-                        <h3 style={{ color: 'var(--text-muted)' }}>Create New</h3>
-                      </div>
-                    </div>
+
                   </>
                 )}
               </div>

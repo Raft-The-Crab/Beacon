@@ -1,10 +1,9 @@
-﻿import React, { useState } from 'react'
-import { Smile, MoreVertical, Copy, Edit, Trash2, File, Pin, Shield, Languages } from 'lucide-react'
+import React, { useRef, useState } from 'react'
+import { Smile, Edit, Trash2, File, Pin, Shield, Languages } from 'lucide-react'
 import type { UserBadge } from '@beacon/types'
-import { Avatar, Tooltip, Dropdown, EmojiPicker } from '../ui'
+import { Avatar, Tooltip, EmojiPicker } from '../ui'
 import { UserBadges, BotTag } from '../ui/UserBadges'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useReactionsStore } from '../../stores/useReactionsStore'
 import { MarkdownRenderer } from '../ui/MarkdownRenderer'
 import { useProfileArtStore } from '../../stores/useProfileArtStore'
 import { UserPopoverCard } from './UserPopoverCard'
@@ -19,8 +18,16 @@ export interface MessageReaction {
 
 interface MessageItemProps {
   id: string
+  authorId?: string
   authorName: string
   authorAvatar?: string
+  authorStatus?: 'online' | 'idle' | 'dnd' | 'offline'
+  authorCustomStatus?: string
+  authorBio?: string
+  authorJoinedAt?: string
+  authorRoles?: { name: string; color: string }[]
+  authorBannerColor?: string
+  authorAvatarDecorationId?: string | null
   content: string
   timestamp: string
   edited?: boolean
@@ -58,8 +65,16 @@ interface MessageItemProps {
 
 export const MessageItem = React.memo(function MessageItem({
   id: _id,
+  authorId,
   authorName,
   authorAvatar,
+  authorStatus = 'offline',
+  authorCustomStatus,
+  authorBio,
+  authorJoinedAt,
+  authorRoles,
+  authorBannerColor,
+  authorAvatarDecorationId,
   content,
   timestamp,
   edited,
@@ -83,9 +98,11 @@ export const MessageItem = React.memo(function MessageItem({
   botActions,
 }: MessageItemProps) {
   const [showReactionPicker, setShowReactionPicker] = useState(false)
+  const [reactionAnchorEl, setReactionAnchorEl] = useState<HTMLElement | null>(null)
+  const inlineReactionButtonRef = useRef<HTMLButtonElement>(null)
+  const actionsReactionButtonRef = useRef<HTMLButtonElement>(null)
   const [translatedContent, setTranslatedContent] = useState<string | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
-  const { customReactions } = useReactionsStore()
   const { user } = useAuthStore()
 
   // Normalize reaction objects to { emoji, count, userReacted }
@@ -111,9 +128,18 @@ export const MessageItem = React.memo(function MessageItem({
     }
   })
   const { arts, equippedFrame } = useProfileArtStore()
-  const isSelf = authorName === 'You'
+  const isSelf = !!user && (authorId === user.id || authorName === user.username || authorName === 'You')
+  const displayAuthorName = isSelf ? (user?.username || authorName) : authorName
+  const displayAuthorAvatar = isSelf ? (user?.avatar || authorAvatar) : authorAvatar
+  const displayAuthorStatus = (isSelf ? user?.status : authorStatus) || 'offline'
   const frameArt = isSelf ? arts.find(a => a.id === equippedFrame) : null
-  const isMentioned = content.includes('@You') || content.includes('@everyone') || content.includes('@here')
+  const isMentioned = (!!user && content.includes(`@${user.username}`)) || content.includes('@You') || content.includes('@everyone') || content.includes('@here')
+  const ownStatusClass =
+    status === 'read'
+      ? styles.ownStatusRead
+      : status === 'sending'
+        ? styles.ownStatusSending
+        : styles.ownStatusMuted
 
   return (
     <div
@@ -123,17 +149,15 @@ export const MessageItem = React.memo(function MessageItem({
         ${isContinuing ? styles.continuing : ''} 
         ${isMentioned ? styles.mentioned : ''}
       `}
-      style={isMentioned ? {
-        boxShadow: '0 0 30px rgba(250, 168, 26, 0.15)',
-        background: 'rgba(250, 168, 26, 0.05)'
-      } : {}}
       onMouseEnter={() => {/* Trigger chromatic aberration in CSS */ }}
     >
       {!isContinuing ? (
         <Avatar
-          src={authorAvatar}
-          alt={authorName}
+          src={displayAuthorAvatar}
+          alt={displayAuthorName}
           size="md"
+          status={displayAuthorStatus as any}
+          username={displayAuthorName}
           frameUrl={frameArt?.imageUrl}
           frameGradient={!frameArt?.imageUrl ? frameArt?.preview : undefined}
         />
@@ -145,27 +169,33 @@ export const MessageItem = React.memo(function MessageItem({
         {!isContinuing && (
           <div className={styles.header}>
             <UserPopoverCard
-              username={authorName}
-              avatar={authorAvatar}
-              badges={authorBadges}
+              username={displayAuthorName}
+              avatar={displayAuthorAvatar}
+              status={displayAuthorStatus as any}
+              customStatus={authorCustomStatus || (isSelf ? (user?.statusText || user?.customStatus || undefined) : undefined) || undefined}
+              badges={authorBadges || (isSelf ? user?.badges : undefined)}
               isBot={isBot}
-              bio="A Beacon user exploring the cosmos."
-              roles={[{ name: 'Member', color: '#5865f2' }]}
+              bio={authorBio || (isSelf ? user?.bio || undefined : 'A Beacon user exploring the cosmos.')}
+              joinedAt={authorJoinedAt}
+              roles={authorRoles && authorRoles.length > 0 ? authorRoles : isSelf ? [{ name: 'You', color: '#5865f2' }] : []}
+              bannerColor={authorBannerColor || '#5865f2'}
+              avatarDecorationId={authorAvatarDecorationId || (isSelf ? user?.avatarDecorationId : undefined)}
             >
-              <span className={styles.author}>{authorName}</span>
+              <span className={styles.author}>{displayAuthorName}</span>
             </UserPopoverCard>
             {isBot && <BotTag />}
             <UserBadges badges={authorBadges} isBot={isBot} size="sm" />
             <span className={styles.time}>{timestamp}</span>
-            {authorName === 'You' && (
-              <span style={{ fontSize: 10, marginLeft: 6, color: status === 'read' ? 'var(--brand-experiment)' : 'var(--text-muted)' }} title={`Status: ${status}`}>
-                {status === 'sending' ? '•' : status === 'sent' ? '✓' : '✓✓'}
+            {isPinned && (
+              <span className={styles.pinnedBadge}>
+                <Pin size={11} />
+                Pinned
               </span>
             )}
-            {isEncrypted && (
-              <Tooltip content="End-to-end encrypted">
-                <Shield size={12} style={{ color: 'var(--brand-experiment)', marginLeft: 4 }} />
-              </Tooltip>
+            {isSelf && (
+              <span className={`${styles.ownStatus} ${ownStatusClass}`} title={`Status: ${status}`}>
+                {status === 'sending' ? '•' : status === 'sent' ? '✓' : '✓✓'}
+              </span>
             )}
             {isEncrypted && (
               <Tooltip content="End-to-end encrypted">
@@ -194,7 +224,11 @@ export const MessageItem = React.memo(function MessageItem({
         {embeds && embeds.length > 0 && (
           <div className={styles.botEmbeds}>
             {embeds.map((embed, i) => (
-              <div key={i} className={styles.botEmbed} style={{ borderLeftColor: embed.color || '#5865F2' }}>
+              <div
+                key={i}
+                className={`${styles.botEmbed} ${embed.thumbnail ? styles.botEmbedWithThumb : ''}`}
+                style={{ borderLeftColor: embed.color || '#5865F2' }}
+              >
                 {embed.title && <div className={styles.embedTitle}>{embed.title}</div>}
                 {embed.description && <div className={styles.embedDesc}>{embed.description}</div>}
                 {embed.thumbnail && <img src={embed.thumbnail} alt="" className={styles.embedThumb} />}
@@ -224,7 +258,7 @@ export const MessageItem = React.memo(function MessageItem({
                 className={styles.botActionBtn}
                 onClick={() => {
                   console.log('[Bot Action]', action.type, action.payload)
-                  // TODO: dispatch slash command or open link  
+                  // Dispatch slash command or open link  
                 }}
               >
                 {action.label || action.type}
@@ -290,63 +324,58 @@ export const MessageItem = React.memo(function MessageItem({
           </div>
         )}
 
-        {/* Quick reactions bar (from user settings) */}
-        {onReaction && customReactions && customReactions.length > 0 && (
-          <div className={styles.quickReactions}>
-            {customReactions.map((emoji) => (
-              <button
-                key={emoji}
-                className={styles.quickReactionBtn}
-                onClick={() => onReaction(emoji, false)}
-                title={`React with ${emoji}`}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {normalizedReactions && normalizedReactions.length > 0 && (
+        {(normalizedReactions.length > 0 || !!onReaction) && (
           <div className={styles.reactions}>
-            {normalizedReactions?.map((reaction) => (
-              <button
-                key={reaction.emoji}
-                className={`${styles.reaction} ${reaction.userReacted ? styles.userReacted : ''} ${reaction.isSuper ? styles.superReaction : ''}`}
-                onClick={() => {
-                  if (reaction.isSuper) {
-                    // Play a random burst sound for super reactions
-                    const audio = new Audio('/assets/sounds/burst.mp3')
-                    audio.volume = 0.5
-                    audio.play().catch(() => { })
-                  }
-                  onReaction?.(reaction.emoji, reaction.isSuper)
-                }}
-                title={`You and ${reaction.count - (reaction.userReacted ? 1 : 0)} others reacted ${reaction.isSuper ? '(Super Reaction)' : ''}`}
-              >
-                <span>{reaction.emoji}</span>
-                <span className={styles.count}>{reaction.count}</span>
-              </button>
-            ))}
+            {normalizedReactions.map((reaction) => {
+              const tooltipText = reaction.userReacted
+                ? reaction.count === 1
+                  ? `You reacted with ${reaction.emoji}`
+                  : `You and ${reaction.count - 1} other${reaction.count - 1 !== 1 ? 's' : ''} reacted with ${reaction.emoji}`
+                : `${reaction.count} ${reaction.count === 1 ? 'person' : 'people'} reacted with ${reaction.emoji}`
+              
+              return (
+                <Tooltip key={reaction.emoji} content={tooltipText} position="top">
+                  <button
+                    className={`${styles.reaction} ${reaction.userReacted ? styles.userReacted : ''} ${reaction.isSuper ? styles.superReaction : ''}`}
+                    onClick={() => {
+                      if (reaction.isSuper) {
+                        const audio = new Audio('/assets/sounds/burst.mp3')
+                        audio.volume = 0.5
+                        audio.play().catch(() => { })
+                      }
+                      onReaction?.(reaction.emoji, reaction.isSuper)
+                    }}
+                  >
+                    <span>{reaction.emoji}</span>
+                    <span className={styles.count}>{reaction.count}</span>
+                  </button>
+                </Tooltip>
+              )
+            })}
             {onReaction && (
               <div className={styles.reactionAdd}>
-                <Tooltip content="Add reaction" position="top">
+                <Tooltip content="Add Reaction" position="top">
                   <button
+                    ref={inlineReactionButtonRef}
                     className={styles.addReactionBtn}
-                    onClick={() => setShowReactionPicker(!showReactionPicker)}
+                    onClick={() => {
+                      setReactionAnchorEl(inlineReactionButtonRef.current)
+                      setShowReactionPicker(!showReactionPicker)
+                    }}
+                    aria-label="Add reaction"
                   >
-                    <Smile size={16} />
+                    <Smile size={14} />
                   </button>
                 </Tooltip>
                 {showReactionPicker && (
-                  <div className={styles.fullEmojiPicker}>
-                    <EmojiPicker
-                      onSelect={(emoji, isSuper) => {
-                        onReaction(emoji, isSuper)
-                        setShowReactionPicker(false)
-                      }}
-                      onClose={() => setShowReactionPicker(false)}
-                    />
-                  </div>
+                  <EmojiPicker
+                    onSelect={(emoji, isSuper) => {
+                      onReaction(emoji, isSuper)
+                      setShowReactionPicker(false)
+                    }}
+                    onClose={() => setShowReactionPicker(false)}
+                    anchorElement={reactionAnchorEl}
+                  />
                 )}
               </div>
             )}
@@ -359,18 +388,35 @@ export const MessageItem = React.memo(function MessageItem({
           {/* Quick Reactions */}
           {onReaction && (
             <>
-              <Tooltip content="Thumbs Up" position="top">
-                <button className={styles.actionBtn} onClick={() => onReaction('👍', false)}>👍</button>
-              </Tooltip>
-              <Tooltip content="Heart" position="top">
-                <button className={styles.actionBtn} onClick={() => onReaction('❤️', false)}>❤️</button>
-              </Tooltip>
-              <Tooltip content="Laugh" position="top">
-                <button className={styles.actionBtn} onClick={() => onReaction('😂', false)}>😂</button>
-              </Tooltip>
-              <div style={{ width: 1, height: 20, background: 'var(--glass-border)', margin: '0 4px' }} />
-              <Tooltip content="Add Reaction" position="top">
-                <button className={styles.actionBtn} onClick={() => setShowReactionPicker(true)}>
+              <button className={styles.actionBtn} onClick={() => onReaction('👍', false)} title="Add 👍">
+                👍
+              </button>
+              <button className={styles.actionBtn} onClick={() => onReaction('❤️', false)} title="Add ❤️">
+                ❤️
+              </button>
+              <button className={styles.actionBtn} onClick={() => onReaction('😂', false)} title="Add 😂">
+                😂
+              </button>
+              <button className={styles.actionBtn} onClick={() => onReaction('😮', false)} title="Add 😮">
+                😮
+              </button>
+              <button className={styles.actionBtn} onClick={() => onReaction('😢', false)} title="Add 😢">
+                😢
+              </button>
+              <button className={styles.actionBtn} onClick={() => onReaction('🔥', false)} title="Add 🔥">
+                🔥
+              </button>
+              <div className={styles.actionsDivider} />
+              <Tooltip content="More reactions" position="top">
+                <button
+                  ref={actionsReactionButtonRef}
+                  className={styles.actionBtn}
+                  onClick={() => {
+                    setReactionAnchorEl(actionsReactionButtonRef.current)
+                    setShowReactionPicker(true)
+                  }}
+                  aria-label="More reactions"
+                >
                   <Smile size={16} />
                 </button>
               </Tooltip>
@@ -402,45 +448,31 @@ export const MessageItem = React.memo(function MessageItem({
             </Tooltip>
           )}
 
-          {/* Overflow Menu */}
-          <Dropdown
-            trigger={
-              <button className={styles.actionBtn} title="More">
-                <MoreVertical size={16} />
-              </button>
-            }
-            items={[
-              {
-                id: 'copy',
-                label: 'Copy Text',
-                icon: <Copy size={16} />,
-                onClick: () => navigator.clipboard.writeText(content),
-              },
-              {
-                id: 'translate',
-                label: isTranslating ? 'Translating...' : 'Translate',
-                icon: <Languages size={16} />,
-                onClick: async () => {
-                  if (translatedContent) {
-                    setTranslatedContent(null)
-                    return
-                  }
-                  setIsTranslating(true)
-                  try {
-                    await new Promise(r => setTimeout(r, 800))
-                    const isCJK = /[\u4e00-\u9fa5\u3040-\u309f\u30a0-\u30ff]/.test(content)
-                    const translation = isCJK
-                      ? `[English]: ${content} (Simulation)`
-                      : `[Target Language]: ${content} (Beacon AI Titan III)`
-                    setTranslatedContent(translation)
-                  } finally {
-                    setIsTranslating(false)
-                  }
-                },
-              }
-            ]}
-            align="right"
-          />
+          <Tooltip content={isTranslating ? 'Translating...' : translatedContent ? 'Hide translation' : 'Translate'} position="top">
+            <button
+              className={styles.actionBtn}
+              onClick={async () => {
+                if (translatedContent) {
+                  setTranslatedContent(null)
+                  return
+                }
+                setIsTranslating(true)
+                try {
+                  await new Promise((r) => setTimeout(r, 800))
+                  const isCJK = /[\u4e00-\u9fa5\u3040-\u309f\u30a0-\u30ff]/.test(content)
+                  const translation = isCJK
+                    ? `[English]: ${content} (Simulation)`
+                    : `[Target Language]: ${content} (Beacon AI Titan III)`
+                  setTranslatedContent(translation)
+                } finally {
+                  setIsTranslating(false)
+                }
+              }}
+              title="Translate"
+            >
+              <Languages size={16} />
+            </button>
+          </Tooltip>
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
-import { Music, Check, Smile, Loader2 } from 'lucide-react'
+import { Music, Smile, Loader2 } from 'lucide-react'
 import { Modal, Input, Button, EmojiPicker } from '../ui'
-import { useAuthStore, PresenceStatus } from '../../stores/useAuthStore'
+import { apiClient } from '../../services/apiClient'
 import { MusicScrubber } from '../ui/MusicScrubber'
 import { fetchMusicMetadata, type MusicMetadata } from '../../services/musicMetadata'
 import styles from '../../styles/modules/modals/BeaconNotesModal.module.css'
@@ -11,26 +11,40 @@ interface BeaconNotesModalProps {
     onClose: () => void
 }
 
-const PRESENCE_OPTIONS: { status: PresenceStatus; label: string; color: string }[] = [
-    { status: 'online', label: 'Online', color: '#23a559' },
-    { status: 'idle', label: 'Idle', color: '#f0b232' },
-    { status: 'dnd', label: 'Do Not Disturb', color: '#f23f43' },
-    { status: 'invisible', label: 'Invisible', color: '#80848e' },
-]
-
 export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
-    const { user, updateStatus, updateProfile } = useAuthStore()
-    const [text, setText] = useState(user?.statusText || '')
-    const [emoji, setEmoji] = useState(user?.statusEmoji || '✨')
-    const [musicUrl, setMusicUrl] = useState(user?.statusMusic || '')
+    const [text, setText] = useState('')
+    const [emoji, setEmoji] = useState('✨')
+    const [musicUrl, setMusicUrl] = useState('')
     const [metadata, setMetadata] = useState<MusicMetadata | null>(null)
     const [clipDuration, setClipDuration] = useState<15 | 30>(15)
     const [clipStart, setClipStart] = useState(0)
     const [isLoadingMetadata, setIsLoadingMetadata] = useState(false)
 
-    const [currentStatus, setCurrentStatus] = useState<PresenceStatus>((user?.status as PresenceStatus) || 'online')
     const [isSaving, setIsSaving] = useState(false)
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false)
+
+    useEffect(() => {
+        if (!isOpen) return
+
+        const load = async () => {
+            const res = await apiClient.request('GET', '/notes/profile/me')
+            if (res.success && res.data?.note) {
+                const note = res.data.note
+                setText(note.text || '')
+                setEmoji(note.emoji || '✨')
+                setMusicUrl(note.musicUrl || '')
+                if (note.musicMetadata) {
+                    setMetadata(note.musicMetadata)
+                    setClipDuration(note.musicMetadata.duration === 30 ? 30 : 15)
+                    setClipStart(Number(note.musicMetadata.start || 0))
+                } else {
+                    setMetadata(null)
+                }
+            }
+        }
+
+        load().catch(console.error)
+    }, [isOpen])
 
     // Auto-fetch metadata when URL changes
     useEffect(() => {
@@ -56,20 +70,20 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
     const handleSave = async () => {
         setIsSaving(true)
         try {
-            await updateStatus({
-                statusText: text,
-                statusEmoji: emoji,
-                statusMusic: musicUrl,
-                statusMusicMetadata: metadata ? {
+            await apiClient.request('PUT', '/notes/profile/me', {
+                text,
+                emoji,
+                musicUrl: musicUrl || null,
+                musicMetadata: metadata ? {
                     url: musicUrl,
                     start: clipStart,
                     duration: clipDuration,
                     title: metadata.title,
                     artist: metadata.artist,
-                    platform: metadata.platform
-                } : undefined
+                    thumbnail: metadata.thumbnail,
+                    platform: metadata.platform,
+                } : null,
             })
-            await updateProfile({ status: currentStatus } as any)
             onClose()
         } catch (err) {
             console.error(err)
@@ -85,34 +99,41 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
         setMetadata(null)
     }
 
+    const embedSrc = (() => {
+        if (!musicUrl) return null
+        if (musicUrl.includes('youtube.com') || musicUrl.includes('youtu.be')) {
+            try {
+                const url = new URL(musicUrl)
+                const id = url.hostname.includes('youtu.be')
+                    ? url.pathname.replace('/', '')
+                    : (url.searchParams.get('v') || '')
+                if (!id) return null
+                return `https://www.youtube.com/embed/${id}?start=${Math.max(0, clipStart)}`
+            } catch {
+                return null
+            }
+        }
+        if (musicUrl.includes('spotify.com/track/')) {
+            const parts = musicUrl.split('/track/')
+            const id = parts[1]?.split('?')[0]
+            if (!id) return null
+            return `https://open.spotify.com/embed/track/${id}`
+        }
+        return null
+    })()
+
+    const canAudioPreview = /\.(mp3|wav|ogg|m4a|aac)$/i.test(musicUrl)
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Beacon Notes" size="md">
             <div className={styles.container}>
                 <p className={styles.description}>
-                    Update your presence and share what's on your mind.
+                    Share a note and optional music preview on your profile.
                 </p>
-
-                {/* Presence Selection */}
-                <div className={styles.section}>
-                    <label className={styles.label}>Presence</label>
-                    <div className={styles.presenceGrid}>
-                        {PRESENCE_OPTIONS.map((opt) => (
-                            <button
-                                key={opt.status}
-                                className={`${styles.presenceBtn} ${currentStatus === opt.status ? styles.activePresence : ''}`}
-                                onClick={() => setCurrentStatus(opt.status)}
-                            >
-                                <div className={styles.presenceDot} style={{ backgroundColor: opt.color }} />
-                                <span>{opt.label}</span>
-                                {currentStatus === opt.status && <Check size={14} className={styles.activeIcon} />}
-                            </button>
-                        ))}
-                    </div>
-                </div>
 
                 {/* Status Input */}
                 <div className={styles.section}>
-                    <label className={styles.label}>What's happening?</label>
+                    <label className={styles.label}>Profile Note</label>
                     <div className={styles.statusInputArea}>
                         <button
                             className={styles.emojiBtn}
@@ -122,7 +143,7 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
                             <Smile size={14} className={styles.miniSmile} />
                         </button>
                         <Input
-                            placeholder="I'm feeling lucky today..."
+                            placeholder="Share a quick note..."
                             value={text}
                             onChange={(e) => setText(e.target.value)}
                             className={styles.textField}
@@ -158,6 +179,22 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
                                 <span className={styles.musicTitle}>{metadata.title}</span>
                                 <span className={styles.musicArtist}>{metadata.artist}</span>
                             </div>
+                        </div>
+                    )}
+
+                    {canAudioPreview && (
+                        <audio className={styles.audioPreview} controls src={musicUrl} />
+                    )}
+
+                    {!canAudioPreview && embedSrc && (
+                        <div className={styles.embedWrap}>
+                            <iframe
+                                title="Music preview"
+                                src={embedSrc}
+                                className={styles.embedFrame}
+                                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                                loading="lazy"
+                            />
                         </div>
                     )}
 

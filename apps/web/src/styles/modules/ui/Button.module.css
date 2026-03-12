@@ -3,9 +3,9 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  font-weight: 600;
-  border-radius: var(--radius-full);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
   border: none;
   white-space: nowrap;
@@ -15,156 +15,207 @@
   position: relative;
   overflow: hidden;
   letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.button:active::before {
+  width: 300px;
+  height: 300px;
+  transition: width 0s, height 0s;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--beacon-brand);
+  outline-offset: 2px;
 }
 
 .button:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;
   box-shadow: none !important;
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Primary ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
+/* Primary - Discord-like Brand Button */
 .primary {
-  background: var(--accent-gradient);
+  background: var(--beacon-brand);
   color: white;
-  box-shadow: 0 2px 8px rgba(88, 101, 242, 0.25);
-}
-
-.primary::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: var(--shimmer-gradient);
-  transition: none;
-}
-
-.primary:hover::after {
-  animation: shimmer 1.5s infinite;
+  box-shadow: none;
 }
 
 .primary:hover:not(:disabled) {
+  background: var(--beacon-brand-hover);
+  box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(88, 101, 242, 0.35);
 }
 
 .primary:active:not(:disabled) {
   transform: translateY(0) scale(0.97);
-  box-shadow: 0 2px 8px rgba(88, 101, 242, 0.2);
+  box-shadow: 0 2px 6px rgba(88, 101, 242, 0.2);
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Secondary ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
+/* Secondary - Subtle Gray Button */
 .secondary {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(79, 84, 92, 0.5);
   color: var(--text-primary);
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  background: rgba(79, 84, 92, 0.7);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .secondary:active:not(:disabled) {
-  transform: translateY(0) scale(0.97);
+  background: rgba(79, 84, 92, 0.8);
+  transform: scale(0.98);
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Ghost ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
+/* Ghost - Transparent Button */
 .ghost {
   background: transparent;
   color: var(--text-secondary);
-  border: none;
+  border: 1px solid transparent;
 }
 
 .ghost:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .ghost:active:not(:disabled) {
   background: rgba(255, 255, 255, 0.08);
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Danger ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
+/* Danger - Red Destructive Button */
 .danger {
-  background: rgba(255, 71, 87, 0.1);
+  background: rgba(242, 63, 67, 0.1);
   color: var(--status-error);
-  border: 1px solid rgba(255, 71, 87, 0.2);
+  border: 1px solid rgba(242, 63, 67, 0.2);
 }
 
 .danger:hover:not(:disabled) {
   background: var(--status-error);
   color: white;
   border-color: var(--status-error);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(255, 71, 87, 0.3);
+  box-shadow: 0 4px 12px rgba(242, 63, 67, 0.3);
 }
 
 .danger:active:not(:disabled) {
-  transform: translateY(0) scale(0.97);
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(242, 63, 67, 0.25);
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Success ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
+/* Success - Green Positive Button */
 .success {
-  background: rgba(36, 218, 118, 0.1);
+  background: rgba(35, 165, 90, 0.1);
   color: var(--status-success);
-  border: 1px solid rgba(36, 218, 118, 0.2);
+  border: 1px solid rgba(35, 165, 90, 0.2);
 }
 
 .success:hover:not(:disabled) {
   background: var(--status-success);
   color: white;
   border-color: var(--status-success);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(36, 218, 118, 0.3);
+  box-shadow: 0 4px 12px rgba(35, 165, 90, 0.3);
 }
 
 .success:active:not(:disabled) {
-  transform: translateY(0) scale(0.97);
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(35, 165, 90, 0.25);
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Sizes ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
+/* Warning - Yellow Caution Button */
+.warning {
+  background: rgba(240, 178, 50, 0.1);
+  color: var(--status-warning);
+  border: 1px solid rgba(240, 178, 50, 0.2);
+}
+
+.warning:hover:not(:disabled) {
+  background: var(--status-warning);
+  color: #000;
+  border-color: var(--status-warning);
+  box-shadow: 0 4px 12px rgba(240, 178, 50, 0.3);
+}
+
+.warning:active:not(:disabled) {
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(240, 178, 50, 0.25);
+}
+
+/* Sizes */
 .sm {
-  min-height: 36px;
-  padding: 0 var(--space-md);
+  min-height: 32px;
+  padding: 6px 16px;
   font-size: var(--font-size-sm);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-sm);
 }
 
 .md {
-  min-height: 44px;
-  padding: 0 var(--space-lg);
+  min-height: 38px;
+  padding: 9px 20px;
   font-size: var(--font-size-md);
 }
 
 .lg {
-  min-height: 52px;
-  padding: 0 var(--space-xl);
+  min-height: 44px;
+  padding: 12px 24px;
   font-size: var(--font-size-lg);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .fullWidth {
   width: 100%;
 }
 
+.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
 .spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: currentColor;
+  border-right-color: currentColor;
   border-radius: 50%;
-  animation: beacon-spin 0.8s linear infinite;
+  animation: beacon-spin 0.6s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 }
 
 @keyframes beacon-spin {
-  to {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
     transform: rotate(360deg);
+  }
+}
+
+/* Bounce keyframe for satisfying interactions */
+@keyframes button-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
   }
 }

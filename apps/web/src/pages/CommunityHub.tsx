@@ -71,7 +71,7 @@ export function CommunityHub() {
                             <div style={{ padding: 24, flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
                                 <div style={{ display: 'flex', gap: 16, alignItems: 'flex-end', marginTop: -48 }}>
                                     <div style={{
-                                        width: 72, height: 72, borderRadius: 24,
+                                        width: 72, height: 72, borderRadius: "var(--radius-xl)",
                                         background: 'var(--bg-secondary)', border: '4px solid var(--bg-primary)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         fontSize: 32, flexShrink: 0
@@ -91,7 +91,7 @@ export function CommunityHub() {
                                     <Users size={14} />
                                     <span>{community.members} members</span>
                                 </div>
-                                <Button variant="primary" style={{ width: '100%', height: 44, borderRadius: 12, fontWeight: 800 }}>
+                                <Button variant="primary" style={{ width: '100%', height: 44, borderRadius: "var(--radius-md)", fontWeight: 800 }}>
                                     {t('community.join')}
                                 </Button>
                             </div>
@@ -108,7 +108,7 @@ export function CommunityHub() {
                     <p style={{ color: 'var(--text-secondary)', fontSize: 18, maxWidth: 600, margin: '0 auto 40px', lineHeight: 1.6 }}>
                         {t('community.cta_desc')}
                     </p>
-                    <Button variant="primary" size="lg" style={{ height: 56, paddingInline: 48, fontSize: 18, fontWeight: 800, borderRadius: 16 }}>
+                    <Button variant="primary" size="lg" style={{ height: 56, paddingInline: 48, fontSize: 18, fontWeight: 800, borderRadius: "var(--radius-lg)" }}>
                         <PlusCircle size={20} />
                         {t('community.create_server')}
                     </Button>

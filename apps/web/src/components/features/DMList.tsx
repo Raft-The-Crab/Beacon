@@ -3,6 +3,7 @@ import { Search, Plus } from 'lucide-react'
 import { Avatar, Input, Badge, Button, Modal } from '../ui'
 import { useDMStore, DMChannel, DMParticipant } from '../../stores/useDMStore'
 import { useAuthStore } from '../../stores/useAuthStore'
+import { useToast } from '../ui'
 import styles from '../../styles/modules/features/DMList.module.css'
 
 interface DMListProps {
@@ -17,6 +18,7 @@ export function DMList({ selectedDmId, onSelectDM }: DMListProps) {
 
   const { user } = useAuthStore()
   const { channels, messages, createDMChannel, markAsRead } = useDMStore()
+  const { show: showToast } = useToast()
 
   const handleSelectDM = (dmId: string) => {
     onSelectDM(dmId)
@@ -28,15 +30,19 @@ export function DMList({ selectedDmId, onSelectDM }: DMListProps) {
 
     // In a real app, you'd search for the user by username via API
     // For now, we'll create a placeholder
-    await createDMChannel({
-      id: Date.now().toString(),
-      username: newDMUsername,
-      avatar: undefined,
-      status: 'invisible',
-    })
+    try {
+      await createDMChannel({
+        id: Date.now().toString(),
+        username: newDMUsername,
+        avatar: undefined,
+        status: 'invisible',
+      })
 
-    setNewDMUsername('')
-    setShowNewDMModal(false)
+      setNewDMUsername('')
+      setShowNewDMModal(false)
+    } catch {
+      showToast('Could not open DM. Pick a valid user from profile or member list.', 'error')
+    }
   }
 
   const getDMInfo = (channel: DMChannel) => {

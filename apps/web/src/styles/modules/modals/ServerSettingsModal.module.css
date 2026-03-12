@@ -1,7 +1,11 @@
 .container {
   display: flex;
-  height: 100%;
-  background: transparent;
+  height: 85vh;
+  max-height: 85vh;
+  background: var(--bg-panel, #232428);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
 .sidebar {
@@ -101,7 +105,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  background: rgba(0, 0, 0, 0.1);
+  background: transparent;
 }
 
 .escButton {
@@ -317,77 +321,7 @@
   }
 }
 
-.roleIcon {
-  color: var(--beacon-brand);
-}
 
-.escButton {
-  position: absolute;
-  top: 32px;
-  right: 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  z-index: 100;
-  background: none;
-  border: none;
-}
-
-.escCircle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  transition: all var(--transition-fast);
-}
-
-.escButton:hover .escCircle {
-  border-color: var(--text-primary);
-  color: var(--text-primary);
-  transform: rotate(90deg);
-}
-
-.escText {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-
-.formGroup {
-  margin-bottom: 16px;
-}
-
-.formGroup label {
-  display: block;
-  margin-bottom: 4px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.formGroup input,
-.formGroup select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-xs);
-  background: var(--background-primary);
-  color: var(--text-primary);
-  font-size: 14px;
-}
-
-.formGroup input:focus,
-.formGroup select:focus {
-  outline: none;
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
-}
 
 .actions {
   display: flex;

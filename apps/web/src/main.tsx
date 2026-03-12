@@ -1,11 +1,10 @@
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
 import App from './App'
 
 import './styles/index.css'
 
 // Suppress the React DevTools warning for a completely pristine console output as requested
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   const originalInfo = console.info;
   const originalLog = console.log;
   console.info = (...args) => {
@@ -18,8 +17,10 @@ if (process.env.NODE_ENV === 'development') {
   };
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-)
+import('react-dom/client').then(({ createRoot }) => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  )
+})

@@ -4,7 +4,7 @@ import { prisma } from '../db'
 
 const router = Router()
 
-// GET /users/@me/notifications
+// GET /users/@me/notifications with deduplication
 router.get('/users/@me/notifications', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id
@@ -17,7 +17,21 @@ router.get('/users/@me/notifications', authenticate, async (req: AuthRequest, re
       take: 100,
     })
 
-    res.json(notifications.map((n) => {
+    // Deduplicate by type + relatedUserId
+    const seen = new Set<string>()
+    const deduplicated = notifications.filter(n => {
+      const metadata = (n.metadata as any) || {}
+      const relatedUserId = metadata.relatedUserId || ''
+      const key = `${n.type}:${relatedUserId}`
+      
+      if (seen.has(key)) {
+        return false
+      }
+      seen.add(key)
+      return true
+    })
+
+    res.json(deduplicated.map((n) => {
       const metadata = n.metadata as any || {}
       return {
         id: n.id,
@@ -33,7 +47,7 @@ router.get('/users/@me/notifications', authenticate, async (req: AuthRequest, re
       }
     }))
   } catch (err) {
-    console.error(err)
+    console.error('Get notifications error:', err)
     res.status(500).json({ error: 'Internal server error' })
   }
 })

@@ -1,13 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 export default defineConfig({
   plugins: [
     react({
-      // Automatic JSX runtime
       jsxRuntime: 'automatic',
     }),
+    tailwindcss(),
   ],
 
   resolve: {
@@ -16,12 +17,10 @@ export default defineConfig({
       '@beacon/api-client': path.resolve(__dirname, '../../packages/api-client/src'),
       '@beacon/sdk': path.resolve(__dirname, '../../packages/sdk/src'),
       '@': path.resolve(__dirname, './src'),
-      // Force single React instance to prevent hook errors
       'react': path.resolve(__dirname, './node_modules/react'),
       'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
     },
   },
-
 
   server: {
     port: 5173,
@@ -32,20 +31,20 @@ export default defineConfig({
     },
     proxy: {
       '/api/moderation': {
-        target: 'http://localhost:8081',
+        target: process.env.VITE_MODERATION_API || 'http://localhost:8081',
         changeOrigin: true,
       },
       '/api/media': {
-        target: 'http://localhost:8081',
+        target: process.env.VITE_MEDIA_API || 'http://localhost:8081',
         changeOrigin: true,
       },
       '/api': {
-        target: 'http://localhost:4000',
+        target: process.env.VITE_BACKEND_URL || 'http://localhost:4000',
         changeOrigin: true,
         timeout: 10000,
       },
       '/gateway': {
-        target: 'ws://localhost:4001',
+        target: process.env.VITE_GATEWAY_URL || 'ws://localhost:4001',
         ws: true,
       }
     }
@@ -57,19 +56,19 @@ export default defineConfig({
   },
 
   build: {
-    // Production optimizations
     target: 'esnext',
     outDir: 'dist',
     assetsDir: 'assets',
-
-    // Enable minification
     minify: 'esbuild',
-
-    // Code splitting optimization
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
+    assetsInlineLimit: 4096,
+    cssCodeSplit: true,
+    reportCompressedSize: true,
+    
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Core vendor splits
           if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) {
             return 'react-vendor';
           }
@@ -85,7 +84,6 @@ export default defineConfig({
           if (id.includes('node_modules/react-virtuoso')) {
             return 'list-vendor';
           }
-          // Heavy page splits (lazy-loaded)
           if (id.includes('/pages/ServerSettings')) {
             return 'page-server-settings';
           }
@@ -107,48 +105,31 @@ export default defineConfig({
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
     },
-
-    // Source maps for production debugging
-    sourcemap: false,
-
-    // Chunk size warnings
-    chunkSizeWarningLimit: 600,
-
-    // Asset inlining threshold
-    assetsInlineLimit: 4096,
-
-    // CSS code splitting
-    cssCodeSplit: true,
-
-    // Enable reporting
-    reportCompressedSize: true,
-
-    // Enable tree-shaking
+    
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true,
     },
   },
 
-  // Optimize dependencies
   optimizeDeps: {
     include: [
       'react',
       'react-dom',
       'react-router-dom',
       'zustand',
+      'framer-motion',
       'lucide-react',
     ],
+    exclude: ['@beacon/types', '@beacon/api-client', '@beacon/sdk'],
   },
 
-  // Performance
   esbuild: {
     logOverride: { 'this-is-undefined-in-esm': 'silent' },
     legalComments: 'none',
     treeShaking: true,
   },
 
-  // Define global constants
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),

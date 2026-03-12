@@ -1,16 +1,25 @@
 import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { openUserProfileModal } from '../utils/modals'
+import { useUIStore } from '../stores/useUIStore'
 
 export function UserProfile() {
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
+  const showUserProfile = useUIStore((state) => state.showUserProfile)
 
   useEffect(() => {
     if (userId) {
       openUserProfileModal(userId)
     }
   }, [userId])
+
+  // Navigate back when modal is closed
+  useEffect(() => {
+    if (!showUserProfile && userId) {
+      navigate(-1)
+    }
+  }, [showUserProfile, navigate, userId])
 
   return (
     <div

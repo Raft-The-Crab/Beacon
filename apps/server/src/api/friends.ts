@@ -63,7 +63,11 @@ router.post('/request', authenticate, async (req: AuthRequest, res: Response) =>
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     if (!prisma) return res.status(500).json({ error: 'Database not connected' });
 
+    // Validate input
     const { username, discriminator } = req.body;
+    if (!username || !discriminator || typeof username !== 'string' || typeof discriminator !== 'string') {
+      return res.status(400).json({ error: 'Invalid username or discriminator' });
+    }
 
     const targetUser = await prisma.user.findFirst({
       where: { username, discriminator }
@@ -98,12 +102,47 @@ router.post('/request', authenticate, async (req: AuthRequest, res: Response) =>
         status: 0
       },
       include: {
-        friend: { select: { id: true, username: true, discriminator: true, avatar: true } }
+        friend: { select: { id: true, username: true, discriminator: true, avatar: true } },
+        user: { select: { id: true, username: true, discriminator: true, avatar: true } }
       }
     });
 
+    // Create notification for the recipient
+    try {
+      const senderName = friendRequest.user.username;
+      const existingNotif = await prisma.notification.findFirst({
+        where: {
+          userId: targetId,
+          type: 'FRIEND_REQUEST',
+          read: false,
+          metadata: {
+            path: ['relatedUserId'],
+            equals: userId
+          }
+        }
+      });
+
+      if (!existingNotif) {
+        await prisma.notification.create({
+          data: {
+            userId: targetId,
+            type: 'FRIEND_REQUEST',
+            title: `${senderName} sent you a friend request`,
+            body: `Accept or decline to manage your friendship`,
+            read: false,
+            metadata: { relatedUserId: userId, avatarUrl: friendRequest.user.avatar },
+            iconUrl: friendRequest.user.avatar
+          }
+        });
+      }
+    } catch (notifError) {
+      console.error('Failed to create friend request notification:', notifError);
+      // Continue even if notification creation fails
+    }
+
     return res.json(friendRequest);
   } catch (error) {
+    console.error('Send friend request error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -116,8 +155,13 @@ router.put('/:friendId/accept', authenticate, async (req: AuthRequest, res: Resp
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     if (!prisma) return res.status(500).json({ error: 'Database not connected' });
 
+    if (!friendId || typeof friendId !== 'string') {
+      return res.status(400).json({ error: 'Invalid friend ID' });
+    }
+
     const friendRequest = await prisma.friendship.findFirst({
-      where: { userId: friendId, friendId: userId, status: 0 }
+      where: { userId: friendId, friendId: userId, status: 0 },
+      include: { user: { select: { username: true, avatar: true } } }
     });
 
     if (!friendRequest) {
@@ -129,8 +173,43 @@ router.put('/:friendId/accept', authenticate, async (req: AuthRequest, res: Resp
       data: { status: 1 }
     });
 
+    // Create notification for the requester
+    try {
+      const acceptorName = (await prisma.user.findUnique({ where: { id: userId }, select: { username: true, avatar: true } }))?.username || 'Unknown';
+      const acceptorAvatar = (await prisma.user.findUnique({ where: { id: userId }, select: { avatar: true } }))?.avatar;
+      
+      const existingNotif = await prisma.notification.findFirst({
+        where: {
+          userId: friendId,
+          type: 'FRIEND_ACCEPTED',
+          read: false,
+          metadata: {
+            path: ['relatedUserId'],
+            equals: userId
+          }
+        }
+      });
+
+      if (!existingNotif) {
+        await prisma.notification.create({
+          data: {
+            userId: friendId,
+            type: 'FRIEND_ACCEPTED',
+            title: `${acceptorName} accepted your friend request`,
+            body: `You're now friends`,
+            read: false,
+            metadata: { relatedUserId: userId, avatarUrl: acceptorAvatar },
+            iconUrl: acceptorAvatar
+          }
+        });
+      }
+    } catch (notifError) {
+      console.error('Failed to create friend accepted notification:', notifError);
+    }
+
     return res.json({ success: true });
   } catch (error) {
+    console.error('Accept friend request error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

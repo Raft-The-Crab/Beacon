@@ -4,7 +4,7 @@ import styles from '../styles/modules/pages/PartnerPortal.module.css'
 
 export function PartnerPortal() {
     return (
-        <div className={styles.container}>
+        <div className={`app-page-shell ${styles.container}`}>
             <div className={styles.hero}>
                 <div className={styles.heroContent}>
                     <div className={styles.partnerBadge}>

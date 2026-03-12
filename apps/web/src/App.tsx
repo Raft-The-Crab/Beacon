@@ -1,33 +1,6 @@
-import React, { useEffect } from 'react'
+import React, { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-
-import {
-  Login,
-  MessagingHome,
-  DeveloperPortal,
-  LandingPage,
-  UserProfile,
-  ServerSettings,
-  VoiceChannel,
-  AboutUs,
-  Contact,
-  Terms,
-  Privacy,
-  TOS,
-  DocsHome,
-  GettingStarted,
-  SDKTutorial,
-  APIReference,
-  GatewayDocs,
-  Mission,
-  BotCommands,
-  BeaconPlusStore,
-  License,
-  SafetyHub,
-  PartnerPortal,
-  AdminDashboard
-} from './pages'
 
 import { MainLayout } from './components/layout/MainLayout'
 import { ToastContainer, useToast } from './components/ui'
@@ -40,6 +13,7 @@ import { useDMStore } from './stores/useDMStore'
 import { useAuthStore } from './stores/useAuthStore'
 import { useBeacoinStore } from './stores/useBeacoinStore'
 import { usePresenceStore } from './stores/usePresenceStore'
+import { useUIStore } from './stores/useUIStore'
 import { activitySync } from './services/ActivitySyncService'
 import { HelmetProvider } from 'react-helmet-async'
 import { ModalManager } from './components/modals'
@@ -51,10 +25,45 @@ import { VersionCheck } from './components/utils/VersionCheck'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import './styles/globals.css'
 import './styles/themes.css'
+import './styles/discord-utils.css'
+
+// Route-level lazy loading for better startup performance
+const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })))
+const MessagingHome = lazy(() => import('./pages/MessagingHome').then(m => ({ default: m.MessagingHome })))
+const DeveloperPortal = lazy(() => import('./pages/DeveloperPortal').then(m => ({ default: m.DeveloperPortal })))
+const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })))
+const UserProfile = lazy(() => import('./pages/UserProfile').then(m => ({ default: m.UserProfile })))
+const ServerSettings = lazy(() => import('./pages/ServerSettings').then(m => ({ default: m.ServerSettings })))
+const VoiceChannel = lazy(() => import('./pages/VoiceChannel').then(m => ({ default: m.VoiceChannel })))
+const AboutUs = lazy(() => import('./pages/AboutUs').then(m => ({ default: m.AboutUs })))
+const Contact = lazy(() => import('./pages/Contact').then(m => ({ default: m.Contact })))
+const Terms = lazy(() => import('./pages/legal/Terms').then(m => ({ default: m.Terms })))
+const Privacy = lazy(() => import('./pages/legal/Privacy').then(m => ({ default: m.Privacy })))
+const TOS = lazy(() => import('./pages/legal/TOS').then(m => ({ default: m.TOS })))
+const License = lazy(() => import('./pages/legal/License').then(m => ({ default: m.License })))
+const DocsHome = lazy(() => import('./pages/docs/DocsHome').then(m => ({ default: m.DocsHome })))
+const GettingStarted = lazy(() => import('./pages/docs/GettingStarted').then(m => ({ default: m.GettingStarted })))
+const SDKTutorial = lazy(() => import('./pages/docs/SDKTutorial').then(m => ({ default: m.SDKTutorial })))
+const APIReference = lazy(() => import('./pages/docs/APIReference').then(m => ({ default: m.APIReference })))
+const GatewayDocs = lazy(() => import('./pages/docs/GatewayDocs').then(m => ({ default: m.GatewayDocs })))
+const Mission = lazy(() => import('./pages/docs/Mission').then(m => ({ default: m.Mission })))
+const BotCommands = lazy(() => import('./pages/docs/BotCommands').then(m => ({ default: m.BotCommands })))
+const BeaconPlusStore = lazy(() => import('./pages/BeaconPlusStore').then(m => ({ default: m.BeaconPlusStore })))
+const SafetyHub = lazy(() => import('./pages/SafetyHub').then(m => ({ default: m.SafetyHub })))
+const PartnerPortal = lazy(() => import('./pages/PartnerPortal').then(m => ({ default: m.PartnerPortal })))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
+
+function RouteFallback() {
+  return (
+    <div style={{ height: '100%', width: '100%', display: 'grid', placeItems: 'center', color: 'var(--text-muted)' }}>
+      Loading...
+    </div>
+  )
+}
 
 export function App() {
   const { toasts, remove } = useToast()
-  // Removed syncTheme from here: const { syncTheme } = useUIStore()
+  const syncTheme = useUIStore((s) => s.syncTheme)
   const handleMessageCreate = useMessageStore((s) => s.handleMessageCreate)
   const handleMessageUpdate = useMessageStore((s) => s.handleMessageUpdate)
   const handleMessageDelete = useMessageStore((s) => s.handleMessageDelete)
@@ -64,20 +73,25 @@ export function App() {
 
   const isMobilePlatform = isAndroid()
 
-  // Removed this useEffect as syncTheme is no longer called directly
-  // React.useEffect(() => {
-  //   syncTheme()
-  // }, [syncTheme])
+  React.useEffect(() => {
+    syncTheme()
+  }, [syncTheme])
 
   const eagerLoadServers = useServerStore(s => s.eagerLoad)
   const eagerLoadFriends = useUserListStore(s => s.eagerLoad)
   const eagerLoadChannels = useDMStore(s => s.eagerLoad)
   const fetchWallet = useBeacoinStore(s => s.fetchWallet)
+  const checkSession = useAuthStore(s => s.checkSession)
   const user = useAuthStore(s => s.user)
+
+  // Hydrate auth state from token/cookie on initial mount.
+  useEffect(() => {
+    checkSession().catch(err => console.error('Session hydration failed', err))
+  }, [checkSession])
 
   // Initial Data Fetch (Eager Loading for zero lag)
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       // Parallel eager loading
       Promise.all([
         eagerLoadServers(),
@@ -89,7 +103,35 @@ export function App() {
       // Start Activity Sync Service
       activitySync.start();
     }
-  }, [user, eagerLoadServers, eagerLoadFriends, eagerLoadChannels, fetchWallet])
+  }, [user?.id, eagerLoadServers, eagerLoadFriends, eagerLoadChannels, fetchWallet])
+
+  // Eager-load critical routes after first paint while leaving the rest lazy.
+  useEffect(() => {
+    const preload = () => {
+      void import('./pages/MessagingHome')
+      void import('./pages/Login')
+      void import('./pages/BeaconPlusStore')
+      void import('./pages/ServerSettings')
+      void import('./pages/DeveloperPortal')
+    }
+
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+
+    if (typeof w.requestIdleCallback === 'function') {
+      const idleId = w.requestIdleCallback(preload)
+      return () => {
+        if (typeof w.cancelIdleCallback === 'function') {
+          w.cancelIdleCallback(idleId)
+        }
+      }
+    }
+
+    const timeout = setTimeout(preload, 250)
+    return () => clearTimeout(timeout)
+  }, [])
 
   // Global WS event handler to sync incoming events into local stores
   React.useEffect(() => {
@@ -157,7 +199,8 @@ export function App() {
                   <div className="mesh-noise" />
                 </div>
 
-                <Routes location={location}>
+                <Suspense fallback={<RouteFallback />}>
+                  <Routes location={location}>
                   {/* Entry Point */}
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/landing" element={<LandingPage />} />
@@ -207,7 +250,8 @@ export function App() {
 
                   {/* Redirect everything else to Messaging Home */}
                   <Route path="*" element={<Navigate to="/channels/@me" replace />} />
-                </Routes>
+                  </Routes>
+                </Suspense>
                 <ToastContainer toasts={toasts} onRemove={remove} />
                 <KeyboardShortcutsPanel />
                 <VersionCheck />

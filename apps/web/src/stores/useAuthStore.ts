@@ -6,6 +6,25 @@ import { UserActivity } from './usePresenceStore'
 
 export type PresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible'
 
+function decorateSystemUser(user: User | null): User | null {
+  if (!user) return null
+
+  const isRaft =
+    user.username?.toLowerCase() === 'raftthecrab' &&
+    String(user.discriminator || '').trim() === '1452'
+
+  if (!isRaft) return user
+
+  const badges = new Set(user.badges || [])
+  badges.add('admin')
+  badges.add('verified')
+
+  return {
+    ...user,
+    badges: Array.from(badges),
+  }
+}
+
 interface AuthState {
   user: (User & { activities?: UserActivity[]; theme?: string }) | null
   isAuthenticated: boolean
@@ -45,7 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const response = await apiClient.login(email, password)
       if (response.success && response.data) {
-        set({ user: response.data.user, isAuthenticated: true, isLoading: false })
+        set({ user: decorateSystemUser(response.data.user), isAuthenticated: true, isLoading: false })
         if (response.data.user.theme) {
           get().setTheme(response.data.user.theme)
         }
@@ -72,7 +91,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response = await apiClient.register(email, username, password)
       if (response.success && response.data) {
         const keys = await CryptoService.generateKeyPair();
-        set({ user: response.data.user, isAuthenticated: true, isLoading: false, encryptionKeys: keys })
+        set({ user: decorateSystemUser(response.data.user), isAuthenticated: true, isLoading: false, encryptionKeys: keys })
       } else {
         throw new Error(response.error || 'Registration failed')
       }
@@ -101,7 +120,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response = await apiClient.getCurrentUser()
       if (response.success && response.data) {
         const userData = response.data as User & { theme?: string }
-        set({ user: userData, isAuthenticated: true, isLoading: false })
+        set({ user: decorateSystemUser(userData as User) as any, isAuthenticated: true, isLoading: false })
         if (userData.theme) {
           get().setTheme(userData.theme)
         }
@@ -117,7 +136,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const response = await apiClient.updateUser(updates as any);
       if (response.success && response.data) {
-        set({ user: response.data as any });
+        set({ user: decorateSystemUser(response.data as User) as any });
         if (updates.theme) get().setTheme(updates.theme);
       }
     } catch (err) {
@@ -150,9 +169,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: newStatus as any })
   },
 
-  setUser: (user) => set({ user: user as any, isAuthenticated: !!user }),
+  setUser: (user) => set({ user: decorateSystemUser(user) as any, isAuthenticated: !!user }),
 
   setTheme: (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
+    const isLight = theme === 'light'
+    document.documentElement.classList.toggle('dark', !isLight)
+    document.documentElement.style.colorScheme = isLight ? 'light' : 'dark'
   }
 }))

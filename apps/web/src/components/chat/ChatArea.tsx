@@ -1,17 +1,19 @@
 ﻿import { useState, useRef, useEffect, useCallback } from 'react'
 import { Virtuoso } from 'react-virtuoso'
-import { Hash, Bell, Pin, Users, Search, HelpCircle, Phone, Video, Inbox, ChevronDown } from 'lucide-react'
+import { Hash, Pin, Users, Search, Phone, Video, ChevronDown } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { useMessageStore } from '../../stores/useMessageStore'
 import { useVoiceStore } from '../../stores/useVoiceStore'
 import { useServerStore } from '../../stores/useServerStore'
+import { useDMStore } from '../../stores/useDMStore'
 import { useUIStore } from '../../stores/useUIStore'
 import { MessageInput } from '../features/MessageInput'
 import { MessageItem } from '../features/MessageItem'
 import { TypingIndicator } from '../typing/TypingIndicator'
 import { type UploadedFile } from '../../services/fileUpload'
 import styles from '../../styles/modules/chat/ChatArea.module.css'
-import { Modal, Input, Button, ToastContainer, useToast, Avatar } from '../ui'
+import { Modal, Button, ToastContainer, useToast, Avatar } from '../ui'
 import { wsClient } from '../../services/websocket'
 import { apiClient } from '../../services/apiClient'
 import { usePinnedMessagesStore } from '../../stores/usePinnedMessagesStore'
@@ -26,6 +28,7 @@ interface ChatAreaProps {
 }
 
 export function ChatArea({ channelId }: ChatAreaProps) {
+  const navigate = useNavigate()
   const { t } = useTranslationStore()
   // Directly select the messages for the current channel
   const messages = useMessageStore((state) => state.messages.get(channelId) || EMPTY_ARRAY);
@@ -40,6 +43,10 @@ export function ChatArea({ channelId }: ChatAreaProps) {
 
   const currentServer = useServerStore(state => state.currentServer);
   const currentChannel = currentServer?.channels?.find((channel: any) => channel.id === channelId)
+  const dmChannel = useDMStore((state) => state.channels.find((channel: any) => channel.id === channelId))
+  const isDMChannel = !!dmChannel && !currentChannel
+  const dmRecipient = dmChannel?.participants?.[0]?.username || 'Direct Message'
+  const channelDisplayName = isDMChannel ? dmRecipient : (currentChannel?.name || 'general')
 
   const toggleMemberList = useUIStore(state => state.toggleMemberList)
   const showMemberList = useUIStore(state => state.showMemberList)
@@ -48,17 +55,51 @@ export function ChatArea({ channelId }: ChatAreaProps) {
   const { pinMessage, unpinMessage, getPinnedMessages } = usePinnedMessagesStore()
   const { user } = useAuthStore()
 
+  const resolveAuthor = useCallback((message: any) => {
+    const author = message?.author || {}
+    const targetAuthorId = author.id || message.authorId
+    const isSelf = !!user && (
+      message.authorId === 'current-user' ||
+      message.authorId === user.id ||
+      author.id === user.id
+    )
+    const memberRecord = (currentServer?.members as any[] | undefined)?.find((member: any) => {
+      const memberId = member?.userId || member?.user?.id || member?.id
+      return memberId === targetAuthorId
+    })
+    const roles = Array.isArray(memberRecord?.roles)
+      ? memberRecord.roles.map((role: any) => ({
+          name: typeof role === 'string' ? role : role?.name || 'Role',
+          color: typeof role === 'string' ? '#5865f2' : role?.color || '#5865f2',
+        }))
+      : []
+
+    return {
+      id: isSelf ? user?.id : targetAuthorId,
+      name: isSelf ? (user?.username || 'You') : (author.username || message.authorName || message.authorId || 'Unknown User'),
+      avatar: isSelf ? (user?.avatar || author.avatar) : (author.avatar || message.authorAvatar),
+      status: (isSelf ? user?.status : author.status || memberRecord?.status) || 'offline',
+      customStatus: isSelf ? user?.statusText : memberRecord?.customStatus,
+      bio: isSelf ? user?.bio : author.bio,
+      joinedAt: author.createdAt || memberRecord?.joinedAt,
+      roles,
+      bannerColor: '#5865f2',
+      avatarDecorationId: isSelf ? user?.avatarDecorationId : author.avatarDecorationId,
+      badges: isSelf ? user?.badges : author.badges,
+    }
+  }, [currentServer?.members, user])
+
   const [showPinnedModal, setShowPinnedModal] = useState(false)
-  const [showEditChannelModal, setShowEditChannelModal] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
-  const [editChannelName, setEditChannelName] = useState(currentChannel?.name || '')
   const editingMessageId = useUIStore(state => state.editingMessageId)
   const editingMessageContent = useUIStore(state => state.editingMessageContent)
   const setEditingMessage = useUIStore(state => state.setEditingMessage)
   const [showScrollBtn, setShowScrollBtn] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const channelType = String(currentChannel?.type ?? '').toLowerCase()
+  const isVoiceLikeChannel = channelType === 'voice' || channelType === '2' || channelType === 'stage' || channelType === '13'
 
   const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant' })
@@ -161,34 +202,6 @@ export function ChatArea({ channelId }: ChatAreaProps) {
   //   setShowMembersModal(true)
   // }
 
-  const handleEditChannel = () => {
-    setEditChannelName(currentChannel?.name || '')
-    setShowEditChannelModal(true)
-  }
-
-  const saveChannelEdit = async () => {
-    if (!currentServer || !channelId) return
-    try {
-      await useServerStore.getState().updateChannel(currentServer.id, channelId, { name: editChannelName })
-      show('Channel renamed successfully', 'success')
-      setShowEditChannelModal(false)
-    } catch (err) {
-      show('Failed to rename channel', 'error')
-    }
-  }
-
-  const handleDeleteChannel = async () => {
-    if (!currentServer || !channelId) return
-    if (!window.confirm('Are you sure you want to delete this channel? This cannot be undone.')) return
-
-    try {
-      await useServerStore.getState().deleteChannel(currentServer.id, channelId)
-      show('Channel deleted', 'info')
-      setShowEditChannelModal(false)
-    } catch (err) {
-      show('Failed to delete channel', 'error')
-    }
-  }
 
   const handleStartEditingMessage = (messageId: string, currentContent: string) => {
     setEditingMessage(messageId, currentContent)
@@ -203,12 +216,13 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         if (wsClient.isConnected()) wsClient.unpinMessage(channelId, msg.id)
       } catch (err) { console.warn('unpin ws failed', err) }
     } else {
+      const author = resolveAuthor(msg)
       const pinnedMsg = {
         id: msg.id,
         channelId,
         content: msg.content,
-        authorName: msg.authorId === 'current-user' ? 'You' : msg.authorId,
-        authorAvatar: msg.authorAvatar || null,
+        authorName: author.name,
+        authorAvatar: author.avatar || null,
         timestamp: msg.createdAt,
         pinnedBy: 'current-user',
         pinnedAt: new Date().toISOString(),
@@ -268,33 +282,63 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.channelInfo}>
-            <Hash size={24} className={styles.channelIcon} />
-            <span className={styles.channelName}>{currentChannel?.name || 'general'}</span>
+            {isDMChannel ? (
+              <Users size={22} className={styles.channelIcon} />
+            ) : (
+              <Hash size={24} className={styles.channelIcon} />
+            )}
+            <span className={styles.channelName}>{channelDisplayName}</span>
           </div>
-          {currentChannel?.type === 'voice' && (
+          {isVoiceLikeChannel && (
             <div className={styles.voiceActions}>
-              <button className={styles.headerButton} onClick={() => show('Voice chat coming soon', 'info')}><Phone size={20} /></button>
-              <button className={styles.headerButton} onClick={() => show('Video chat coming soon', 'info')}><Video size={20} /></button>
+              <button 
+                className={styles.headerButton} 
+                onClick={() => navigate(`/voice?guildId=${currentServer?.id}&channelId=${currentChannel?.id}&name=${encodeURIComponent(currentChannel?.name || 'Voice Channel')}`)}
+                aria-label="Start voice call"
+              >
+                <Phone size={20} />
+              </button>
+              <button 
+                className={styles.headerButton} 
+                onClick={() => navigate(`/voice?guildId=${currentServer?.id}&channelId=${currentChannel?.id}&name=${encodeURIComponent(currentChannel?.name || 'Voice Channel')}`)}
+                aria-label="Start video call"
+              >
+                <Video size={20} />
+              </button>
             </div>
           )}
         </div>
 
         <div className={styles.headerRight}>
-          <button className={`${styles.headerButton} ${styles.hideOnMobile}`} title={t('common.notifications', { defaultValue: 'Notifications' })} onClick={() => show('Notifications toggled', 'info')}><Bell size={20} /></button>
-          <button className={`${styles.headerButton} ${styles.hideOnMobile}`} title={t('common.pinned_messages', { defaultValue: 'Pinned Messages' })} onClick={handleOpenPinned}><Pin size={20} /></button>
+          <button 
+            className={`${styles.headerButton} ${styles.hideOnMobile}`} 
+            title="Pinned Messages" 
+            onClick={handleOpenPinned}
+            aria-label="View pinned messages"
+          >
+            <Pin size={20} />
+          </button>
           <button
             className={`${styles.headerButton} ${showMemberList ? styles.headerButtonActive : ''}`}
-            title={t('common.member_list', { defaultValue: 'Member List' })}
+            title="Member List · Ctrl+Shift+M"
             onClick={toggleMemberList}
+            aria-label="Toggle member list"
+            aria-pressed={showMemberList}
           >
             <Users size={20} />
           </button>
-          <div className={styles.searchBar} onClick={() => setShowSearch(true)}>
+          <div className={styles.searchBar} onClick={() => setShowSearch(true)} title="Search · Ctrl+F">
             <input type="text" placeholder={t('common.search', { defaultValue: 'Search' })} readOnly />
             <Search size={16} />
           </div>
-          <button className={`${styles.headerButton} ${styles.hideOnMobile}`} title={t('common.inbox', { defaultValue: 'Inbox' })} onClick={() => show('Inbox opened', 'info')}><Inbox size={20} /></button>
-          <button className={`${styles.headerButton} ${styles.hideOnMobile}`} title={t('common.help', { defaultValue: 'Help' })} onClick={() => show('Help opened', 'info')}><HelpCircle size={20} /></button>
+          <button
+            className={styles.headerButton}
+            title="Keyboard Shortcuts · Ctrl+/"
+            onClick={() => useUIStore.getState().setShowKeyboardShortcuts(true)}
+            aria-label="Show keyboard shortcuts"
+          >
+            <kbd className={styles.kbdIcon}>⌘</kbd>
+          </button>
         </div>
       </div>
 
@@ -312,11 +356,19 @@ export function ChatArea({ channelId }: ChatAreaProps) {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className={`${styles.welcomeIcon} glass-panel`}>
-              <Hash size={48} />
+              {isDMChannel ? <Users size={44} /> : <Hash size={48} />}
             </div>
-            <h2 className={`${styles.welcomeTitle} premium-text-glow`}>Welcome to #{currentChannel?.name || 'general'}!</h2>
-            <p className={styles.welcomeText}>This is the start of the #{currentChannel?.name || 'general'} channel.</p>
-            <button className={`${styles.editChannelBtn} glass-hover`} onClick={handleEditChannel}>Edit Channel</button>
+            {isDMChannel ? (
+              <>
+                <h2 className={`${styles.welcomeTitle} premium-text-glow`}>Start your conversation</h2>
+                <p className={styles.welcomeText}>You are now chatting with {dmRecipient}.</p>
+              </>
+            ) : (
+              <>
+                <h2 className={`${styles.welcomeTitle} premium-text-glow`}>Welcome to #{channelDisplayName}!</h2>
+                <p className={styles.welcomeText}>This is the start of the #{channelDisplayName} channel.</p>
+              </>
+            )}
           </motion.div>
         ) : (
           <Virtuoso
@@ -349,11 +401,22 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                       <div className={styles.dateLine} />
                     </div>
                   )}
-                  <MessageItem
-                    id={msg.id}
-                    authorName={msg.authorId === 'current-user' ? 'You' : msg.authorId}
-                    authorAvatar={msg.authorAvatar || undefined}
-                    content={msg.content}
+                  {(() => {
+                    const author = resolveAuthor(msg)
+                    return (
+                      <MessageItem
+                        id={msg.id}
+                        authorId={author.id}
+                        authorName={author.name}
+                        authorAvatar={author.avatar || undefined}
+                        authorStatus={author.status as any}
+                        authorCustomStatus={author.customStatus}
+                        authorBio={author.bio}
+                        authorJoinedAt={author.joinedAt}
+                        authorRoles={author.roles}
+                        authorBannerColor={author.bannerColor}
+                        authorAvatarDecorationId={author.avatarDecorationId}
+                        content={msg.content}
                     timestamp={new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     attachments={msg.attachments}
                     edited={!!msg.editedAt}
@@ -361,12 +424,12 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                     isEncrypted={!!msg.nonce || !!msg.encryptedContent} // Logic for E2EE
                     showActions={true}
                     isContinuing={isContinuing}
-                    canDelete={msg.authorId === 'current-user'}
-                    canEdit={msg.authorId === 'current-user'}
-                    onDelete={() => handleDeleteMessage(msg.id)}
-                    onEdit={() => handleStartEditingMessage(msg.id, msg.content)}
-                    onPin={() => handleTogglePin(msg)}
-                    onReaction={(emoji) => {
+                        canDelete={msg.authorId === 'current-user' || (!!user && (msg.authorId === user.id || msg.author?.id === user.id))}
+                        canEdit={msg.authorId === 'current-user' || (!!user && (msg.authorId === user.id || msg.author?.id === user.id))}
+                        onDelete={() => handleDeleteMessage(msg.id)}
+                        onEdit={() => handleStartEditingMessage(msg.id, msg.content)}
+                        onPin={() => handleTogglePin(msg)}
+                        onReaction={(emoji) => {
                       const target = messages.find((m: any) => m.id === msg.id)
                       if (!target) return
                       const existingReactions = target.reactions || []
@@ -393,11 +456,17 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                       handleMessageUpdate(channelId, msg.id, { reactions: newReactions })
                       try {
                         const existed = !!found && reactionExistsForUser(found)
-                        if (wsClient.isConnected()) wsClient.reactMessage(channelId, msg.id, emoji)
-                        else { if (existed) apiClient.removeReaction(channelId, msg.id, emoji); else apiClient.addReaction(channelId, msg.id, emoji) }
+                        if (existed) {
+                          void apiClient.removeReaction(channelId, msg.id, emoji)
+                        } else {
+                          void apiClient.addReaction(channelId, msg.id, emoji)
+                        }
+
                       } catch (err) { console.warn('Persist reaction failed', err) }
                     }}
-                  />
+                      />
+                    )
+                  })()}
                 </div>
               )
             }}
@@ -422,28 +491,11 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       </div>
 
       <MessageInput
-        placeholder={`Message #${currentChannel?.name || 'general'}...`}
+        placeholder={isDMChannel ? `Message ${dmRecipient}...` : `Message #${channelDisplayName}...`}
         onSendMessage={handleSendMessage}
         onStartTyping={handleStartTyping}
         onStopTyping={handleStopTyping}
       />
-      <Modal
-        isOpen={showEditChannelModal}
-        onClose={() => setShowEditChannelModal(false)}
-        title="Edit Channel"
-      >
-        <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
-          <Input value={editChannelName} onChange={(e) => setEditChannelName(e.currentTarget.value)} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-            <Button variant="secondary" onClick={handleDeleteChannel} style={{ color: 'var(--danger)' }}>Delete Channel</Button>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Button variant="secondary" onClick={() => setShowEditChannelModal(false)}>Cancel</Button>
-              <Button variant="primary" onClick={saveChannelEdit}>Save</Button>
-            </div>
-          </div>
-        </div>
-      </Modal>
-
       <Modal
         isOpen={showPinnedModal}
         onClose={() => setShowPinnedModal(false)}

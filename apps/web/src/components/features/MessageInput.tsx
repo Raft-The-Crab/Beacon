@@ -1,6 +1,6 @@
 ﻿import { useState, useRef, useCallback } from 'react'
-import { Send, Plus, Smile, Volume2, Image as ImageIcon, X, File, Bot, Sparkles, Reply } from 'lucide-react'
-import { Button, Tooltip, EmojiPicker, GifPicker, Dropdown } from '../ui'
+import { Send, Plus, Smile, Volume2, Image as ImageIcon, X, File, Sparkles, Reply } from 'lucide-react'
+import { Button, Tooltip, EmojiPicker, GifPicker } from '../ui'
 import { StickerPicker } from './StickerPicker'
 import { fileUploadService, type UploadedFile } from '../../services/fileUpload'
 import { SlashCommandPicker, type SlashCommand } from './SlashCommandPicker'
@@ -39,6 +39,7 @@ export function MessageInput({
   replyingTo,
   onCancelReply,
 }: MessageInputProps) {
+  const MAX_MESSAGE_LENGTH = 2000
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -64,10 +65,12 @@ export function MessageInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const gifButtonRef = useRef<HTMLButtonElement>(null)
+  const emojiButtonRef = useRef<HTMLButtonElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const text = e.currentTarget.value
+    const text = e.currentTarget.value.slice(0, MAX_MESSAGE_LENGTH)
     setMessage(text)
 
     // Auto-resize textarea
@@ -202,6 +205,15 @@ export function MessageInput({
   }, [message])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      setShowEmojiPicker(false)
+      setShowStickerPicker(false)
+      setShowGifPicker(false)
+      setShowSlashPicker(false)
+      setShowMentionPicker(false)
+      return
+    }
+
     // If either picker is open, let it consume navigation keys
     if ((showSlashPicker || showMentionPicker) && ['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) {
       if (e.key !== 'Escape') e.preventDefault()
@@ -303,45 +315,6 @@ export function MessageInput({
     setAttachments(attachments.filter((_, i) => i !== index))
   }
 
-  const applyBotAction = (command: string) => {
-    setMessage(command)
-    setTimeout(() => {
-      textareaRef.current?.focus()
-    }, 0)
-  }
-
-  const botActions = [
-    {
-      id: 'summarize',
-      label: 'Summarize recent chat',
-      icon: <Sparkles size={16} />,
-      onClick: () => applyBotAction('/bot summarize --recent 50')
-    },
-    {
-      id: 'poll',
-      label: 'Create poll',
-      icon: <Bot size={16} />,
-      onClick: () => applyBotAction('/bot poll "Question" "Option 1" "Option 2"')
-    },
-    {
-      id: 'translate',
-      label: 'Translate message',
-      icon: <Sparkles size={16} />,
-      onClick: () => applyBotAction('/bot translate --to en ""')
-    },
-    {
-      id: 'divider-1',
-      label: '',
-      divider: true
-    },
-    {
-      id: 'announce',
-      label: 'Server announcement',
-      icon: <Bot size={16} />,
-      onClick: () => applyBotAction('/bot announce ""')
-    }
-  ]
-
   return (
     <div className={styles.inputContainer} ref={containerRef}>
       {/* Reply preview bar */}
@@ -414,6 +387,7 @@ export function MessageInput({
             className={styles.iconButton}
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
+            aria-label="Add files"
           >
             <Plus size={20} />
           </button>
@@ -438,28 +412,20 @@ export function MessageInput({
           onPaste={handlePaste}
           rows={1}
           disabled={uploading}
+          maxLength={MAX_MESSAGE_LENGTH}
         />
 
         <div className={styles.actions}>
-          <Tooltip content="Bot actions" position="top">
-            <div className={styles.dropdownTriggerWrap}>
-              <Dropdown
-                trigger={<Bot size={20} />}
-                items={botActions}
-                align="right"
-                className={styles.botDropdown}
-              />
-            </div>
-          </Tooltip>
-
           <div className={styles.pickerWrapper}>
             <Tooltip content="Add GIF" position="top">
               <button
+                ref={gifButtonRef}
                 className={styles.iconButton}
                 onClick={() => {
                   setShowGifPicker(!showGifPicker)
                   setShowEmojiPicker(false)
                 }}
+                aria-label="Add GIF"
               >
                 <ImageIcon size={20} />
               </button>
@@ -468,6 +434,7 @@ export function MessageInput({
               <GifPicker
                 onSelect={handleGifSelect}
                 onClose={() => setShowGifPicker(false)}
+                anchorElement={gifButtonRef.current}
               />
             )}
           </div>
@@ -475,11 +442,13 @@ export function MessageInput({
           <div className={styles.pickerWrapper}>
             <Tooltip content="Add emoji" position="top">
               <button
+                ref={emojiButtonRef}
                 className={styles.iconButton}
                 onClick={() => {
                   setShowEmojiPicker(!showEmojiPicker)
                   setShowGifPicker(false)
                 }}
+                aria-label="Add emoji"
               >
                 <Smile size={20} />
               </button>
@@ -488,6 +457,7 @@ export function MessageInput({
               <EmojiPicker
                 onSelect={handleEmojiSelect}
                 onClose={() => setShowEmojiPicker(false)}
+                anchorElement={emojiButtonRef.current}
               />
             )}
           </div>
@@ -501,6 +471,7 @@ export function MessageInput({
                   setShowEmojiPicker(false)
                   setShowGifPicker(false)
                 }}
+                aria-label="Add sticker"
               >
                 <Sparkles size={20} />
               </button>
@@ -510,17 +481,23 @@ export function MessageInput({
                 isOpen={showStickerPicker}
                 onClose={() => setShowStickerPicker(false)}
                 onStickerSelect={(emoji) => handleEmojiSelect(emoji)}
-                onSuperReaction={(_, anim) => console.log('Super Reaction: ', anim)}
+                onSuperReaction={() => { }}
               />
             )}
           </div>
 
           {onVoiceClick && (
             <Tooltip content="Send voice message" position="top">
-              <button className={styles.iconButton} onClick={onVoiceClick}>
+              <button className={styles.iconButton} onClick={onVoiceClick} aria-label="Send voice message">
                 <Volume2 size={20} />
               </button>
             </Tooltip>
+          )}
+
+          {message.length >= 1600 && (
+            <span className={`${styles.charCount} ${message.length >= MAX_MESSAGE_LENGTH ? styles.charCountLimit : ''}`}>
+              {message.length}/{MAX_MESSAGE_LENGTH}
+            </span>
           )}
 
           <Button

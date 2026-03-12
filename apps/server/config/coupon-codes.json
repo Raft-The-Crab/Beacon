@@ -1,0 +1,250 @@
+[
+  {
+    "code": "WELCOME10",
+    "kind": "percent",
+    "value": 10,
+    "active": true,
+    "description": "Welcome discount",
+    "expiresAt": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "code": "BEACON20",
+    "kind": "percent",
+    "value": 20,
+    "active": true,
+    "description": "Beacon seasonal discount",
+    "expiresAt": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "code": "NITRO30",
+    "kind": "percent",
+    "value": 30,
+    "active": true,
+    "description": "Limited premium discount",
+    "expiresAt": "2026-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONBLAST15",
+    "kind": "percent",
+    "value": 15,
+    "active": true,
+    "description": "Beacon spring promo",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONNOVA22",
+    "kind": "percent",
+    "value": 22,
+    "active": true,
+    "description": "Beacon Nova discount",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONPIXEL12",
+    "kind": "percent",
+    "value": 12,
+    "active": true,
+    "description": "Beacon Pixel sale",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONULTRA28",
+    "kind": "percent",
+    "value": 28,
+    "active": true,
+    "description": "Beacon Ultra campaign",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONSPARK17",
+    "kind": "percent",
+    "value": 17,
+    "active": true,
+    "description": "Beacon spark week",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "FROGSTORM14",
+    "kind": "percent",
+    "value": 14,
+    "active": true,
+    "description": "Random drop coupon",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "MANGOHYPE16",
+    "kind": "percent",
+    "value": 16,
+    "active": true,
+    "description": "Mango hype discount",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "GLITCHTIGER18",
+    "kind": "percent",
+    "value": 18,
+    "active": true,
+    "description": "Glitch tiger promo",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "CANDYVOID11",
+    "kind": "percent",
+    "value": 11,
+    "active": true,
+    "description": "Candy void discount",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "NINJATOAST19",
+    "kind": "percent",
+    "value": 19,
+    "active": true,
+    "description": "Ninja toast sale",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "ROCKETBERRY13",
+    "kind": "percent",
+    "value": 13,
+    "active": true,
+    "description": "Rocket berry discount",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONWAVE21",
+    "kind": "percent",
+    "value": 21,
+    "active": true,
+    "description": "Beacon wave campaign",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONLUSH24",
+    "kind": "percent",
+    "value": 24,
+    "active": true,
+    "description": "Beacon lush promotion",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONBOLT26",
+    "kind": "percent",
+    "value": 26,
+    "active": true,
+    "description": "Beacon bolt premium sale",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "PUDDLEDRIP9",
+    "kind": "percent",
+    "value": 9,
+    "active": true,
+    "description": "Puddle drip light discount",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "DARKCOCO20",
+    "kind": "percent",
+    "value": 20,
+    "active": true,
+    "description": "Dark coco sale",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "WOBBLEJAM23",
+    "kind": "percent",
+    "value": 23,
+    "active": true,
+    "description": "Wobble jam deal",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "LAVAQUACK25",
+    "kind": "percent",
+    "value": 25,
+    "active": true,
+    "description": "Lava quack coupon",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "MINTRIP27",
+    "kind": "percent",
+    "value": 27,
+    "active": true,
+    "description": "Mint rip discount",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONBYTE29",
+    "kind": "percent",
+    "value": 29,
+    "active": true,
+    "description": "Beacon byte mega sale",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONPULSE14",
+    "kind": "percent",
+    "value": 14,
+    "active": true,
+    "description": "Beacon pulse weekend",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONCLUB16",
+    "kind": "percent",
+    "value": 16,
+    "active": true,
+    "description": "Beacon club offer",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "GHOSTPASTA12",
+    "kind": "percent",
+    "value": 12,
+    "active": true,
+    "description": "Ghost pasta voucher",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "CHILLRAVEN18",
+    "kind": "percent",
+    "value": 18,
+    "active": true,
+    "description": "Chill raven markdown",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "TURBOPEAR15",
+    "kind": "percent",
+    "value": 15,
+    "active": true,
+    "description": "Turbo pear promo",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "BEACONFLEX30",
+    "kind": "percent",
+    "value": 30,
+    "active": true,
+    "description": "Beacon flex max discount",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "NEONRUMBLE22",
+    "kind": "percent",
+    "value": 22,
+    "active": true,
+    "description": "Neon rumble coupon",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  },
+  {
+    "code": "SILLYMELON10",
+    "kind": "percent",
+    "value": 10,
+    "active": true,
+    "description": "Silly melon saver",
+    "expiresAt": "2027-12-31T23:59:59.000Z"
+  }
+]

@@ -14,27 +14,28 @@
 }
 
 .menu {
-  position: absolute;
-  top: 100%;
-  margin-top: var(--space-sm);
+  position: fixed;
   min-width: 240px;
+  max-width: 320px;
   background: var(--bg-primary);
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  /* Hyper-rounded */
   box-shadow: var(--shadow-xl);
   z-index: 9999;
-  animation: slideUp 0.4s var(--ease-out);
-  /* Buttery elastic */
-  overflow: hidden;
-  overflow-y: auto;
-  max-height: 250px;
+  animation: slideUp 0.15s ease-out;
+  overflow: visible;
   padding: var(--space-xs);
   will-change: transform, opacity;
   transform: translateZ(0);
-  /* Hardware Acceleration */
+}
+
+/* Disable low-bandwidth blur */
+[data-low-bandwidth=\"true\"] .menu {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--bg-secondary);
 }
 
 /* Custom Scrollbar for Dropdown Menu */
@@ -48,7 +49,7 @@
 
 .menu::-webkit-scrollbar-thumb {
   background: var(--bg-modifier-hover);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .menu::-webkit-scrollbar-thumb:hover {

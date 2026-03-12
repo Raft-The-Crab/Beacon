@@ -16,7 +16,9 @@
   color: white;
   font-size: 13px;
   font-weight: 600;
-  white-space: nowrap;
+  white-space: normal;
+  max-width: 240px;
+  word-wrap: break-word;
   pointer-events: none;
   box-shadow: var(--shadow-sm);
   animation: tooltipFadeIn 0.4s var(--ease-out);
@@ -25,6 +27,13 @@
   will-change: transform, opacity;
   transform: translateZ(0);
   /* Hardware Acceleration */
+}
+
+/* Disable blur on low-bandwidth mode */
+[data-low-bandwidth="true"] .tooltip {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--bg-tertiary);
 }
 
 @keyframes tooltipFadeIn {

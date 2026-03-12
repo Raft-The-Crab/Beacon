@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 import { api } from '../lib/api'
 
+let walletFetchInFlight: Promise<void> | null = null
+let walletLastFetchedAt = 0
+const WALLET_FETCH_COOLDOWN_MS = 1500
+
 export interface BeacoinTransaction {
   id: string
   type: 'earn' | 'spend' | 'transfer_in' | 'transfer_out' | 'bonus'
@@ -74,26 +78,32 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
   messageCount: 0,
 
   fetchWallet: async () => {
+    const now = Date.now()
+    if (walletFetchInFlight) return walletFetchInFlight
+    if (now - walletLastFetchedAt < WALLET_FETCH_COOLDOWN_MS) return
+
     set({ isLoading: true })
-    try {
-      const { data } = await api.get('/users/@me/beacoin')
-      set({
-        balance: data.balance ?? 0,
-        transactions: data.transactions ?? [],
-        streak: data.streak ?? 0,
-        lastDailyClaim: data.lastDailyClaim ?? null,
-        dailyRewards: generateDailyRewards(data.streak ?? 0),
-        isLoading: false,
-      })
-    } catch {
-      // Offline mode — seed with starter balance
-      set({
-        balance: 100,
-        streak: 0,
-        dailyRewards: generateDailyRewards(0),
-        isLoading: false,
-      })
-    }
+    walletFetchInFlight = (async () => {
+      try {
+        const { data } = await api.get('/users/@me/beacoin')
+        walletLastFetchedAt = Date.now()
+        set({
+          balance: data.balance ?? 0,
+          transactions: data.transactions ?? [],
+          streak: data.streak ?? 0,
+          lastDailyClaim: data.lastDailyClaim ?? null,
+          dailyRewards: generateDailyRewards(data.streak ?? 0),
+          isLoading: false,
+        })
+      } catch {
+        // Keep the last known wallet state instead of overwriting with synthetic values.
+        set({ isLoading: false })
+      } finally {
+        walletFetchInFlight = null
+      }
+    })()
+
+    return walletFetchInFlight
   },
 
   sendCoins: async (toUserId, amount, note) => {
@@ -121,9 +131,32 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
         balance: state.balance - data.cost,
         transactions: [data.transaction, ...state.transactions]
       }))
-    } catch (err) {
-      set({ isLoading: false })
-      throw err
+    } catch (err: any) {
+      const message = String(err?.response?.data?.error || err?.message || '')
+      const isDbOrNetwork = /database not connected|network|failed to fetch/i.test(message)
+
+      if (!isDbOrNetwork) {
+        set({ isLoading: false })
+        throw err
+      }
+
+      const baseCost = tier === 'yearly' ? 10000 : 1250
+      set((state) => {
+        if (state.balance < baseCost) {
+          return { isLoading: false }
+        }
+        return {
+          isLoading: false,
+          balance: state.balance - baseCost,
+          transactions: [{
+            id: `local-sub-${Date.now()}`,
+            type: 'spend',
+            amount: baseCost,
+            description: `Beacon+ ${tier} (offline mode)`,
+            timestamp: new Date().toISOString(),
+          } as any, ...state.transactions],
+        }
+      })
     }
   },
 

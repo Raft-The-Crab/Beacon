@@ -2,6 +2,7 @@ import { Response } from 'express'
 import { prisma } from '../db'
 import { AuthRequest } from '../middleware/auth'
 import { BeacoinTxType } from '@prisma/client'
+import { applyPercentPromo } from '../lib/promoCodes'
 
 export const purchaseCosmetic = async (req: AuthRequest, res: Response) => {
     try {
@@ -16,17 +17,12 @@ export const purchaseCosmetic = async (req: AuthRequest, res: Response) => {
 
         if (!effect && !decoration) return res.status(404).json({ error: 'Item not found in shop' })
 
-        let price = (effect?.price || decoration?.price) || 0
+        const basePrice = (effect?.price || decoration?.price) || 0
+        let price = basePrice
         const type = effect ? 'profile' : 'avatar'
 
-        if (couponCode && typeof couponCode === 'string') {
-            let hash = 0
-            for (let i = 0; i < couponCode.length; i++) {
-                hash = Math.imul(31, hash) + couponCode.charCodeAt(i) | 0
-            }
-            const discount = Math.abs(hash) % 100
-            price = Math.floor(price * (1 - discount / 100))
-        }
+        const promoResult = applyPercentPromo(basePrice, couponCode)
+        price = promoResult.cost
 
         // Check ownership
         const existing = await prisma.ownedCosmetic.findUnique({
@@ -36,13 +32,13 @@ export const purchaseCosmetic = async (req: AuthRequest, res: Response) => {
 
         // Transaction: check balance, deduct, add cosmetic
         const result = await prisma.$transaction(async (tx) => {
-            const user = await tx.user.findUnique({ where: { id: userId } })
-            if (!user) throw new Error('User not found')
-            if (user.beacoins < price) throw new Error('Insufficient Beacoins')
+            const wallet = await tx.beacoinWallet.findUnique({ where: { userId } })
+            if (!wallet) throw new Error('Wallet not found')
+            if (wallet.balance < price) throw new Error('Insufficient Beacoins')
 
-            await tx.user.update({
-                where: { id: userId },
-                data: { beacoins: { decrement: price } }
+            await tx.beacoinWallet.update({
+                where: { userId },
+                data: { balance: { decrement: price } }
             })
 
             const cosmetic = await tx.ownedCosmetic.create({
@@ -54,21 +50,22 @@ export const purchaseCosmetic = async (req: AuthRequest, res: Response) => {
             })
 
             // Optional: Log transaction
-            const wallet = await tx.beacoinWallet.findUnique({ where: { userId } })
             await tx.beacoinTransaction.create({
                 data: {
-                    walletId: wallet?.id || '',
+                    walletId: wallet.id,
                     fromUserId: userId,
                     type: BeacoinTxType.SPEND,
-                    amount: -price,
-                    reason: `Purchased cosmetic ${cosmeticId}`
+                    amount: price,
+                    reason: promoResult.code
+                        ? `Purchased cosmetic ${cosmeticId} with ${promoResult.code}`
+                        : `Purchased cosmetic ${cosmeticId}`
                 }
             })
 
             return cosmetic
         })
 
-        res.json({ success: true, cosmetic: result })
+        res.json({ success: true, cosmetic: result, cost: price, appliedCoupon: promoResult.code })
     } catch (err: any) {
         res.status(400).json({ error: err.message })
     }

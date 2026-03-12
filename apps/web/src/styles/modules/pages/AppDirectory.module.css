@@ -10,7 +10,7 @@
 }
 
 .hero h1 {
-    font-size: 3rem;
+    font-size: clamp(2rem, 5vw, 3rem);
     font-weight: 800;
     margin-bottom: 1rem;
     background: linear-gradient(to right, var(--beacon-brand), #ff73fa);
@@ -61,6 +61,11 @@
     transition: all 0.2s;
 }
 
+.categories button:focus-visible {
+    outline: 2px solid var(--beacon-brand);
+    outline-offset: 2px;
+}
+
 .categories button.active {
     background: var(--beacon-brand);
     color: white;
@@ -69,7 +74,7 @@
 
 .appGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
     gap: 1.5rem;
 }
 

@@ -2,6 +2,7 @@ import { Router, Response } from 'express'
 import { authenticate as requireAuth, AuthRequest } from '../middleware/auth'
 import { prisma as db } from '../db'
 import { PremiumTier, BeacoinTxType } from '@prisma/client'
+import { applyPercentPromo, getCoinPromoAmount, normalizePromoCode, resolvePromoCode } from '../lib/promoCodes'
 
 const router = Router()
 
@@ -126,16 +127,9 @@ router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: AuthRequest
       return res.status(400).json({ error: 'Invalid tier. Must be monthly or yearly.' })
     }
 
-    let cost = tier === 'yearly' ? 10000 : 1000
-
-    if (couponCode && typeof couponCode === 'string') {
-      let hash = 0
-      for (let i = 0; i < couponCode.length; i++) {
-        hash = Math.imul(31, hash) + couponCode.charCodeAt(i) | 0
-      }
-      const discount = Math.abs(hash) % 100
-      cost = Math.floor(cost * (1 - discount / 100))
-    }
+    const baseCost = tier === 'yearly' ? 10000 : 1250
+    const promoResult = applyPercentPromo(baseCost, couponCode)
+    const cost = promoResult.cost
 
     const wallet = await db.beacoinWallet.findUnique({ where: { userId } })
     if (!wallet || wallet.balance < cost) {
@@ -191,6 +185,8 @@ router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: AuthRequest
     res.json({
       success: true,
       cost,
+      appliedCoupon: promoResult.code,
+      discountPercent: promoResult.discountPercent,
       expiresAt,
       transaction: {
         id: transaction.id,
@@ -200,6 +196,293 @@ router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: AuthRequest
         timestamp: transaction.createdAt,
       },
     })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /users/@me/beacoin/redeem — redeem a one-time Beacoin promo code
+router.post('/users/@me/beacoin/redeem', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!db) return res.status(500).json({ error: 'Database not connected' })
+
+    const rawCode = req.body?.code
+    const normalizedCode = normalizePromoCode(rawCode)
+    if (!normalizedCode) {
+      return res.status(400).json({ error: 'Promo code is required' })
+    }
+
+    const promo = resolvePromoCode(normalizedCode)
+    if (!promo || (promo.benefit.kind !== 'coins' && promo.benefit.kind !== 'beacon_plus')) {
+      return res.status(400).json({ error: 'Invalid or unsupported promo code' })
+    }
+
+    const wallet = await db.beacoinWallet.upsert({
+      where: { userId },
+      create: { userId, balance: 100, lifetime: 100 },
+      update: {},
+    })
+
+    const existing = await db.beacoinTransaction.findFirst({
+      where: {
+        walletId: wallet.id,
+        reason: `Redeemed promo code ${promo.code}`,
+      },
+      select: { id: true },
+    })
+    if (existing) {
+      return res.status(409).json({ error: 'Promo code already redeemed' })
+    }
+
+    if (promo.benefit.kind === 'coins') {
+      const coinPromo = getCoinPromoAmount(normalizedCode)
+      if (!coinPromo.code || coinPromo.amount <= 0) {
+        return res.status(400).json({ error: 'Invalid or unsupported promo code' })
+      }
+
+      await db.beacoinWallet.update({
+        where: { userId },
+        data: {
+          balance: { increment: coinPromo.amount },
+          lifetime: { increment: coinPromo.amount },
+        },
+      })
+
+      const transaction = await db.beacoinTransaction.create({
+        data: {
+          walletId: wallet.id,
+          type: BeacoinTxType.EARN,
+          amount: coinPromo.amount,
+          reason: `Redeemed promo code ${coinPromo.code}`,
+          fromUserId: userId,
+          toUserId: userId,
+          meta: { code: coinPromo.code, kind: 'coins' },
+        },
+      })
+
+      return res.json({
+        success: true,
+        code: coinPromo.code,
+        amount: coinPromo.amount,
+        reward: {
+          kind: 'coins',
+          amount: coinPromo.amount,
+        },
+        transaction: {
+          id: transaction.id,
+          type: 'earn',
+          amount: transaction.amount,
+          description: transaction.reason,
+          timestamp: transaction.createdAt,
+        },
+      })
+    }
+
+    const months = Math.max(1, Math.min(12, Math.floor(promo.benefit.value)))
+    const now = new Date()
+    const currentPremium = await db.userPremium.findUnique({ where: { userId } })
+    const effectiveStart = currentPremium?.expiresAt && currentPremium.expiresAt > now ? currentPremium.expiresAt : now
+    const expiresAt = new Date(effectiveStart)
+    expiresAt.setMonth(expiresAt.getMonth() + months)
+
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        isBeaconPlus: true,
+        beaconPlusSince: now,
+      },
+    })
+
+    await db.userPremium.upsert({
+      where: { userId },
+      create: {
+        userId,
+        tier: PremiumTier.PREMIUM,
+        expiresAt,
+        purchasedWith: 0,
+      },
+      update: {
+        tier: PremiumTier.PREMIUM,
+        expiresAt,
+      },
+    })
+
+    const transaction = await db.beacoinTransaction.create({
+      data: {
+        walletId: wallet.id,
+        type: BeacoinTxType.EARN,
+        amount: 0,
+        reason: `Redeemed promo code ${promo.code}`,
+        fromUserId: userId,
+        toUserId: userId,
+        meta: { code: promo.code, kind: 'beacon_plus', months, expiresAt: expiresAt.toISOString() },
+      },
+    })
+
+    return res.json({
+      success: true,
+      code: promo.code,
+      amount: 0,
+      reward: {
+        kind: 'beacon_plus',
+        months,
+        expiresAt,
+      },
+      transaction: {
+        id: transaction.id,
+        type: 'earn',
+        amount: transaction.amount,
+        description: transaction.reason,
+        timestamp: transaction.createdAt,
+      },
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /users/@me/beacoin/coupon/validate — validate promo code and return discount metadata
+router.post('/users/@me/beacoin/coupon/validate', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+    const code = normalizePromoCode(req.body?.code)
+    if (!code) {
+      return res.status(400).json({ error: 'Promo code is required' })
+    }
+
+    const promo = resolvePromoCode(code)
+    if (!promo) {
+      return res.status(400).json({ error: 'Invalid or expired promo code' })
+    }
+
+    res.json({
+      success: true,
+      code: promo.code,
+      kind: promo.benefit.kind,
+      value: promo.benefit.value,
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /users/@me/beacoin/daily — claim daily reward
+router.post('/users/@me/beacoin/daily', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!db) return res.status(500).json({ error: 'Database not connected' })
+
+    const wallet = await db.beacoinWallet.upsert({
+      where: { userId },
+      create: { userId, balance: 100, lifetime: 100 },
+      update: {},
+    })
+
+    const amount = 50
+
+    await db.beacoinWallet.update({
+      where: { userId },
+      data: { balance: { increment: amount }, lifetime: { increment: amount } },
+    })
+
+    const transaction = await db.beacoinTransaction.create({
+      data: {
+        walletId: wallet.id,
+        type: BeacoinTxType.EARN,
+        amount,
+        reason: 'Daily check-in reward',
+        fromUserId: userId,
+        toUserId: userId,
+      },
+    })
+
+    res.json({ success: true, amount, transaction })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /users/@me/beacoin/activity — claim activity milestone reward
+router.post('/users/@me/beacoin/activity', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!db) return res.status(500).json({ error: 'Database not connected' })
+
+    const wallet = await db.beacoinWallet.upsert({
+      where: { userId },
+      create: { userId, balance: 100, lifetime: 100 },
+      update: {},
+    })
+
+    const amount = 10
+
+    await db.beacoinWallet.update({
+      where: { userId },
+      data: { balance: { increment: amount }, lifetime: { increment: amount } },
+    })
+
+    const transaction = await db.beacoinTransaction.create({
+      data: {
+        walletId: wallet.id,
+        type: BeacoinTxType.EARN,
+        amount,
+        reason: 'Activity milestone reward',
+        fromUserId: userId,
+        toUserId: userId,
+      },
+    })
+
+    res.json({ success: true, amount, transaction })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// POST /users/@me/beacoin/invite — claim invite bonus
+router.post('/users/@me/beacoin/invite', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id
+    const invitedUserId = req.body?.invitedUserId
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!db) return res.status(500).json({ error: 'Database not connected' })
+    if (!invitedUserId) return res.status(400).json({ error: 'invitedUserId is required' })
+
+    const wallet = await db.beacoinWallet.upsert({
+      where: { userId },
+      create: { userId, balance: 100, lifetime: 100 },
+      update: {},
+    })
+
+    const amount = 25
+
+    await db.beacoinWallet.update({
+      where: { userId },
+      data: { balance: { increment: amount }, lifetime: { increment: amount } },
+    })
+
+    const transaction = await db.beacoinTransaction.create({
+      data: {
+        walletId: wallet.id,
+        type: BeacoinTxType.EARN,
+        amount,
+        reason: 'Invite bonus reward',
+        fromUserId: invitedUserId,
+        toUserId: userId,
+      },
+    })
+
+    res.json({ success: true, amount, transaction })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Internal server error' })

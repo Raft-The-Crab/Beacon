@@ -99,8 +99,8 @@ client.login()
 import { BeaconClient } from '@beacon/sdk'
 
 const beacon = new BeaconClient({
-  apiUrl: 'https://api.beacon.app',
-  wsUrl: 'wss://gateway.beacon.app'
+  apiUrl: 'https://api.beacon.qzz.io',
+  wsUrl: 'wss://gateway.beacon.qzz.io'
 })
 
 await beacon.auth.login('user@example.com', 'password')
@@ -114,9 +114,9 @@ await beacon.connect()
 
 ## 📚 Documentation
 
-- [Beacon Documentation](https://docs.beacon.app)
-- [Developer Portal](https://developers.beacon.app)
-- [API Reference](https://api.beacon.app/docs)
+- [Beacon Documentation](https://docs.beacon.qzz.io)
+- [Developer Portal](https://developers.beacon.qzz.io)
+- [API Reference](https://api.beacon.qzz.io/docs)
 
 ## 🤝 Contributing
 
@@ -131,9 +131,8 @@ Contributions are welcome! Please read our contributing guidelines.
 
 ## 🔗 Links
 
-- [Website](https://beacon.app)
+- [Website](https://beacon.qzz.io)
 - [Main Repository](https://github.com/Raft-The-Crab/Beacon)
-- [Discord Community](https://beacon.app/discord)
 
 ---
 

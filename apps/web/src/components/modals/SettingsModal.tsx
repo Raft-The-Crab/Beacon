@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book, AlignLeft, Layers, Zap, Palette, ChevronDown } from 'lucide-react'
+import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book, AlignLeft, Layers, Zap, Palette, ChevronDown, Gift } from 'lucide-react'
 import { useUIStore } from '../../stores/useUIStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useServerStore } from '../../stores/useServerStore'
@@ -11,6 +11,9 @@ import { fileUploadService, type UploadedFile } from '../../services/fileUpload'
 import { useProfileArtStore } from '../../stores/useProfileArtStore'
 import { useTranslationStore } from '../../stores/useTranslationStore'
 import { useLowBandwidthStore } from '../../stores/useLowBandwidthStore'
+import { useQuestStore } from '../../stores/useQuestStore'
+import { useBeacoinStore } from '../../stores/useBeacoinStore'
+import { api } from '../../lib/api'
 import styles from '../../styles/modules/modals/SettingsModal.module.css'
 
 const PRESET_COLORS = [
@@ -57,7 +60,11 @@ interface SettingsModalProps {
 
 import { ProfileArtPicker } from '../features/ProfileArtPicker'
 
-type TabId = 'profile' | 'profileArt' | 'security' | 'notifications' | 'advanced' | 'server' | 'appearance' | 'about'
+type TabId = 'profile' | 'profileArt' | 'security' | 'notifications' | 'advanced' | 'server' | 'appearance' | 'tasks' | 'redeem' | 'about'
+
+type RedeemReward =
+    | { kind: 'coins'; amount: number; code: string }
+    | { kind: 'beacon_plus'; months: number; code: string; expiresAt?: string }
 
 export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: SettingsModalProps = {}) {
     const {
@@ -92,7 +99,6 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [username, setUsername] = useState(user?.username || '')
-    const [customStatus, setCustomStatus] = useState(user?.customStatus || '')
     const [bio, setBio] = useState(user?.bio || '')
     const [notifPrefs, setNotifPrefs] = useState(() => {
         try {
@@ -100,6 +106,13 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
             return saved ? { ...DEFAULT_NOTIF_PREFS, ...JSON.parse(saved) } : DEFAULT_NOTIF_PREFS
         } catch { return DEFAULT_NOTIF_PREFS }
     })
+    const [redeemCode, setRedeemCode] = useState('')
+    const [redeeming, setRedeeming] = useState(false)
+    const [redeemReward, setRedeemReward] = useState<RedeemReward | null>(null)
+    const [redeemRevealState, setRedeemRevealState] = useState<'idle' | 'opening' | 'opened'>('idle')
+    const [claimingQuestId, setClaimingQuestId] = useState<string | null>(null)
+    const { quests, isLoading: questsLoading, fetchQuests, claimReward } = useQuestStore()
+    const { fetchWallet } = useBeacoinStore()
 
     const setNotifPref = (key: keyof typeof DEFAULT_NOTIF_PREFS) => (val: boolean) => {
         if (key === 'desktopNotifications' && val && typeof window !== 'undefined' && 'Notification' in window) {
@@ -133,7 +146,6 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
         try {
             const response = await apiClient.updateUser({
                 username,
-                customStatus,
                 bio,
             })
             if (response.success && response.data) {
@@ -193,15 +205,6 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                 value={username}
                                 onChange={(e: any) => setUsername(e.target.value)}
                                 placeholder="Your username"
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <Input
-                                label="Custom Status"
-                                value={customStatus}
-                                onChange={(e: any) => setCustomStatus(e.target.value)}
-                                placeholder="What's on your mind?"
                             />
                         </div>
 
@@ -745,6 +748,161 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                     </div>
                 )
 
+            case 'tasks':
+                return (
+                    <div className={styles.tabContent}>
+                        <p className={styles.muted} style={{ marginBottom: 16 }}>
+                            Complete quests to earn Beacoins and unlock cosmetics faster.
+                        </p>
+
+                        {questsLoading && (
+                            <div className={styles.questCard}>
+                                <p className={styles.muted}>Loading tasks...</p>
+                            </div>
+                        )}
+
+                        {!questsLoading && quests.length === 0 && (
+                            <div className={styles.questCard}>
+                                <h3>No active tasks</h3>
+                                <p className={styles.muted}>New quests will appear soon.</p>
+                            </div>
+                        )}
+
+                        {!questsLoading && quests.map((questItem) => {
+                            const progress = Math.min(100, Math.round((questItem.progress / Math.max(1, questItem.quest.total)) * 100))
+                            const canClaim = questItem.completed && !questItem.claimed
+                            return (
+                                <div className={styles.questCard} key={questItem.id}>
+                                    <div className={styles.questHeader}>
+                                        <h3>{questItem.quest.title}</h3>
+                                        <span className={styles.questReward}>+{questItem.quest.reward} Beacoins</span>
+                                    </div>
+                                    <p className={styles.muted}>{questItem.quest.description}</p>
+                                    <div className={styles.questProgressRow}>
+                                        <span className={styles.muted}>{questItem.progress}/{questItem.quest.total}</span>
+                                        <span className={styles.muted}>{progress}%</span>
+                                    </div>
+                                    <div className={styles.questProgressTrack}>
+                                        <div className={styles.questProgressFill} style={{ width: `${progress}%` }} />
+                                    </div>
+                                    <div className={styles.questActions}>
+                                        <Button
+                                            variant={canClaim ? 'primary' : 'secondary'}
+                                            size="sm"
+                                            disabled={!canClaim || claimingQuestId === questItem.questId}
+                                            loading={claimingQuestId === questItem.questId}
+                                            onClick={async () => {
+                                                try {
+                                                    setClaimingQuestId(questItem.questId)
+                                                    await claimReward(questItem.questId)
+                                                    await fetchWallet()
+                                                    toast.success('Task reward claimed')
+                                                } catch {
+                                                    toast.error('Could not claim task reward')
+                                                } finally {
+                                                    setClaimingQuestId(null)
+                                                }
+                                            }}
+                                        >
+                                            {questItem.claimed ? 'Claimed' : canClaim ? 'Claim Reward' : 'In Progress'}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )
+
+            case 'redeem':
+                return (
+                    <div className={styles.tabContent}>
+                        <p className={styles.muted} style={{ marginBottom: 16 }}>
+                            Redeem codes unlock rewards instantly. Some codes grant Beacoins, and special drops can unlock Beacon+.
+                        </p>
+
+                        <div className={styles.redeemCard}>
+                            <Input
+                                label="Redeem Code"
+                                value={redeemCode}
+                                onChange={(e: any) => setRedeemCode(e.target.value.toUpperCase())}
+                                placeholder="Enter code (example: STARTER500)"
+                            />
+                            <div className={styles.formActions}>
+                                <Button
+                                    variant="primary"
+                                    loading={redeeming}
+                                    disabled={!redeemCode.trim()}
+                                    onClick={async () => {
+                                        try {
+                                            setRedeeming(true)
+                                            setRedeemRevealState('opening')
+                                            setRedeemReward(null)
+                                            const { data } = await api.post('/users/@me/beacoin/redeem', { code: redeemCode.trim() })
+                                            await fetchWallet()
+                                            setRedeemCode('')
+
+                                            const nextReward: RedeemReward = data?.reward?.kind === 'beacon_plus'
+                                                ? {
+                                                    kind: 'beacon_plus',
+                                                    code: data.code,
+                                                    months: Number(data?.reward?.months || 1),
+                                                    expiresAt: data?.reward?.expiresAt,
+                                                }
+                                                : {
+                                                    kind: 'coins',
+                                                    code: data.code,
+                                                    amount: Number(data?.amount || data?.reward?.amount || 0),
+                                                }
+
+                                            window.setTimeout(() => {
+                                                setRedeemReward(nextReward)
+                                                setRedeemRevealState('opened')
+                                            }, 850)
+
+                                            if (nextReward.kind === 'beacon_plus') {
+                                                toast.success(`Redeemed ${nextReward.code} (Beacon+ for ${nextReward.months} month${nextReward.months === 1 ? '' : 's'})`)
+                                            } else {
+                                                toast.success(`Redeemed ${nextReward.code} (+${nextReward.amount} Beacoins)`)
+                                            }
+                                        } catch (err: any) {
+                                            setRedeemRevealState('idle')
+                                            const message = err?.response?.data?.error || 'Invalid or already redeemed code'
+                                            toast.error(message)
+                                        } finally {
+                                            setRedeeming(false)
+                                        }
+                                    }}
+                                >
+                                    Redeem Code
+                                </Button>
+                            </div>
+                            <p className={styles.muted}>Redeem codes are provided through events, rewards, and official drops.</p>
+
+                            {(redeemRevealState !== 'idle' || redeemReward) && (
+                                <div className={`${styles.redeemReveal} ${redeemRevealState === 'opening' ? styles.redeemRevealOpening : ''} ${redeemRevealState === 'opened' ? styles.redeemRevealOpened : ''}`}>
+                                    <div className={styles.redeemCrate} aria-hidden>
+                                        <div className={styles.redeemCrateLid} />
+                                        <div className={styles.redeemCrateBody} />
+                                        <div className={styles.redeemGlow} />
+                                    </div>
+                                    <div className={styles.redeemRewardText}>
+                                        {redeemRevealState === 'opening' && <span>Opening reward crate...</span>}
+                                        {redeemRevealState === 'opened' && redeemReward?.kind === 'coins' && (
+                                            <span>+{redeemReward.amount} Beacoins from <strong>{redeemReward.code}</strong></span>
+                                        )}
+                                        {redeemRevealState === 'opened' && redeemReward?.kind === 'beacon_plus' && (
+                                            <span>
+                                                Beacon+ unlocked for {redeemReward.months} month{redeemReward.months === 1 ? '' : 's'} via <strong>{redeemReward.code}</strong>
+                                                {redeemReward.expiresAt ? ` (expires ${new Date(redeemReward.expiresAt).toLocaleDateString()})` : ''}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )
+
             case 'profileArt':
                 return (
                     <div className={styles.tabContent}>
@@ -829,6 +987,23 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                 <Code size={18} />
                                 Advanced
                             </button>
+                            <button
+                                className={`${styles.navItem} ${activeTab === 'tasks' ? styles.active : ''}`}
+                                onClick={async () => {
+                                    setActiveTab('tasks')
+                                    await fetchQuests()
+                                }}
+                            >
+                                <Book size={18} />
+                                Tasks
+                            </button>
+                            <button
+                                className={`${styles.navItem} ${activeTab === 'redeem' ? styles.active : ''}`}
+                                onClick={() => setActiveTab('redeem')}
+                            >
+                                <Gift size={18} />
+                                Redeem Code
+                            </button>
                         </div>
 
                         <div className={styles.section}>
@@ -864,7 +1039,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
 
                 <div className={styles.content}>
                     <div className={styles.header}>
-                        <h2>{{ profile: 'Profile', profileArt: 'Profile Art', security: 'Security', notifications: 'Notifications', appearance: 'Appearance', advanced: 'Advanced', server: 'Server', about: 'About' }[activeTab]}</h2>
+                        <h2>{{ profile: 'Profile', profileArt: 'Profile Art', security: 'Security', notifications: 'Notifications', appearance: 'Appearance', advanced: 'Advanced', tasks: 'Tasks', redeem: 'Redeem Code', server: 'Server', about: 'About' }[activeTab]}</h2>
                     </div>
 
                     {renderTabContent()}

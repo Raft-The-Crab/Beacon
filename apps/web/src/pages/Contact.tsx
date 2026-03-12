@@ -22,21 +22,21 @@ export function Contact() {
                         <div className={styles.iconWrapper} style={{ color: 'var(--beacon-brand)' }}><Mail size={32} /></div>
                         <h3>Email Support</h3>
                         <p>For general inquiries and technical support.</p>
-                        <span className={styles.contactValue}>support@beacon.app</span>
+                        <span className={styles.contactValue}>support@beacon.qzz.io</span>
                     </div>
 
                     <div className={styles.card}>
                         <div className={styles.iconWrapper} style={{ color: 'var(--accent-green)' }}><MessageSquare size={32} /></div>
-                        <h3>Protocol HQ</h3>
-                        <p>Join our global Beacon server for real-time architectural support.</p>
-                        <span className={styles.contactValue}>beacon.network/hq</span>
+                        <h3>Website</h3>
+                        <p>Visit the official Beacon website for updates and platform access.</p>
+                        <span className={styles.contactValue}>beacon.qzz.io</span>
                     </div>
 
                     <div className={styles.card}>
                         <div className={styles.iconWrapper} style={{ color: '#a855f7' }}><Globe size={32} /></div>
                         <h3>Press</h3>
                         <p>For media inquiries and brand assets.</p>
-                        <span className={styles.contactValue}>press@beacon.app</span>
+                        <span className={styles.contactValue}>press@beacon.qzz.io</span>
                     </div>
                 </div>
             </section>

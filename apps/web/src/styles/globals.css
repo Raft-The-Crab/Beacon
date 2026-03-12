@@ -1,108 +1,109 @@
-/* Beacon Global Styles - Soft Minimalistic Theme */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* Beacon Global Styles - Discord-Inspired Soft Design */
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Brand Colors - Ionized & High-Saturation */
+  /* Brand Colors - Discord-like Purple/Blue */
   --beacon-brand: #5865f2;
-  /* More electric Discord-like but refined */
   --beacon-brand-hover: #4752c4;
-  --beacon-brand-muted: rgba(88, 101, 242, 0.12);
+  --beacon-brand-muted: rgba(88, 101, 242, 0.1);
+  --beacon-brand-subtle: rgba(88, 101, 242, 0.05);
 
-  /* Status Colors - High Vibrancy */
-  --status-success: #24da76;
-  /* Vibrant Neon Green */
-  --status-error: #ff4757;
-  --status-warning: #ffa502;
-  --status-info: #1e90ff;
+  /* Status Colors - Softer, More Harmonious */
+  --status-success: #23a55a;
+  --status-error: #f23f43;
+  --status-warning: #f0b232;
+  --status-info: #00a8fc;
+  --status-online: #23a55a;
+  --status-idle: #f0b232;
+  --status-dnd: #f23f43;
+  --status-offline: #80848e;
 
-  /* Premium Deep Cool Dark Theme - Soft & Clean */
-  --bg-primary: #0d0f12;
-  /* Main Content (Deepest cool dark) */
-  --bg-secondary: #08090a;
-  /* Sidebar (Darkest) */
-  --bg-tertiary: #040405;
-  /* Deep Backfill */
-  --bg-panel: #111317;
+  /* Discord-like Dark Theme - Refined Zinc Hierarchy */
+  --bg-primary: #09090b;   /* Server Rail (Zinc-950) */
+  --bg-secondary: #0f0f12; /* Sidebars (Zinc-900+) */
+  --bg-tertiary: #161619;  /* Chat Area (Zinc-900) */
+  --bg-panel: #161619;
   --bg-hover: rgba(255, 255, 255, 0.04);
-  --bg-active: rgba(255, 255, 255, 0.07);
+  --bg-active: rgba(255, 255, 255, 0.08);
 
-  /* Lightened variants for depth */
-  --bg-surface-soft: #1a1d24;
-  --bg-surface-elevated: #23262f;
+  /* Surface variants */
+  --bg-surface-soft: #1c1c21;
+  --bg-surface-elevated: #27272a;
+  --bg-modal: #0f0f12;
+  --bg-input: #09090b;
 
-  /* Text Colors - Standard Contrast */
-  --text-primary: #ffffff;
+  /* Specific panel mappings */
+  --server-rail-bg: #09090b;
+  --sidebar-bg: #111114;
+  --chat-bg: #18181b;
+  --activity-bg: #111114;
+  --border-sep: rgba(255, 255, 255, 0.06);
+
+  /* Text Colors - Discord-like Hierarchy */
+  --text-primary: #f2f3f5;
   --text-secondary: #b5bac1;
   --text-muted: #80848e;
   --text-normal: #dbdee1;
   --text-link: #00a8fc;
+  --text-interactive: #f2f3f5;
+  --text-interactive-hover: #ffffff;
 
   /* Neutral Surfaces */
-  --surface-0: #0e0f11;
-  --surface-1: #17181c;
+  --surface-0: #313338;
+  --surface-1: #2b2d31;
   --surface-2: #232428;
-  --border-soft: rgba(255, 255, 255, 0.05);
+  --border-soft: rgba(0, 0, 0, 0.2);
+  --border-subtle: rgba(0, 0, 0, 0.1);
 
   /* Theme-Aware Surfaces */
   --bg-main: var(--bg-primary);
-  --bg-side: var(--bg-secondary);
+  --bg-side: var(--bg-tertiary);
 
-  /* Singularity Glassmorphism 4.0 */
-  --glass-bg: rgba(255, 255, 255, 0.025);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: 16px;
-  --glass-saturation: 180%;
-  --glass-reflection: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 40%, rgba(255, 255, 255, 0.02) 100%);
-  --chromatic-aberration: 0.8px;
+  /* Glassmorphism - Subtle & Discord-like */
+  --glass-bg: rgba(0, 0, 0, 0.2);
+  --glass-border: rgba(0, 0, 0, 0.3);
+  --glass-blur: 12px;
+  --glass-saturation: 150%;
 
-  /* Mesh Gradient Tokens - More subtle */
-  --mesh-1: radial-gradient(at 0% 0%, rgba(88, 101, 242, 0.15) 0px, transparent 55%);
-  --mesh-2: radial-gradient(at 100% 0%, rgba(148, 156, 247, 0.12) 0px, transparent 55%);
-  --mesh-3: radial-gradient(at 50% 100%, rgba(114, 137, 218, 0.1) 0px, transparent 55%);
-  --mesh-4: radial-gradient(at 100% 100%, rgba(88, 101, 242, 0.08) 0px, transparent 55%);
+  /* Accent Gradients */
+  --accent-gradient: linear-gradient(135deg, #5865f2 0%, #7289da 100%);
+  --accent-glow: 0 0 24px rgba(88, 101, 242, 0.3);
+  --premium-gradient: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
 
-  --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-
-  --atmos-glow: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(88, 101, 242, 0.2) 0%, transparent 65%);
-  --atmos-radiance: 0 0 140px rgba(88, 101, 242, 0.3);
-
-  --accent-gradient: linear-gradient(135deg, #5865f2 0%, #7289da 50%, #949cf7 100%);
-  --accent-glow: 0 0 60px rgba(88, 101, 242, 0.5);
-
-  /* Aura Glows for Active Panels - More subtle */
-  --aura-brand: 0 0 30px rgba(88, 101, 242, 0.15);
-  --aura-success: 0 0 30px rgba(36, 218, 118, 0.12);
-  --aura-glow-primary: radial-gradient(circle at center, rgba(88, 101, 242, 0.08), transparent 70%);
-  --aura-glow-secondary: radial-gradient(circle at center, rgba(148, 156, 247, 0.05), transparent 70%);
+  /* Shimmer effect for buttons */
   --shimmer-gradient: linear-gradient(90deg,
       rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.15) 50%,
       rgba(255, 255, 255, 0) 100%);
 
-  /* Shadows — Soft & Diffused (Airy & Floating) */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.16), 0 6px 12px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.2), 0 12px 24px rgba(0, 0, 0, 0.1);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12);
+  /* Shadows - Soft & Subtle like Discord */
+  --shadow-sm: 0 1px 0 rgba(4, 4, 5, 0.2), 0 1.5px 0 rgba(6, 6, 7, 0.05), 0 2px 0 rgba(4, 4, 5, 0.05);
+  --shadow-md: 0 2px 10px 0 rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.24);
+  --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.3);
+  --shadow-glass: 0 8px 24px rgba(0, 0, 0, 0.16);
+  --shadow-elevation-low: 0 1px 5px rgba(0, 0, 0, 0.2);
+  --shadow-elevation-medium: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-elevation-high: 0 8px 20px rgba(0, 0, 0, 0.3);
 
-  /* Transitions — Expressive spring for interactions, smooth for layouts */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Transitions - Smooth & Natural */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --transition-normal: 0.3s var(--ease-out);
-  --transition-slow: 0.5s var(--ease-out);
-  --transition-fast: 0.15s var(--ease-out);
+  --transition-normal: 0.2s var(--ease-out);
+  --transition-slow: 0.3s var(--ease-out);
+  --transition-fast: 0.1s var(--ease-out);
   --transition-spring: 0.4s var(--ease-spring);
 
-  /* Radii - Balanced modern & rounded style */
+  /* Border Radius - Consistent & Modern */
   --radius-2xs: 6px;
   --radius-xs: 8px;
-  --radius-sm: 10px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 24px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
   --radius-full: 9999px;
 
   /* Spacing System - Fluid Responsive Interpolation (320px to 1200px) */
@@ -116,11 +117,10 @@
   --space-3xl: clamp(2.5rem, 2.34rem + 0.76vw, 2.94rem);
   --space-4xl: clamp(4rem, 3.75rem + 1.25vw, 4.73rem);
 
-  /* Typography Scales - Fluid Responsive Interpolation */
+  /* Typography - Cleaner, Discord-like */
   --font-size-xs: clamp(0.70rem, 0.68rem + 0.08vw, 0.75rem);
   --font-size-sm: clamp(0.80rem, 0.78rem + 0.11vw, 0.88rem);
   --font-size-md: clamp(0.95rem, 0.92rem + 0.15vw, 1rem);
-  /* 16px desktop, ~15px mobile */
   --font-size-lg: clamp(1.05rem, 1.02rem + 0.17vw, 1.15rem);
   --font-size-xl: clamp(1.15rem, 1.10rem + 0.25vw, 1.30rem);
   --font-size-2xl: clamp(1.30rem, 1.21rem + 0.45vw, 1.56rem);
@@ -128,10 +128,13 @@
   --font-size-4xl: clamp(2.40rem, 2.10rem + 1.50vw, 3.25rem);
   --font-size-5xl: clamp(3.00rem, 2.50rem + 2.50vw, 4.45rem);
 
-  --font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'Consolas', 'Andale Mono', 'Ubuntu Mono', monospace;
+
   --sidebar-width: 240px;
   --z-modal: 1000;
+  --z-popout: 900;
+  --z-dropdown: 800;
 }
 
 [data-theme="glass"] {
@@ -142,12 +145,12 @@
   --bg-side: rgba(0, 0, 0, 0.65);
   --bg-panel: rgba(0, 0, 0, 0.8);
   --backdrop-blur: 40px;
-  --glass-bg: rgba(0, 0, 0, 0.3);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --border-soft: rgba(255, 255, 255, 0.1);
-  --bg-hover: rgba(255, 255, 255, 0.08);
-  --bg-active: rgba(255, 255, 255, 0.12);
-  --shadow-glass: 0 20px 50px rgba(0, 0, 0, 0.6);
+  --glass-bg: rgba(13, 15, 18, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --border-soft: rgba(255, 255, 255, 0.05);
+  --bg-hover: rgba(255, 255, 255, 0.06);
+  --bg-active: rgba(255, 255, 255, 0.1);
+  --shadow-glass: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] {
@@ -476,31 +479,19 @@ body {
   overflow: hidden;
 }
 
-/* Scrollbar Styling — Minimalist & Visible */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
 
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: var(--radius-full);
-  transition: background 0.3s;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.35);
-}
-
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-}
 
 /* Focus Styles */
 :focus-visible {
@@ -1473,6 +1464,39 @@ h4 {
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: flex-end;
+}
+
+/* Shared alignment primitives */
+.app-page-shell {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 32px);
+  box-sizing: border-box;
+}
+
+.app-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--modal-z-index, 1000);
+  background: var(--modal-overlay-bg, rgba(0, 0, 0, 0.55));
+  backdrop-filter: blur(var(--modal-overlay-blur, 6px));
+  -webkit-backdrop-filter: blur(var(--modal-overlay-blur, 6px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--modal-overlay-padding, 20px);
+  box-sizing: border-box;
+}
+
+.app-modal-shell {
+  width: var(--modal-width, min(92vw, 520px));
+  max-width: var(--modal-max-width, 100%);
+  max-height: var(--modal-max-height, 88vh);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--modal-radius, 16px);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 @media (max-width: 480px) {

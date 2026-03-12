@@ -4,14 +4,19 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
   animation: overlayFadeIn 0.2s ease;
+}
+
+/* Disable blur on low-bandwidth mode for performance */
+[data-low-bandwidth="true"] .overlay {
+  backdrop-filter: none;
+  background-color: rgba(0, 0, 0, 0.85);
 }
 
 .closing {
@@ -22,14 +27,13 @@
 .closing .modal {
   transform: scale(0.95) translateY(20px);
   opacity: 0;
-  transition: all 0.2s ease-out;
+  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
 }
 
 @keyframes overlayFadeIn {
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
@@ -37,25 +41,27 @@
 
 .modal {
   background: var(--bg-panel);
-  border-radius: var(--radius-2xl);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
   max-width: 95%;
   max-height: 85vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
-  border: 1px solid var(--glass-border);
-  animation: modalSpringUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes modalSpringUp {
-  from {
+@keyframes modalBounceIn {
+  0% {
     opacity: 0;
-    transform: translateY(40px) scale(0.95);
+    transform: translateY(30px) scale(0.9);
   }
-
-  to {
+  60% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
@@ -65,43 +71,43 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--glass-border);
-  position: relative;
-  z-index: 10;
+  padding: 16px;
   flex-shrink: 0;
 }
 
 .title {
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
 .closeButton {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
+  background: transparent;
+  border: none;
   cursor: pointer;
-  color: var(--text-secondary);
-  width: 40px;
-  height: 40px;
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-full);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-xs);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 4px;
   font-size: 24px;
   line-height: 1;
-  z-index: 20;
-  position: relative;
-  pointer-events: auto;
 }
 
 .closeButton:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
-  transform: none;
+  transform: scale(1.1) rotate(90deg);
+}
+
+.closeButton:active {
+  transform: scale(0.9) rotate(90deg);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .content {

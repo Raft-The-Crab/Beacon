@@ -15,10 +15,20 @@ interface GroupDMModalProps {
   onClose: () => void;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+function normalizeApiBaseUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim().replace(/\/+$/, '');
+  if (!trimmed) return '/api';
+  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
+}
+
+const API_BASE = normalizeApiBaseUrl(
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  '/api'
+);
 
 function getToken() {
-  return localStorage.getItem('token') || '';
+  return localStorage.getItem('beacon_token') || localStorage.getItem('accessToken') || '';
 }
 
 async function apiFetch(path: string, options?: RequestInit) {
@@ -49,7 +59,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
   useEffect(() => {
     // If no friends provided, fetch them
     if (friends.length === 0) {
-      apiFetch('/users/me/friends')
+      apiFetch('/friends')
         .then(data => setAllFriends(data.friends || data || []))
         .catch(() => { });
     }
@@ -82,10 +92,10 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
     setError('');
     try {
       const recipients = selected.map(f => f.id);
-      const data = await apiFetch('/channels/group-dm', {
+      const data = await apiFetch('/dms', {
         method: 'POST',
         body: JSON.stringify({
-          recipients,
+          userIds: recipients,
           name: groupName.trim() || undefined,
         }),
       });
@@ -107,8 +117,8 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
   };
 
   return (
-    <div className={styles.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className={styles.modal}>
+    <div className={`app-modal-overlay ${styles.overlay}`} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className={`app-modal-shell ${styles.modal}`}>
         <div className={styles.header}>
           <h2>New Group DM</h2>
           <button className={styles.closeBtn} onClick={onClose}>✕</button>

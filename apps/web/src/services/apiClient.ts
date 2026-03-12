@@ -1,22 +1,107 @@
 class ApiClient {
     private token: string | null = null;
-    private baseUrl = '/api'; // Assuming proxy handles this
+    private baseUrl: string;
     private csrfToken: string | null = null;
+    private csrfInitPromise: Promise<void> | null = null;
+    private maxCsrfRetries: number = 3;
 
-    constructor() {
-        this.token = localStorage.getItem('beacon_token');
-        this.initCsrf();
+    private normalizeApiBaseUrl(rawUrl: string): string {
+        const trimmed = rawUrl.trim().replace(/\/+$/, '');
+        if (!trimmed) return '/api';
+        return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
     }
 
-    private async initCsrf() {
+    constructor() {
+        this.token = localStorage.getItem('token') || localStorage.getItem('beacon_token');
+        
+        // Determine API base URL
+        // In development with Vite proxy: use relative /api path
+        // In production: use same origin or configured URL
+        const isDev = import.meta.env.DEV;
+        const configUrl =
+            import.meta.env.VITE_API_URL ||
+            import.meta.env.VITE_BACKEND_URL ||
+            '';
+        
+        if (configUrl) {
+            this.baseUrl = this.normalizeApiBaseUrl(configUrl);
+        } else if (isDev) {
+            // Development: rely on proxy configured in vite.config.ts
+            this.baseUrl = '/api';
+        } else {
+            // Production: use configured URL or default
+            this.baseUrl = this.normalizeApiBaseUrl(`${window.location.origin}/api`);
+        }
+        
+        console.log('[API] Using base URL:', this.baseUrl);
+        
+        // Ensure CSRF token is initialized immediately
+        this.csrfInitPromise = this.ensureCsrfToken();
+    }
+
+    private getCookie(name: string): string | null {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+        return null;
+    }
+
+    private async initCsrf(): Promise<void> {
         try {
-            const res = await fetch(`${this.baseUrl}/csrf-token`, { credentials: 'include' });
+            // Check if CSRF token already exists in cookies from a recent request
+            const existingToken = this.getCookie('csrf_token');
+            if (existingToken) {
+                this.csrfToken = existingToken;
+                return;
+            }
+
+            const csrfUrl = `${this.baseUrl}/csrf-token`;
+            const res = await fetch(csrfUrl, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!res.ok) {
+                throw new Error(`CSRF fetch failed with status ${res.status}`);
+            }
+
             const data = await res.json();
-            if (data.token) {
-                this.csrfToken = data.token;
+            const token = data?.token || data?.data?.token || this.getCookie('csrf_token');
+            
+            if (token) {
+                this.csrfToken = token;
+                console.log('[CSRF] Token successfully initialized');
+            } else {
+                console.warn('[CSRF] No token in response, will try cookie');
             }
         } catch (e) {
-            console.error('Failed to fetch CSRF token', e);
+            console.error('[CSRF] Failed to fetch token:', e);
+            // Fall back to trying to read from cookie
+            const cookieToken = this.getCookie('csrf_token');
+            if (cookieToken) {
+                this.csrfToken = cookieToken;
+            }
+        }
+    }
+
+    private async ensureCsrfToken(): Promise<void> {
+        // Only initialize CSRF once, with retry logic
+        if (this.csrfToken) return;
+        
+        let lastError: Error | null = null;
+        for (let i = 0; i < this.maxCsrfRetries; i++) {
+            try {
+                await this.initCsrf();
+                if (this.csrfToken) return;
+            } catch (e) {
+                lastError = e as Error;
+                await new Promise(resolve => setTimeout(resolve, 100 * (i + 1)));
+            }
+        }
+        
+        if (!this.csrfToken) {
+            console.warn('[CSRF] Could not initialize token after retries', lastError);
         }
     }
 
@@ -26,32 +111,77 @@ class ApiClient {
 
     private setToken(token: string) {
         this.token = token;
+        localStorage.setItem('token', token);
         localStorage.setItem('beacon_token', token);
     }
 
-    public async request(method: string, endpoint: string, data?: any) {
-        if (!this.csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-            await this.initCsrf();
+    public async request(
+        method: string,
+        endpoint: string,
+        data?: any,
+        retryOnCsrf: boolean = true
+    ): Promise<{ success: boolean; data?: any; error?: string }> {
+        // Ensure CSRF token is initialized before making mutation requests
+        if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+            if (this.csrfInitPromise) {
+                await this.csrfInitPromise;
+            }
+            
+            // If still no token, try one more time
+            if (!this.csrfToken) {
+                this.csrfToken = this.getCookie('csrf_token');
+            }
         }
 
-        const headers: Record<string, string> = {};
-        if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
-        if (this.csrfToken) headers['x-csrf-token'] = this.csrfToken;
-        if (data) headers['Content-Type'] = 'application/json';
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+        };
 
-        const res = await fetch(`${this.baseUrl}${endpoint}`, {
-            method,
-            headers,
-            credentials: 'include',
-            body: data ? JSON.stringify(data) : undefined,
-        });
-
-        // Beacon API standard wrapper
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) {
-            return { success: false, error: json.error || res.statusText };
+        if (this.token) {
+            headers['Authorization'] = `Bearer ${this.token}`;
         }
-        return { success: true, data: json.data || json };
+
+        if (this.csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+            headers['x-csrf-token'] = this.csrfToken;
+        }
+
+        const url = this.baseUrl + endpoint;
+        
+        try {
+            const res = await fetch(url, {
+                method,
+                headers,
+                credentials: 'include',
+                body: data ? JSON.stringify(data) : undefined,
+            });
+
+            const json = await res.json().catch(() => ({}));
+
+            // Handle CSRF failures with recovery
+            if (
+                retryOnCsrf &&
+                res.status === 403 &&
+                typeof json?.error === 'string' &&
+                json.error.toLowerCase().includes('csrf')
+            ) {
+                console.warn('[CSRF] Token mismatch detected, refreshing token and retrying');
+                this.csrfToken = null;
+                this.csrfInitPromise = this.ensureCsrfToken();
+                await this.csrfInitPromise;
+                return this.request(method, endpoint, data, false);
+            }
+
+            if (!res.ok) {
+                const error = json.error || json.message || res.statusText;
+                console.error(`[API] ${res.status} error on ${method} ${endpoint}:`, error);
+                return { success: false, error };
+            }
+
+            return { success: true, data: json.data || json };
+        } catch (error) {
+            console.error(`[API] Network error on ${method} ${endpoint}:`, error);
+            return { success: false, error: error instanceof Error ? error.message : 'Network error' };
+        }
     }
 
     async login(email: string, password: string) {
@@ -72,6 +202,7 @@ class ApiClient {
 
     async logout() {
         this.token = null;
+        localStorage.removeItem('token');
         localStorage.removeItem('beacon_token');
     }
 

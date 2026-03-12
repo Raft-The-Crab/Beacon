@@ -1,4 +1,4 @@
-﻿import { Home, Plus, Compass, Folder, Settings, UserPlus, LogOut, Bell, Copy, Hash, Zap } from 'lucide-react'
+﻿import { Home, Plus, Compass, Folder, Settings, UserPlus, LogOut, Copy, Hash, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useServerStore } from '../../stores/useServerStore'
@@ -8,6 +8,19 @@ import { useContextMenuTrigger } from '../ui/ContextMenu'
 import { Tooltip, useToast } from '../ui'
 import styles from '../../styles/modules/layout/ServerList.module.css'
 
+function ServerIconShell({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      className={`${styles.serverIcon} glass`}
+      whileHover={{ scale: 1.1, borderRadius: '16px' }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
 // ── Individual server button with its own context menu ──────
 function ServerButton({ server, isActive, onClick }: {
   server: any
@@ -16,6 +29,7 @@ function ServerButton({ server, isActive, onClick }: {
 }) {
   const { show } = useToast()
   const setShowServerSettings = useUIStore(s => s.setShowServerSettings)
+  const leaveGuild = useServerStore(s => s.leaveGuild)
 
   const onContextMenu = useContextMenuTrigger([
     {
@@ -50,7 +64,7 @@ function ServerButton({ server, isActive, onClick }: {
       icon: <Hash size={16} />,
       onClick: () => {
         onClick()
-        openCreateChannelModal('TEXT')
+        openCreateChannelModal('text')
       },
     },
     {
@@ -60,14 +74,8 @@ function ServerButton({ server, isActive, onClick }: {
       divider: true,
       onClick: () => {
         onClick()
-        openCreateChannelModal('CATEGORY')
+        openCreateChannelModal('category')
       },
-    },
-    {
-      id: 'notifs',
-      label: 'Notification Settings',
-      icon: <Bell size={16} />,
-      onClick: () => show('Notification settings (coming soon)', 'info'),
     },
     {
       id: 'copy-id',
@@ -94,7 +102,16 @@ function ServerButton({ server, isActive, onClick }: {
       label: 'Leave Server',
       icon: <LogOut size={16} />,
       danger: true,
-      onClick: () => show('Leave server (coming soon)', 'info'),
+      onClick: async () => {
+        try {
+          await leaveGuild(server.id)
+          show('You left the server', 'success')
+          window.location.href = '/channels/@me'
+        } catch (err: any) {
+          const message = err?.response?.data?.error || 'Unable to leave this server'
+          show(message, 'error')
+        }
+      },
     },
   ])
 
@@ -104,19 +121,16 @@ function ServerButton({ server, isActive, onClick }: {
         className={`${styles.serverButton} ${isActive ? styles.activeServer : ''}`}
         onClick={onClick}
         onContextMenu={onContextMenu}
+        aria-label={`${server.name} server${isActive ? ' (active)' : ''}`}
+        aria-current={isActive ? 'true' : undefined}
       >
-        <motion.div
-          className={`${styles.serverIcon} glass`}
-          whileHover={{ scale: 1.1, borderRadius: '16px' }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-        >
+        <ServerIconShell>
           {server.icon ? (
             <img src={server.icon} alt={server.name} className={styles.serverIconImg} />
           ) : (
             <span>{server.name.charAt(0).toUpperCase()}</span>
           )}
-        </motion.div>
+        </ServerIconShell>
         {/* Active indicator pill */}
         <AnimatePresence>
           {isActive && (
@@ -141,18 +155,35 @@ export function ServerList() {
   const folders = useServerStore(state => state.folders)
   const currentServerId = useServerStore(state => state.currentServerId)
   const setCurrentServer = useServerStore(state => state.setCurrentServer)
+  const fetchGuild = useServerStore(state => state.fetchGuild)
   const toggleFolder = useServerStore(state => state.toggleFolder)
 
   const serversInFolders = new Set(folders.flatMap(f => f.serverIds))
   const standaloneServers = servers.filter(s => !serversInFolders.has(s.id))
 
-  const handleServerClick = (server: any) => {
+  const handleServerClick = async (server: any) => {
     setCurrentServer(server.id)
-    if (server.channels && server.channels.length > 0) {
-      navigate(`/channels/${server.id}/${server.channels[0].id}`)
-    } else {
-      navigate(`/server/${server.id}/settings`)
+
+    let targetServer = server
+    const hasChannels = Array.isArray(server?.channels) && server.channels.length > 0
+    if (!hasChannels) {
+      try {
+        await fetchGuild(server.id)
+        targetServer = useServerStore.getState().servers.find((s) => s.id === server.id) || targetServer
+      } catch {
+        // keep current server fallback route below
+      }
     }
+
+    const channels = Array.isArray(targetServer?.channels) ? targetServer.channels : []
+    const preferredChannel = channels.find((ch: any) => String(ch?.type).toLowerCase() === 'text' || ch?.type === 0) || channels[0]
+
+    if (preferredChannel?.id) {
+      navigate(`/channels/${server.id}/${preferredChannel.id}`)
+      return
+    }
+
+    navigate(`/channels/${server.id}`)
   }
 
   const addMenuTrigger = useContextMenuTrigger([
@@ -184,14 +215,9 @@ export function ServerList() {
           className={`${styles.serverButton} ${styles.homeButton} ${currentServerId === null ? styles.activeServer : ''}`}
           onClick={() => { setCurrentServer(null); navigate('/channels/@me') }}
         >
-          <motion.div
-            className={`${styles.serverIcon} glass`}
-            whileHover={{ scale: 1.1, borderRadius: '16px' }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-          >
+          <ServerIconShell>
             <Home size={22} />
-          </motion.div>
+          </ServerIconShell>
           <AnimatePresence>
             {currentServerId === null && (
               <motion.div
@@ -255,7 +281,9 @@ export function ServerList() {
           onClick={() => openCreateServerModal()}
           onContextMenu={addMenuTrigger}
         >
-          <Plus size={22} />
+          <ServerIconShell>
+            <Plus size={22} />
+          </ServerIconShell>
         </button>
       </Tooltip>
 
@@ -267,7 +295,9 @@ export function ServerList() {
           className={styles.serverButton}
           onClick={() => show('Server discovery coming soon!', 'info')}
         >
-          <Compass size={22} />
+          <ServerIconShell>
+            <Compass size={22} />
+          </ServerIconShell>
         </button>
       </Tooltip>
     </div>

@@ -1,5 +1,5 @@
-﻿import { useState } from 'react'
-import { Hash, Volume2 } from 'lucide-react'
+﻿import { useEffect, useState, type ReactNode } from 'react'
+import { Hash, Megaphone, MessageSquare, Radio, Volume2 } from 'lucide-react'
 import { Modal, Button, Input } from '../ui'
 import { useUIStore } from '../../stores/useUIStore'
 import { useServerStore } from '../../stores/useServerStore'
@@ -12,18 +12,79 @@ interface CreateChannelModalProps {
 
 export function CreateChannelModal({ isOpen, onClose }: CreateChannelModalProps) {
   const [channelName, setChannelName] = useState('')
-  const [type, setType] = useState<'text' | 'voice' | 'category'>('text')
+  const [type, setType] = useState<'text' | 'voice' | 'stage' | 'forum' | 'announcement' | 'category'>('text')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { currentServer, createChannel } = useServerStore()
-  const { setShowCreateChannel } = useUIStore()
+  const { setShowCreateChannel, createChannelType, createChannelParentId } = useUIStore()
+
+  useEffect(() => {
+    if (!isOpen) return
+    if (createChannelType) {
+      setType(createChannelType)
+    }
+  }, [isOpen, createChannelType])
+
+  const channelTypeOptions: Array<{
+    key: 'text' | 'voice' | 'stage' | 'forum' | 'announcement' | 'category'
+    label: string
+    description: string
+    icon: ReactNode
+  }> = [
+    {
+      key: 'text',
+      label: 'Text',
+      description: 'Send messages, images, GIFs, emoji, and opinions',
+      icon: <Hash size={24} className={styles.typeIcon} />,
+    },
+    {
+      key: 'voice',
+      label: 'Voice',
+      description: 'Hang out together with voice, video, and screen share',
+      icon: <Volume2 size={24} className={styles.typeIcon} />,
+    },
+    {
+      key: 'stage',
+      label: 'Stage',
+      description: 'Host one-to-many conversations with speakers and audience',
+      icon: <Radio size={24} className={styles.typeIcon} />,
+    },
+    {
+      key: 'forum',
+      label: 'Forum',
+      description: 'Organize discussions into topics and threads',
+      icon: <MessageSquare size={24} className={styles.typeIcon} />,
+    },
+    {
+      key: 'announcement',
+      label: 'Announcement',
+      description: 'Broadcast important updates to members',
+      icon: <Megaphone size={24} className={styles.typeIcon} />,
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      description: 'Group your channels into organized sections',
+      icon: <Hash size={24} className={styles.typeIcon} style={{ transform: 'rotate(90deg)' }} />,
+    },
+  ]
 
   const handleCreate = () => {
-    if (!channelName.trim() || !currentServer) return
+    if (!channelName.trim() || !currentServer || isLoading) return
 
+    setIsLoading(true)
+    setError(null)
     const normalizedName = type === 'category' ? channelName : channelName.toLowerCase().replace(/\s+/g, '-')
-    createChannel(currentServer.id, normalizedName, type.toUpperCase()).then(() => {
+    createChannel(currentServer.id, normalizedName, type.toUpperCase(), createChannelParentId ?? undefined).then(() => {
       setShowCreateChannel(false)
       onClose()
-    }).catch(console.error)
+      setIsLoading(false)
+      setError(null)
+    }).catch(err => {
+      console.error(err)
+      setError(err?.message || 'Failed to create channel. Please try again.')
+      setIsLoading(false)
+    })
   }
 
   return (
@@ -31,48 +92,22 @@ export function CreateChannelModal({ isOpen, onClose }: CreateChannelModalProps)
       <div className={styles.container}>
         <div className={styles.typeSelector}>
           <p className={styles.label}>CHANNEL TYPE</p>
-
-          <button
-            className={`${styles.typeOption} ${type === 'text' ? styles.active : ''}`}
-            onClick={() => setType('text')}
-          >
-            <Hash size={24} className={styles.typeIcon} />
-            <div className={styles.typeInfo}>
-              <span className={styles.typeName}>Text</span>
-              <span className={styles.typeDesc}>Send messages, images, GIFs, emoji, and opinions</span>
-            </div>
-            <div className={styles.radio}>
-              {type === 'text' && <div className={styles.radioInner} />}
-            </div>
-          </button>
-
-          <button
-            className={`${styles.typeOption} ${type === 'voice' ? styles.active : ''}`}
-            onClick={() => setType('voice')}
-          >
-            <Volume2 size={24} className={styles.typeIcon} />
-            <div className={styles.typeInfo}>
-              <span className={styles.typeName}>Voice</span>
-              <span className={styles.typeDesc}>Hang out together with voice, video, and screen share</span>
-            </div>
-            <div className={styles.radio}>
-              {type === 'voice' && <div className={styles.radioInner} />}
-            </div>
-          </button>
-
-          <button
-            className={`${styles.typeOption} ${type === 'category' ? styles.active : ''}`}
-            onClick={() => setType('category')}
-          >
-            <Hash size={24} className={styles.typeIcon} style={{ transform: 'rotate(90deg)' }} />
-            <div className={styles.typeInfo}>
-              <span className={styles.typeName}>Category</span>
-              <span className={styles.typeDesc}>Group your channels into organized sections</span>
-            </div>
-            <div className={styles.radio}>
-              {type === 'category' && <div className={styles.radioInner} />}
-            </div>
-          </button>
+          {channelTypeOptions.map((option) => (
+            <button
+              key={option.key}
+              className={`${styles.typeOption} ${type === option.key ? styles.active : ''}`}
+              onClick={() => setType(option.key)}
+            >
+              {option.icon}
+              <div className={styles.typeInfo}>
+                <span className={styles.typeName}>{option.label}</span>
+                <span className={styles.typeDesc}>{option.description}</span>
+              </div>
+              <div className={styles.radio}>
+                {type === option.key && <div className={styles.radioInner} />}
+              </div>
+            </button>
+          ))}
         </div>
 
         <Input
@@ -80,14 +115,20 @@ export function CreateChannelModal({ isOpen, onClose }: CreateChannelModalProps)
           placeholder="new-channel"
           value={channelName}
           onChange={(e) => setChannelName(e.currentTarget.value)}
-          icon={type === 'text' ? <Hash size={18} /> : <Volume2 size={18} />}
+          icon={type === 'category' ? <Hash size={18} /> : type === 'voice' || type === 'stage' ? <Volume2 size={18} /> : type === 'announcement' ? <Megaphone size={18} /> : <Hash size={18} />}
           required
         />
 
+        {error && (
+          <div style={{ padding: '12px', background: 'rgba(242, 63, 67, 0.1)', border: '1px solid rgba(242, 63, 67, 0.3)', borderRadius: '8px', color: 'var(--status-error)', fontSize: '14px' }}>
+            {error}
+          </div>
+        )}
+
         <div className={styles.footer}>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={handleCreate} disabled={!channelName.trim()}>
-            Create Channel
+          <Button variant="primary" onClick={handleCreate} disabled={!channelName.trim() || isLoading}>
+            {isLoading ? 'Creating...' : 'Create Channel'}
           </Button>
         </div>
       </div>

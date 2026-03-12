@@ -73,6 +73,13 @@ const PartnerSVG = ({ size }: { size: number }) => (
   </svg>
 )
 
+const VerifiedSVG = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L14.2 4.2L17.3 3.7L18.4 6.6L21.1 8L20.6 11.1L22.8 13.3L20.6 15.5L21.1 18.6L18.4 20L17.3 22.9L14.2 22.4L12 24.6L9.8 22.4L6.7 22.9L5.6 20L2.9 18.6L3.4 15.5L1.2 13.3L3.4 11.1L2.9 8L5.6 6.6L6.7 3.7L9.8 4.2L12 2Z" fill="#3ba55d" />
+    <path d="M8.4 13.1L10.6 15.3L15.9 10" stroke="#fff" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+
 interface UserBadgesProps {
   badges?: UserBadge[]
   isBot?: boolean
@@ -88,6 +95,7 @@ const BADGE_CONFIG: Record<UserBadge, { element: React.FC<{ size: number }>; lab
   early_supporter: { element: StarSVG, label: 'Early Supporter', className: 'earlySup' },
   bug_hunter: { element: BugSVG, label: 'Bug Hunter', className: 'bugHunter' },
   server_owner: { element: PartnerSVG, label: 'Server Owner', className: 'serverOwner' },
+  verified: { element: VerifiedSVG, label: 'Verified', className: 'moderator' },
 }
 
 export function UserBadges({ badges = [], isBot, size = 'sm' }: UserBadgesProps) {

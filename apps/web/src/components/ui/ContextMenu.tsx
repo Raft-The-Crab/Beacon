@@ -109,6 +109,8 @@ export function ContextMenuProvider({ children }: { children: React.ReactNode })
 
 function MenuItemRow({ item, close }: { item: ContextMenuItem; close: () => void }) {
   const [subOpen, setSubOpen] = useState(false)
+  const submenuRef = useRef<HTMLDivElement>(null)
+  const [submenuPos, setSubmenuPos] = useState<'right' | 'left'>('right')
 
   if (item.divider) {
     return (
@@ -131,7 +133,19 @@ function MenuItemRow({ item, close }: { item: ContextMenuItem; close: () => void
     )
   }
 
+  useEffect(() => {
+    if (subOpen && submenuRef.current) {
+      const rect = submenuRef.current.getBoundingClientRect()
+      if (rect.right > window.innerWidth - 8) {
+        setSubmenuPos('left')
+      } else {
+        setSubmenuPos('right')
+      }
+    }
+  }, [subOpen])
+
   if (item.submenu) {
+
     return (
       <div
         className={styles.submenuWrapper}
@@ -144,7 +158,7 @@ function MenuItemRow({ item, close }: { item: ContextMenuItem; close: () => void
           <span className={styles.chevron}>›</span>
         </button>
         {subOpen && (
-          <div className={styles.submenu}>
+          <div ref={submenuRef} className={`${styles.submenu} ${submenuPos === 'left' ? styles.submenuLeft : ''}`}>
             {item.submenu.map(sub => (
               <MenuItemRow key={sub.id} item={sub} close={close} />
             ))}

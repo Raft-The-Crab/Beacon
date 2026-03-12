@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useUIStore } from '../../stores/useUIStore'
 import { useServerStore } from '../../stores/useServerStore'
 import { WorkspaceLayout } from './WorkspaceLayout'
@@ -11,6 +11,7 @@ import styles from '../../styles/modules/layout/MainLayout.module.css'
 
 export function MainLayout() {
   const { serverId, channelId } = useParams<{ serverId: string; channelId: string }>()
+  const navigate = useNavigate()
   const [showQuickSwitcher, setShowQuickSwitcher] = useState(false)
 
   const setCurrentChannel = useUIStore(state => state.setCurrentChannel)
@@ -85,6 +86,22 @@ export function MainLayout() {
   ])
 
   const targetServer = servers.find(s => s.id === serverId) || null
+  const targetChannels = targetServer?.channels || []
+  const hasRouteChannel = !!channelId && targetChannels.some((c: any) => c.id === channelId)
+  const hasStoredChannel = !!storeCurrentChannelId && targetChannels.some((c: any) => c.id === storeCurrentChannelId)
+  const resolvedChannelId = hasRouteChannel
+    ? (channelId as string)
+    : hasStoredChannel
+      ? (storeCurrentChannelId as string)
+      : (targetChannels[0]?.id || '')
+
+  useEffect(() => {
+    if (!serverId || !targetServer || !channelId) return
+    if (targetChannels.length === 0) return
+    if (!hasRouteChannel) {
+      navigate(`/channels/${serverId}/${resolvedChannelId}`, { replace: true })
+    }
+  }, [serverId, targetServer, channelId, targetChannels, hasRouteChannel, resolvedChannelId, navigate])
 
   if (serverId && servers.length === 0) {
     return (
@@ -112,7 +129,7 @@ export function MainLayout() {
       sidebar={<Sidebar />}
       rightPanel={showMemberList ? <MemberList /> : undefined}
     >
-      <ChatArea channelId={channelId || (targetServer?.channels?.[0]?.id) || ''} />
+      <ChatArea channelId={resolvedChannelId} />
 
       {showQuickSwitcher && (
         <QuickSwitcher onClose={() => setShowQuickSwitcher(false)} />

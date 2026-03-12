@@ -1,6 +1,6 @@
 {
   "name": "@beacon/server",
-  "version": "2.4.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:ws\" \"npm run dev:render\"",
@@ -13,7 +13,7 @@
     "start:ws": "node dist/src/ws-server.js",
     "start:render": "node dist/src/render-server.js",
     "start:railway": "node server-railway.js",
-    "start:northflank": "node server-northflank.js",
+    "start:clawcloud": "node server-clawcloud.js",
     "test": "node --test tests/*.test.js",
     "lint": "eslint src --ext ts",
     "prisma:generate": "npx prisma@6.2.1 generate"
@@ -64,7 +64,7 @@
     "typescript": "^5.3.3"
   },
   "description": "",
-  "main": "server-azure.js",
+  "main": "server-railway.js",
   "directories": {
     "test": "tests"
   },

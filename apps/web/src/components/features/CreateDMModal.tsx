@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import React, { useState } from 'react'
 import { MessageSquarePlus, Search, User } from 'lucide-react'
 import { useUserListStore } from '../../stores/useUserListStore'
 import { useDMStore } from '../../stores/useDMStore'
@@ -14,7 +14,7 @@ export function CreateDMModal({ onClose }: CreateDMModalProps) {
     const { setActiveChannel } = useDMStore()
     const [searchQuery, setSearchQuery] = useState('')
 
-    const filteredFriends = friends.filter(f =>
+    const filteredFriends = friends.filter((f: any) =>
         f.username.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
@@ -43,7 +43,7 @@ export function CreateDMModal({ onClose }: CreateDMModalProps) {
                         type="text"
                         placeholder="Type the username of a friend"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                         autoFocus
                     />
                 </div>
@@ -51,13 +51,13 @@ export function CreateDMModal({ onClose }: CreateDMModalProps) {
 
             <div className={styles.friendsList}>
                 {filteredFriends.length > 0 ? (
-                    filteredFriends.map(friend => (
+                    filteredFriends.map((friend: any) => (
                         <div key={friend.id} className={styles.friendRow} onClick={() => handleSelectFriend(friend.id)}>
                             <div className={styles.friendInfo}>
                                 <Avatar
                                     src={friend.avatar && !friend.avatar.includes('dicebear') ? friend.avatar : undefined}
                                     username={friend.username}
-                                    status={friend.status as any}
+                                    status={friend.status}
                                     size="md"
                                 />
                                 <span className={styles.username}>{friend.username}</span>

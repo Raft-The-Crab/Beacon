@@ -1,18 +1,20 @@
 .serverList {
   width: 72px;
-  background: transparent;
+  background: var(--server-rail-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 0;
+  padding: 16px 0;
   gap: 8px;
   overflow-y: auto;
   flex-shrink: 0;
   z-index: 50;
+  border-radius: 0 18px 18px 0;
+  border-right: 1px solid var(--border-sep);
 }
 
 .serverList::-webkit-scrollbar {
-  display: none;
+  width: 0px;
 }
 
 .serverButton {
@@ -22,74 +24,70 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-normal);
+  transition: all 0.2s cubic-bezier(0.25, 0, 0, 1);
   cursor: pointer;
   border: none;
   background: none;
   padding: 0;
+  margin: 0;
+  overflow: visible;
+}
+
+.serverButton:focus-visible {
+  outline: 2px solid var(--beacon-brand);
+  outline-offset: 4px;
+  border-radius: 16px;
 }
 
 .serverButton::before {
   content: '';
   position: absolute;
-  left: 0;
-  width: 4px;
+  left: -10px;
+  top: 50%;
+  width: 8px;
   height: 8px;
-  background: white;
-  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  background: color-mix(in srgb, var(--beacon-brand) 35%, white);
+  border-radius: 4px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   opacity: 0;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  transform: scaleY(0);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+  transform: translate(-10px, -50%);
 }
 
 .serverButton:hover::before {
-  opacity: 1;
   height: 20px;
-  transform: scale(1);
-}
-
-.activeServer::before {
   opacity: 1;
-  height: 40px !important;
-  transform: scale(1) !important;
-  background: white;
+  transform: translate(0, -50%);
 }
 
 .serverIcon {
   width: 48px;
   height: 48px;
-  background: var(--bg-surface-soft);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-primary);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  font-weight: 700;
-  font-size: 0.875rem;
-  border: 1px solid var(--glass-border);
+  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 18px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  will-change: transform, border-radius, background-color;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .serverButton:hover .serverIcon {
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--beacon-brand);
   color: white;
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(88, 101, 242, 0.35);
-  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .activeServer .serverIcon {
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--beacon-brand);
   color: white;
-  box-shadow: 0 8px 24px rgba(88, 101, 242, 0.4);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(114, 137, 218, 0.3);
 }
 
 .homeButton {
@@ -98,16 +96,16 @@
 
 .divider {
   width: 32px;
-  height: 3px;
-  background: var(--glass-border);
-  margin: 8px 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
   border-radius: var(--radius-full);
 }
 
 .addButton .serverIcon {
   color: var(--status-success);
-  background: transparent;
-  border: 2px dashed var(--glass-border);
+  background: rgba(35, 165, 89, 0.08);
+  border: 1px dashed rgba(35, 165, 89, 0.3);
 }
 
 .addButton:hover .serverIcon {
@@ -150,7 +148,7 @@
 }
 
 .folderIcon:hover {
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
@@ -186,14 +184,14 @@
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Active server pill indicator ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 .activePill {
   position: absolute;
-  left: 0;
-  width: 3px;
-  background: linear-gradient(to bottom, transparent, white, transparent);
-  border-radius: 0 var(--radius-2xs) var(--radius-2xs) 0;
+  left: -10px;
+  top: 50%;
+  width: 4px;
+  background: color-mix(in srgb, var(--beacon-brand) 35%, white);
+  border-radius: 0 4px 4px 0;
   height: 32px;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  opacity: 0.8;
+  transform: translateY(-50%);
+  transition: all 0.2s ease;
 }
 
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Tablet ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
@@ -240,7 +238,7 @@
     z-index: 200;
     background: var(--bg-tertiary);
     border-top: 1px solid var(--glass-border);
-    border-radius: 0;
+    border-radius: 18px 18px 0 0;
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;

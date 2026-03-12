@@ -1,7 +1,18 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import type { APIResponse } from '@beacon/types'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api'
+function normalizeApiBaseUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim().replace(/\/+$/, '')
+  if (!trimmed) return '/api'
+  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`
+}
+
+const API_URL = normalizeApiBaseUrl(
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  '/api'
+)
+let csrfBootstrapPromise: Promise<void> | null = null
 
 interface RetryConfig {
   retries: number
@@ -26,8 +37,26 @@ export const api = axios.create({
   timeout: 30000, // 30 second timeout
 })
 
+async function ensureCsrfToken(): Promise<void> {
+  const existingToken = getCookie('csrf_token')
+  if (existingToken) return
+  if (csrfBootstrapPromise) return csrfBootstrapPromise
+
+  csrfBootstrapPromise = fetch(`${API_URL}/csrf-token`, {
+    method: 'GET',
+    credentials: 'include',
+  })
+    .then(() => undefined)
+    .catch(() => undefined)
+    .finally(() => {
+      csrfBootstrapPromise = null
+    })
+
+  return csrfBootstrapPromise
+}
+
 // Request interceptor
-api.interceptors.request.use((config: any) => {
+api.interceptors.request.use(async (config: any) => {
   const token = localStorage.getItem('beacon_token')
   if (token) {
     if (config.headers && typeof config.headers.set === 'function') {
@@ -36,6 +65,11 @@ api.interceptors.request.use((config: any) => {
       config.headers = config.headers || {}
       config.headers.Authorization = `Bearer ${token}`
     }
+  }
+
+  const method = (config.method || 'get').toUpperCase()
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    await ensureCsrfToken()
   }
 
   // Add CSRF token if available

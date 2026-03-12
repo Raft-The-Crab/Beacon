@@ -43,7 +43,7 @@ interface DMStore {
   addMessage: (channelId: string, message: DirectMessage) => void
   getMessages: (channelId: string) => DirectMessage[]
   markAsRead: (channelId: string) => void
-  createDMChannel: (participant: DMParticipant | string) => Promise<void>
+  createDMChannel: (participant: DMParticipant | string) => Promise<string>
   updateUserStatus: (userId: string, status: DMParticipant['status']) => void
   sendMessage: (channelId: string, content: string) => Promise<void>
   editMessage: (channelId: string, messageId: string, newContent: string) => Promise<void>
@@ -65,9 +65,9 @@ export const useDMStore = create<DMStore>((set, get) => ({
         id: channel.id,
         unreadCount: 0,
         participants: channel.recipients.map((r: any) => ({
-          id: r.user.id,
-          username: r.user.username,
-          avatar: r.user.avatar,
+          id: r.id || r.user?.id,
+          username: r.username || r.user?.username,
+          avatar: r.avatar || r.user?.avatar,
           status: 'offline'
         }))
       }))
@@ -84,9 +84,9 @@ export const useDMStore = create<DMStore>((set, get) => ({
         id: channel.id,
         unreadCount: 0,
         participants: channel.recipients.map((r: any) => ({
-          id: r.user.id,
-          username: r.user.username,
-          avatar: r.user.avatar,
+          id: r.id || r.user?.id,
+          username: r.username || r.user?.username,
+          avatar: r.avatar || r.user?.avatar,
           status: 'offline'
         }))
       }))
@@ -146,13 +146,13 @@ export const useDMStore = create<DMStore>((set, get) => ({
   createDMChannel: async (target: DMParticipant | string) => {
     const userId = typeof target === 'string' ? target : target.id;
     try {
-      const { data } = await api.post('/dms', { userId });
+      const { data } = await api.post('/dms', { userIds: [userId] });
       const newChannel: DMChannel = {
         id: data.id,
         participants: data.recipients.map((r: any) => ({
-          id: r.user.id,
-          username: r.user.username,
-          avatar: r.user.avatar,
+          id: r.id || r.user?.id,
+          username: r.username || r.user?.username,
+          avatar: r.avatar || r.user?.avatar,
           status: 'offline'
         })),
         unreadCount: 0,
@@ -166,8 +166,10 @@ export const useDMStore = create<DMStore>((set, get) => ({
           activeChannel: data.id
         }
       })
+      return data.id as string
     } catch (e) {
       console.error('Failed to create DM channel', e)
+      throw e
     }
   },
 
@@ -220,6 +222,8 @@ export const useDMStore = create<DMStore>((set, get) => ({
   },
 
   addReaction: async (channelId: string, messageId: string, emoji: string) => {
+    const snapshot = get().messages
+
     set((state) => {
       const messages = new Map(state.messages)
       const channelMessages = messages.get(channelId) || []
@@ -254,5 +258,13 @@ export const useDMStore = create<DMStore>((set, get) => ({
       messages.set(channelId, updatedMessages)
       return { messages }
     })
+
+    try {
+      await api.put(`/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}/@me`)
+    } catch (error) {
+      console.error('Failed to sync reaction with server', error)
+      set({ messages: snapshot })
+      throw error
+    }
   },
 }))

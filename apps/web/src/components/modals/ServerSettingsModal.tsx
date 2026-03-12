@@ -60,7 +60,7 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
   // Placeholder create channel flow is triggered inline where needed
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" transparent noPadding hideHeader>
       <div className={styles.container}>
         <div className={styles.sidebar}>
           <div className={styles.sidebarHeader}>

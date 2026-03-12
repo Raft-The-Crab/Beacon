@@ -12,25 +12,52 @@ export async function getMe(req: Request, res: Response) {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        discriminator: true,
-        email: true,
-        avatar: true,
-        banner: true,
-        bio: true,
-        status: true,
-        customStatus: true,
-        theme: true,
-        developerMode: true,
-        avatarDecorationId: true,
-        profileEffectId: true,
-        createdAt: true,
-      },
-    });
+    let user: any = null
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          username: true,
+          discriminator: true,
+          email: true,
+          avatar: true,
+          banner: true,
+          bio: true,
+          status: true,
+          customStatus: true,
+          theme: true,
+          developerMode: true,
+          avatarDecorationId: true,
+          profileEffectId: true,
+          createdAt: true,
+        },
+      })
+    } catch (selectErr) {
+      console.warn('getMe full select failed, falling back to minimal profile:', selectErr)
+      const minimal = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          username: true,
+          discriminator: true,
+          email: true,
+          avatar: true,
+          banner: true,
+          bio: true,
+          status: true,
+          customStatus: true,
+          createdAt: true,
+        },
+      })
+      user = minimal ? {
+        ...minimal,
+        theme: 'auto',
+        developerMode: false,
+        avatarDecorationId: null,
+        profileEffectId: null,
+      } : null
+    }
     if (!user) return res.status(404).json({ error: 'User not found' });
     return res.json(user);
   } catch (err) {
@@ -119,22 +146,46 @@ export async function getUser(req: Request, res: Response) {
     const cached = await CacheService.get(`user:${userId}`);
     if (cached) return res.json(cached);
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId as string },
-      select: {
-        id: true,
-        username: true,
-        discriminator: true,
-        avatar: true,
-        banner: true,
-        bio: true,
-        status: true,
-        customStatus: true,
-        avatarDecorationId: true,
-        profileEffectId: true,
-        createdAt: true,
-      },
-    });
+    let user: any = null
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: userId as string },
+        select: {
+          id: true,
+          username: true,
+          discriminator: true,
+          avatar: true,
+          banner: true,
+          bio: true,
+          status: true,
+          customStatus: true,
+          avatarDecorationId: true,
+          profileEffectId: true,
+          createdAt: true,
+        },
+      })
+    } catch (selectErr) {
+      console.warn('getUser full select failed, falling back to minimal profile:', selectErr)
+      const minimal = await prisma.user.findUnique({
+        where: { id: userId as string },
+        select: {
+          id: true,
+          username: true,
+          discriminator: true,
+          avatar: true,
+          banner: true,
+          bio: true,
+          status: true,
+          customStatus: true,
+          createdAt: true,
+        },
+      })
+      user = minimal ? {
+        ...minimal,
+        avatarDecorationId: null,
+        profileEffectId: null,
+      } : null
+    }
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     await CacheService.set(`user:${userId}`, user, 600); // 10 min cache

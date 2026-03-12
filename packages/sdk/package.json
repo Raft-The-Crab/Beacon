@@ -1,6 +1,6 @@
 {
   "name": "@beacon/sdk",
-  "version": "2.5.0",
+  "version": "1.0.0",
   "description": "Official JavaScript SDK for Beacon - A comprehensive client library for real-time communication",
   "type": "module",
   "main": "./dist/index.js",

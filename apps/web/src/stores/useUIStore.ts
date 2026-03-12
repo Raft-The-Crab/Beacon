@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 
 export type Theme = 'classic' | 'dark' | 'glass' | 'light' | 'oled' | 'neon' | 'midnight' | 'auto'
 export type MessageDensity = 'cozy' | 'compact' | 'ultra-compact'
+export type CreateChannelType = 'text' | 'voice' | 'stage' | 'forum' | 'announcement' | 'category'
 
 interface UIState {
   currentChannelId: string | null
@@ -23,6 +24,8 @@ interface UIState {
   showVoiceChannel: boolean
   showCreateServer: boolean
   showCreateChannel: boolean
+  createChannelType: CreateChannelType | null
+  createChannelParentId: string | null
   showMobileSidebar: boolean
   customBackground: string | null
   customAccentColor: string | null
@@ -67,6 +70,7 @@ interface UIState {
   setShowVoiceChannel: (show: boolean) => void
   setShowCreateServer: (show: boolean) => void
   setShowCreateChannel: (show: boolean) => void
+  setCreateChannelContext: (type?: CreateChannelType, parentId?: string) => void
   setShowMobileSidebar: (show: boolean) => void
   setCustomBackground: (url: string | null) => void
   setCustomAccentColor: (color: string | null) => void
@@ -106,6 +110,8 @@ export const useUIStore = create<UIState>()(
       showVoiceChannel: false,
       showCreateServer: false,
       showCreateChannel: false,
+      createChannelType: null,
+      createChannelParentId: null,
       showMobileSidebar: false,
       customBackground: typeof localStorage !== 'undefined' ? localStorage.getItem('beacon:custom_bg') : null,
       customAccentColor: typeof localStorage !== 'undefined' ? localStorage.getItem('beacon:custom_accent') : null,
@@ -131,15 +137,23 @@ export const useUIStore = create<UIState>()(
       toggleSidebar: () =>
         set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
 
+      
+      
+
       setTheme: (theme) => {
         set({ theme })
-        // Apply to document immediately
         const root = document.documentElement
+        const isLight = theme === 'light'
+
         if (theme === 'classic' || theme === 'auto') {
           root.removeAttribute('data-theme')
         } else {
           root.setAttribute('data-theme', theme)
         }
+
+        root.classList.toggle('dark', !isLight)
+        root.style.colorScheme = isLight ? 'light' : 'dark'
+
         // Persist
         localStorage.setItem('beacon:theme', theme)
       },
@@ -197,7 +211,15 @@ export const useUIStore = create<UIState>()(
       setShowMessagingHome: (show) => set({ showMessagingHome: show }),
       setShowVoiceChannel: (show) => set({ showVoiceChannel: show }),
       setShowCreateServer: (show) => set({ showCreateServer: show }),
-      setShowCreateChannel: (show) => set({ showCreateChannel: show }),
+      setShowCreateChannel: (show) => set((state) => ({
+        showCreateChannel: show,
+        createChannelType: show ? state.createChannelType : null,
+        createChannelParentId: show ? state.createChannelParentId : null,
+      })),
+      setCreateChannelContext: (type, parentId) => set({
+        createChannelType: type ?? null,
+        createChannelParentId: parentId ?? null,
+      }),
       setShowMobileSidebar: (show: boolean) => set({ showMobileSidebar: show }),
 
       setCustomBackground: (url) => {
@@ -254,7 +276,15 @@ export const useUIStore = create<UIState>()(
           set({ theme: stored })
           if (stored !== 'classic' && stored !== 'auto') {
             document.documentElement.setAttribute('data-theme', stored)
+          } else {
+            document.documentElement.removeAttribute('data-theme')
           }
+          const isLight = stored === 'light'
+          document.documentElement.classList.toggle('dark', !isLight)
+          document.documentElement.style.colorScheme = isLight ? 'light' : 'dark'
+        } else {
+          document.documentElement.classList.add('dark')
+          document.documentElement.style.colorScheme = 'dark'
         }
 
         set({ glassEnabled: glass })
@@ -295,6 +325,9 @@ export const useUIStore = create<UIState>()(
         } else if (!theme || theme === 'classic') {
           document.documentElement.removeAttribute('data-theme')
         }
+        const isLight = theme === 'light'
+        document.documentElement.classList.toggle('dark', !isLight)
+        document.documentElement.style.colorScheme = isLight ? 'light' : 'dark'
         if (state.glassEnabled) {
           document.body.classList.add('glass-theme-active')
         } else {

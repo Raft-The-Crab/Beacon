@@ -37,10 +37,12 @@ export function VoiceChannel() {
   const [isDeafened, setIsDeafened] = useState(false)
   const [isVideoOn, setIsVideoOn] = useState(false)
   const [isScreenSharing, setIsScreenSharing] = useState(false)
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null)
   const [isHandRaised, setIsHandRaised] = useState(false)
   const [layout, setLayout] = useState<'grid' | 'focus'>('grid')
   const [sidePanel, setSidePanel] = useState<'members' | 'chat' | 'soundboard' | null>('members')
   const [participants, setParticipants] = useState<VoiceParticipant[]>([])
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting')
 
   const {
     localStream,
@@ -54,7 +56,10 @@ export function VoiceChannel() {
   // Join Voice Channel on Mount
   useEffect(() => {
     if (channelId) {
+      setConnectionStatus('connecting')
       joinChannel(channelId)
+        .then(() => setConnectionStatus('connected'))
+        .catch(() => setConnectionStatus('failed'))
     }
     return () => {
       if (channelId) leaveChannel(channelId)
@@ -74,7 +79,7 @@ export function VoiceChannel() {
       isVideoOn,
       isSpeaking: false,
       isHandRaised,
-      isScreenSharing,
+      isScreenSharing: !!screenStream,
       role: 'member',
       stream: localStream || undefined
     }
@@ -93,7 +98,7 @@ export function VoiceChannel() {
     }))
 
     setParticipants([me, ...peerParticipants])
-  }, [user, localStream, peers, isMuted, isDeafened, isVideoOn, isHandRaised, isScreenSharing])
+  }, [user, localStream, peers, isMuted, isDeafened, isVideoOn, isHandRaised, screenStream])
 
   const handleLeave = () => {
     navigate(-1)
@@ -117,7 +122,31 @@ export function VoiceChannel() {
     setIsVideoOn(!isVideoOn)
   }
 
-  const toggleScreenShare = () => setIsScreenSharing((s) => !s)
+  const toggleScreenShare = async () => {
+    if (screenStream) {
+      screenStream.getTracks().forEach((track) => track.stop())
+      setScreenStream(null)
+      setIsScreenSharing(false)
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+      const [track] = stream.getVideoTracks()
+      if (track) {
+        track.onended = () => {
+          setScreenStream(null)
+          setIsScreenSharing(false)
+        }
+      }
+      setScreenStream(stream)
+      setIsScreenSharing(true)
+    } catch (err) {
+      console.error('Screen share failed:', err)
+      setScreenStream(null)
+      setIsScreenSharing(false)
+    }
+  }
   const toggleHand = () => {
     setIsHandRaised((h) => !h)
     setParticipants((ps) =>
@@ -126,6 +155,12 @@ export function VoiceChannel() {
   }
 
   const speakingCount = participants.filter((p) => p.isSpeaking && !p.isMuted).length
+
+  useEffect(() => {
+    return () => {
+      screenStream?.getTracks().forEach((track) => track.stop())
+    }
+  }, [screenStream])
 
   return (
     <div className={styles.root}>
@@ -137,10 +172,22 @@ export function VoiceChannel() {
             <span>{channelName}</span>
           </div>
           <span className={styles.serverLabel}>{serverName}</span>
-          {speakingCount > 0 && (
+          {connectionStatus === 'connecting' && (
+            <div className={styles.statusPill} style={{ background: 'rgba(250, 166, 26, 0.15)', color: '#faa61a' }}>
+              <span className={styles.statusDot} style={{ background: '#faa61a' }} />
+              Connecting...
+            </div>
+          )}
+          {connectionStatus === 'connected' && speakingCount > 0 && (
             <div className={styles.speakingPill}>
               <span className={styles.speakingDot} />
               {speakingCount} speaking
+            </div>
+          )}
+          {connectionStatus === 'failed' && (
+            <div className={styles.statusPill} style={{ background: 'rgba(242, 63, 67, 0.15)', color: '#f04747' }}>
+              <span className={styles.statusDot} style={{ background: '#f04747' }} />
+              Connection Failed
             </div>
           )}
         </div>
