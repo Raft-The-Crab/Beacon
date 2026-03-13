@@ -5,41 +5,37 @@
 
 .tooltip {
   position: absolute;
-  z-index: 1000;
-  padding: 10px 16px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  z-index: 1100;
+  padding: 7px 12px;
+  background: var(--bg-surface-elevated, #27272a);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  /* Hyper-rounded */
-  color: white;
-  font-size: 13px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
   font-weight: 600;
-  white-space: normal;
-  max-width: 240px;
-  word-wrap: break-word;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   pointer-events: none;
-  box-shadow: var(--shadow-sm);
-  animation: tooltipFadeIn 0.4s var(--ease-out);
-  /* Buttery elastic */
+  box-shadow: var(--shadow-lg);
+  animation: tooltipFadeIn 0.18s var(--ease-out);
   letter-spacing: -0.01em;
   will-change: transform, opacity;
   transform: translateZ(0);
-  /* Hardware Acceleration */
 }
 
 /* Disable blur on low-bandwidth mode */
 [data-low-bandwidth="true"] .tooltip {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  background: var(--bg-tertiary);
+  background: var(--bg-surface-elevated, #27272a);
 }
 
 @keyframes tooltipFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(4px);
+    transform: scale(0.93) translateY(3px);
   }
 
   to {

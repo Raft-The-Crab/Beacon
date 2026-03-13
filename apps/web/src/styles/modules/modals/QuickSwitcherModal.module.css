@@ -95,3 +95,44 @@
     font-family: var(--font-mono);
     margin-right: 4px;
 }
+
+@media (max-width: 768px) {
+    .container {
+        max-height: min(72vh, calc(100dvh - 20px));
+    }
+
+    .searchWrapper {
+        padding: 14px;
+        gap: 10px;
+    }
+
+    .input {
+        font-size: 16px;
+    }
+
+    .results {
+        max-height: min(52vh, 360px);
+        padding: 6px;
+    }
+
+    .resultItem {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .footer {
+        padding: 10px 12px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .itemName {
+        font-size: 13px;
+    }
+
+    .itemType {
+        font-size: 9px;
+    }
+}

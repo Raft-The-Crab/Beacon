@@ -7,11 +7,13 @@ function normalizeApiBaseUrl(rawUrl: string): string {
   return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`
 }
 
-const API_URL = normalizeApiBaseUrl(
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_BACKEND_URL ||
-  '/api'
-)
+const API_URL = import.meta.env.DEV
+  ? '/api'
+  : normalizeApiBaseUrl(
+      import.meta.env.VITE_API_URL ||
+      import.meta.env.VITE_BACKEND_URL ||
+      '/api'
+    )
 let csrfBootstrapPromise: Promise<void> | null = null
 
 interface RetryConfig {

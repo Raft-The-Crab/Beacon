@@ -10,10 +10,37 @@
     background:
         radial-gradient(circle at 8% 12%, rgba(116, 140, 255, 0.1), transparent 34%),
         radial-gradient(circle at 92% 88%, rgba(49, 178, 173, 0.08), transparent 30%),
-        linear-gradient(180deg, #0c0f18, #0a0d15);
+        var(--bg-primary);
     position: relative;
     box-sizing: border-box;
     contain: layout;
+    isolation: isolate;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background-image: var(--custom-bg, none);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.4;
+    transform: scale(1.02);
+    pointer-events: none;
+}
+
+.container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 8% 12%, rgba(116, 140, 255, 0.1), transparent 34%),
+        radial-gradient(circle at 92% 88%, rgba(49, 178, 173, 0.08), transparent 30%),
+        linear-gradient(180deg, rgba(5, 7, 12, 0.1), rgba(5, 7, 12, 0.42));
+    pointer-events: none;
 }
 
 .mobileBackdrop {
@@ -27,7 +54,7 @@
 .leftNav {
     width: clamp(240px, 20vw, 320px);
     min-width: 240px;
-    background: rgba(12, 16, 26, 0.4);
+    background: var(--bg-secondary);
     backdrop-filter: blur(8px);
     display: flex;
     flex-direction: column;
@@ -54,7 +81,7 @@
 .rightPanel {
     width: 340px;
     min-width: 340px;
-    background: rgba(12, 16, 26, 0.4);
+    background: var(--bg-secondary);
     backdrop-filter: blur(8px);
     display: flex;
     flex-direction: column;
@@ -95,8 +122,8 @@
 @media (max-width: 768px) {
     .container {
         height: 100dvh;
-        padding: var(--space-xs);
-        gap: var(--space-xs);
+        padding: 0;
+        gap: 0;
     }
 
     .mobileBackdrop {
@@ -107,8 +134,8 @@
         position: fixed;
         left: 0;
         top: 0;
-        bottom: 0;
-        width: 300px;
+        bottom: calc(60px + env(safe-area-inset-bottom));
+        width: min(86vw, 300px);
         z-index: 101;
         border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
         transform: translateX(-100%);
@@ -121,6 +148,8 @@
     }
 
     .mainContent {
-        border-radius: var(--radius-xl);
+        border-radius: 0;
+        padding-bottom: calc(60px + env(safe-area-inset-bottom));
+        box-sizing: border-box;
     }
 }

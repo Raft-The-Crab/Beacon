@@ -11,19 +11,21 @@ interface CreateDMModalProps {
 
 export function CreateDMModal({ onClose }: CreateDMModalProps) {
     const { friends } = useUserListStore()
-    const { setActiveChannel } = useDMStore()
+    const { createDMChannel, setActiveChannel } = useDMStore()
     const [searchQuery, setSearchQuery] = useState('')
 
     const filteredFriends = friends.filter((f: any) =>
         f.username.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    const handleSelectFriend = (friendId: string) => {
-        // Logic to find or create a DM channel would go here
-        // For now, we'll just mock it or assume it exists in useDMStore
-        setActiveChannel(friendId)
-        console.log(`Starting DM with ${friendId}`)
-        onClose()
+    const handleSelectFriend = async (friendId: string) => {
+        try {
+            const channelId = await createDMChannel(friendId)
+            setActiveChannel(channelId)
+            onClose()
+        } catch (error) {
+            console.error('Failed to create DM channel', error)
+        }
     }
 
     return (
@@ -52,7 +54,7 @@ export function CreateDMModal({ onClose }: CreateDMModalProps) {
             <div className={styles.friendsList}>
                 {filteredFriends.length > 0 ? (
                     filteredFriends.map((friend: any) => (
-                        <div key={friend.id} className={styles.friendRow} onClick={() => handleSelectFriend(friend.id)}>
+                        <div key={friend.id} className={styles.friendRow} onClick={() => void handleSelectFriend(friend.id)}>
                             <div className={styles.friendInfo}>
                                 <Avatar
                                     src={friend.avatar && !friend.avatar.includes('dicebear') ? friend.avatar : undefined}

@@ -168,7 +168,7 @@ export function DeveloperPortal() {
   )
 
   return (
-    <WorkspaceLayout sidebar={sidebar} rightPanel={rightPanel}>
+    <WorkspaceLayout showServerRail sidebar={sidebar} rightPanel={rightPanel}>
       <Helmet>
         <title>Developer Portal - Beacon</title>
       </Helmet>
@@ -249,16 +249,16 @@ export function DeveloperPortal() {
 
             <div className={styles.miniStats} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: 32 }}>
               <div className={styles.miniStatCard}>
-                <div className={styles.miniStatValue}>1.2M</div>
-                <div className={styles.miniStatLabel}>Total Requests</div>
+                <div className={styles.miniStatValue}>Live</div>
+                <div className={styles.miniStatLabel}>Request telemetry unlocks when production traffic is connected.</div>
               </div>
               <div className={styles.miniStatCard}>
-                <div className={styles.miniStatValue}>42.5 GB</div>
-                <div className={styles.miniStatLabel}>Data Transferred</div>
+                <div className={styles.miniStatValue}>Pending</div>
+                <div className={styles.miniStatLabel}>Bandwidth reporting is hidden until verified usage exists.</div>
               </div>
               <div className={styles.miniStatCard}>
-                <div className={styles.miniStatValue}>99.9%</div>
-                <div className={styles.miniStatLabel}>Success Rate</div>
+                <div className={styles.miniStatValue}>Secure</div>
+                <div className={styles.miniStatLabel}>Only non-demo analytics are shown in this dashboard.</div>
               </div>
             </div>
 

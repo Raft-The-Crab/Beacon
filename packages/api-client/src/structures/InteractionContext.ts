@@ -3,11 +3,15 @@
  */
 import { RestClient } from '../rest/RestClient';
 import { EmbedBuilder } from '../builders/EmbedBuilder';
+import type { ActionRowData } from '../builders/ActionRowBuilder';
+import type { CardData } from '../builders/CardBuilder';
 import { RawInteraction, InteractionOption } from './Message';
 
 export interface ReplyOptions {
   content?: string;
   embeds?: ReturnType<EmbedBuilder['toJSON']>[];
+  components?: ActionRowData[];
+  cards?: CardData[];
   ephemeral?: boolean;
 }
 
@@ -95,6 +99,8 @@ export class InteractionContext {
       data: {
         content: data.content,
         embeds: data.embeds,
+        components: data.components,
+        cards: data.cards,
         flags,
       },
     });
@@ -119,6 +125,8 @@ export class InteractionContext {
     await this._rest.request('PATCH', `/webhooks/${this.applicationId}/${this.token}/messages/@original`, {
       content: data.content,
       embeds: data.embeds,
+      components: data.components,
+      cards: data.cards,
     });
   }
 
@@ -130,6 +138,8 @@ export class InteractionContext {
     await this._rest.request('POST', `/webhooks/${this.applicationId}/${this.token}`, {
       content: data.content,
       embeds: (data as ReplyOptions).embeds,
+      components: (data as ReplyOptions).components,
+      cards: (data as ReplyOptions).cards,
       flags,
     });
   }

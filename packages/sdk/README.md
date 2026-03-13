@@ -28,18 +28,15 @@ yarn add @beacon/sdk
 ```typescript
 import { BeaconClient } from '@beacon/sdk'
 
-// Initialize the client
-const beacon = new BeaconClient({
-  apiUrl: 'https://api.beacon.example.com',
-  wsUrl: 'wss://ws.beacon.example.com'
-})
+// Initialize client (defaults to api.beacon.qzz.io + gateway.beacon.qzz.io)
+const beacon = new BeaconClient()
 
-// Authenticate
-await beacon.auth.login('user@example.com', 'password')
+// Authenticate (stores access token internally)
+await beacon.login('user@example.com', 'password')
 
 // Listen for messages
 beacon.on('message', (message) => {
-  console.log(`${message.author.username}: ${message.content}`)
+  console.log(`${message.author?.username ?? 'Unknown'}: ${message.content}`)
 })
 
 // Send a message
@@ -56,17 +53,21 @@ await beacon.connect()
 ### Authentication
 
 ```typescript
-// Login with email and password
-await beacon.auth.login(email, password)
+// Login with email and password (recommended)
+await beacon.login(email, password)
 
-// Register a new account
-await beacon.auth.register(email, username, password)
+// Register and authenticate
+await beacon.register(email, username, password)
 
 // Logout
-await beacon.auth.logout()
+await beacon.logout()
 
 // Get current user
-const user = beacon.auth.getCurrentUser()
+const user = beacon.getCurrentUser()
+
+// Alternative low-level auth API (returns ApiResponse)
+const res = await beacon.auth.login(email, password)
+if (!res.success) throw new Error(res.error)
 ```
 
 ### Messages

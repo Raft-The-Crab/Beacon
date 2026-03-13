@@ -7,14 +7,16 @@ export function VersionCheck() {
     const [hasUpdate, setHasUpdate] = useState(false)
 
     useEffect(() => {
+        if (import.meta.env.DEV) return
+
         // Grab current version from manifest/package
         const version = '2.4.0' // This would ideally be injected by Vite
 
         const checkVersion = async () => {
             try {
-                // Remove trailing slash to prevent double slash if BASE_URL has one
                 const baseUrl = API_CONFIG?.BASE_URL?.replace(/\/+$/, '') || ''
-                const res = await fetch(`${baseUrl}/api/version`)
+                const versionUrl = /\/api$/i.test(baseUrl) ? `${baseUrl}/version` : `${baseUrl}/api/version`
+                const res = await fetch(versionUrl)
                 if (!res.ok) return;
 
                 const data = await res.json()

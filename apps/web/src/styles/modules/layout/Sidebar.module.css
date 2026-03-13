@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 0;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -554,9 +554,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    bottom: 60px;
-    /* leave room for server bar */
-    width: 280px;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+    width: min(86vw, 300px);
     z-index: 150;
     border-radius: 0;
     transform: translateX(-100%);
@@ -581,11 +580,30 @@
   .userArea {
     padding: 10px 12px;
     min-height: 60px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
   }
 
   .controlButton {
     width: 40px;
     height: 40px;
     min-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .channel {
+    padding: 10px 12px;
+    min-height: 40px;
+  }
+
+  .userArea {
+    min-height: 56px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .controlButton {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
   }
 }

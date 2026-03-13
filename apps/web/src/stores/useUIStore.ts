@@ -4,6 +4,8 @@ import { persist } from 'zustand/middleware'
 export type Theme = 'classic' | 'dark' | 'glass' | 'light' | 'oled' | 'neon' | 'midnight' | 'auto'
 export type MessageDensity = 'cozy' | 'compact' | 'ultra-compact'
 export type CreateChannelType = 'text' | 'voice' | 'stage' | 'forum' | 'announcement' | 'category'
+export type ChatBubbleStyle = 'reef' | 'jelly' | 'comic' | 'aurora' | 'prism' | 'carbon'
+export type ChatBubbleIntensity = 'low' | 'medium' | 'high'
 
 interface UIState {
   currentChannelId: string | null
@@ -11,6 +13,8 @@ interface UIState {
   theme: Theme
   glassEnabled: boolean
   messageDensity: MessageDensity
+  chatBubbleStyle: ChatBubbleStyle
+  chatBubbleIntensity: ChatBubbleIntensity
   showUserSettings: boolean
   selectedUserId: string | null
   darkMode: boolean
@@ -57,6 +61,8 @@ interface UIState {
   setTheme: (theme: Theme) => void
   setGlassEnabled: (enabled: boolean) => void
   setMessageDensity: (density: MessageDensity) => void
+  setChatBubbleStyle: (style: ChatBubbleStyle) => void
+  setChatBubbleIntensity: (intensity: ChatBubbleIntensity) => void
   setShowUserSettings: (show: boolean) => void
   setSelectedUser: (userId: string | null) => void
   setDarkMode: (darkMode: boolean) => void
@@ -97,6 +103,8 @@ export const useUIStore = create<UIState>()(
       theme: 'dark',
       glassEnabled: true,
       messageDensity: 'cozy',
+      chatBubbleStyle: 'reef',
+      chatBubbleIntensity: 'medium',
       showUserSettings: false,
       selectedUserId: null,
       darkMode: true,
@@ -160,10 +168,14 @@ export const useUIStore = create<UIState>()(
 
       setGlassEnabled: (enabled) => {
         set({ glassEnabled: enabled })
+        const root = document.documentElement
         if (enabled) {
           document.body.classList.add('glass-theme-active')
+          // Stack glass CSS variables on top of current theme
+          root.setAttribute('data-glass', 'true')
         } else {
           document.body.classList.remove('glass-theme-active')
+          root.removeAttribute('data-glass')
         }
         localStorage.setItem('beacon:glass_enabled', enabled ? 'true' : 'false')
       },
@@ -172,6 +184,16 @@ export const useUIStore = create<UIState>()(
         set({ messageDensity: density })
         document.documentElement.setAttribute('data-density', density)
         localStorage.setItem('beacon:density', density)
+      },
+
+      setChatBubbleStyle: (style) => {
+        set({ chatBubbleStyle: style })
+        localStorage.setItem('beacon:chat_bubble_style', style)
+      },
+
+      setChatBubbleIntensity: (intensity) => {
+        set({ chatBubbleIntensity: intensity })
+        localStorage.setItem('beacon:chat_bubble_intensity', intensity)
       },
 
       setShowUserSettings: (show) =>
@@ -269,6 +291,8 @@ export const useUIStore = create<UIState>()(
         const stored = localStorage.getItem('beacon:theme') as Theme | null
         const glass = localStorage.getItem('beacon:glass_enabled') !== 'false'
         const density = localStorage.getItem('beacon:density') as MessageDensity | null
+        const chatBubbleStyle = localStorage.getItem('beacon:chat_bubble_style') as ChatBubbleStyle | null
+        const chatBubbleIntensity = localStorage.getItem('beacon:chat_bubble_intensity') as ChatBubbleIntensity | null
         const accent = localStorage.getItem('beacon:custom_accent')
         const bg = localStorage.getItem('beacon:custom_bg')
 
@@ -298,6 +322,12 @@ export const useUIStore = create<UIState>()(
           set({ messageDensity: density })
           document.documentElement.setAttribute('data-density', density)
         }
+        if (chatBubbleStyle) {
+          set({ chatBubbleStyle })
+        }
+        if (chatBubbleIntensity) {
+          set({ chatBubbleIntensity })
+        }
         if (accent) {
           document.documentElement.style.setProperty('--beacon-brand', accent)
         }
@@ -312,6 +342,8 @@ export const useUIStore = create<UIState>()(
         theme: state.theme,
         glassEnabled: state.glassEnabled,
         messageDensity: state.messageDensity,
+        chatBubbleStyle: state.chatBubbleStyle,
+        chatBubbleIntensity: state.chatBubbleIntensity,
         developerMode: state.developerMode,
         showMemberList: state.showMemberList,
         darkMode: state.darkMode,

@@ -1,7 +1,5 @@
 import fs from 'fs'
-import path from 'path'
-
-const DEVELOPERS_PATH = path.join(process.cwd(), 'apps/server/config/developers.json')
+import { resolveFirstExistingConfigPath } from '../lib/configPaths'
 
 export class SovereigntyService {
     private static developers: string[] = []
@@ -10,8 +8,9 @@ export class SovereigntyService {
     private static loadDevelopers() {
         if (this.loaded) return
         try {
-            if (fs.existsSync(DEVELOPERS_PATH)) {
-                const data = JSON.parse(fs.readFileSync(DEVELOPERS_PATH, 'utf-8'))
+            const developersPath = resolveFirstExistingConfigPath('developers.json')
+            if (developersPath && fs.existsSync(developersPath)) {
+                const data = JSON.parse(fs.readFileSync(developersPath, 'utf-8'))
                 this.developers = data.developers || []
             }
         } catch (err) {

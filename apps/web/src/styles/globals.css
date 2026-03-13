@@ -1,6 +1,4 @@
 /* Beacon Global Styles - Discord-Inspired Soft Design */
-@import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   /* Brand Colors - Discord-like Purple/Blue */
@@ -209,16 +207,12 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
   --shadow-glass: 0 4px 20px rgba(0, 0, 0, 0.08);
 
-  --custom-bg: none !important;
-  /* Force no background image in light mode unless user insists */
-  background-image: none !important;
   background-color: #ffffff !important;
 }
 
 [data-theme="light"],
 [data-theme="dark"],
 [data-theme="oled"] {
-  --custom-bg: none !important;
   background-image: none !important;
 }
 
@@ -497,6 +491,27 @@ body {
 :focus-visible {
   outline: 2px solid var(--beacon-brand);
   outline-offset: 2px;
+}
+
+/* ── Glassmorphism overlay (data-glass="true" stacks on any theme) ────── */
+[data-glass="true"] {
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --bg-secondary: rgba(255, 255, 255, 0.06);
+  --bg-surface-elevated: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"][data-glass="true"] {
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --bg-secondary: rgba(255, 255, 255, 0.55);
+}
+
+body.glass-theme-active .glass,
+body.glass-theme-active [class*="card"],
+body.glass-theme-active [class*="panel"] {
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
 /* Selection */

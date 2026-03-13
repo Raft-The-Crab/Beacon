@@ -27,7 +27,7 @@ export function GatewayDocs() {
           <h2>Connecting</h2>
           <p>Connect to the Gateway URL using any standard WebSocket client:</p>
           <div className={styles.infoBox}>
-            <code>wss://gateway.beacon.chat/?v=1&encoding=json</code>
+            <code>wss://gateway.beacon.qzz.io/?v=1&encoding=json</code>
           </div>
           <p>
             Once connected, Beacon will immediately send you a <strong>Hello</strong> packet (opcode 10) that tells you
@@ -186,24 +186,24 @@ export function GatewayDocs() {
         <section className={styles.docsSection}>
           <h2>Using the SDK</h2>
           <p>
-            The official <code>beacon.js</code> SDK handles all Gateway internals automatically.
+            The official <code>@beacon/sdk</code> package handles all Gateway internals automatically.
             Here's how to get started:
           </p>
 
           <h3>Installation</h3>
           <div className={styles.codeBlock}>
-            <pre>{`npm install beacon.js`}</pre>
+            <pre>{`npm install @beacon/sdk`}</pre>
           </div>
 
           <h3>Quick Start</h3>
           <div className={styles.codeBlock}>
-            <pre>{`import { Client } from 'beacon.js'
+            <pre>{`import { BeaconClient } from '@beacon/sdk'
 
-const client = new Client({ token: process.env.BEACON_TOKEN })
+const client = new BeaconClient({ token: process.env.BEACON_TOKEN })
 
 client.on('ready', () => {
   console.log(\`✅ Logged in as \${client.user?.username}\`)
-  console.log(\`📡 Connected to \${client.guilds.size} guilds\`)
+  console.log('📡 Gateway connected')
 })
 
 client.login()`}</pre>
@@ -230,7 +230,7 @@ client.on('guildCreate', (guild) => {
 // Use Channel.send() for rich messages
 const channel = client.channels.get(channelId)
 await channel.send({
-  content: 'Hello from beacon.js!',
+  content: 'Hello from @beacon/sdk!',
   embeds: [embed]
 })`}</pre>
           </div>
@@ -238,7 +238,7 @@ await channel.send({
           <h3>Builders</h3>
           <p>Use the builder pattern to create embeds, buttons, polls, and commands:</p>
           <div className={styles.codeBlock}>
-            <pre>{`import { EmbedBuilder, CommandBuilder, ButtonBuilder, ActionRowBuilder } from 'beacon.js'
+            <pre>{`import { EmbedBuilder, ButtonBuilder, ActionRowBuilder } from '@beacon/sdk'
 
 // Embed
 const embed = new EmbedBuilder()
@@ -247,12 +247,6 @@ const embed = new EmbedBuilder()
   .addField('Members', '1,234', true)
   .addField('Channels', '42', true)
   .setTimestamp()
-  .build()
-
-// Slash Command
-const cmd = new CommandBuilder()
-  .setName('stats')
-  .setDescription('View server statistics')
   .build()
 
 // Interactive Button
@@ -269,15 +263,15 @@ const row = new ActionRowBuilder()
 
           <h3>Client Options</h3>
           <div className={styles.codeBlock}>
-            <pre>{`const client = new Client({
+            <pre>{`const client = new BeaconClient({
   token: 'Bot YOUR_TOKEN',        // Required
   intents: Intents.DEFAULT,       // Gateway intents bitmask
   gateway: {
-    url: 'wss://gateway.beacon.chat',
+    url: 'wss://gateway.beacon.qzz.io',
     version: 10,
   },
   rest: {
-    baseURL: 'https://api.beacon.chat',
+    baseURL: 'https://api.beacon.qzz.io/api',
     timeout: 15000,
   },
 })`}</pre>

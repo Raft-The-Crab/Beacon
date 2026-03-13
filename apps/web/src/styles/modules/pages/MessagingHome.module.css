@@ -680,3 +680,115 @@
   background: rgba(240, 178, 50, 0.16);
   transform: none;
 }
+
+@media (max-width: 768px) {
+  .pageWrapper {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .topBar {
+    height: 52px;
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  .topBarTitle {
+    font-size: 15px;
+  }
+
+  .topBarLeft {
+    gap: 8px;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .topBarRight {
+    gap: 6px;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    gap: 4px;
+    scrollbar-width: none;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .addFriendBtn {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+    margin-left: 4px;
+    flex-shrink: 0;
+  }
+
+  .friendsSearchRow {
+    padding: 10px 12px 6px;
+  }
+
+  .friendsLabel {
+    padding: 8px 12px 6px;
+    letter-spacing: 0.08em;
+  }
+
+  .friendsScroll {
+    padding: 0 10px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .friendRow {
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    margin-bottom: 4px;
+  }
+
+  .friendRow:hover {
+    transform: none;
+  }
+
+  .friendName {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topBar {
+    padding: 0 8px;
+  }
+
+  .topBarTitle {
+    font-size: 14px;
+  }
+
+  .topBarRight {
+    display: none;
+  }
+
+  .tab {
+    height: 28px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .addFriendBtn {
+    height: 28px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+}

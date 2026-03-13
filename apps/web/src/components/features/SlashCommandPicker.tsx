@@ -1,13 +1,12 @@
 ﻿import { useEffect, useRef, useState, useCallback } from 'react'
-import { Zap, Music, Hash, Image, Vote, Calendar, Smile, Clock, Gift, Mic, Bot } from 'lucide-react'
-import { useInteractionStore } from '../../stores/useInteractionStore'
+import { Zap, Hash, Image, Smile, Gift } from 'lucide-react'
 import styles from '../../styles/modules/features/SlashCommandPicker.module.css'
 
 export interface SlashCommand {
   name: string
   description: string
   usage?: string
-  category: 'chat' | 'media' | 'fun' | 'utility' | 'poll' | 'bot'
+  category: 'chat' | 'media' | 'fun'
   icon: React.ReactNode
   onSelect?: (command: SlashCommand) => void
 }
@@ -21,38 +20,22 @@ const BUILT_IN_COMMANDS: SlashCommand[] = [
   { name: 'unflip', description: '┬─┬ ノ( ゜-゜ノ)', category: 'chat', icon: <Smile size={16} /> },
   // Media
   { name: 'gif', description: 'Search and send a GIF', usage: '/gif <search>', category: 'media', icon: <Image size={16} /> },
-  { name: 'image', description: 'Upload an image', category: 'media', icon: <Image size={16} /> },
-  // Poll
-  { name: 'poll', description: 'Create a poll', usage: '/poll <question> | <option1> | <option2>', category: 'poll', icon: <Vote size={16} /> },
-  // Utility
-  { name: 'reminder', description: 'Set a reminder', usage: '/reminder <time> <message>', category: 'utility', icon: <Clock size={16} /> },
-  { name: 'event', description: 'Create a server event', usage: '/event <name> <date>', category: 'utility', icon: <Calendar size={16} /> },
-  { name: 'schedule', description: 'Schedule a message', usage: '/schedule <time> <message>', category: 'utility', icon: <Clock size={16} /> },
   // Fun
-  { name: 'roll', description: 'Roll a dice', usage: '/roll <sides>', category: 'fun', icon: <Gift size={16} /> },
+  { name: 'roll', description: 'Roll a die (default d6)', usage: '/roll [sides]', category: 'fun', icon: <Gift size={16} /> },
   { name: 'flip', description: 'Flip a coin', category: 'fun', icon: <Gift size={16} /> },
   { name: 'rps', description: 'Rock, paper, scissors', category: 'fun', icon: <Gift size={16} /> },
-  // Bot integrations
-  { name: 'play', description: 'Play music in voice channel', usage: '/play <song or URL>', category: 'bot', icon: <Music size={16} /> },
-  { name: 'record', description: 'Start voice channel recording', category: 'bot', icon: <Mic size={16} /> },
 ]
 
 const CATEGORY_LABELS: Record<string, string> = {
   chat: 'CHAT',
   media: 'MEDIA',
-  poll: 'POLLS',
-  utility: 'UTILITY',
   fun: 'FUN',
-  bot: 'BOT',
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
   chat: 'var(--beacon-brand)',
   media: '#7289da',
-  poll: '#43b581',
-  utility: '#faa61a',
   fun: '#f04747',
-  bot: '#9b59b6',
 }
 
 interface SlashCommandPickerProps {
@@ -72,21 +55,8 @@ export function SlashCommandPicker({
 }: SlashCommandPickerProps) {
   const [selectedIdx, setSelectedIdx] = useState(0)
   const listRef = useRef<HTMLDivElement>(null)
-  const { commands: remoteCommands, fetchCommands } = useInteractionStore()
 
-  useEffect(() => {
-    fetchCommands()
-  }, [fetchCommands])
-
-  const mappedRemote: SlashCommand[] = remoteCommands.map(rc => ({
-    name: rc.name,
-    description: rc.description,
-    usage: rc.usage,
-    category: 'bot',
-    icon: <Bot size={16} />
-  }))
-
-  const allCommands = [...BUILT_IN_COMMANDS, ...mappedRemote, ...extraCommands]
+  const allCommands = [...BUILT_IN_COMMANDS, ...extraCommands]
 
   const filtered = query.trim()
     ? allCommands.filter(

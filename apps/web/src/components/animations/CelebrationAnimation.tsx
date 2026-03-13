@@ -2,27 +2,40 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import styles from '../../styles/modules/animations/CelebrationAnimation.module.css'
 
-interface Confetti {
+interface Particle {
   id: number
   left: number
   delay: number
   duration: number
   color: string
+  shape: 'square' | 'circle' | 'star' | 'ribbon'
+  size: number
+  xDrift: number
+  rotation: number
 }
 
 export function CelebrationAnimation() {
-  const [confetti, setConfetti] = useState<Confetti[]>([])
+  const [particles, setParticles] = useState<Particle[]>([])
 
   useEffect(() => {
-    // Generate confetti particles
-    const particles = Array.from({ length: 50 }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      delay: Math.random() * 0.5,
-      duration: 2 + Math.random() * 1,
-      color: ['#5865f2', '#7289da', '#949cf7', '#f0b232', '#23a55a'][Math.floor(Math.random() * 5)],
-    }))
-    setConfetti(particles)
+    const colors = [
+      '#5865f2', '#7b2ff7', '#949cf7', '#f0b232', '#23a55a',
+      '#ff73fa', '#eb459e', '#00b0f4', '#ffffff', '#ffd700',
+    ]
+    const shapes: Particle['shape'][] = ['square', 'circle', 'star', 'ribbon']
+    setParticles(
+      Array.from({ length: 80 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        delay: Math.random() * 0.8,
+        duration: 2.2 + Math.random() * 1.6,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        shape: shapes[Math.floor(Math.random() * shapes.length)],
+        size: 6 + Math.random() * 8,
+        xDrift: (Math.random() - 0.5) * 320,
+        rotation: Math.random() * 900,
+      }))
+    )
   }, [])
 
   return (
@@ -30,41 +43,45 @@ export function CelebrationAnimation() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.25 }}
       className={styles.container}
     >
-      {/* Bright flash background */}
+      {/* Radial glow burst */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-        className={styles.flash}
+        initial={{ opacity: 0, scale: 0.4 }}
+        animate={{ opacity: [0, 0.85, 0], scale: [0.4, 1.8, 2.4] }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+        className={styles.glowBurst}
       />
 
-      {/* Burst effect */}
+      {/* Inner ring expand */}
       <motion.div
-        initial={{ opacity: 1, scale: 0 }}
-        animate={{ opacity: 0, scale: 4 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+        initial={{ opacity: 1, scale: 0, borderWidth: 4 }}
+        animate={{ opacity: 0, scale: 3.5, borderWidth: 1 }}
+        transition={{ duration: 0.9, ease: 'easeOut' }}
         className={styles.burstRing}
       />
 
-      {/* Confetti particles */}
-      {confetti.map((p) => (
+      {/* Second ring, delayed */}
+      <motion.div
+        initial={{ opacity: 1, scale: 0, borderWidth: 3 }}
+        animate={{ opacity: 0, scale: 2.8, borderWidth: 1 }}
+        transition={{ duration: 0.9, delay: 0.15, ease: 'easeOut' }}
+        className={styles.burstRingAlt}
+      />
+
+      {/* Confetti / particle shower */}
+      {particles.map((p) => (
         <motion.div
           key={p.id}
-          className={styles.confetti}
-          initial={{
-            x: 0,
-            y: 0,
-            opacity: 1,
-            rotate: 0,
-          }}
+          className={`${styles.confetti} ${styles[p.shape]}`}
+          initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 0.8 }}
           animate={{
-            x: (Math.random() - 0.5) * 400,
-            y: Math.random() * 600 + 200,
-            opacity: 0,
-            rotate: Math.random() * 720,
+            x: p.xDrift,
+            y: 650 + Math.random() * 200,
+            opacity: [1, 1, 0],
+            rotate: p.rotation,
+            scale: [0.8, 1.1, 0.7],
           }}
           transition={{
             duration: p.duration,
@@ -73,27 +90,31 @@ export function CelebrationAnimation() {
           }}
           style={{
             left: `${p.left}%`,
-            backgroundColor: p.color,
+            backgroundColor: p.shape !== 'star' ? p.color : 'transparent',
+            color: p.color,
+            width: p.size,
+            height: p.shape === 'ribbon' ? p.size * 3 : p.size,
             position: 'absolute',
-            top: 0,
+            top: '45%',
           }}
         />
       ))}
 
-      {/* Center sparkles */}
-      {[0, 1, 2].map((i) => (
+      {/* Crown sparkle cluster */}
+      {[0, 1, 2, 3, 4].map((i) => (
         <motion.div
           key={`sparkle-${i}`}
           className={styles.sparkle}
-          initial={{ opacity: 1, scale: 0 }}
-          animate={{ opacity: 0, scale: 1 }}
-          transition={{
-            duration: 0.6,
-            delay: i * 0.1,
-            ease: 'easeOut',
+          initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+          animate={{
+            opacity: [1, 1, 0],
+            scale: [0, 1.4, 0],
+            x: Math.cos((i / 5) * Math.PI * 2) * 70,
+            y: Math.sin((i / 5) * Math.PI * 2) * 70,
           }}
+          transition={{ duration: 0.9, delay: i * 0.07, ease: 'easeOut' }}
         >
-          ✨
+          {['✨', '⭐', '💫', '🌟', '✦'][i]}
         </motion.div>
       ))}
     </motion.div>

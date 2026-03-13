@@ -7,17 +7,24 @@ import type { User, ApiResponse } from '../types'
 export class AuthAPI {
   constructor(private client: HTTPClient) {}
 
+  private extractAccessToken(data: any): string | undefined {
+    return data?.accessToken || data?.token
+  }
+
   /**
    * Login with email and password
    */
-  async login(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
-    const response = await this.client.post<{ user: User; token: string }>('/auth/login', {
+  async login(email: string, password: string): Promise<ApiResponse<{ user: User; accessToken: string; refreshToken?: string }>> {
+    const response = await this.client.post<{ user: User; accessToken: string; refreshToken?: string }>('/auth/login', {
       email,
       password
     })
 
     if (response.success && response.data) {
-      this.client.setToken(response.data.token)
+      const accessToken = this.extractAccessToken(response.data)
+      if (accessToken) {
+        this.client.setToken(accessToken)
+      }
     }
 
     return response
@@ -30,15 +37,18 @@ export class AuthAPI {
     email: string,
     username: string,
     password: string
-  ): Promise<ApiResponse<{ user: User; token: string }>> {
-    const response = await this.client.post<{ user: User; token: string }>('/auth/register', {
+  ): Promise<ApiResponse<{ user: User; accessToken: string; refreshToken?: string }>> {
+    const response = await this.client.post<{ user: User; accessToken: string; refreshToken?: string }>('/auth/register', {
       email,
       username,
       password
     })
 
     if (response.success && response.data) {
-      this.client.setToken(response.data.token)
+      const accessToken = this.extractAccessToken(response.data)
+      if (accessToken) {
+        this.client.setToken(accessToken)
+      }
     }
 
     return response
@@ -48,13 +58,9 @@ export class AuthAPI {
    * Logout
    */
   async logout(): Promise<ApiResponse<void>> {
-    const response = await this.client.post<void>('/auth/logout')
-    
-    if (response.success) {
-      this.client.setToken('')
-    }
-
-    return response
+    // Server does not expose a logout endpoint; clear local auth state.
+    this.client.setToken('')
+    return { success: true }
   }
 
   /**
@@ -67,13 +73,16 @@ export class AuthAPI {
   /**
    * Refresh token
    */
-  async refreshToken(refreshToken: string): Promise<ApiResponse<{ token: string }>> {
-    const response = await this.client.post<{ token: string }>('/auth/refresh', {
+  async refreshToken(refreshToken: string): Promise<ApiResponse<{ accessToken: string; refreshToken?: string }>> {
+    const response = await this.client.post<{ accessToken: string; refreshToken?: string }>('/auth/refresh', {
       refreshToken
     })
 
     if (response.success && response.data) {
-      this.client.setToken(response.data.token)
+      const accessToken = this.extractAccessToken(response.data)
+      if (accessToken) {
+        this.client.setToken(accessToken)
+      }
     }
 
     return response

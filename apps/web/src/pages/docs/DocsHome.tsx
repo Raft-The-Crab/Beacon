@@ -50,7 +50,7 @@ export function DocsHome() {
                 <DocLink
                     icon={<Book size={20} />}
                     title={t('docs.categories.sdk')}
-                    description="Master the official beacon.js SDK — slash commands, buttons, and managers."
+                    description="Master the official @beacon/sdk package — slash commands, buttons, and managers."
                     to="/docs/sdk-tutorial"
                     color="green"
                 />

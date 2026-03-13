@@ -6,6 +6,7 @@ import { useUIStore } from '../../stores/useUIStore'
 import { openCreateServerModal, openCreateChannelModal } from '../../utils/modals'
 import { useContextMenuTrigger } from '../ui/ContextMenu'
 import { Tooltip, useToast } from '../ui'
+import { apiClient } from '../../services/apiClient'
 import styles from '../../styles/modules/layout/ServerList.module.css'
 
 function ServerIconShell({ children }: { children: React.ReactNode }) {
@@ -156,6 +157,7 @@ export function ServerList() {
   const currentServerId = useServerStore(state => state.currentServerId)
   const setCurrentServer = useServerStore(state => state.setCurrentServer)
   const fetchGuild = useServerStore(state => state.fetchGuild)
+  const joinGuild = useServerStore(state => state.joinGuild)
   const toggleFolder = useServerStore(state => state.toggleFolder)
 
   const serversInFolders = new Set(folders.flatMap(f => f.serverIds))
@@ -186,6 +188,39 @@ export function ServerList() {
     navigate(`/channels/${server.id}`)
   }
 
+  const extractInviteCode = (input: string): string => {
+    const trimmed = input.trim()
+    if (!trimmed) return ''
+    const fromUrl = trimmed.match(/\/invites\/([^/?#]+)/i) || trimmed.match(/\/invite\/([^/?#]+)/i)
+    if (fromUrl?.[1]) return fromUrl[1]
+    const bareCode = trimmed.match(/^([a-z0-9_-]{4,64})$/i)
+    return bareCode?.[1] || trimmed
+  }
+
+  const handleJoinByInvite = async () => {
+    const input = window.prompt('Paste an invite code or invite link to join a server:')
+    if (!input) return
+
+    const inviteCode = extractInviteCode(input)
+    if (!inviteCode) {
+      show('Invalid invite code', 'error')
+      return
+    }
+
+    try {
+      const response = await apiClient.joinByInvite(inviteCode)
+      if (!response.success || !response.data?.id) {
+        throw new Error(response.error || 'Failed to join server')
+      }
+
+      const joinedGuildId = response.data.id as string
+      await joinGuild(joinedGuildId)
+      show(`Joined ${response.data.name || 'server'}!`, 'success')
+    } catch (err: any) {
+      show(err?.message || 'Could not join server with that invite', 'error')
+    }
+  }
+
   const addMenuTrigger = useContextMenuTrigger([
     {
       id: 'create',
@@ -197,13 +232,13 @@ export function ServerList() {
       id: 'join',
       label: 'Join a Server',
       icon: <UserPlus size={16} />,
-      onClick: () => show('Join server (coming soon)', 'info'),
+      onClick: handleJoinByInvite,
     },
     {
       id: 'discover',
       label: 'Explore Communities',
       icon: <Compass size={16} />,
-      onClick: () => show('Discover (coming soon)', 'info'),
+      onClick: () => navigate('/discovery'),
     },
   ])
 
@@ -293,7 +328,7 @@ export function ServerList() {
       <Tooltip content="Discover" position="right">
         <button
           className={styles.serverButton}
-          onClick={() => show('Server discovery coming soon!', 'info')}
+          onClick={() => navigate('/discovery')}
         >
           <ServerIconShell>
             <Compass size={22} />

@@ -22,6 +22,9 @@ export function SDKTutorial() {
                     <pre className={styles.code}>
                         <code>npm install @beacon/sdk</code>
                     </pre>
+                    <div className={styles.infoBox}>
+                        Latest SDK package: <a href="https://www.npmjs.com/package/@beacon/sdk" target="_blank" rel="noreferrer">@beacon/sdk on npm</a>.
+                    </div>
                     <p>Create your client:</p>
                     <pre className={styles.code}>
                         <code>{`import { BeaconClient } from '@beacon/sdk';

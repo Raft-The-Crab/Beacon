@@ -2,6 +2,16 @@ import { Request, Response, NextFunction } from 'express'
 import { logger } from '../services/logger'
 import { redis } from '../db'
 
+const NOISY_LOG_PATHS = (process.env.REQUEST_LOG_NOISY_PATHS || '/info,/options,/friends')
+    .split(',')
+    .map((path) => path.trim())
+    .filter(Boolean)
+
+const endpointLogWindowMs = Math.max(1000, Number(process.env.REQUEST_LOG_THROTTLE_MS || 15000))
+const requestLogSampleRate = Math.min(1, Math.max(0, Number(process.env.REQUEST_LOG_SAMPLE_RATE || 1)))
+const logSuccessfulRequests = !['0', 'false', 'no'].includes(String(process.env.REQUEST_LOG_SUCCESS || 'true').toLowerCase())
+const endpointLastLog = new Map<string, number>()
+
 /**
  * Middleware to track request duration and log performance metrics.
  */
@@ -13,7 +23,27 @@ export function requestTimer(req: Request, res: Response, next: NextFunction) {
         const duration = (seconds * 1000 + nanoseconds / 1000000).toFixed(2)
 
         const status = res.statusCode
-        const color = status >= 500 ? 'red' : status >= 400 ? 'yellow' : 'green'
+        const isNoisyPath = NOISY_LOG_PATHS.some((path) => req.path === path || req.path.endsWith(path))
+        const isSuccess = status < 400
+
+        if (isSuccess && !logSuccessfulRequests) {
+            return
+        }
+
+        if (isNoisyPath && isSuccess) {
+            const key = `${req.method}:${req.path}:${status}`
+            const now = Date.now()
+            const last = endpointLastLog.get(key) || 0
+            if (now - last >= endpointLogWindowMs) {
+                endpointLastLog.set(key, now)
+                logger.info(`${req.method} ${req.path} - ${status} (${duration}ms) [throttled]`)
+            }
+            return
+        }
+
+        if (isSuccess && requestLogSampleRate < 1 && Math.random() > requestLogSampleRate) {
+            return
+        }
 
         logger.info(`${req.method} ${req.path} - ${status} (${duration}ms)`)
     })
@@ -30,7 +60,8 @@ export function cacheResponse(durationSeconds: number = 60) {
         if (req.method !== 'GET') return next()
 
         // Create a unique cache key based on URL and query params
-        const key = `beacon:cache:${req.originalUrl || req.url}`
+        const userId = (req as any).user?.id || 'anonymous'
+        const key = `beacon:cache:${userId}:${req.originalUrl || req.url}`
 
         try {
             const cached = await redis.get(key)

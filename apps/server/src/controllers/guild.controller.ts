@@ -294,6 +294,21 @@ export class GuildController {
     }
 
     // -- ROLES --
+    static async getRoles(req: Request, res: Response) {
+        try {
+            const { guildId } = req.params as { guildId: string };
+
+            const roles = await prisma.role.findMany({
+                where: { guildId },
+                orderBy: { position: 'desc' }
+            });
+
+            res.json(serializeBigInt(roles));
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch roles' });
+        }
+    }
+
     static async createRole(req: Request, res: Response) {
         try {
             const { guildId } = req.params as { guildId: string };
@@ -393,7 +408,12 @@ export class GuildController {
             // Check if guild exists and user is a member
             const guild = await prisma.guild.findUnique({
                 where: { id: guildId },
-                include: { members: { where: { userId } } }
+                include: {
+                    members: {
+                        where: { userId },
+                        include: { roles: true }
+                    }
+                }
             });
 
             if (!guild) {
@@ -406,7 +426,7 @@ export class GuildController {
 
             // Check permissions
             const member = guild.members[0];
-            const hasPermission = member.roles?.includes('MANAGE_SERVER') || member.roles?.includes('ADMIN') || guild.ownerId === userId;
+            const hasPermission = member.roles?.some((role) => role.name === 'ADMIN' || role.name === 'MANAGE_SERVER') || guild.ownerId === userId;
             
             if (!hasPermission) {
                 return res.status(403).json({ error: 'You lack permission to create invites' });
@@ -535,6 +555,112 @@ export class GuildController {
             res.json(updated);
         } catch (error) {
             res.status(500).json({ error: 'Failed to set vanity URL' });
+        }
+    }
+
+    static async joinGuild(req: Request, res: Response) {
+        try {
+            const { id: guildId } = req.params as { id: string };
+            const userId = req.user?.id;
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const guild = await prisma.guild.findUnique({
+                where: { id: guildId },
+                include: {
+                    channels: {
+                        orderBy: [
+                            { position: 'asc' },
+                            { createdAt: 'asc' }
+                        ],
+                        take: 200
+                    },
+                    roles: { orderBy: { position: 'desc' }, take: 100 },
+                    members: {
+                        take: 100,
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    avatar: true,
+                                    status: true,
+                                    discriminator: true,
+                                }
+                            },
+                            roles: true,
+                        }
+                    },
+                    _count: {
+                        select: { members: true }
+                    }
+                }
+            });
+
+            if (!guild) {
+                return res.status(404).json({ error: 'Guild not found' });
+            }
+
+            const existingMembership = await prisma.guildMember.findUnique({
+                where: {
+                    userId_guildId: {
+                        userId,
+                        guildId,
+                    }
+                }
+            });
+
+            if (!existingMembership) {
+                const everyoneRole = guild.roles.find((role: any) => role.name === '@everyone');
+
+                await prisma.guildMember.create({
+                    data: {
+                        userId,
+                        guildId,
+                        roles: everyoneRole ? { connect: [{ id: everyoneRole.id }] } : undefined,
+                    }
+                });
+            }
+
+            await CacheService.del(`guild:${guildId}`);
+
+            const updatedGuild = await prisma.guild.findUnique({
+                where: { id: guildId },
+                include: {
+                    channels: {
+                        orderBy: [
+                            { position: 'asc' },
+                            { createdAt: 'asc' }
+                        ],
+                        take: 200
+                    },
+                    roles: { orderBy: { position: 'desc' }, take: 100 },
+                    members: {
+                        take: 100,
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    avatar: true,
+                                    status: true,
+                                    discriminator: true,
+                                }
+                            },
+                            roles: true,
+                        }
+                    },
+                    _count: {
+                        select: { members: true }
+                    }
+                }
+            });
+
+            res.json(serializeBigInt(updatedGuild));
+        } catch (error) {
+            console.error('[JOIN_GUILD]', error);
+            res.status(500).json({ error: 'Failed to join guild' });
         }
     }
 
@@ -922,6 +1048,132 @@ export class GuildController {
         } catch (error) {
             console.error('[GET_INVITES]', error);
             res.status(500).json({ error: 'Failed to fetch invites' });
+        }
+    }
+
+    static async joinByInvite(req: Request, res: Response) {
+        try {
+            const { inviteCode } = req.params as { inviteCode: string };
+            const userId = req.user?.id;
+
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const invite = await prisma.invite.findUnique({
+                where: { code: inviteCode },
+                include: {
+                    guild: {
+                        include: {
+                            channels: {
+                                orderBy: [
+                                    { position: 'asc' },
+                                    { createdAt: 'asc' }
+                                ],
+                                take: 200
+                            },
+                            roles: { orderBy: { position: 'desc' }, take: 100 },
+                            members: {
+                                take: 100,
+                                include: {
+                                    user: {
+                                        select: {
+                                            id: true,
+                                            username: true,
+                                            avatar: true,
+                                            status: true,
+                                            discriminator: true,
+                                        }
+                                    },
+                                    roles: true,
+                                }
+                            },
+                            _count: {
+                                select: { members: true }
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (!invite) {
+                return res.status(404).json({ error: 'Invite not found' });
+            }
+
+            if (invite.expiresAt && invite.expiresAt.getTime() <= Date.now()) {
+                return res.status(410).json({ error: 'Invite has expired' });
+            }
+
+            if (invite.maxUses > 0 && invite.uses >= invite.maxUses) {
+                return res.status(410).json({ error: 'Invite has reached maximum uses' });
+            }
+
+            const guildId = invite.guildId;
+
+            const existingMembership = await prisma.guildMember.findUnique({
+                where: {
+                    userId_guildId: {
+                        userId,
+                        guildId,
+                    }
+                }
+            });
+
+            if (!existingMembership) {
+                const everyoneRole = invite.guild.roles.find((role: any) => role.name === '@everyone');
+
+                await prisma.guildMember.create({
+                    data: {
+                        userId,
+                        guildId,
+                        roles: everyoneRole ? { connect: [{ id: everyoneRole.id }] } : undefined,
+                    }
+                });
+            }
+
+            await prisma.invite.update({
+                where: { code: inviteCode },
+                data: { uses: { increment: 1 } },
+            });
+
+            await CacheService.del(`guild:${guildId}`);
+
+            const updatedGuild = await prisma.guild.findUnique({
+                where: { id: guildId },
+                include: {
+                    channels: {
+                        orderBy: [
+                            { position: 'asc' },
+                            { createdAt: 'asc' }
+                        ],
+                        take: 200
+                    },
+                    roles: { orderBy: { position: 'desc' }, take: 100 },
+                    members: {
+                        take: 100,
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    avatar: true,
+                                    status: true,
+                                    discriminator: true,
+                                }
+                            },
+                            roles: true,
+                        }
+                    },
+                    _count: {
+                        select: { members: true }
+                    }
+                }
+            });
+
+            res.json(serializeBigInt(updatedGuild));
+        } catch (error) {
+            console.error('[JOIN_BY_INVITE]', error);
+            res.status(500).json({ error: 'Failed to join guild by invite' });
         }
     }
 

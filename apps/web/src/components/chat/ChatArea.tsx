@@ -3,6 +3,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { Hash, Pin, Users, Search, Phone, Video, ChevronDown } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { InteractionType } from '@beacon/types'
 import { useMessageStore } from '../../stores/useMessageStore'
 import { useVoiceStore } from '../../stores/useVoiceStore'
 import { useServerStore } from '../../stores/useServerStore'
@@ -32,6 +33,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
   const { t } = useTranslationStore()
   // Directly select the messages for the current channel
   const messages = useMessageStore((state) => state.messages.get(channelId) || EMPTY_ARRAY);
+  const fetchMessages = useMessageStore((state) => state.fetchMessages);
 
   // Select individual actions for better performance and stability
   const handleMessageCreate = useMessageStore(state => state.handleMessageCreate);
@@ -40,12 +42,13 @@ export function ChatArea({ channelId }: ChatAreaProps) {
 
   const addTypingUser = useVoiceStore(state => state.addTypingUser);
   const removeTypingUser = useVoiceStore(state => state.removeTypingUser);
+  const { user } = useAuthStore()
 
   const currentServer = useServerStore(state => state.currentServer);
   const currentChannel = currentServer?.channels?.find((channel: any) => channel.id === channelId)
   const dmChannel = useDMStore((state) => state.channels.find((channel: any) => channel.id === channelId))
   const isDMChannel = !!dmChannel && !currentChannel
-  const dmRecipient = dmChannel?.participants?.[0]?.username || 'Direct Message'
+  const dmRecipient = dmChannel?.participants?.find((participant: any) => participant.id !== user?.id)?.username || dmChannel?.participants?.[0]?.username || 'Direct Message'
   const channelDisplayName = isDMChannel ? dmRecipient : (currentChannel?.name || 'general')
 
   const toggleMemberList = useUIStore(state => state.toggleMemberList)
@@ -53,15 +56,14 @@ export function ChatArea({ channelId }: ChatAreaProps) {
 
   const { toasts, show } = useToast()
   const { pinMessage, unpinMessage, getPinnedMessages } = usePinnedMessagesStore()
-  const { user } = useAuthStore()
 
   const resolveAuthor = useCallback((message: any) => {
     const author = message?.author || {}
     const targetAuthorId = author.id || message.authorId
     const isSelf = !!user && (
-      message.authorId === 'current-user' ||
       message.authorId === user.id ||
-      author.id === user.id
+      author.id === user.id ||
+      (message.localOnly && message.authorId === 'current-user')
     )
     const memberRecord = (currentServer?.members as any[] | undefined)?.find((member: any) => {
       const memberId = member?.userId || member?.user?.id || member?.id
@@ -78,14 +80,19 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       id: isSelf ? user?.id : targetAuthorId,
       name: isSelf ? (user?.username || 'You') : (author.username || message.authorName || message.authorId || 'Unknown User'),
       avatar: isSelf ? (user?.avatar || author.avatar) : (author.avatar || message.authorAvatar),
+      banner: isSelf ? (user as any)?.banner : (author.banner || message.authorBanner),
       status: (isSelf ? user?.status : author.status || memberRecord?.status) || 'offline',
       customStatus: isSelf ? user?.statusText : memberRecord?.customStatus,
       bio: isSelf ? user?.bio : author.bio,
       joinedAt: author.createdAt || memberRecord?.joinedAt,
       roles,
-      bannerColor: '#5865f2',
       avatarDecorationId: isSelf ? user?.avatarDecorationId : author.avatarDecorationId,
       badges: isSelf ? user?.badges : author.badges,
+      isBeaconPlus: Boolean(
+        isSelf
+          ? user?.isBeaconPlus
+          : author.isBeaconPlus || (Array.isArray(author.badges) && author.badges.some((badge: string) => String(badge).toLowerCase() === 'beacon_plus'))
+      ),
     }
   }, [currentServer?.members, user])
 
@@ -100,6 +107,52 @@ export function ChatArea({ channelId }: ChatAreaProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const channelType = String(currentChannel?.type ?? '').toLowerCase()
   const isVoiceLikeChannel = channelType === 'voice' || channelType === '2' || channelType === 'stage' || channelType === '13'
+
+  const appendInteractionMessage = useCallback((payload: any) => {
+    if (!payload || payload.flags === 64) return false
+
+    const hasRenderableBody = Boolean(
+      payload.content?.trim() ||
+      payload.embeds?.length ||
+      payload.components?.length
+    )
+
+    if (!hasRenderableBody) return false
+
+    handleMessageCreate({
+      id: `interaction-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      channelId,
+      authorId: 'beacon-bot',
+      author: {
+        id: 'beacon-bot',
+        username: 'Beacon Bot',
+        avatar: null,
+        bot: true,
+      },
+      content: payload.content || '',
+      attachments: [],
+      embeds: payload.embeds || [],
+      components: payload.components || [],
+      mentions: [],
+      createdAt: new Date().toISOString(),
+      localOnly: true,
+    } as any)
+
+    return true
+  }, [channelId, handleMessageCreate])
+
+  const handleInteractionResult = useCallback((payload: any, successLabel: string) => {
+    const rendered = appendInteractionMessage(payload)
+
+    if (payload?.flags === 64) {
+      show(payload.content || `${successLabel} completed`, 'info')
+      return
+    }
+
+    if (!rendered) {
+      show(payload?.content || `${successLabel} completed`, 'success')
+    }
+  }, [appendInteractionMessage, show])
 
   const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant' })
@@ -121,6 +174,12 @@ export function ChatArea({ channelId }: ChatAreaProps) {
     setShowScrollBtn(distanceFromBottom > 200)
   }, [])
 
+  useEffect(() => {
+    if (!channelId) return
+    if (messages.length > 0) return
+    void fetchMessages(channelId)
+  }, [channelId, messages.length, fetchMessages])
+
   const handleSendMessage = async (content: string, gifUrl?: string, attachments?: UploadedFile[]) => {
     if ((!content.trim() && !gifUrl && !attachments?.length) || !channelId) return
 
@@ -133,7 +192,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       // Execute as interaction
       try {
         const res = await apiClient.executeInteraction({
-          type: 2, // APPLICATION_COMMAND
+          type: InteractionType.APPLICATION_COMMAND,
           channelId,
           data: {
             name: commandName,
@@ -142,11 +201,14 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         })
 
         if (res.success) {
-          show(`Command /${commandName} executed`, 'success')
+          handleInteractionResult(res.data, `Command /${commandName}`)
           return
         }
+
+        show(res.error || `Command /${commandName} failed`, 'error')
       } catch (err) {
         console.warn('Slash command failed:', err)
+        show(`Command /${commandName} failed`, 'error')
       }
     }
 
@@ -168,26 +230,11 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       })
     }
 
-    const newMessage = {
-      id: Date.now().toString(),
-      channelId,
-      authorId: 'current-user',
-      content: content || '',
-      attachments: messageAttachments,
-      embeds: [],
-      mentions: [],
-      createdAt: new Date().toISOString(),
-    }
-
-    // optimistic UI update
-    handleMessageCreate(newMessage as any)
-
-    // Try websocket first, fallback to REST API
+    // Send via REST API so persistence + gateway fanout stay consistent.
     try {
-      if (wsClient.isConnected()) {
-        wsClient.sendMessage(channelId, content)
-      } else {
-        apiClient.sendMessage(channelId, { content })
+      const result = await apiClient.sendMessage(channelId, { content, attachments: messageAttachments })
+      if (result.success && result.data) {
+        handleMessageCreate({ ...result.data, channelId } as any)
       }
     } catch (err) {
       console.warn('Send message failed:', err)
@@ -272,9 +319,41 @@ export function ChatArea({ channelId }: ChatAreaProps) {
     removeTypingUser('current-user')
   }
 
+  const handleComponentInteraction = useCallback(async (message: any, component: any, values?: string[]) => {
+    const customId = component?.custom_id || component?.customId
+    if (!customId) return
+
+    try {
+      const res = await apiClient.executeInteraction({
+        type: InteractionType.MESSAGE_COMPONENT,
+        channelId,
+        guildId: currentServer?.id,
+        message: {
+          id: message.id,
+          content: message.content,
+        },
+        data: {
+          customId,
+          componentType: component.type,
+          values: values || [],
+        },
+      })
+
+      if (!res.success) {
+        show(res.error || 'Interaction failed', 'error')
+        return
+      }
+
+      handleInteractionResult(res.data, 'Interaction')
+    } catch (err) {
+      console.warn('Component interaction failed:', err)
+      show('Interaction failed', 'error')
+    }
+  }, [channelId, currentServer?.id, handleInteractionResult, show])
+
   return (
     <motion.div
-      className={`${styles.chatArea} glass`}
+      className={styles.chatArea}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -383,8 +462,10 @@ export function ChatArea({ channelId }: ChatAreaProps) {
               const isContinuing = isSameUser && isRecent
 
               // Date separator logic
-              const msgDate = new Date(msg.createdAt)
-              const prevDate = prevMsg ? new Date(prevMsg.createdAt) : null
+              const _rawMd = msg.createdAt ? new Date(msg.createdAt) : null
+              const msgDate = _rawMd && !isNaN(_rawMd.getTime()) ? _rawMd : new Date()
+              const _rawPd = prevMsg?.createdAt ? new Date(prevMsg.createdAt) : null
+              const prevDate = _rawPd && !isNaN(_rawPd.getTime()) ? _rawPd : null
               const showDateSep = !prevDate || msgDate.toDateString() !== prevDate.toDateString()
               const today = new Date()
               const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)
@@ -408,31 +489,36 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                         id={msg.id}
                         authorId={author.id}
                         authorName={author.name}
+                        authorIsBeaconPlus={author.isBeaconPlus}
                         authorAvatar={author.avatar || undefined}
+                        authorBanner={author.banner || undefined}
                         authorStatus={author.status as any}
                         authorCustomStatus={author.customStatus}
                         authorBio={author.bio}
                         authorJoinedAt={author.joinedAt}
                         authorRoles={author.roles}
-                        authorBannerColor={author.bannerColor}
                         authorAvatarDecorationId={author.avatarDecorationId}
                         content={msg.content}
-                    timestamp={new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    attachments={msg.attachments}
-                    edited={!!msg.editedAt}
-                    isPinned={getPinnedMessages(channelId).some((p: any) => p.id === msg.id)}
-                    isEncrypted={!!msg.nonce || !!msg.encryptedContent} // Logic for E2EE
-                    showActions={true}
-                    isContinuing={isContinuing}
+                        timestamp={(() => { const _td = msg.createdAt ? new Date(msg.createdAt) : null; return _td && !isNaN(_td.getTime()) ? _td.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '' })()}
+                        attachments={msg.attachments}
+                        components={msg.components}
+                        embeds={msg.embeds}
+                        edited={!!msg.editedAt}
+                        isPinned={getPinnedMessages(channelId).some((p: any) => p.id === msg.id)}
+                        isEncrypted={!!msg.nonce || !!msg.encryptedContent} // Logic for E2EE
+                        showActions={!msg.localOnly}
+                        isContinuing={isContinuing}
                         canDelete={msg.authorId === 'current-user' || (!!user && (msg.authorId === user.id || msg.author?.id === user.id))}
                         canEdit={msg.authorId === 'current-user' || (!!user && (msg.authorId === user.id || msg.author?.id === user.id))}
                         onDelete={() => handleDeleteMessage(msg.id)}
                         onEdit={() => handleStartEditingMessage(msg.id, msg.content)}
                         onPin={() => handleTogglePin(msg)}
-                        onReaction={(emoji) => {
+                        onComponentInteraction={(component, values) => handleComponentInteraction(msg, component, values)}
+                        onReaction={msg.localOnly ? undefined : async (emoji) => {
                       const target = messages.find((m: any) => m.id === msg.id)
                       if (!target) return
-                      const existingReactions = target.reactions || []
+                      const previousReactions = target.reactions || []
+                      const existingReactions = previousReactions
                       const reactionExistsForUser = (r: any) => {
                         if (r.users && Array.isArray(r.users)) return !!(user && r.users.includes(user.id))
                         return !!r.userReacted
@@ -447,9 +533,10 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                           const name = r.emoji?.name || r.emoji
                           if (name !== emoji) return r
                           const userReacted = !reactionExistsForUser(r)
-                          const count = userReacted ? (r.count || (r.users ? r.users.length : 0)) + 1 : Math.max(0, (r.count || (r.users ? r.users.length : 1)) - 1)
+                          const currentCount = r.count || (r.users ? r.users.length : 0)
+                          const count = userReacted ? currentCount + 1 : Math.max(0, currentCount - 1)
                           return { ...r, emoji: emoji, userReacted, count }
-                        })
+                        }).filter((r: any) => (r.count || (r.users ? r.users.length : 0)) > 0)
                       } else {
                         newReactions = [...existingReactions, { emoji, count: 1, userReacted: true }]
                       }
@@ -457,12 +544,15 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                       try {
                         const existed = !!found && reactionExistsForUser(found)
                         if (existed) {
-                          void apiClient.removeReaction(channelId, msg.id, emoji)
+                          await apiClient.removeReaction(channelId, msg.id, emoji)
                         } else {
-                          void apiClient.addReaction(channelId, msg.id, emoji)
+                          await apiClient.addReaction(channelId, msg.id, emoji)
                         }
 
-                      } catch (err) { console.warn('Persist reaction failed', err) }
+                      } catch (err) {
+                        handleMessageUpdate(channelId, msg.id, { reactions: previousReactions })
+                        console.warn('Persist reaction failed', err)
+                      }
                     }}
                       />
                     )
@@ -486,7 +576,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         </button>
       )}
 
-      <div style={{ marginTop: 'auto', marginBottom: 8, paddingLeft: 16 }}>
+      <div style={{ paddingLeft: 16 }}>
         <TypingIndicator channelId={channelId} />
       </div>
 

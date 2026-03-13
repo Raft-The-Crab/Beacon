@@ -6,6 +6,7 @@
   position: relative;
   border-radius: 18px;
   margin: 2px 8px;
+  animation: messageFadeIn 0.2s ease-out;
 }
 
 .withActions {
@@ -38,6 +39,7 @@
   background: transparent;
   border-color: transparent;
   padding-top: 4px;
+  max-width: min(100%, 860px);
 }
 
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Avatar ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
@@ -81,12 +83,81 @@
 
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Content ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 .content {
-  flex: 1;
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  padding: 10px 12px 12px;
+  width: auto;
+  max-width: min(72vw, 700px);
+  padding: 9px 11px 10px;
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
   border: 1px solid rgba(255, 255, 255, 0.05);
+  animation: bubbleRiseIn 0.24s ease-out;
+}
+
+.plusBubble {
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 24px rgba(10, 14, 30, 0.28);
+}
+
+.plusBubbleIntensityLow {
+  filter: saturate(0.95) brightness(0.98);
+}
+
+.plusBubbleIntensityMedium {
+  filter: saturate(1.08) brightness(1);
+}
+
+.plusBubbleIntensityHigh {
+  filter: saturate(1.24) brightness(1.03);
+}
+
+.plusBubbleReef {
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 247, 137, 0.46) 0 20%, transparent 43%),
+    radial-gradient(circle at 84% 30%, rgba(74, 208, 255, 0.34) 0 18%, transparent 42%),
+    radial-gradient(circle at 58% 82%, rgba(255, 166, 91, 0.28) 0 16%, transparent 40%),
+    linear-gradient(150deg, rgba(255, 232, 102, 0.28), rgba(44, 186, 255, 0.26), rgba(255, 140, 100, 0.22));
+  border-color: rgba(255, 226, 96, 0.5);
+  box-shadow: 0 10px 26px rgba(20, 70, 120, 0.32), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  animation: reefFloat 5.4s ease-in-out infinite;
+}
+
+.plusBubbleJelly {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 120, 196, 0.34) 0 22%, transparent 45%),
+    radial-gradient(circle at 78% 76%, rgba(99, 176, 255, 0.34) 0 20%, transparent 48%),
+    linear-gradient(140deg, rgba(255, 114, 176, 0.2), rgba(127, 119, 255, 0.24), rgba(106, 234, 255, 0.2));
+  border-color: rgba(165, 173, 255, 0.48);
+  box-shadow: 0 12px 30px rgba(45, 35, 98, 0.34), inset 0 0 16px rgba(255, 255, 255, 0.1);
+  animation: jellyPulse 3.8s ease-in-out infinite;
+}
+
+.plusBubbleComic {
+  background:
+    repeating-linear-gradient(-24deg, rgba(255, 255, 255, 0.09) 0 2px, transparent 2px 12px),
+    linear-gradient(130deg, rgba(255, 106, 92, 0.24), rgba(255, 201, 78, 0.22), rgba(86, 228, 130, 0.22));
+  border-color: rgba(255, 208, 111, 0.5);
+  box-shadow: 0 10px 24px rgba(92, 48, 24, 0.25), inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+  animation: comicPop 2.2s steps(2, end) infinite;
+}
+
+.plusBubbleAurora {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(168, 85, 247, 0.16));
+  border-color: rgba(125, 211, 252, 0.25);
+}
+
+.plusBubblePrism {
+  background: linear-gradient(140deg, rgba(236, 72, 153, 0.13), rgba(99, 102, 241, 0.18), rgba(16, 185, 129, 0.12));
+  border-color: rgba(165, 180, 252, 0.28);
+}
+
+.plusBubbleCarbon {
+  background:
+    linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(30, 41, 59, 0.95)),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 6px);
+  border-color: rgba(56, 189, 248, 0.25);
 }
 
 .header {
@@ -148,9 +219,67 @@
   line-height: 1.4;
   margin: 0;
   word-break: break-word;
+  overflow-wrap: break-word;
   font-size: 15px;
   white-space: pre-wrap;
   font-weight: 400;
+}
+
+@keyframes messageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bubbleRiseIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes reefFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes jellyPulse {
+  0%,
+  100% {
+    filter: saturate(1);
+  }
+
+  50% {
+    filter: saturate(1.22);
+  }
+}
+
+@keyframes comicPop {
+  0%,
+  100% {
+    background-size: auto, 100% 100%;
+  }
+
+  50% {
+    background-size: auto, 108% 108%;
+  }
 }
 
 .text code {
@@ -202,7 +331,9 @@
   border-left: 3px solid var(--beacon-brand);
   box-shadow: var(--shadow-sm);
   position: relative;
-  overflow: hidden;
+    overflow: hidden;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .translationDivider {
@@ -303,6 +434,35 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.selectWrapper {
+  min-width: 220px;
+  max-width: 320px;
+  flex: 1 1 220px;
+}
+
+.selectMenu {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-default);
+  background: rgba(24, 26, 32, 0.92);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+}
+
+.selectMenu:focus {
+  border-color: var(--beacon-brand);
+  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
+}
+
+.selectMenu:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .componentButton {
@@ -513,7 +673,7 @@
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  transition: all 0.1s ease;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
   user-select: none;
   min-height: 28px;
 }
@@ -546,7 +706,7 @@
 .superReaction {
   background: linear-gradient(135deg, rgba(235, 69, 158, 0.2), rgba(88, 101, 242, 0.2));
   border: 1px solid rgba(235, 69, 158, 0.4);
-  animation: superGlow 2s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(235, 69, 158, 0.25);
 }
 
 .superReaction:hover {
@@ -737,7 +897,6 @@
 
 .quickReactionBtn:hover {
   background: rgba(79, 84, 92, 0.24);
-  transform: scale(1.05);
 }
 
 .quickReactionBtn:active {
@@ -766,6 +925,11 @@
 
   .text {
     font-size: 14px;
+  }
+
+  .content {
+    width: min(100%, calc(100vw - 96px));
+    max-width: min(100%, calc(100vw - 96px));
   }
 
   .imageAttachment {

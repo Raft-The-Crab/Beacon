@@ -1,7 +1,7 @@
 .container {
   display: flex;
   height: 85vh;
-  max-height: 85vh;
+  max-height: min(85vh, calc(100dvh - 24px));
   background: var(--bg-panel, #232428);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -332,59 +332,124 @@
 
 @media (max-width: 768px) {
   .container {
-    gap: 16px;
-  }
-
-  .header {
-    text-align: center;
-  }
-
-  .tabs {
-    flex-wrap: wrap;
-  }
-
-  .tab {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
-  .sectionHeader {
     flex-direction: column;
-    align-items: flex-start;
+    height: calc(100dvh - 12px);
+    max-height: calc(100dvh - 12px);
+    border-radius: 14px;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: 10px 10px 8px;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
     gap: 8px;
   }
 
-  .sectionHeader h2 {
-    font-size: 15px;
+  .sidebarHeader {
+    padding: 0 6px;
   }
 
-  .channelItem,
-  .memberItem {
-    padding: 10px;
+  .sidebarContent {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 6px;
+    scrollbar-width: none;
   }
 
-  .memberAvatar {
-    width: 28px;
-    height: 28px;
+  .sidebarContent::-webkit-scrollbar {
+    display: none;
   }
 
-  .memberName {
+  .sidebarItem,
+  .sidebarItemDanger {
+    white-space: nowrap;
+    min-width: max-content;
+    padding: 8px 10px;
+    font-size: 13px;
+    gap: 8px;
+  }
+
+  .sidebarItem:hover,
+  .sidebarItemDanger:hover {
+    transform: none;
+  }
+
+  .sidebarCategory,
+  .sidebarSeparator {
+    display: none;
+  }
+
+  .escButton {
+    top: 10px;
+    right: 10px;
+    gap: 4px;
+  }
+
+  .escCircle {
+    width: 32px;
+    height: 32px;
+  }
+
+  .escText {
+    display: none;
+  }
+
+  .scrollArea {
+    padding: 42px 14px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .section {
+    max-width: 100%;
+    margin-bottom: 24px;
+  }
+
+  .headerTitle {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+
+  .avatarSection {
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .uploadHint {
     font-size: 13px;
   }
 
-  .memberRole {
-    font-size: 11px;
+  .listItem {
+    padding: 12px;
   }
 
-  .modal {
-    padding: 16px;
+  .itemName {
+    font-size: 15px;
   }
 
-  .formGroup {
-    margin-bottom: 12px;
+  .listItemActions {
+    gap: 8px;
   }
 
-  .actions {
+  .iconBtn,
+  .iconBtnDanger {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    border-radius: 10px;
+  }
+
+  .headerTitle {
+    font-size: 20px;
+  }
+
+  .headerRow {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 }

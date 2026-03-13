@@ -10,6 +10,7 @@ import { useTranslationStore } from '../../stores/useTranslationStore'
 interface UserPopoverCardProps {
     username: string
     avatar?: string
+    banner?: string
     status?: 'online' | 'idle' | 'dnd' | 'offline'
     customStatus?: string
     bio?: string
@@ -17,7 +18,6 @@ interface UserPopoverCardProps {
     isBot?: boolean
     joinedAt?: string
     roles?: { name: string; color: string }[]
-    bannerColor?: string
     avatarDecorationId?: string | null
     profileEffectId?: string | null
     children: React.ReactNode  // The trigger element
@@ -28,6 +28,7 @@ interface UserPopoverCardProps {
 export function UserPopoverCard({
     username,
     avatar,
+    banner,
     status = 'online',
     customStatus,
     bio,
@@ -35,7 +36,6 @@ export function UserPopoverCard({
     isBot,
     joinedAt,
     roles = [],
-    bannerColor = '#5865f2',
     avatarDecorationId,
     children,
     onMessage,
@@ -98,7 +98,10 @@ export function UserPopoverCard({
         return () => document.removeEventListener('keydown', handleEsc)
     }, [isOpen])
 
-    const dateStr = joinedAt ? new Date(joinedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Jan 1, 2024'
+    const parsedJoinedAt = joinedAt ? new Date(joinedAt) : null
+    const dateStr = parsedJoinedAt && !Number.isNaN(parsedJoinedAt.getTime())
+        ? parsedJoinedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+        : 'Unknown'
     const memberSince = t('user_profile.joined_at', { date: dateStr, defaultValue: `Member since ${dateStr}` })
     const hasAdmin = (badges || []).includes('admin')
     const hasVerified = (badges || []).includes('verified')
@@ -114,15 +117,17 @@ export function UserPopoverCard({
                     {isOpen && (
                         <motion.div
                             ref={popoverRef}
-                            className="z-50 w-72 overflow-hidden rounded-2xl border border-white/15 bg-zinc-950/95 text-zinc-100 shadow-[0_30px_80px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
+                            className="fixed z-9999 w-72 overflow-hidden rounded-2xl border border-white/15 bg-zinc-950/95 text-zinc-100 shadow-[0_30px_80px_rgba(0,0,0,0.5)] backdrop-blur-2xl"
                             style={{ top: position.top, left: position.left }}
                             initial={{ opacity: 0, scale: 0.9, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 10 }}
                             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
                         >
-                            <div className="h-20 w-full" style={{ background: `linear-gradient(135deg, ${bannerColor}, color-mix(in srgb, ${bannerColor} 45%, #0b1220))` }} />
-
+                            <div
+                                className="h-20 w-full bg-zinc-900/90"
+                                style={banner ? { backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                            />
                             <div className="-mt-7 px-4">
                                 <Avatar src={avatar} alt={username} size="lg" status={status} username={username} avatarDecorationId={avatarDecorationId} />
                             </div>
@@ -170,14 +175,34 @@ export function UserPopoverCard({
 
                                 <div className="h-px bg-white/10" />
 
-                                <div className="flex items-center gap-2">
-                                    <button className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-zinc-200 transition hover:border-white/30 hover:bg-white/10" onClick={onMessage} title={t('user_profile.message', { defaultValue: 'Message' })}>
-                                        <MessageSquare size={16} />
-                                    </button>
-                                    <button className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-zinc-200 transition hover:border-white/30 hover:bg-white/10" onClick={onAddFriend} title={t('user_profile.add_friend', { defaultValue: 'Add Friend' })}>
-                                        <UserPlus size={16} />
-                                    </button>
-                                </div>
+                                {(onMessage || onAddFriend) && (
+                                    <div className="flex items-center gap-2">
+                                        {onMessage && (
+                                            <button
+                                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-zinc-200 transition hover:border-white/30 hover:bg-white/10"
+                                                onClick={(event) => {
+                                                    event.stopPropagation()
+                                                    onMessage()
+                                                }}
+                                                title={t('user_profile.message', { defaultValue: 'Message' })}
+                                            >
+                                                <MessageSquare size={16} />
+                                            </button>
+                                        )}
+                                        {onAddFriend && (
+                                            <button
+                                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-zinc-200 transition hover:border-white/30 hover:bg-white/10"
+                                                onClick={(event) => {
+                                                    event.stopPropagation()
+                                                    onAddFriend()
+                                                }}
+                                                title={t('user_profile.add_friend', { defaultValue: 'Add Friend' })}
+                                            >
+                                                <UserPlus size={16} />
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     )}

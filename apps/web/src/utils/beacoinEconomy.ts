@@ -58,7 +58,7 @@ export interface BeaconPlusFeatures {
   // Customization (ALL INCLUDED)
   animatedAvatar: true
   animatedEmoji: true
-  customBanner: true
+  profileMediaAssets: true
   customThemes: true // Unlimited
   profileEffects: true
   customTag: true
@@ -82,7 +82,7 @@ export interface BeaconPlusFeatures {
   vanityURL: true
   customInvite: true
   welcomeScreen: true
-  bannerBackground: true
+  mediaRichBranding: true
 }
 
 export const FREE_FEATURES = {

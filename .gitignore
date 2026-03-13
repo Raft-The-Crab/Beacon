@@ -54,5 +54,8 @@ node_modules/@prisma/
 # Desktop/Tauri build artifacts
 apps/desktop/src-tauri/target/
 
+# Server-local operational config
+apps/server/config/*.local.json
+
 # Local one-off scripts
 apply_ui_overhaul.js

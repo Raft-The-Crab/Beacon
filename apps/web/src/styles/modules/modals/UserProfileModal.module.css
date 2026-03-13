@@ -118,6 +118,13 @@
   opacity: 0.5;
 }
 
+.handle {
+  margin: -2px 0 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
 .customStatus {
   font-size: 17px;
   color: var(--text-secondary);
@@ -166,12 +173,13 @@
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .buttonGroup {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .botHint {

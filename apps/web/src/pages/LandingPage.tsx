@@ -108,8 +108,8 @@ export function LandingPage() {
       </div>
 
       <div className={styles.statCard}>
-        <div className={styles.statValue}>1.2M</div>
-        <div className={styles.statLabel}>{t('landing.status.active_nodes', { count: '1.2M' })}</div>
+        <div className={styles.statValue}>LIVE</div>
+        <div className={styles.statLabel}>Network telemetry is shown only when live metrics are available.</div>
       </div>
     </div>
   )

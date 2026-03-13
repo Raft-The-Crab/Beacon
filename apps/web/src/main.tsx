@@ -3,6 +3,11 @@ import App from './App'
 
 import './styles/index.css'
 
+// simple-peer/randombytes expects a Node-style global in browser contexts.
+if (typeof (globalThis as any).global === 'undefined') {
+  ;(globalThis as any).global = globalThis
+}
+
 // Suppress the React DevTools warning for a completely pristine console output as requested
 if (import.meta.env.DEV) {
   const originalInfo = console.info;

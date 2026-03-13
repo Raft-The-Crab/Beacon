@@ -5,12 +5,13 @@
   "scripts": {
     "dev": "cap sync && cap open android",
     "build": "cap sync && cap copy android",
-    "build:apk": "npm run build && cd android && gradlew.bat assembleRelease",
-    "build:bundle": "npm run build && cd android && gradlew.bat bundleRelease",
-    "build:debug": "npm run build && cd android && gradlew.bat assembleDebug",
+    "android:ensure-sdk": "node ./scripts/ensureAndroidSdk.js",
+    "build:apk": "npm run build && npm run android:ensure-sdk && cd android && gradlew.bat assembleRelease",
+    "build:bundle": "npm run build && npm run android:ensure-sdk && cd android && gradlew.bat bundleRelease",
+    "build:debug": "npm run build && npm run android:ensure-sdk && cd android && gradlew.bat assembleDebug",
     "sync": "cap sync android",
     "open": "cap open android",
-    "clean": "cd android && gradlew.bat clean",
+    "clean": "npm run android:ensure-sdk && cd android && gradlew.bat clean",
     "lint": "eslint src --ext ts,tsx"
   },
   "dependencies": {

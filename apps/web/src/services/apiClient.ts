@@ -23,11 +23,11 @@ class ApiClient {
             import.meta.env.VITE_BACKEND_URL ||
             '';
         
-        if (configUrl) {
-            this.baseUrl = this.normalizeApiBaseUrl(configUrl);
-        } else if (isDev) {
+        if (isDev) {
             // Development: rely on proxy configured in vite.config.ts
             this.baseUrl = '/api';
+        } else if (configUrl) {
+            this.baseUrl = this.normalizeApiBaseUrl(configUrl);
         } else {
             // Production: use configured URL or default
             this.baseUrl = this.normalizeApiBaseUrl(`${window.location.origin}/api`);
@@ -214,8 +214,28 @@ class ApiClient {
         return this.request('PATCH', '/users/me', updates);
     }
 
-    async sendMessage(channelId: string, data: { content: string }) {
+    async sendMessage(channelId: string, data: { content: string, attachments?: any[] }) {
         return this.request('POST', `/channels/${channelId}/messages`, data);
+    }
+
+    async getNotifications() {
+        return this.request('GET', '/users/@me/notifications');
+    }
+
+    async markNotificationRead(id: string) {
+        return this.request('PATCH', `/users/@me/notifications/${id}/read`);
+    }
+
+    async markAllNotificationsRead() {
+        return this.request('POST', '/users/@me/notifications/read-all');
+    }
+
+    async deleteNotification(id: string) {
+        return this.request('DELETE', `/users/@me/notifications/${id}`);
+    }
+
+    async clearNotifications() {
+        return this.request('DELETE', '/users/@me/notifications');
     }
 
     async updateMessage(channelId: string, messageId: string, content: string) {
@@ -263,8 +283,16 @@ class ApiClient {
         return this.request('GET', `/guilds/${guildId}/invites`);
     }
 
+    async createInvite(guildId: string) {
+        return this.request('POST', `/guilds/${guildId}/invites`, {});
+    }
+
     async deleteInvite(guildId: string, inviteCode: string) {
         return this.request('DELETE', `/guilds/${guildId}/invites/${inviteCode}`);
+    }
+
+    async joinByInvite(inviteCode: string) {
+        return this.request('POST', `/guilds/invites/${encodeURIComponent(inviteCode)}/join`, {});
     }
 
     async getAuditLogs(guildId: string) {
@@ -318,12 +346,24 @@ class ApiClient {
 
     // -- SLASH COMMANDS --
     async getSlashCommands(guildId?: string) {
-        const url = guildId ? `/guilds/${guildId}/commands` : '/applications/global/commands';
-        return this.request('GET', url);
+        const query = guildId ? `?guildId=${encodeURIComponent(guildId)}` : '';
+        return this.request('GET', `/interactions/commands${query}`);
     }
 
     async getGuildRoles(guildId: string) {
         return this.request('GET', `/guilds/${guildId}/roles`);
+    }
+
+    async createGuildRole(guildId: string, data: { name: string; color?: string; permissions?: string | number }) {
+        return this.request('POST', `/guilds/${guildId}/roles`, data);
+    }
+
+    async updateGuildRole(guildId: string, roleId: string, data: { name?: string; color?: string; permissions?: string | number; position?: number }) {
+        return this.request('PATCH', `/guilds/${guildId}/roles/${roleId}`, data);
+    }
+
+    async deleteGuildRole(guildId: string, roleId: string) {
+        return this.request('DELETE', `/guilds/${guildId}/roles/${roleId}`);
     }
 
     async executeInteraction(data: any) {

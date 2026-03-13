@@ -13,7 +13,7 @@ export function APIReference() {
         <section className={styles.docsSection}>
           <h2>Base URL</h2>
           <div className={styles.infoBox}>
-            <code>https://api.beacon.chat/v1</code>
+            <code>https://api.beacon.qzz.io/api</code>
           </div>
           <p>
             All requests must be made over HTTPS. Responses are JSON. We follow standard HTTP status codes —

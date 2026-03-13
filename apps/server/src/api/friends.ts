@@ -5,6 +5,7 @@
 import { Router, Response } from 'express';
 import { prisma } from '../db';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { publishGatewayEvent } from '../services/gatewayPublisher';
 
 const router = Router();
 
@@ -28,7 +29,13 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
       }
     });
 
-    const formatted = friends.map(f => (f.userId === userId ? f.friend : f.user));
+    const byId = new Map<string, any>()
+    for (const friendship of friends) {
+      const other = friendship.userId === userId ? friendship.friend : friendship.user
+      if (other?.id) byId.set(other.id, other)
+    }
+
+    const formatted = Array.from(byId.values())
     return res.json(formatted);
   } catch (error) {
     console.error('Get friends error:', error);
@@ -64,14 +71,37 @@ router.post('/request', authenticate, async (req: AuthRequest, res: Response) =>
     if (!prisma) return res.status(500).json({ error: 'Database not connected' });
 
     // Validate input
-    const { username, discriminator } = req.body;
-    if (!username || !discriminator || typeof username !== 'string' || typeof discriminator !== 'string') {
-      return res.status(400).json({ error: 'Invalid username or discriminator' });
+    const rawUsername = req.body?.username;
+    const rawDiscriminator = req.body?.discriminator;
+
+    if (!rawUsername || typeof rawUsername !== 'string') {
+      return res.status(400).json({ error: 'Username is required' });
     }
 
-    const targetUser = await prisma.user.findFirst({
-      where: { username, discriminator }
-    });
+    const username = rawUsername.trim();
+    const discriminator = typeof rawDiscriminator === 'string' ? rawDiscriminator.trim() : '';
+
+    let targetUser: any = null;
+
+    if (discriminator) {
+      targetUser = await prisma.user.findFirst({
+        where: {
+          username: { equals: username, mode: 'insensitive' },
+          discriminator,
+        }
+      });
+    } else {
+      const matches = await prisma.user.findMany({
+        where: { username: { equals: username, mode: 'insensitive' } },
+        take: 2,
+      });
+
+      if (matches.length > 1) {
+        return res.status(409).json({ error: 'Multiple users match this username. Include discriminator (name#0000).' });
+      }
+
+      targetUser = matches[0] || null;
+    }
 
     if (!targetUser) {
       return res.status(404).json({ error: 'User not found' });
@@ -92,7 +122,27 @@ router.post('/request', authenticate, async (req: AuthRequest, res: Response) =>
     });
 
     if (existing) {
-      return res.status(400).json({ error: 'Friendship or request already exists' });
+      // If the target already sent a pending request to the current user, accept it.
+      if (existing.status === 0 && existing.userId === targetId && existing.friendId === userId) {
+        await prisma.friendship.update({
+          where: { id: existing.id },
+          data: { status: 1 },
+        })
+
+        return res.json({
+          success: true,
+          accepted: true,
+          friendshipId: existing.id,
+          userId,
+          friendId: targetId,
+        })
+      }
+
+      if (existing.status === 0) {
+        return res.status(409).json({ error: 'Friend request already pending' })
+      }
+
+      return res.status(409).json({ error: 'Users are already friends' });
     }
 
     const friendRequest = await prisma.friendship.create({
@@ -102,14 +152,14 @@ router.post('/request', authenticate, async (req: AuthRequest, res: Response) =>
         status: 0
       },
       include: {
-        friend: { select: { id: true, username: true, discriminator: true, avatar: true } },
-        user: { select: { id: true, username: true, discriminator: true, avatar: true } }
+        friend: { select: { id: true, username: true, displayName: true, discriminator: true, avatar: true } },
+        user: { select: { id: true, username: true, displayName: true, discriminator: true, avatar: true } }
       }
     });
 
     // Create notification for the recipient
     try {
-      const senderName = friendRequest.user.username;
+      const senderName = friendRequest.user.displayName || friendRequest.user.username;
       const existingNotif = await prisma.notification.findFirst({
         where: {
           userId: targetId,
@@ -123,7 +173,7 @@ router.post('/request', authenticate, async (req: AuthRequest, res: Response) =>
       });
 
       if (!existingNotif) {
-        await prisma.notification.create({
+        const notification = await prisma.notification.create({
           data: {
             userId: targetId,
             type: 'FRIEND_REQUEST',
@@ -134,6 +184,16 @@ router.post('/request', authenticate, async (req: AuthRequest, res: Response) =>
             iconUrl: friendRequest.user.avatar
           }
         });
+
+        await publishGatewayEvent('NOTIFICATION_CREATE', {
+          id: notification.id,
+          type: 'friend_request',
+          title: notification.title,
+          body: notification.body,
+          createdAt: notification.createdAt,
+          avatarUrl: notification.iconUrl,
+          userId,
+        }, null, [targetId]);
       }
     } catch (notifError) {
       console.error('Failed to create friend request notification:', notifError);
@@ -175,13 +235,14 @@ router.put('/:friendId/accept', authenticate, async (req: AuthRequest, res: Resp
 
     // Create notification for the requester
     try {
-      const acceptorName = (await prisma.user.findUnique({ where: { id: userId }, select: { username: true, avatar: true } }))?.username || 'Unknown';
-      const acceptorAvatar = (await prisma.user.findUnique({ where: { id: userId }, select: { avatar: true } }))?.avatar;
+      const acceptor = await prisma.user.findUnique({ where: { id: userId }, select: { username: true, displayName: true, avatar: true } });
+      const acceptorName = acceptor?.displayName || acceptor?.username || 'Unknown';
+      const acceptorAvatar = acceptor?.avatar;
       
       const existingNotif = await prisma.notification.findFirst({
         where: {
           userId: friendId,
-          type: 'FRIEND_ACCEPTED',
+          type: 'SYSTEM_ALERT',
           read: false,
           metadata: {
             path: ['relatedUserId'],
@@ -191,10 +252,10 @@ router.put('/:friendId/accept', authenticate, async (req: AuthRequest, res: Resp
       });
 
       if (!existingNotif) {
-        await prisma.notification.create({
+        const notification = await prisma.notification.create({
           data: {
             userId: friendId,
-            type: 'FRIEND_ACCEPTED',
+            type: 'SYSTEM_ALERT',
             title: `${acceptorName} accepted your friend request`,
             body: `You're now friends`,
             read: false,
@@ -202,6 +263,16 @@ router.put('/:friendId/accept', authenticate, async (req: AuthRequest, res: Resp
             iconUrl: acceptorAvatar
           }
         });
+
+        await publishGatewayEvent('NOTIFICATION_CREATE', {
+          id: notification.id,
+          type: 'friend_accept',
+          title: notification.title,
+          body: notification.body,
+          createdAt: notification.createdAt,
+          avatarUrl: notification.iconUrl,
+          userId,
+        }, null, [friendId]);
       }
     } catch (notifError) {
       console.error('Failed to create friend accepted notification:', notifError);

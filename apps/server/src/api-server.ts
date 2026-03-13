@@ -34,6 +34,29 @@ const app = express()
 app.use(compression({ level: 6, threshold: 10 * 1024 })) // Gzip compression > 10kb
 app.use(requestTimer)
 
+const configuredCorsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
+    : ['http://localhost:5173', 'https://beacon.qzz.io', 'http://127.0.0.1:5173']
+
+const devTunnelRegex = /^https:\/\/[a-z0-9-]+\.[a-z0-9-]*devtunnels\.ms$/i
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin) {
+            callback(null, true)
+            return
+        }
+
+        if (configuredCorsOrigins.includes(origin) || devTunnelRegex.test(origin)) {
+            callback(null, true)
+            return
+        }
+
+        callback(new Error(`CORS blocked origin: ${origin}`))
+    },
+    credentials: true,
+}))
+
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -59,11 +82,29 @@ app.use(responseWrapper)
 
 const server = http.createServer(app)
 const PORT = process.env.PORT || 8080
+let lastPostgresHealthErrorLogAt = 0
 
-app.use(cors({
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173', 'https://beacon.qzz.io', 'http://127.0.0.1:5173'],
-    credentials: true,
-}))
+async function connectPostgresWithRetry(maxAttempts = 5, baseDelayMs = 800): Promise<boolean> {
+    if (!prisma) return false
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            await prisma.$connect()
+            console.log(`✅ PostgreSQL: Connected (attempt ${attempt}/${maxAttempts})`)
+            return true
+        } catch (error) {
+            const delay = baseDelayMs * attempt
+            const reason = error instanceof Error ? error.message : String(error)
+            console.warn(`⚠️  PostgreSQL connection attempt ${attempt}/${maxAttempts} failed: ${reason}`)
+            if (attempt < maxAttempts) {
+                await new Promise((resolve) => setTimeout(resolve, delay))
+            }
+        }
+    }
+
+    return false
+}
+
 app.use(express.json({ limit: profile.jsonLimitMB }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(cookieParser())
@@ -81,13 +122,19 @@ app.get('/health', async (_req: express.Request, res: express.Response) => {
         const postgresStart = Date.now()
         const postgresConnected = !!prisma
         let postgresLatency = -1
+        let postgresHealthy = postgresConnected
         try {
             if (prisma) {
                 await prisma.$queryRaw`SELECT 1`
                 postgresLatency = Date.now() - postgresStart
             }
         } catch (e) {
-            console.warn('Postgres health check failed:', e)
+            postgresHealthy = false
+            const now = Date.now()
+            if (now - lastPostgresHealthErrorLogAt > 60_000) {
+                console.warn('Postgres health check failed:', e)
+                lastPostgresHealthErrorLogAt = now
+            }
         }
 
         const redisStatus = redis.status === 'ready'
@@ -101,7 +148,7 @@ app.get('/health', async (_req: express.Request, res: express.Response) => {
                 heapUsed: `${Math.round(mem.heapUsed / 1024 / 1024)} MB`,
             },
             services: {
-                postgres: postgresConnected ? 'connected' : 'unavailable',
+                postgres: postgresHealthy ? 'connected' : 'degraded',
                 postgresLatency: postgresLatency > -1 ? `${postgresLatency}ms` : 'N/A',
                 mongodb: 'connected',
                 redis: redisStatus ? 'connected' : 'unavailable',
@@ -207,11 +254,9 @@ const start = async () => {
         console.log(`   Memory limit: ${process.env.NODE_OPTIONS || 'default'}`)
         try { await connectMongo() } catch (e) { console.warn('⚠️  MongoDB connection failed', e) }
         if (prisma) {
-            try {
-                await prisma.$connect()
-                console.log('✅ PostgreSQL: Connected')
-            } catch (e) {
-                console.warn('⚠️  PostgreSQL connection failed:', e)
+            const postgresConnected = await connectPostgresWithRetry(6)
+            if (!postgresConnected) {
+                console.warn('⚠️  PostgreSQL unavailable at startup. Server continues in degraded mode and will retry on next queries.')
             }
         }
         // Initialize Redis in background — don't block server startup

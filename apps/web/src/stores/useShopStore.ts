@@ -15,11 +15,11 @@ const FALLBACK_MARKETPLACE = {
         { id: 'deco-ember-crown', name: 'Ember Crown', price: 1000, color: '#f04747' },
     ],
     themes: [
-        { id: 'theme-midnight', name: 'Midnight', price: 1200, bannerColor: '#0f0e1a', accentColor: '#5865f2', description: 'Deep midnight blue with beacon brand accent' },
-        { id: 'theme-aurora', name: 'Aurora', price: 1500, bannerColor: '#2a1a3a', accentColor: '#c471ed', description: 'Ethereal aurora borealis inspired theme' },
-        { id: 'theme-sunset', name: 'Sunset', price: 1200, bannerColor: '#3a1a1a', accentColor: '#f0743d', description: 'Warm golden sunset with amber accents' },
-        { id: 'theme-ocean', name: 'Ocean', price: 1300, bannerColor: '#0a1e2a', accentColor: '#00d9ff', description: 'Serene deep ocean with cyan waves' },
-        { id: 'theme-forest', name: 'Forest', price: 1200, bannerColor: '#0f2a1a', accentColor: '#23a559', description: 'Lush forest green with nature vibes' },
+        { id: 'theme-midnight', name: 'Midnight', price: 1200, accentColor: '#5865f2', description: 'Deep midnight blue with beacon brand accent' },
+        { id: 'theme-aurora', name: 'Aurora', price: 1500, accentColor: '#c471ed', description: 'Ethereal aurora borealis inspired theme' },
+        { id: 'theme-sunset', name: 'Sunset', price: 1200, accentColor: '#f0743d', description: 'Warm golden sunset with amber accents' },
+        { id: 'theme-ocean', name: 'Ocean', price: 1300, accentColor: '#00d9ff', description: 'Serene deep ocean with cyan waves' },
+        { id: 'theme-forest', name: 'Forest', price: 1200, accentColor: '#23a559', description: 'Lush forest green with nature vibes' },
     ],
 }
 

@@ -6,9 +6,10 @@ import {
   VolumeX, Hand, MoreVertical, Maximize2, Crown, Shield
 } from 'lucide-react'
 import { useAuthStore } from '../stores/useAuthStore'
+import { useVoiceStore } from '../stores/useVoiceStore'
+import { voiceManager } from '../services/voiceManager'
 import { Avatar } from '../components/ui'
 import { ServerSoundboard } from '../components/features/ServerSoundboard'
-import { useWebRTC } from '../hooks/useWebRTC'
 import styles from '../styles/modules/pages/VoiceChannel.module.css'
 
 interface VoiceParticipant {
@@ -29,121 +30,136 @@ export function VoiceChannel() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const channelName = searchParams.get('name') || 'Voice Channel'
-  const serverName = searchParams.get('server') || 'Server'
-  const channelId = searchParams.get('channel_id') || 'preview_channel'
+  const serverName = searchParams.get('server') || searchParams.get('guildName') || 'Server'
+  const channelId = searchParams.get('channelId') || searchParams.get('channel_id') || 'preview_channel'
+  const guildId = searchParams.get('guildId') || searchParams.get('server_id') || 'preview_guild'
   const user = useAuthStore((s) => s.user)
+  const voiceUsers = useVoiceStore((s) => s.voiceUsers)
+  const currentVoiceState = useVoiceStore((s) => s.currentVoiceState)
 
   const [isMuted, setIsMuted] = useState(false)
   const [isDeafened, setIsDeafened] = useState(false)
   const [isVideoOn, setIsVideoOn] = useState(false)
   const [isScreenSharing, setIsScreenSharing] = useState(false)
-  const [screenStream, setScreenStream] = useState<MediaStream | null>(null)
   const [isHandRaised, setIsHandRaised] = useState(false)
   const [layout, setLayout] = useState<'grid' | 'focus'>('grid')
   const [sidePanel, setSidePanel] = useState<'members' | 'chat' | 'soundboard' | null>('members')
   const [participants, setParticipants] = useState<VoiceParticipant[]>([])
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting')
-
-  const {
-    localStream,
-    peers,
-    joinChannel,
-    leaveChannel,
-    toggleAudio,
-    toggleVideo: toggleWebRTCVideo
-  } = useWebRTC(channelId)
+  const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({})
 
   // Join Voice Channel on Mount
   useEffect(() => {
     if (channelId) {
       setConnectionStatus('connecting')
-      joinChannel(channelId)
+      voiceManager.joinChannel(guildId, channelId)
         .then(() => setConnectionStatus('connected'))
         .catch(() => setConnectionStatus('failed'))
     }
-    return () => {
-      if (channelId) leaveChannel(channelId)
+
+    const onUserStream = ({ userId, stream }: { userId: string; stream: MediaStream }) => {
+      setRemoteStreams((prev) => ({ ...prev, [userId]: stream }))
     }
-  }, [channelId])
+
+    const onUserLeft = (userId: string) => {
+      setRemoteStreams((prev) => {
+        const next = { ...prev }
+        delete next[userId]
+        return next
+      })
+    }
+
+    voiceManager.on('user-stream', onUserStream)
+    voiceManager.on('user-left', onUserLeft)
+
+    return () => {
+      void voiceManager.leaveChannel()
+      voiceManager.off('user-stream', onUserStream)
+      voiceManager.off('user-left', onUserLeft)
+    }
+  }, [channelId, guildId])
+
+  useEffect(() => {
+    setIsMuted(!!currentVoiceState?.selfMute)
+    setIsDeafened(!!currentVoiceState?.selfDeaf)
+    setIsVideoOn(!!currentVoiceState?.selfVideo)
+  }, [currentVoiceState?.selfMute, currentVoiceState?.selfDeaf, currentVoiceState?.selfVideo])
 
   // Map local stream and remote peers into participants array for UI rendering
   useEffect(() => {
     if (!user) return
 
+    const localStream = voiceManager.getLocalStream()
+    const channelVoiceStates = Array.from(voiceUsers.values()).filter((state) => state.channelId === channelId)
+
     const me: VoiceParticipant = {
       id: user.id,
       username: user.username,
       avatar: user.avatar as any,
-      isMuted,
-      isDeafened,
-      isVideoOn,
-      isSpeaking: false,
+      isMuted: !!currentVoiceState?.selfMute,
+      isDeafened: !!currentVoiceState?.selfDeaf,
+      isVideoOn: !!currentVoiceState?.selfVideo,
+      isSpeaking: (currentVoiceState?.audioLevel || 0) > 0.08,
       isHandRaised,
-      isScreenSharing: !!screenStream,
+      isScreenSharing,
       role: 'member',
       stream: localStream || undefined
     }
 
-    const peerParticipants: VoiceParticipant[] = Object.keys(peers).map(peerId => ({
-      id: peerId,
-      username: `User ${peerId.substring(0, 4)}`, // Would resolve real username from store
-      isMuted: false,
-      isDeafened: false,
-      isVideoOn: peers[peerId].stream.getVideoTracks().length > 0,
-      isSpeaking: false,
+    const peerParticipants: VoiceParticipant[] = channelVoiceStates
+      .filter((state) => state.userId !== user.id)
+      .map((state) => ({
+      id: state.userId,
+      username: `User ${state.userId.substring(0, 4)}`,
+      isMuted: state.selfMute,
+      isDeafened: state.selfDeaf,
+      isVideoOn: state.selfVideo,
+      isSpeaking: (state.audioLevel || 0) > 0.08,
       isHandRaised: false,
       isScreenSharing: false,
       role: 'member',
-      stream: peers[peerId].stream
+      stream: remoteStreams[state.userId]
     }))
 
     setParticipants([me, ...peerParticipants])
-  }, [user, localStream, peers, isMuted, isDeafened, isVideoOn, isHandRaised, screenStream])
+  }, [user, voiceUsers, channelId, currentVoiceState, isHandRaised, isScreenSharing, remoteStreams])
 
   const handleLeave = () => {
+    void voiceManager.leaveChannel()
     navigate(-1)
   }
 
   const handleToggleMute = () => {
-    toggleAudio()
-    setIsMuted(!isMuted)
+    if (!currentVoiceState) return
+    const next = !currentVoiceState.selfMute
+    voiceManager.setMute(guildId, next)
+    setIsMuted(next)
   }
 
   const toggleDeafen = () => {
-    setIsDeafened((d) => {
-      const next = !d
-      if (next) setIsMuted(true)
-      return next
-    })
+    if (!currentVoiceState) return
+    const next = !currentVoiceState.selfDeaf
+    voiceManager.setDeaf(guildId, next)
+    setIsDeafened(next)
+    if (next) {
+      voiceManager.setMute(guildId, true)
+      setIsMuted(true)
+    }
   }
 
   const handleToggleVideo = () => {
-    toggleWebRTCVideo()
-    setIsVideoOn(!isVideoOn)
+    if (!currentVoiceState) return
+    const next = !currentVoiceState.selfVideo
+    voiceManager.setVideo(guildId, next)
+    setIsVideoOn(next)
   }
 
   const toggleScreenShare = async () => {
-    if (screenStream) {
-      screenStream.getTracks().forEach((track) => track.stop())
-      setScreenStream(null)
-      setIsScreenSharing(false)
-      return
-    }
-
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-      const [track] = stream.getVideoTracks()
-      if (track) {
-        track.onended = () => {
-          setScreenStream(null)
-          setIsScreenSharing(false)
-        }
-      }
-      setScreenStream(stream)
-      setIsScreenSharing(true)
+      await voiceManager.startScreenShare(guildId)
+      setIsScreenSharing((prev) => !prev)
     } catch (err) {
       console.error('Screen share failed:', err)
-      setScreenStream(null)
       setIsScreenSharing(false)
     }
   }
@@ -158,9 +174,9 @@ export function VoiceChannel() {
 
   useEffect(() => {
     return () => {
-      screenStream?.getTracks().forEach((track) => track.stop())
+      setIsScreenSharing(false)
     }
-  }, [screenStream])
+  }, [])
 
   return (
     <div className={styles.root}>
@@ -253,7 +269,7 @@ export function VoiceChannel() {
               <ChatPanel channelName={channelName} />
             )}
             {sidePanel === 'soundboard' && (
-              <ServerSoundboard guildId={searchParams.get('server_id') || 'preview_guild'} />
+              <ServerSoundboard guildId={guildId} />
             )}
           </div>
         )}

@@ -7,13 +7,8 @@ async function fetchFriendsList() {
     const { data } = await api.get('/users/me/friends')
     return data
   } catch {
-    try {
-      const { data } = await api.get('/users/@me/friends')
-      return data
-    } catch {
-      const { data } = await api.get('/friends')
-      return data
-    }
+    const { data } = await api.get('/friends')
+    return data
   }
 }
 
@@ -53,7 +48,13 @@ export const useUserListStore = create<UserListState>((set, get) => ({
   fetchFriends: async () => {
     try {
       const data = await fetchFriendsList()
-      const friendsList = (Array.isArray(data) ? data : []).map((friend: any) => ({
+      const deduped = new Map<string, any>()
+      for (const friend of Array.isArray(data) ? data : []) {
+        const key = String(friend?.id || `${friend?.username || ''}#${friend?.discriminator || '0000'}`)
+        if (!key) continue
+        deduped.set(key, friend)
+      }
+      const friendsList = Array.from(deduped.values()).map((friend: any) => ({
         ...friend,
         discriminator: friend?.discriminator || '0000',
         status: friend?.status || 'offline'
@@ -67,7 +68,13 @@ export const useUserListStore = create<UserListState>((set, get) => ({
   eagerLoad: async () => {
     try {
       const data = await fetchFriendsList()
-      const friendsList = (Array.isArray(data) ? data : []).map((friend: any) => ({
+      const deduped = new Map<string, any>()
+      for (const friend of Array.isArray(data) ? data : []) {
+        const key = String(friend?.id || `${friend?.username || ''}#${friend?.discriminator || '0000'}`)
+        if (!key) continue
+        deduped.set(key, friend)
+      }
+      const friendsList = Array.from(deduped.values()).map((friend: any) => ({
         ...friend,
         discriminator: friend?.discriminator || '0000',
         status: friend?.status || 'offline'

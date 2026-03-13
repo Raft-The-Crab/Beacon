@@ -118,13 +118,41 @@
   padding: 8px 12px;
   border-top: 1px solid var(--border-color);
   display: flex;
+  gap: 8px;
   justify-content: flex-end;
   align-items: center;
 }
 
-.tenorLogo {
+.poweredBy {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.giphyLogo {
   height: 16px;
-  opacity: 0.6;
+  opacity: 0.75;
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: min(94vw, 360px);
+    height: min(62vh, 380px);
+  }
+
+  .gifGrid {
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 6px;
+  }
+
+  .header {
+    padding: 10px;
+  }
+
+  .footer {
+    padding: 6px 10px;
+  }
 }
 
 

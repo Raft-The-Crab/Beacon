@@ -35,6 +35,14 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; group: string }[]
   { id: 'insights', label: 'Insights', icon: <BarChart2 size={15} />, group: 'Integrations' },
 ]
 
+type GuildRole = {
+  id: string
+  name: string
+  color?: string | null
+  permissions?: string
+  position?: number
+}
+
 export function ServerSettings() {
   const navigate = useNavigate()
   const { serverId: routeServerId } = useParams<{ serverId: string }>()
@@ -51,8 +59,13 @@ export function ServerSettings() {
   // -- State for Live Sub-Views --
   const [invites, setInvites] = useState<any[]>([])
   const [loadingInvites, setLoadingInvites] = useState(false)
+  const [creatingInvite, setCreatingInvite] = useState(false)
   const [bans, setBans] = useState<any[]>([])
   const [loadingBans, setLoadingBans] = useState(false)
+  const [roles, setRoles] = useState<GuildRole[]>([])
+  const [loadingRoles, setLoadingRoles] = useState(false)
+  const [creatingRole, setCreatingRole] = useState(false)
+  const [newRoleName, setNewRoleName] = useState('')
 
   const isRouteMode = !!routeServerId
   const isOpen = isRouteMode || showServerSettings
@@ -90,6 +103,14 @@ export function ServerSettings() {
         if (res.success) setBans(res.data)
       }).finally(() => setLoadingBans(false))
     }
+    if (activeTab === 'roles') {
+      setLoadingRoles(true)
+      apiClient.getGuildRoles(currentServer.id).then(res => {
+        if (res.success) {
+          setRoles(Array.isArray(res.data) ? res.data : [])
+        }
+      }).finally(() => setLoadingRoles(false))
+    }
   }, [activeTab, currentServer])
 
   const handleRevokeInvite = async (code: string) => {
@@ -103,6 +124,27 @@ export function ServerSettings() {
     }
   }
 
+  const handleCreateInvite = async () => {
+    if (!currentServer) return
+    setCreatingInvite(true)
+    try {
+      const res = await apiClient.createInvite(currentServer.id)
+      if (res.success && res.data?.code) {
+        const created = res.data
+        setInvites(prev => [created, ...prev.filter((inv: any) => inv.code !== created.code)])
+        const link = `https://beacon.qzz.io/invite/${created.code}`
+        navigator.clipboard.writeText(link)
+        toast.success('Invite created and copied')
+      } else {
+        toast.error('Failed to create invite')
+      }
+    } catch {
+      toast.error('Failed to create invite')
+    } finally {
+      setCreatingInvite(false)
+    }
+  }
+
   const handleUnban = async (userId: string) => {
     if (!currentServer) return
     const res = await apiClient.unbanMember(currentServer.id, userId)
@@ -112,6 +154,79 @@ export function ServerSettings() {
     } else {
       toast.error('Failed to unban user')
     }
+  }
+
+  const handleKickMember = async (userId: string) => {
+    if (!currentServer) return
+    if (!confirm('Kick this member from the server?')) return
+
+    const res = await apiClient.kickMember(currentServer.id, userId)
+    if (res.success) {
+      await fetchGuild(currentServer.id)
+      toast.success('Member kicked')
+      return
+    }
+    toast.error(res.error || 'Failed to kick member')
+  }
+
+  const handleBanMember = async (userId: string) => {
+    if (!currentServer) return
+    if (!confirm('Ban this member from the server?')) return
+
+    const res = await apiClient.banMember(currentServer.id, userId)
+    if (res.success) {
+      await fetchGuild(currentServer.id)
+      toast.success('Member banned')
+      return
+    }
+    toast.error(res.error || 'Failed to ban member')
+  }
+
+  const handleCreateRole = async () => {
+    if (!currentServer) return
+    const name = newRoleName.trim()
+    if (!name) {
+      toast.error('Role name is required')
+      return
+    }
+
+    setCreatingRole(true)
+    try {
+      const res = await apiClient.createGuildRole(currentServer.id, {
+        name,
+        color: '#99aab5',
+        permissions: '0'
+      })
+
+      if (!res.success) {
+        toast.error(res.error || 'Failed to create role')
+        return
+      }
+
+      setRoles(prev => [res.data as GuildRole, ...prev])
+      setNewRoleName('')
+      toast.success('Role created')
+    } finally {
+      setCreatingRole(false)
+    }
+  }
+
+  const handleDeleteRole = async (role: GuildRole) => {
+    if (!currentServer) return
+    if (role.name === '@everyone') {
+      toast.error('Cannot delete @everyone role')
+      return
+    }
+    if (!confirm(`Delete role "${role.name}"?`)) return
+
+    const res = await apiClient.deleteGuildRole(currentServer.id, role.id)
+    if (!res.success) {
+      toast.error(res.error || 'Failed to delete role')
+      return
+    }
+
+    setRoles(prev => prev.filter(r => r.id !== role.id))
+    toast.success('Role deleted')
   }
 
   if (!isOpen) return null
@@ -329,13 +444,62 @@ export function ServerSettings() {
 
                 {/* ── Roles ── */}
                 {activeTab === 'roles' && (
-                  <div className={styles.emptyState}>
-                    <Shield size={48} className={styles.emptyIcon} />
-                    <h3>Role Management</h3>
-                    <p>Create and manage roles to control what members can do. Full role editor coming soon — for now, visit the server settings to manage roles via API.</p>
-                    <div className={styles.emptyHint}>
-                      <code>POST /guilds/{currentServer.id}/roles</code>
+                  <div>
+                    <p className={styles.tabIntro}>
+                      Create and manage role groups for your server members.
+                    </p>
+                    <div className={`${styles.inviteCreate} glass-panel`}>
+                      <div className={styles.inviteInfo}>
+                        <span>Create a new role</span>
+                        <code className={styles.inviteCode}>Roles control permission bundles and hierarchy.</code>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <input
+                          className={styles.input}
+                          style={{ minWidth: 180 }}
+                          placeholder="Role name"
+                          value={newRoleName}
+                          onChange={(e) => setNewRoleName(e.target.value)}
+                          maxLength={100}
+                        />
+                        <button className={styles.copyBtn} onClick={handleCreateRole} disabled={creatingRole}>
+                          {creatingRole ? 'Creating...' : 'Create Role'}
+                        </button>
+                      </div>
                     </div>
+
+                    {loadingRoles ? (
+                      <p style={{ color: 'var(--text-muted)', marginTop: 16 }}>Loading roles...</p>
+                    ) : roles.length === 0 ? (
+                      <div className={styles.emptyState}>
+                        <Shield size={48} className={styles.emptyIcon} />
+                        <h3>No roles found</h3>
+                        <p>Create your first role to start assigning permissions.</p>
+                      </div>
+                    ) : (
+                      <div className={styles.memberList} style={{ marginTop: 16 }}>
+                        {roles.map((role) => (
+                          <div key={role.id} className={`${styles.memberRow} glass-hover`}>
+                            <div className={styles.memberInfo}>
+                              <span className={styles.memberName}>
+                                <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 999, background: role.color || '#99aab5', marginRight: 8 }} />
+                                {role.name}
+                              </span>
+                              <span className={styles.memberRole}>Permissions: {String(role.permissions ?? '0')}</span>
+                            </div>
+                            <div className={styles.memberActions}>
+                              <button
+                                className={`${styles.memberBtn} ${styles.memberBtnDanger}`}
+                                onClick={() => handleDeleteRole(role)}
+                                disabled={role.name === '@everyone'}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -366,8 +530,8 @@ export function ServerSettings() {
                             </div>
                             {m.userId !== currentServer.ownerId && (
                               <div className={styles.memberActions}>
-                                <button className={styles.memberBtn}>Kick</button>
-                                <button className={`${styles.memberBtn} ${styles.memberBtnDanger}`}>Ban</button>
+                                <button className={styles.memberBtn} onClick={() => handleKickMember(m.userId)}>Kick</button>
+                                <button className={`${styles.memberBtn} ${styles.memberBtnDanger}`} onClick={() => handleBanMember(m.userId)}>Ban</button>
                               </div>
                             )}
                           </div>
@@ -418,17 +582,15 @@ export function ServerSettings() {
                     </p>
                     <div className={`${styles.inviteCreate} glass-panel`}>
                       <div className={styles.inviteInfo}>
-                        <span>Permanent invite link</span>
-                        <code className={styles.inviteCode}>beacon.qzz.io/invite/{currentServer.id.slice(0, 8)}</code>
+                        <span>Create a new server invite</span>
+                        <code className={styles.inviteCode}>Invite links expire after 7 days by default.</code>
                       </div>
                       <button
                         className={styles.copyBtn}
-                        onClick={() => {
-                          navigator.clipboard.writeText(`https://beacon.qzz.io/invite/${currentServer.id.slice(0, 8)}`)
-                          toast.success('Invite link copied!')
-                        }}
+                        onClick={handleCreateInvite}
+                        disabled={creatingInvite}
                       >
-                        Copy Link
+                        {creatingInvite ? 'Creating...' : 'Create + Copy'}
                       </button>
                     </div>
 
@@ -450,6 +612,15 @@ export function ServerSettings() {
                               <span className={styles.memberRole}>Created by {inv.inviter?.username || inv.inviterId} • Uses: {inv.uses}/{inv.maxUses || '∞'}</span>
                             </div>
                             <div className={styles.memberActions}>
+                              <button
+                                className={styles.memberBtn}
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`https://beacon.qzz.io/invite/${inv.code}`)
+                                  toast.success('Invite link copied!')
+                                }}
+                              >
+                                Copy
+                              </button>
                               <button
                                 className={`${styles.memberBtn} ${styles.memberBtnDanger}`}
                                 onClick={() => handleRevokeInvite(inv.code)}
@@ -557,7 +728,7 @@ export function ServerSettings() {
                     <div className={styles.emptyState} style={{ marginTop: 24 }}>
                       <BarChart2 size={40} className={styles.emptyIcon} />
                       <h3>Detailed analytics</h3>
-                      <p>Full growth charts, message volume, and member activity coming soon.</p>
+                      <p>Live totals are shown above. Historical analytics can be accessed from the audit logs and moderation events stream.</p>
                     </div>
                   </div>
                 )}

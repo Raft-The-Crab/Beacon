@@ -1,5 +1,5 @@
-﻿import { useState, useEffect } from 'react'
-import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book, AlignLeft, Layers, Zap, Palette, ChevronDown, Gift } from 'lucide-react'
+﻿import { useState, useEffect, useRef } from 'react'
+import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book, AlignLeft, Layers, Zap, Palette, ChevronDown, Gift, ImageIcon, Trash2 } from 'lucide-react'
 import { useUIStore } from '../../stores/useUIStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useServerStore } from '../../stores/useServerStore'
@@ -62,6 +62,92 @@ import { ProfileArtPicker } from '../features/ProfileArtPicker'
 
 type TabId = 'profile' | 'profileArt' | 'security' | 'notifications' | 'advanced' | 'server' | 'appearance' | 'tasks' | 'redeem' | 'about'
 
+const TAB_META: Record<TabId, { title: string; eyebrow: string; description: string }> = {
+    profile: {
+        title: 'Profile',
+        eyebrow: 'Identity',
+        description: 'Update the way people see you across Beacon, including your name, username, avatar, and bio.',
+    },
+    profileArt: {
+        title: 'Profile Art',
+        eyebrow: 'Cosmetics',
+        description: 'Equip your frame and, with Beacon+, tune the chat bubble finish shown on your own messages.',
+    },
+    security: {
+        title: 'Security',
+        eyebrow: 'Protection',
+        description: 'Manage your email, password, and account protection settings in one place.',
+    },
+    notifications: {
+        title: 'Notifications',
+        eyebrow: 'Alerts',
+        description: 'Choose exactly which pings, requests, and desktop notifications Beacon should send you.',
+    },
+    advanced: {
+        title: 'Advanced',
+        eyebrow: 'Developer',
+        description: 'Enable advanced behavior, diagnostics, and developer-facing controls when you need them.',
+    },
+    server: {
+        title: 'Server',
+        eyebrow: 'Workspace',
+        description: 'See the active server context and jump into server-specific management details.',
+    },
+    appearance: {
+        title: 'Appearance',
+        eyebrow: 'Interface',
+        description: 'Control themes, density, language, performance mode, and the overall feel of the app shell.',
+    },
+    tasks: {
+        title: 'Tasks',
+        eyebrow: 'Progression',
+        description: 'Track quests, claim Beacoin rewards, and see what is available right now.',
+    },
+    redeem: {
+        title: 'Redeem Code',
+        eyebrow: 'Rewards',
+        description: 'Enter official drops, promo codes, and reward codes to unlock Beacoins or Beacon+ time.',
+    },
+    about: {
+        title: 'About',
+        eyebrow: 'Product',
+        description: 'Version details, docs, and legal links for Beacon.',
+    },
+}
+
+const SETTINGS_NAV: Array<{ section: string; items: Array<{ id: TabId; label: string; icon: any }> }> = [
+    {
+        section: 'Account',
+        items: [
+            { id: 'profile', label: 'Profile', icon: User },
+            { id: 'security', label: 'Security', icon: Shield },
+            { id: 'profileArt', label: 'Profile Art', icon: Palette },
+        ],
+    },
+    {
+        section: 'App',
+        items: [
+            { id: 'notifications', label: 'Notifications', icon: Bell },
+            { id: 'appearance', label: 'Appearance', icon: Settings },
+            { id: 'advanced', label: 'Advanced', icon: Code },
+            { id: 'tasks', label: 'Tasks', icon: Book },
+            { id: 'redeem', label: 'Redeem Code', icon: Gift },
+        ],
+    },
+    {
+        section: 'Server',
+        items: [
+            { id: 'server', label: 'Server', icon: Users },
+        ],
+    },
+    {
+        section: 'Info',
+        items: [
+            { id: 'about', label: 'About', icon: Code },
+        ],
+    },
+]
+
 type RedeemReward =
     | { kind: 'coins'; amount: number; code: string }
     | { kind: 'beacon_plus'; months: number; code: string; expiresAt?: string }
@@ -71,6 +157,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
         showUserSettings, setShowUserSettings,
         developerMode, setDeveloperMode,
         theme, setTheme,
+        glassEnabled, setGlassEnabled,
         messageDensity, setMessageDensity,
         customBackground, setCustomBackground,
         customAccentColor, setCustomAccentColor
@@ -99,7 +186,10 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [username, setUsername] = useState(user?.username || '')
+    const [displayName, setDisplayName] = useState((user as any)?.displayName || user?.username || '')
     const [bio, setBio] = useState(user?.bio || '')
+    const [bannerUrl, setBannerUrl] = useState((user as any)?.banner || '')
+    const bannerInputRef = useRef<HTMLInputElement>(null)
     const [notifPrefs, setNotifPrefs] = useState(() => {
         try {
             const saved = localStorage.getItem('beacon_notif_prefs')
@@ -113,6 +203,9 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
     const [claimingQuestId, setClaimingQuestId] = useState<string | null>(null)
     const { quests, isLoading: questsLoading, fetchQuests, claimReward } = useQuestStore()
     const { fetchWallet } = useBeacoinStore()
+    const selectedLanguage = LANGUAGES.find((lang) => lang.code === language) || LANGUAGES[0]
+    const hasBeaconPlus = Boolean((user as any)?.isBeaconPlus)
+    const activeTabMeta = TAB_META[activeTab]
 
     const setNotifPref = (key: keyof typeof DEFAULT_NOTIF_PREFS) => (val: boolean) => {
         if (key === 'desktopNotifications' && val && typeof window !== 'undefined' && 'Notification' in window) {
@@ -146,7 +239,9 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
         try {
             const response = await apiClient.updateUser({
                 username,
+                displayName,
                 bio,
+                ...(bannerUrl !== ((user as any)?.banner || '') ? { banner: bannerUrl || null } : {}),
             })
             if (response.success && response.data) {
                 setUser(response.data)
@@ -167,6 +262,38 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
         setShowUserSettings(false)
         navigate('/login')
         toast.success('Logged out successfully')
+    }
+
+    const handleBannerFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        try {
+            const uploaded = await fileUploadService.uploadFile(file)
+            const response = await apiClient.updateUser({ banner: uploaded.url })
+            if (response.success && response.data) {
+                setUser(response.data)
+                setBannerUrl(uploaded.url)
+                toast.success('Banner updated')
+            } else {
+                toast.error(response.error || 'Failed to update banner')
+            }
+        } catch {
+            toast.error('Upload failed')
+        }
+        if (bannerInputRef.current) bannerInputRef.current.value = ''
+    }
+
+    const handleBannerRemove = async () => {
+        try {
+            const response = await apiClient.updateUser({ banner: null })
+            if (response.success && response.data) {
+                setUser(response.data)
+                setBannerUrl('')
+                toast.success('Banner removed')
+            }
+        } catch {
+            toast.error('Failed to remove banner')
+        }
     }
 
     const handleAvatarUpload = async (file: UploadedFile) => {
@@ -190,12 +317,56 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
             case 'profile':
                 return (
                     <div className={styles.tabContent}>
+                        {/* Banner */}
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Profile Banner</label>
+                            <div
+                                className={styles.bannerPreview}
+                                style={bannerUrl ? { backgroundImage: `url(${bannerUrl})` } : undefined}
+                            >
+                                {!bannerUrl && (
+                                    <div className={styles.bannerEmpty}>
+                                        <ImageIcon size={22} opacity={0.4} />
+                                        <span>No banner set</span>
+                                    </div>
+                                )}
+                                <div className={styles.bannerOverlay}>
+                                    <button type="button" className={styles.bannerUploadBtn} onClick={() => bannerInputRef.current?.click()}>
+                                        <ImageIcon size={14} />
+                                        {bannerUrl ? 'Change' : 'Upload Banner'}
+                                    </button>
+                                    {bannerUrl && (
+                                        <button type="button" className={styles.bannerRemoveBtn} onClick={handleBannerRemove}>
+                                            <Trash2 size={14} />
+                                        </button>
+                                    )}
+                                </div>
+                                <input
+                                    ref={bannerInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
+                                    onChange={handleBannerFileChange}
+                                />
+                            </div>
+                        </div>
+
                         <div className={styles.profileSection}>
                             <AvatarUpload
                                 currentAvatar={user?.avatar && !user.avatar.includes('dicebear') ? user.avatar : undefined}
                                 onUpload={handleAvatarUpload}
                                 size={96}
                                 type="user"
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <Input
+                                label="Display Name"
+                                value={displayName}
+                                onChange={(e: any) => setDisplayName(e.target.value)}
+                                placeholder="How people see your name"
                             />
                         </div>
 
@@ -502,14 +673,6 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                     Light
                                 </Button>
                                 <Button
-                                    variant={theme === 'glass' ? 'primary' : 'secondary'}
-                                    onClick={() => setTheme('glass')}
-                                    className={styles.themeButton}
-                                >
-                                    <Globe size={16} />
-                                    Glass
-                                </Button>
-                                <Button
                                     variant={theme === 'oled' ? 'primary' : 'secondary'}
                                     onClick={() => setTheme('oled')}
                                     className={styles.themeButton}
@@ -537,26 +700,42 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                         </div>
 
                         <div className={styles.appearanceSection}>
+                            <div className={styles.perfHeader}>
+                                <div className={styles.perfTitleGroup}>
+                                    <h3>Glassmorphism</h3>
+                                    <span className={glassEnabled ? styles.perfBadgeLow : styles.perfBadgePremium}>
+                                        {glassEnabled ? 'On' : 'Off'}
+                                    </span>
+                                </div>
+                                <Switch checked={glassEnabled} onChange={setGlassEnabled} />
+                            </div>
+                            <p className={styles.muted}>
+                                Applies a frosted-glass translucent effect to panels and surfaces. Can be stacked on top of any theme.
+                            </p>
+                        </div>
+
+                        <div className={styles.appearanceSection}>
                             <h3>Language</h3>
                             <p className={styles.muted} style={{ marginBottom: 16 }}>Select your preferred language for the interface</p>
-                            <div style={{ maxWidth: 300 }}>
+                            <div className={styles.languageSelect}>
                                 <Dropdown
+                                    matchTriggerWidth
                                     trigger={
-                                        <Button variant="secondary" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                                <span style={{ fontSize: 18 }}>{LANGUAGES.find(l => l.code === language)?.flag || '🇺🇸'}</span>
-                                                <span style={{ fontWeight: 600 }}>{LANGUAGES.find(l => l.code === language)?.name || 'English'}</span>
+                                        <div className={styles.languageTrigger}>
+                                            <div className={styles.languageTriggerMain}>
+                                                <span className={styles.languageTriggerFlag}>{selectedLanguage.flag}</span>
+                                                <span className={styles.languageTriggerName}>{selectedLanguage.name}</span>
                                             </div>
-                                            <ChevronDown size={16} className="text-muted" />
-                                        </Button>
+                                            <ChevronDown size={16} className={styles.languageTriggerChevron} />
+                                        </div>
                                     }
                                     items={LANGUAGES.map(lang => ({
                                         id: lang.code,
                                         label: (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: 250 }}>
-                                                <span style={{ fontSize: 18 }}>{lang.flag}</span>
-                                                <span style={{ fontWeight: 500, flex: 1 }}>{lang.name}</span>
-                                                {language === lang.code && <span className="text-brand" style={{ fontWeight: 800 }}>✓</span>}
+                                            <div className={styles.languageMenuRow}>
+                                                <span className={styles.languageMenuFlag}>{lang.flag}</span>
+                                                <span className={styles.languageMenuName}>{lang.name}</span>
+                                                {language === lang.code && <span className={styles.languageMenuCheck}>✓</span>}
                                             </div>
                                         ),
                                         onClick: () => setLanguage(lang.code as any)
@@ -627,6 +806,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                         <Button
                                             variant="secondary"
                                             size="sm"
+                                            className={styles.utilityButton}
                                             onClick={() => document.getElementById('bg-upload-input')?.click()}
                                             loading={loading}
                                         >
@@ -660,7 +840,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                     <Button
                                         variant="secondary"
                                         size="sm"
-                                        className={styles.resetBtn}
+                                        className={`${styles.resetBtn} ${styles.utilityButton}`}
                                         onClick={() => setCustomBackground(null)}
                                     >
                                         Remove Background
@@ -693,6 +873,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                     <Button
                                         variant="secondary"
                                         size="sm"
+                                        className={styles.utilityButton}
                                         onClick={() => setCustomAccentColor(null)}
                                         disabled={!customAccentColor}
                                     >
@@ -730,7 +911,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                     <Code size={16} />
                                     GitHub
                                 </Button>
-                                <Button variant="secondary" size="sm" onClick={() => {
+                                <Button variant="secondary" size="sm" className={styles.utilityButton} onClick={() => {
                                     navigate('/docs')
                                     onClose()
                                 }}>
@@ -907,7 +1088,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                 return (
                     <div className={styles.tabContent}>
                         <p className={styles.muted} style={{ marginBottom: 24 }}>
-                            Customize your profile with unique frames, banners, and effects. Your first 4 arts are free — earn Beacoins to unlock more!
+                            Choose your profile frame and message bubble style here. Banner assets stay disabled until the media pipeline is finished.
                         </p>
                         <ProfileArtPicker />
                     </div>
@@ -939,94 +1120,29 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                     </div>
 
                     <nav className={styles.nav}>
-                        <div className={styles.section}>
-                            <span className={styles.sectionTitle}>User Settings</span>
-                            <button
-                                className={`${styles.navItem} ${activeTab === 'profile' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('profile')}
-                            >
-                                <User size={18} />
-                                Profile
-                            </button>
-                            <button
-                                className={`${styles.navItem} ${activeTab === 'security' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('security')}
-                            >
-                                <Shield size={18} />
-                                Security
-                            </button>
-                            <button
-                                className={`${styles.navItem} ${activeTab === 'profileArt' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('profileArt')}
-                            >
-                                <Palette size={18} />
-                                Profile Art
-                            </button>
-                        </div>
-
-                        <div className={styles.section}>
-                            <span className={styles.sectionTitle}>App Settings</span>
-                            <button
-                                className={`${styles.navItem} ${activeTab === 'notifications' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('notifications')}
-                            >
-                                <Bell size={18} />
-                                Notifications
-                            </button>
-                            <button
-                                className={`${styles.navItem} ${activeTab === 'appearance' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('appearance')}
-                            >
-                                <Settings size={18} />
-                                Appearance
-                            </button>
-                            <button
-                                className={`${styles.navItem} ${activeTab === 'advanced' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('advanced')}
-                            >
-                                <Code size={18} />
-                                Advanced
-                            </button>
-                            <button
-                                className={`${styles.navItem} ${activeTab === 'tasks' ? styles.active : ''}`}
-                                onClick={async () => {
-                                    setActiveTab('tasks')
-                                    await fetchQuests()
-                                }}
-                            >
-                                <Book size={18} />
-                                Tasks
-                            </button>
-                            <button
-                                className={`${styles.navItem} ${activeTab === 'redeem' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('redeem')}
-                            >
-                                <Gift size={18} />
-                                Redeem Code
-                            </button>
-                        </div>
-
-                        <div className={styles.section}>
-                            <span className={styles.sectionTitle}>Server Settings</span>
-                            <button
-                                className={`${styles.navItem} ${activeTab === 'server' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('server')}
-                            >
-                                <Users size={18} />
-                                Server
-                            </button>
-                        </div>
-
-                        <div className={styles.section}>
-                            <span className={styles.sectionTitle}>About</span>
-                            <button
-                                className={`${styles.navItem} ${activeTab === 'about' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('about')}
-                            >
-                                <Code size={18} />
-                                About
-                            </button>
-                        </div>
+                        {SETTINGS_NAV.map((group) => (
+                            <div className={styles.section} key={group.section}>
+                                <span className={styles.sectionTitle}>{group.section}</span>
+                                {group.items.map((item) => {
+                                    const Icon = item.icon
+                                    return (
+                                        <button
+                                            key={item.id}
+                                            className={`${styles.navItem} ${activeTab === item.id ? styles.active : ''}`}
+                                            onClick={async () => {
+                                                setActiveTab(item.id)
+                                                if (item.id === 'tasks') {
+                                                    await fetchQuests()
+                                                }
+                                            }}
+                                        >
+                                            <Icon size={18} />
+                                            {item.label}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        ))}
 
                         <div className={styles.divider} />
 
@@ -1039,7 +1155,17 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
 
                 <div className={styles.content}>
                     <div className={styles.header}>
-                        <h2>{{ profile: 'Profile', profileArt: 'Profile Art', security: 'Security', notifications: 'Notifications', appearance: 'Appearance', advanced: 'Advanced', tasks: 'Tasks', redeem: 'Redeem Code', server: 'Server', about: 'About' }[activeTab]}</h2>
+                        <span className={styles.headerEyebrow}>{activeTabMeta.eyebrow}</span>
+                        <div className={styles.headerMain}>
+                            <div>
+                                <h2>{activeTabMeta.title}</h2>
+                                <p className={styles.headerDescription}>{activeTabMeta.description}</p>
+                            </div>
+                            <div className={styles.headerChips}>
+                                {activeTab === 'appearance' && <span className={styles.headerChip}>{theme}</span>}
+                                {activeTab === 'profileArt' && <span className={styles.headerChip}>{hasBeaconPlus ? 'Bubble unlocked' : 'Beacon+ required'}</span>}
+                            </div>
+                        </div>
                     </div>
 
                     {renderTabContent()}

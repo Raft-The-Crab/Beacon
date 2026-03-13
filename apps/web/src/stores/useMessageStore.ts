@@ -49,9 +49,9 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     })
 
     try {
-      const response = await apiRequest<PaginatedResponse<Message>>({
+      const response = await apiRequest<PaginatedResponse<Message> | Message[]>({
         method: 'GET',
-        url: `/messages/${channelId}`,
+        url: `/channels/${channelId}/messages`,
         params: { limit: 50, before }
       })
 
@@ -59,20 +59,23 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         set(state => {
           const newMessages = new Map(state.messages)
           const existing = newMessages.get(channelId) || []
+          const payload = response.data as any
+          const items: Message[] = Array.isArray(payload) ? payload : (payload.items || [])
+          const hasMore = Array.isArray(payload) ? items.length === 50 : Boolean(payload.hasMore)
 
           // Prepend older messages
           const combined = before
-            ? [...response.data!.items, ...existing]
-            : response.data!.items
+            ? [...items, ...existing]
+            : items
 
           newMessages.set(channelId, combined)
 
           const newHasMore = new Map(state.hasMore)
-          newHasMore.set(channelId, response.data!.hasMore)
+          newHasMore.set(channelId, hasMore)
 
           const newOldest = new Map(state.oldestMessageId)
-          if (response.data!.items.length > 0) {
-            newOldest.set(channelId, response.data!.items[0].id)
+          if (items.length > 0) {
+            newOldest.set(channelId, items[0].id)
           }
 
           const newLoading = new Map(state.isLoading)

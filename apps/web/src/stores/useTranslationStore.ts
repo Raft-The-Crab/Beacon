@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import en from '../locales/en.json'
+
+const localeModules = import.meta.glob('../locales/*.json', { eager: true, import: 'default' }) as Record<string, any>
+const defaultLocale = localeModules['../locales/en.json'] || {}
 
 interface TranslationState {
     language: string
@@ -13,37 +15,27 @@ export const useTranslationStore = create<TranslationState>()(
     persist(
         (set, get) => ({
             language: 'en',
-            locales: { en },
+            locales: Object.fromEntries(
+                Object.entries(localeModules).map(([path, locale]) => {
+                    const match = path.match(/\.\.\/locales\/(.+)\.json$/)
+                    return [match?.[1] || path, locale]
+                })
+            ),
 
             setLanguage: async (lang: string) => {
                 const currentLocales = get().locales
-                if (!currentLocales[lang]) {
-                    try {
-                        let data;
-                        // Dynamic import for scalability
-                        try {
-                            data = await import(`../locales/${lang}.json`)
-                        } catch (e) {
-                            console.warn(`Local file for ${lang} not found, using English fallback`, e)
-                            data = { default: en }
-                        }
-
-                        set((state) => ({
-                            locales: { ...state.locales, [lang]: data.default },
-                            language: lang
-                        }))
-                    } catch (err) {
-                        console.error(`Error switching language to ${lang}:`, err)
-                    }
-                } else {
+                if (currentLocales[lang]) {
                     set({ language: lang })
+                } else {
+                    console.warn(`Local file for ${lang} not found, using English fallback`)
+                    set({ language: 'en' })
                 }
             },
 
             t: (key: string, variables?: Record<string, any>) => {
                 const { language, locales } = get()
-                const data = locales[language] || locales['en']
-                const english = locales['en']
+                const data = locales[language] || locales['en'] || defaultLocale
+                const english = locales['en'] || defaultLocale
 
                 const resolvePath = (source: any): string | undefined => {
                     const keys = key.split('.')

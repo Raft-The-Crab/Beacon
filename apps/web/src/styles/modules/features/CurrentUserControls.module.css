@@ -68,6 +68,21 @@
     font-size: 11px;
 }
 
+.voicePill {
+    margin-top: 3px;
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(35, 165, 89, 0.16);
+    border: 1px solid rgba(35, 165, 89, 0.32);
+    color: #53d18b;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
 .userControls {
     display: flex;
     align-items: center;
@@ -97,4 +112,37 @@
 .iconCtrlBtnActive {
     color: #2ea043;
     background: rgba(35, 165, 89, 0.1);
+}
+
+@media (max-width: 768px) {
+    .userArea {
+        height: auto;
+        min-height: 56px;
+        padding: 6px 8px;
+    }
+
+    .iconCtrlBtn {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+@media (max-width: 420px) {
+    .userPanel {
+        gap: 6px;
+        padding: 4px;
+    }
+
+    .userName {
+        font-size: 12.5px;
+    }
+
+    .userStatusText {
+        font-size: 10.5px;
+    }
+
+    .iconCtrlBtn {
+        width: 28px;
+        height: 28px;
+    }
 }

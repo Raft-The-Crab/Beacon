@@ -2,6 +2,7 @@ import { prisma } from '../db'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { z } from 'zod'
+import { validateUsername } from '../middleware/validation'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-me'
 
@@ -17,21 +18,73 @@ export const LoginSchema = z.object({
   password: z.string()
 })
 
+const BADGE_NORMALIZATION_MAP: Record<string, string> = {
+  APP_OWNER: 'owner',
+  owner: 'owner',
+  SYSTEM_ADMIN: 'admin',
+  admin: 'admin',
+  PLATFORM_MODERATOR: 'moderator',
+  moderator: 'moderator',
+  BEACON_PLUS: 'beacon_plus',
+  beacon_plus: 'beacon_plus',
+  BOT: 'bot',
+  bot: 'bot',
+  EARLY_SUPPORTER: 'early_supporter',
+  early_supporter: 'early_supporter',
+  BUG_HUNTER: 'bug_hunter',
+  bug_hunter: 'bug_hunter',
+  SERVER_OWNER: 'server_owner',
+  server_owner: 'server_owner',
+  VERIFIED: 'verified',
+  verified: 'verified',
+}
+
+export function normalizeUserBadges(badges: unknown, isBeaconPlus?: boolean): string[] {
+  const normalized = new Set<string>()
+
+  if (Array.isArray(badges)) {
+    for (const badge of badges) {
+      if (typeof badge !== 'string') continue
+      const mapped = BADGE_NORMALIZATION_MAP[badge] || BADGE_NORMALIZATION_MAP[badge.toUpperCase()]
+      if (mapped) {
+        normalized.add(mapped)
+      }
+    }
+  }
+
+  if (isBeaconPlus) {
+    normalized.add('beacon_plus')
+  }
+
+  return Array.from(normalized)
+}
+
 export class AuthService {
   static async register(data: z.infer<typeof RegisterSchema>) {
     if (!prisma) throw new Error('Database not available')
 
+    const username = data.username.trim()
+    const email = data.email.trim().toLowerCase()
+    const usernameValidation = validateUsername(username)
+    if (!usernameValidation.valid) {
+      throw new Error(usernameValidation.error || 'Invalid username')
+    }
+
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: data.email },
-          { username: data.username }
+          { email: { equals: email, mode: 'insensitive' } },
+          { username: { equals: username, mode: 'insensitive' } }
         ]
       }
     })
 
     if (existingUser) {
-      throw new Error('User already exists')
+      if (existingUser.email.toLowerCase() === email) {
+        throw new Error('Email is already registered')
+      }
+
+      throw new Error('Username is already taken')
     }
 
     const roundsStr = process.env.BCRYPT_ROUNDS || '10';
@@ -44,7 +97,7 @@ export class AuthService {
     let isUnique = false
     while (!isUnique) {
       const exists = await prisma.user.findUnique({
-        where: { username_discriminator: { username: data.username, discriminator } }
+        where: { username_discriminator: { username, discriminator } }
       })
       if (!exists) isUnique = true
       else discriminator = Math.floor(1000 + Math.random() * 9000).toString()
@@ -53,23 +106,23 @@ export class AuthService {
     // Auto-ascend RaftTheCrab
     let badges: string[] = []
     let isBeaconPlus = false
-    if (data.username === 'RaftTheCrab') {
+    if (username.toLowerCase() === 'raftthecrab') {
       badges = ['SYSTEM_ADMIN', 'PLATFORM_MODERATOR', 'APP_OWNER', 'BUG_HUNTER', 'EARLY_SUPPORTER', 'BEACON_PLUS']
       isBeaconPlus = true
     }
 
     const user = await prisma.user.create({
       data: {
-        email: data.email,
-        username: data.username,
-        displayName: data.username,
+        email,
+        username,
+        displayName: username,
         password: hashedPassword,
         discriminator,
         badges,
         isBeaconPlus,
         beaconPlusSince: isBeaconPlus ? new Date() : null,
         theme: 'auto',
-        developerMode: data.username === 'RaftTheCrab'
+        developerMode: username.toLowerCase() === 'raftthecrab'
       }
     })
 
@@ -158,7 +211,10 @@ export class AuthService {
 
   static sanitizeUser(user: any) {
     const { password, twoFactorSecret, ...safeUser } = user
-    return safeUser
+    return {
+      ...safeUser,
+      badges: normalizeUserBadges(safeUser.badges, safeUser.isBeaconPlus),
+    }
   }
 
   static async verifyMFA(userId: string, token: string) {

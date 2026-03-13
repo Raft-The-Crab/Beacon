@@ -62,6 +62,7 @@
     border: 2px solid transparent;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: left;
 }
 
 .artCard:hover {
@@ -76,6 +77,45 @@
 
 .locked {
     opacity: 0.75;
+    cursor: not-allowed;
+}
+
+.plusOnlyHint {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.colorGrid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.colorSwatch {
+    height: 42px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.colorSwatch:hover {
+    transform: translateY(-1px);
+}
+
+.colorSwatchActive {
+    border-color: rgba(255, 255, 255, 0.85);
 }
 
 .preview {
@@ -177,4 +217,130 @@
     color: #43b581;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+}
+
+@media (max-width: 640px) {
+    .colorGrid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.intensitySection {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.intensityTitle {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.intensityRow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.intensityButton {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.intensityButton:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.intensityButton:hover {
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+.intensityButtonActive {
+    color: #03160d;
+    border-color: transparent;
+    background: var(--beacon-brand);
+}
+
+.previewPanel {
+    margin-top: 14px;
+    border-radius: 14px;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(5, 10, 20, 0.35);
+}
+
+.previewPanelTitle {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+.previewBubble {
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 10px 12px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.24);
+}
+
+.previewAuthor {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.previewText {
+    font-size: 13px;
+    color: var(--text-normal);
+    line-height: 1.4;
+}
+
+.preview-reef {
+    background: linear-gradient(150deg, rgba(255, 232, 102, 0.28), rgba(44, 186, 255, 0.26), rgba(255, 140, 100, 0.22));
+}
+
+.preview-jelly {
+    background: linear-gradient(140deg, rgba(255, 114, 176, 0.2), rgba(127, 119, 255, 0.24), rgba(106, 234, 255, 0.2));
+}
+
+.preview-comic {
+    background: linear-gradient(130deg, rgba(255, 106, 92, 0.24), rgba(255, 201, 78, 0.22), rgba(86, 228, 130, 0.22));
+}
+
+.preview-aurora {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(168, 85, 247, 0.16));
+}
+
+.preview-prism {
+    background: linear-gradient(140deg, rgba(236, 72, 153, 0.13), rgba(99, 102, 241, 0.18), rgba(16, 185, 129, 0.12));
+}
+
+.preview-carbon {
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(30, 41, 59, 0.95));
+}
+
+.previewIntensity-low {
+    filter: saturate(0.92);
+}
+
+.previewIntensity-medium {
+    filter: saturate(1.08);
+}
+
+.previewIntensity-high {
+    filter: saturate(1.2);
 }

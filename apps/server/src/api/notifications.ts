@@ -4,6 +4,18 @@ import { prisma } from '../db'
 
 const router = Router()
 
+function buildNotificationDedupKey(notification: any): string {
+  const metadata = (notification.metadata as any) || {}
+  return [
+    notification.type,
+    metadata.relatedUserId || '',
+    metadata.serverId || '',
+    metadata.channelId || '',
+    notification.title || '',
+    notification.body || '',
+  ].join(':')
+}
+
 // GET /users/@me/notifications with deduplication
 router.get('/users/@me/notifications', authenticate, async (req: AuthRequest, res: Response) => {
   try {
@@ -17,12 +29,10 @@ router.get('/users/@me/notifications', authenticate, async (req: AuthRequest, re
       take: 100,
     })
 
-    // Deduplicate by type + relatedUserId
+    // Deduplicate on the fields users actually see in the UI.
     const seen = new Set<string>()
     const deduplicated = notifications.filter(n => {
-      const metadata = (n.metadata as any) || {}
-      const relatedUserId = metadata.relatedUserId || ''
-      const key = `${n.type}:${relatedUserId}`
+      const key = buildNotificationDedupKey(n)
       
       if (seen.has(key)) {
         return false
@@ -81,6 +91,40 @@ router.post('/users/@me/notifications/read-all', authenticate, async (req: AuthR
       where: { userId, read: false },
       data: { read: true },
     })
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// DELETE /users/@me/notifications/:id
+router.delete('/users/@me/notifications/:id', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!prisma) return res.status(500).json({ error: 'Database not connected' })
+
+    await prisma.notification.deleteMany({
+      where: { id: req.params.id, userId },
+    })
+
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// DELETE /users/@me/notifications
+router.delete('/users/@me/notifications', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+    if (!prisma) return res.status(500).json({ error: 'Database not connected' })
+
+    await prisma.notification.deleteMany({
+      where: { userId },
+    })
+
     res.json({ success: true })
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' })

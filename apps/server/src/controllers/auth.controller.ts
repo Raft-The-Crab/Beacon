@@ -6,6 +6,12 @@ import { SystemAuditService, AuditAction } from '../services/systemAudit';
 type Request = express.Request;
 type Response = express.Response;
 
+function isDatabaseUnavailable(error: unknown): boolean {
+    if (!prisma) return true;
+    const message = error instanceof Error ? error.message : String(error);
+    return /database not available|can't reach database|failed to connect|prisma/i.test(message);
+}
+
 export class AuthController {
     static async register(req: Request, res: Response) {
         try {
@@ -23,6 +29,9 @@ export class AuthController {
             res.json(result);
         } catch (error: any) {
             console.error('Register error:', error);
+            if (isDatabaseUnavailable(error)) {
+                return res.status(503).json({ error: 'Authentication service unavailable. Check the database connection.' });
+            }
             res.status(400).json({ error: error.message || 'Registration failed' });
         }
     }
@@ -48,6 +57,9 @@ export class AuthController {
                 ip: req.ip,
                 userAgent: req.headers['user-agent'] as string
             });
+            if (isDatabaseUnavailable(error)) {
+                return res.status(503).json({ error: 'Authentication service unavailable. Check the database connection.' });
+            }
             res.status(401).json({ error: 'Invalid credentials' });
         }
     }
@@ -56,16 +68,20 @@ export class AuthController {
         try {
             const userId = req.user?.id;
             if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+            if (!prisma) return res.status(503).json({ error: 'User service unavailable. Check the database connection.' });
 
             const user = await prisma.user.findUnique({
                 where: { id: userId },
-                select: { id: true, username: true, email: true, avatar: true, discriminator: true, badges: true, status: true, customStatus: true }
+                select: { id: true, username: true, displayName: true, email: true, avatar: true, discriminator: true, badges: true, status: true, customStatus: true }
             });
 
             if (!user) return res.status(404).json({ error: 'User not found' });
 
             res.json(AuthService.sanitizeUser(user));
         } catch (error) {
+            if (isDatabaseUnavailable(error)) {
+                return res.status(503).json({ error: 'User service unavailable. Check the database connection.' });
+            }
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }

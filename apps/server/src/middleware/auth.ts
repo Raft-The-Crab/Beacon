@@ -38,6 +38,6 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     next()
   } catch (err) {
     console.error(`[AUTH] DB Check Error:`, err);
-    res.status(500).json({ error: 'Internal Server Error during Auth' });
+    res.status(503).json({ error: 'Authentication service unavailable. Check the database connection.' });
   }
 }

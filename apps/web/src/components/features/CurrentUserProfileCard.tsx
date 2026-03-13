@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
-import { Edit2, Copy, Users, LogOut, Music2 } from 'lucide-react'
-import { Avatar } from '../ui/Avatar'
+import { ArrowRightLeft, Music2, Circle, Moon, Minus, EyeOff, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useUIStore } from '../../stores/useUIStore'
-import { apiClient } from '../../services/apiClient'
 import { BeaconNotesModal } from '../modals/BeaconNotesModal'
+import { apiClient } from '../../services/apiClient'
 import styles from '../../styles/modules/features/CurrentUserProfileCard.module.css'
 
 interface CurrentUserProfileCardProps {
@@ -16,28 +14,41 @@ interface CurrentUserProfileCardProps {
 export function CurrentUserProfileCard({ children }: CurrentUserProfileCardProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [showNotesModal, setShowNotesModal] = useState(false)
-    const [profileNote, setProfileNote] = useState<any>(null)
+    const [showStatusMenu, setShowStatusMenu] = useState(false)
     const [position, setPosition] = useState({ top: 0, left: 0 })
     const triggerRef = useRef<HTMLDivElement>(null)
     const popoverRef = useRef<HTMLDivElement>(null)
 
     const user = useAuthStore(state => state.user)
     const logout = useAuthStore(state => state.logout)
-    const setShowUserSettings = useUIStore(state => state.setShowUserSettings)
-    const updateStatus = useAuthStore(state => state.updateProfile)
 
-    const handleClick = (e: React.MouseEvent) => {
+    const STATUS_OPTIONS = [
+        { value: 'online',    label: 'Online',    color: '#23a559', icon: <Circle size={10} fill="#23a559" stroke="none" /> },
+        { value: 'idle',      label: 'Idle',      color: '#f0b232', icon: <Moon size={11} /> },
+        { value: 'dnd',       label: 'Do Not Disturb', color: '#ed4245', icon: <Minus size={11} /> },
+        { value: 'invisible', label: 'Invisible', color: '#747f8d', icon: <EyeOff size={11} /> },
+    ] as const
+
+    const handleSetStatus = async (status: string) => {
+        setShowStatusMenu(false)
+        setIsOpen(false)
+        try {
+            await apiClient.request('PATCH', '/users/@me', { status })
+        } catch { /* ignore */ }
+    }
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation()
         if (!triggerRef.current) return
 
         const rect = triggerRef.current.getBoundingClientRect()
-        const popoverHeight = 420
-        const popoverWidth = 330
+        const popoverHeight = 170
+        const popoverWidth = 220
         const viewportPadding = 12
 
-        let top = rect.top - popoverHeight - 12
-        if (top < viewportPadding) {
-            top = Math.min(window.innerHeight - popoverHeight - viewportPadding, rect.bottom + 8)
+        let top = rect.top - popoverHeight - 8
+        if (top < viewportPadding || rect.top < 260) {
+            top = Math.min(window.innerHeight - popoverHeight - viewportPadding, rect.bottom + 6)
         }
 
         let left = rect.left
@@ -66,38 +77,21 @@ export function CurrentUserProfileCard({ children }: CurrentUserProfileCardProps
         return () => document.removeEventListener('mousedown', handleOutside)
     }, [isOpen])
 
-    useEffect(() => {
-        if (!isOpen) return
-        apiClient.request('GET', '/notes/profile/me').then((res) => {
-            if (res.success && res.data?.note) {
-                setProfileNote(res.data.note)
-            }
-        }).catch(() => {
-            setProfileNote(null)
-        })
-    }, [isOpen, showNotesModal])
-
     if (!user) return <>{children}</>
-
-    const copyUserId = () => {
-        navigator.clipboard.writeText(user.id)
-        setIsOpen(false)
-    }
-
-    const handleStatusChange = async (newStatus: 'online' | 'idle' | 'dnd' | 'invisible') => {
-        try {
-            await updateStatus({ status: newStatus } as any)
-            await apiClient.request('PATCH', '/users/me', { status: newStatus })
-        } catch (e) {
-            console.error('Failed to save status', e)
-        }
-        setIsOpen(false)
-    }
 
     return (
         <>
-            <div ref={triggerRef} onClick={handleClick} className={styles.triggerWrapper}>
-                {children}
+            <div ref={triggerRef} className={styles.triggerWrapper}>
+                <button
+                    type="button"
+                    onClick={handleClick}
+                    className={styles.triggerButton}
+                    aria-haspopup="menu"
+                    aria-expanded={isOpen}
+                    aria-label="Open user profile menu"
+                >
+                    {children}
+                </button>
             </div>
 
             {typeof document !== 'undefined' && createPortal(
@@ -112,77 +106,45 @@ export function CurrentUserProfileCard({ children }: CurrentUserProfileCardProps
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 400 }}
                         >
-                            <div className={styles.banner} style={{ background: '#5865f2' }} />
-
-                            <div className={styles.avatarSection}>
-                                <Avatar src={user.avatar ?? undefined} alt={user.username} size="xl" status={user.status as any} username={user.username} />
-                            </div>
-
-                            <div className={styles.body}>
-                                <div className={styles.nameRow}>
-                                    <span className={styles.username}>{user.username}</span>
-                                    <span className={styles.discriminator}>#{user.discriminator || '0000'}</span>
-                                </div>
-
-                                {profileNote && (profileNote.text || profileNote.musicMetadata?.title) && (
-                                    <div className={styles.noteBubble}>
-                                        <span className={styles.noteEmoji}>{profileNote.emoji || '✨'}</span>
-                                        <div className={styles.noteTextWrap}>
-                                            {profileNote.text && <div className={styles.noteText}>{profileNote.text}</div>}
-                                            {profileNote.musicMetadata?.title && (
-                                                <div className={styles.noteMusic}>Listening to {profileNote.musicMetadata.title}</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className={styles.divider} />
-
-                                <button className={styles.actionRow} onClick={() => { setIsOpen(false); setShowUserSettings(true); }}>
-                                    <Edit2 size={16} />
-                                    <span>Edit Profile</span>
-                                </button>
-
+                            <div className={styles.bodyCompact}>
                                 <button className={styles.actionRow} onClick={() => { setIsOpen(false); setShowNotesModal(true); }}>
                                     <Music2 size={16} />
-                                    <span>Edit Beacon Note</span>
+                                    <span>Beacon Notes</span>
                                 </button>
 
-                                <div className={styles.divider} />
-
-                                {/* Status Selector */}
-                                <div className={styles.statusSection}>
-                                    <button className={styles.statusBtn} onClick={() => handleStatusChange('online')}>
-                                        <div className={`${styles.statusDot} ${styles.online}`} /> Online
-                                    </button>
-                                    <button className={styles.statusBtn} onClick={() => handleStatusChange('idle')}>
-                                        <div className={`${styles.statusDot} ${styles.idle}`} /> Idle
-                                    </button>
-                                    <button className={styles.statusBtn} onClick={() => handleStatusChange('dnd')}>
-                                        <div className={`${styles.statusDot} ${styles.dnd}`} /> Do Not Disturb
-                                    </button>
-                                    <button className={styles.statusBtn} onClick={() => handleStatusChange('invisible')}>
-                                        <div className={`${styles.statusDot} ${styles.invisible}`} /> Invisible
-                                    </button>
-                                </div>
-
-                                <div className={styles.divider} />
-
-                                <button className={styles.actionRow} onClick={() => { setIsOpen(false); setShowUserSettings(true); }}>
-                                    <Users size={16} />
-                                    <span>Account Settings</span>
+                                <button className={styles.actionRow} onClick={() => setShowStatusMenu(s => !s)}>
+                                    <Circle size={12} fill={(user?.status === 'dnd' ? '#ed4245' : user?.status === 'idle' ? '#f0b232' : user?.status === 'invisible' ? '#747f8d' : '#23a559')} stroke="none" />
+                                    <span style={{ flex: 1 }}>Status</span>
+                                    <ChevronRight size={13} style={{ opacity: 0.5, transform: showStatusMenu ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
                                 </button>
 
-                                <button className={styles.actionRow} onClick={copyUserId}>
-                                    <Copy size={16} />
-                                    <span>Copy User ID</span>
-                                </button>
+                                <AnimatePresence>
+                                    {showStatusMenu && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.18 }}
+                                            style={{ overflow: 'hidden' }}
+                                        >
+                                            {STATUS_OPTIONS.map(opt => (
+                                                <button
+                                                    key={opt.value}
+                                                    className={`${styles.actionRow} ${styles.subRow}`}
+                                                    onClick={() => handleSetStatus(opt.value)}
+                                                    style={user?.status === opt.value ? { background: 'rgba(255,255,255,0.06)' } : {}}
+                                                >
+                                                    <span style={{ color: opt.color }}>{opt.icon}</span>
+                                                    <span>{opt.label}</span>
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
 
-                                <div className={styles.divider} />
-
-                                <button className={`${styles.actionRow} ${styles.danger}`} onClick={() => { setIsOpen(false); logout(); }}>
-                                    <LogOut size={16} />
-                                    <span>Log Out</span>
+                                <button className={styles.actionRow} onClick={() => { setIsOpen(false); logout() }}>
+                                    <ArrowRightLeft size={16} />
+                                    <span>Switch Account</span>
                                 </button>
                             </div>
                         </motion.div>

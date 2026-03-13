@@ -104,6 +104,7 @@ export interface User {
   bio?: string | null
   banner?: string | null
   developerMode?: boolean
+  isBeaconPlus?: boolean
   badges?: UserBadge[]
   bot?: boolean
   twoFactorEnabled?: boolean

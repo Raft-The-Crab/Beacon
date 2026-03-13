@@ -45,6 +45,9 @@ export function GettingStarted() {
                     <pre className={`${styles.code} glass`}>
                         <code>pnpm add @beacon/sdk</code>
                     </pre>
+                    <div className={styles.infoBox}>
+                        Package links: <a href="https://www.npmjs.com/package/@beacon/sdk" target="_blank" rel="noreferrer">npm: @beacon/sdk</a> and <a href="/docs/sdk-tutorial">SDK tutorial docs</a>.
+                    </div>
                 </section>
 
                 <section>

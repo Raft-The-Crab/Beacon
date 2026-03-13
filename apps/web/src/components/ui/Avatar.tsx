@@ -72,6 +72,7 @@ export const Avatar = React.memo(function Avatar({
   const finalFrameUrl = frameUrl !== undefined ? frameUrl : (simulatedArt?.imageUrl || currentUserArt?.imageUrl)
   const finalFrameGradient = frameGradient !== undefined ? frameGradient : (simulatedArt?.preview || currentUserArt?.preview)
   const finalFrameAnimation = frameAnimation !== undefined ? frameAnimation : (simulatedArt?.animation || currentUserArt?.animation)
+  const shouldAnimateFrame = !!finalFrameAnimation && !finalFrameUrl
 
   const displayName = username || alt || ''
   const { bg, text } = stringToGradient(displayName)
@@ -86,7 +87,7 @@ export const Avatar = React.memo(function Avatar({
     >
       {/* Profile Art Frame */}
       {hasFrame && (
-        <div className={`${styles.frameRing} ${finalFrameAnimation ? styles[`anim-${finalFrameAnimation}`] : ''}`}>
+        <div className={`${styles.frameRing} ${shouldAnimateFrame ? styles[`anim-${finalFrameAnimation}`] : ''}`}>
           {finalFrameUrl ? (
             <img src={finalFrameUrl} alt="frame" className={styles.frameImage} />
           ) : finalFrameGradient ? (

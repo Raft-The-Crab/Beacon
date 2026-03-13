@@ -33,13 +33,13 @@ export class BeaconClient extends BeaconEventEmitter {
   private currentUser?: User
   private options: Required<BeaconClientOptions>
 
-  constructor(options: BeaconClientOptions) {
+  constructor(options: BeaconClientOptions = {}) {
     super()
 
     // Set default options
     this.options = {
-      apiUrl: options.apiUrl,
-      wsUrl: options.wsUrl,
+      apiUrl: options.apiUrl || 'https://api.beacon.qzz.io',
+      wsUrl: options.wsUrl || 'wss://gateway.beacon.qzz.io',
       token: options.token || '',
       reconnect: options.reconnect !== false,
       reconnectAttempts: options.reconnectAttempts || 5,
@@ -48,7 +48,7 @@ export class BeaconClient extends BeaconEventEmitter {
       requestTimeout: options.requestTimeout || 10000,
       debug: options.debug || false,
       headers: options.headers || {},
-      userAgent: options.userAgent || 'BeaconSDK/2.5'
+      userAgent: options.userAgent || 'BeaconSDK/1.0.0'
     }
 
     // Initialize cache
@@ -127,8 +127,13 @@ export class BeaconClient extends BeaconEventEmitter {
     }
 
     this.currentUser = response.data.user
-    this.httpClient.setToken(response.data.token)
-    this.wsClient = new WSClient(this.options, response.data.token, this)
+    const accessToken = (response.data as any).accessToken || (response.data as any).token
+    if (!accessToken) {
+      throw new Error('Login succeeded but no access token was returned')
+    }
+
+    this.httpClient.setToken(accessToken)
+    this.wsClient = new WSClient(this.options, accessToken, this)
 
     return response.data.user
   }
@@ -144,8 +149,13 @@ export class BeaconClient extends BeaconEventEmitter {
     }
 
     this.currentUser = response.data.user
-    this.httpClient.setToken(response.data.token)
-    this.wsClient = new WSClient(this.options, response.data.token, this)
+    const accessToken = (response.data as any).accessToken || (response.data as any).token
+    if (!accessToken) {
+      throw new Error('Registration succeeded but no access token was returned')
+    }
+
+    this.httpClient.setToken(accessToken)
+    this.wsClient = new WSClient(this.options, accessToken, this)
 
     return response.data.user
   }

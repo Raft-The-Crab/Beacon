@@ -1,33 +1,58 @@
-import { useState } from 'react'
-import { Search, Rocket, Code, Laptop, Shield, Zap, Bot, Music, Cpu, Palette, CheckCircle } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Search, Bot, Cpu, PlusCircle } from 'lucide-react'
 import { Button } from '../components/ui'
 import { useTranslationStore } from '../stores/useTranslationStore'
+import { apiClient } from '../services/apiClient'
+import { useNavigate } from 'react-router-dom'
 import styles from '../styles/modules/pages/AppDirectory.module.css'
+import shellStyles from '../styles/modules/pages/DiscoveryShell.module.css'
 
-const APPS = [
-    { name: 'Beacon Bot', icon: <Bot size={28} />, category: 'Official', desc: 'The official Beacon bot with moderation, welcomes, and slash commands.', gradient: 'linear-gradient(135deg, #5865f2, #4752c4)', official: true },
-    { name: 'AutoMod Pro', icon: <Shield size={28} />, category: 'Security', desc: 'Advanced auto-moderation powered by AI to keep your server clean.', gradient: 'linear-gradient(135deg, #23a559, #1a7a42)', official: false },
-    { name: 'MusicMaster', icon: <Music size={28} />, category: 'Productivity', desc: 'High-quality music streaming with queue management and DJ controls.', gradient: 'linear-gradient(135deg, #f0b232, #e05c00)', official: false },
-    { name: 'CodeRunner', icon: <Code size={28} />, category: 'Developer', desc: 'Execute code snippets in 30+ languages directly from chat messages.', gradient: 'linear-gradient(135deg, #949cf7, #5865f2)', official: false },
-    { name: 'PollMaster', icon: <Zap size={28} />, category: 'Productivity', desc: 'Create beautiful polls, surveys, and votes with real-time results.', gradient: 'linear-gradient(135deg, #ff6b6b, #ee0979)', official: false },
-    { name: 'AvatarFX', icon: <Palette size={28} />, category: 'Social', desc: 'Apply stunning visual effects and filters to your server profiles.', gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)', official: false },
-]
-
-const CATEGORIES = ['All', 'Official', 'Security', 'Productivity', 'Developer', 'Social']
+interface ApplicationItem {
+    id: string
+    name: string
+    description?: string | null
+    bot?: { id: string } | null
+}
 
 export function AppDirectory() {
     const { t } = useTranslationStore()
-    const [activeCategory, setActiveCategory] = useState('All')
+    const navigate = useNavigate()
     const [searchQuery, setSearchQuery] = useState('')
+    const [apps, setApps] = useState<ApplicationItem[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
-    const filtered = APPS.filter((app: any) => {
-        const matchesCat = activeCategory === 'All' || app.category === activeCategory
-        const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) || app.desc.toLowerCase().includes(searchQuery.toLowerCase())
-        return matchesCat && matchesSearch
-    })
+    useEffect(() => {
+        const loadApps = async () => {
+            setLoading(true)
+            setError(null)
+
+            const response = await apiClient.request('GET', '/applications')
+            if (!response.success) {
+                setError(response.error || 'Failed to load applications')
+                setLoading(false)
+                return
+            }
+
+            setApps(Array.isArray(response.data) ? response.data : [])
+            setLoading(false)
+        }
+
+        void loadApps()
+    }, [])
+
+    const filtered = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase()
+        if (!q) return apps
+        return apps.filter((app) =>
+            app.name.toLowerCase().includes(q) || (app.description || '').toLowerCase().includes(q)
+        )
+    }, [apps, searchQuery])
 
     return (
-        <div className={styles.container}>
+        <div className={shellStyles.pageShell}>
+            <div className={shellStyles.modalFrame} style={{ height: 'min(84vh, 100%)', overflow: 'auto' }}>
+            <div className={styles.container}>
             <header className={`${styles.hero} premium-hero-section`}>
                 <div className="atmos-bg">
                     <div className="atmos-orb" style={{ top: '-10%', right: '-10%', background: '#7c3aed', opacity: 0.15 }} />
@@ -53,88 +78,51 @@ export function AppDirectory() {
             </header>
 
             <main className="vista-transition" style={{ maxWidth: 1400, margin: '0 auto', padding: '0 40px 80px' }}>
-                {/* Category Filter */}
-                <div style={{ marginTop: -28, marginBottom: 48, display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <div className="premium-glass-card" style={{ padding: 6, borderRadius: "var(--radius-xl)", display: 'inline-flex', gap: 4 }}>
-                        {CATEGORIES.map((cat: string) => (
-                            <button
-                                key={cat}
-                                onClick={() => setActiveCategory(cat)}
-                                style={{
-                                    padding: '10px 20px',
-                                    borderRadius: "var(--radius-md)",
-                                    fontSize: 14,
-                                    fontWeight: 700,
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    background: activeCategory === cat ? 'var(--beacon-brand)' : 'transparent',
-                                    color: activeCategory === cat ? '#fff' : 'rgba(255,255,255,0.6)',
-                                    transition: 'all 0.2s ease',
-                                }}
-                            >
-                                {t(`app_directory.categories.${cat.toLowerCase().replace(' ', '_')}`) || cat}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Apps Grid */}
-                <div className="premium-grid">
-                    {filtered.map((app: any) => (
-                        <div key={app.name} className="premium-glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ height: 100, background: app.gradient, borderRadius: '32px 32px 0 0', position: 'relative', display: 'flex', alignItems: 'flex-end', padding: 20 }}>
-                                <div style={{ width: 64, height: 64, borderRadius: "var(--radius-xl)", background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', marginBottom: -32, border: '3px solid rgba(255,255,255,0.2)' }}>
-                                    {app.icon}
-                                </div>
-                                {app.official && (
-                                    <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: "var(--radius-sm)", display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 800, color: '#fff' }}>
-                                        <CheckCircle size={12} fill="var(--beacon-brand)" color="white" />
-                                        {t('app_directory.items.official')}
-                                    </div>
-                                )}
-                            </div>
-                            <div style={{ padding: 24, paddingTop: 44, flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                <div>
-                                    <h3 style={{ fontSize: 22, fontWeight: 900, marginBottom: 4 }}>{app.name}</h3>
-                                    <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', opacity: 0.5 }}>{app.category}</span>
-                                </div>
-                                <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, flex: 1 }}>{app.desc}</p>
-                                <Button
-                                    variant="primary"
-                                    style={{ width: '100%', height: 44, borderRadius: "var(--radius-md)", fontWeight: 800, marginTop: 8 }}
-                                >
-                                    {t('app_directory.items.add_to_server')}
-                                </Button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Coming Soon Banner */}
-                <div className="premium-glass-card" style={{ marginTop: 80, padding: 64, textAlign: 'center', borderRadius: 40 }}>
-                    <div className="atmos-bg">
-                        <div className="atmos-orb" style={{ background: '#7c3aed', opacity: 0.08, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-                    </div>
-                    <Rocket size={56} style={{ color: 'var(--beacon-brand)', marginBottom: 24, filter: 'drop-shadow(0 0 20px rgba(114, 137, 218, 0.4))' }} />
-                    <h2 className="premium-glow-text" style={{ fontSize: 40, marginBottom: 16 }}>Sovereign App Curation</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: 18, maxWidth: 600, margin: '0 auto 40px', lineHeight: 1.6 }}>
-                        We are hand-picking the highest quality plugins to ensure the Beacon experience remains premium and secure.
-                    </p>
-                    <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginBottom: 40 }}>
-                        <div className="premium-glass-card" style={{ padding: '20px 32px', borderRadius: "var(--radius-xl)", display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <Code size={24} style={{ color: 'var(--beacon-brand)' }} />
-                            <span style={{ fontWeight: 800 }}>Verified SDK</span>
-                        </div>
-                        <div className="premium-glass-card" style={{ padding: '20px 32px', borderRadius: "var(--radius-xl)", display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <Laptop size={24} style={{ color: 'var(--beacon-brand)' }} />
-                            <span style={{ fontWeight: 800 }}>Native Performance</span>
-                        </div>
-                    </div>
-                    <Button variant="primary" size="lg" style={{ height: 56, paddingInline: 48, fontSize: 18, fontWeight: 800, borderRadius: "var(--radius-lg)" }}>
-                        Join Developer Preview
+                <div style={{ marginTop: -10, marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Real applications from your account. Build and manage bots in Developer Portal.</p>
+                    <Button variant="primary" onClick={() => navigate('/developer')}>
+                        <PlusCircle size={16} />
+                        Open Developer Portal
                     </Button>
                 </div>
+
+                {loading ? (
+                    <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '36px 0' }}>Loading applications...</div>
+                ) : error ? (
+                    <div className="premium-glass-card" style={{ padding: 24, borderRadius: "var(--radius-xl)", color: 'var(--text-secondary)' }}>
+                        {error}
+                    </div>
+                ) : filtered.length === 0 ? (
+                    <div className="premium-glass-card" style={{ padding: 32, borderRadius: "var(--radius-xl)", textAlign: 'center' }}>
+                        <Bot size={40} style={{ opacity: 0.35, marginBottom: 12 }} />
+                        <h3 style={{ marginBottom: 8 }}>No applications yet</h3>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>Create your first application to start building bots and integrations.</p>
+                        <Button variant="primary" onClick={() => navigate('/developer')}>Create Application</Button>
+                    </div>
+                ) : (
+                    <div className="premium-grid">
+                        {filtered.map((app) => (
+                            <div key={app.id} className="premium-glass-card" style={{ padding: 22, borderRadius: "var(--radius-xl)", display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div style={{ width: 42, height: 42, borderRadius: 12, display: 'grid', placeItems: 'center', background: 'rgba(88,101,242,0.18)', border: '1px solid rgba(88,101,242,0.3)' }}>
+                                        <Cpu size={20} />
+                                    </div>
+                                    <div style={{ minWidth: 0 }}>
+                                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{app.name}</h3>
+                                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{app.bot ? 'Bot linked' : 'No bot linked'}</div>
+                                    </div>
+                                </div>
+                                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }}>{app.description || 'No description provided.'}</p>
+                                <Button variant="secondary" onClick={() => navigate('/developer')}>
+                                    Manage
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </main>
+        </div>
+        </div>
         </div>
     )
 }

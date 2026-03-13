@@ -98,11 +98,10 @@ export function useWebRTC(channelId: string | null): WebRTCState {
 
         // Handle ICE candidates
         pc.onicecandidate = (event) => {
-            const socket = wsClient.getSocket() as any
-            if (event.candidate && wsClient.isConnected() && socket) {
-                socket.emit('WEBRTC_SIGNAL', {
-                    targetUserId,
-                    signal: { type: 'candidate', candidate: event.candidate }
+            if (event.candidate) {
+                wsClient.sendWebRTCSignal(targetUserId, {
+                    type: 'candidate',
+                    candidate: event.candidate,
                 })
             }
         }
@@ -112,12 +111,8 @@ export function useWebRTC(channelId: string | null): WebRTCState {
             pc.createOffer()
                 .then(offer => pc.setLocalDescription(offer))
                 .then(() => {
-                    const socket = wsClient.getSocket() as any
-                    if (socket) {
-                        socket.emit('WEBRTC_SIGNAL', {
-                            targetUserId,
-                            signal: pc.localDescription
-                        })
+                    if (pc.localDescription) {
+                        wsClient.sendWebRTCSignal(targetUserId, pc.localDescription)
                     }
                 })
         }
@@ -144,23 +139,15 @@ export function useWebRTC(channelId: string | null): WebRTCState {
             }
 
             // Announce presence via WS
-            const socket = wsClient.getSocket() as any
-            if (socket && wsClient.isConnected()) {
-                socket.emit('VOICE_JOIN', { channelId: id, guildId })
-                console.log('🔊 Joined voice channel:', id)
-            } else {
-                console.error('Cannot join: WebSocket not connected')
-            }
+            wsClient.sendVoiceStateUpdate(guildId || 'global', id)
+            console.log('🔊 Joined voice channel:', id)
         } catch (err) {
             console.error('Failed to join voice channel:', err)
         }
     }
 
-    const leaveChannel = (id: string, guildId?: string) => {
-        const socket = wsClient.getSocket() as any
-        if (socket) {
-            socket.emit('VOICE_LEAVE', { channelId: id, guildId })
-        }
+    const leaveChannel = (_id: string, guildId?: string) => {
+        wsClient.sendVoiceStateUpdate(guildId || 'global', null)
 
         // Close all peer connections
         Object.values(peersRef.current).forEach(peer => peer.connection.close())
@@ -176,17 +163,18 @@ export function useWebRTC(channelId: string | null): WebRTCState {
     }
 
     useEffect(() => {
-        const socket = wsClient.getSocket() as any
-        if (!socket || !user) return
+        if (!user) return
 
         // Another user joined, initiate connection to them
-        const onUserJoined = async ({ userId }: { userId: string }) => {
+        const onUserJoined = async (event: any) => {
+            const { userId } = event?.data || {}
             if (userId === user.id) return
             createPeerConnection(userId, true) // We are the initiator
         }
 
         // Handle incoming WebRTC signaling data
-        const onSignal = async ({ senderUserId, signal }: { senderUserId: string, signal: any }) => {
+        const onSignal = async (event: any) => {
+            const { senderUserId, signal } = event?.data || {}
             if (senderUserId === user.id) return
 
             let pc = peersRef.current[senderUserId]?.connection
@@ -201,7 +189,9 @@ export function useWebRTC(channelId: string | null): WebRTCState {
                 await pc.setRemoteDescription(new RTCSessionDescription(signal))
                 const answer = await pc.createAnswer()
                 await pc.setLocalDescription(answer)
-                socket.emit('WEBRTC_SIGNAL', { targetUserId: senderUserId, signal: pc.localDescription })
+                if (pc.localDescription) {
+                    wsClient.sendWebRTCSignal(senderUserId, pc.localDescription)
+                }
             } else if (signal.type === 'answer') {
                 await pc.setRemoteDescription(new RTCSessionDescription(signal))
             } else if (signal.type === 'candidate') {
@@ -209,7 +199,8 @@ export function useWebRTC(channelId: string | null): WebRTCState {
             }
         }
 
-        const onUserLeft = ({ userId }: { userId: string }) => {
+        const onUserLeft = (event: any) => {
+            const { userId } = event?.data || {}
             if (peersRef.current[userId]) {
                 peersRef.current[userId].connection.close()
                 const newPeers = { ...peersRef.current }
@@ -219,14 +210,14 @@ export function useWebRTC(channelId: string | null): WebRTCState {
             }
         }
 
-        socket.on('VOICE_USER_JOINED', onUserJoined)
-        socket.on('VOICE_USER_LEFT', onUserLeft)
-        socket.on('WEBRTC_SIGNAL', onSignal)
+        wsClient.on('VOICE_USER_JOINED', onUserJoined)
+        wsClient.on('VOICE_USER_LEFT', onUserLeft)
+        wsClient.on('WEBRTC_SIGNAL', onSignal)
 
         return () => {
-            socket.off('VOICE_USER_JOINED', onUserJoined)
-            socket.off('VOICE_USER_LEFT', onUserLeft)
-            socket.off('WEBRTC_SIGNAL', onSignal)
+            wsClient.off('VOICE_USER_JOINED', onUserJoined)
+            wsClient.off('VOICE_USER_LEFT', onUserLeft)
+            wsClient.off('WEBRTC_SIGNAL', onSignal)
         }
     }, [user])
 

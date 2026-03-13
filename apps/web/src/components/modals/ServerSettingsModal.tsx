@@ -210,25 +210,25 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
             )}
 
             {activeTab === 'roles' && (
-              <div className={styles.section} style={{ height: '600px', display: 'flex', flexDirection: 'column' }}>
+              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
                 <RoleManager serverId={currentServer.id} />
               </div>
             )}
 
             {activeTab === 'assets' && (
-              <div className={styles.section} style={{ height: '600px', display: 'flex', flexDirection: 'column' }}>
+              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
                 <AssetManager guildId={currentServer.id} />
               </div>
             )}
 
             {activeTab === 'members' && (
-              <div className={styles.section} style={{ height: '600px', display: 'flex', flexDirection: 'column' }}>
+              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
                 <ModerationManager guildId={currentServer.id} />
               </div>
             )}
 
             {activeTab === 'audit_logs' && (
-              <div className={styles.section} style={{ height: '600px', display: 'flex', flexDirection: 'column' }}>
+              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
                 <AuditLogModal
                   guildId={currentServer.id}
                   guildName={currentServer.name}
@@ -239,7 +239,7 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
             )}
 
             {activeTab === 'webhooks' && (
-              <div className={styles.section} style={{ height: '600px', display: 'flex', flexDirection: 'column' }}>
+              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
                 <WebhooksManager
                   guildId={currentServer.id}
                   channels={currentServer.channels || []}
@@ -250,7 +250,7 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
             )}
 
             {activeTab === 'soundboard' && (
-              <div className={styles.section} style={{ height: '600px', display: 'flex', flexDirection: 'column' }}>
+              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
                 <SoundManager guildId={currentServer.id} />
               </div>
             )}

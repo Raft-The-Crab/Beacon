@@ -49,6 +49,56 @@ router.post('/', localAuthenticate, async (req: AuthRequest, res: Response) => {
     }
 })
 
+router.get('/:id', localAuthenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.id
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+        const { id } = req.params
+        const app = await AppsService.getApp(id)
+        if (!app) return res.status(404).json({ error: 'Application not found' })
+        if (app.ownerId !== userId) return res.status(403).json({ error: 'Unauthorized' })
+
+        return res.json(app)
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to fetch application' })
+    }
+})
+
+router.post('/:id/bot', localAuthenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.id
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+        const { id } = req.params
+        const app = await AppsService.getApp(id)
+        if (!app) return res.status(404).json({ error: 'Application not found' })
+        if (app.ownerId !== userId) return res.status(403).json({ error: 'Unauthorized' })
+
+        const bot = await AppsService.createBot(id)
+        return res.json(bot)
+    } catch (error: any) {
+        return res.status(500).json({ error: error?.message || 'Failed to create bot' })
+    }
+})
+
+router.get('/:id/bot', localAuthenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.id
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+        const { id } = req.params
+        const app = await AppsService.getApp(id)
+        if (!app) return res.status(404).json({ error: 'Application not found' })
+        if (app.ownerId !== userId) return res.status(403).json({ error: 'Unauthorized' })
+        if (!app.bot) return res.status(404).json({ error: 'Bot not found' })
+
+        return res.json(app.bot)
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to fetch bot' })
+    }
+})
+
 router.patch('/:id/bot', localAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params

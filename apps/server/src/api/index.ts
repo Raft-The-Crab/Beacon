@@ -18,6 +18,7 @@ import shopRouter from './shop'
 import interactionsRouter from './interactions'
 import questRouter from './quests'
 import giftingRouter from './gifting'
+import gifsRouter from './gifs'
 import activityRouter from '../routes/activity.routes'
 import notesRouter from './notes'
 import uploadRouter from '../routes/upload.routes'
@@ -37,7 +38,7 @@ router.use('/webhooks', webhookRouter)
 router.use('/audit-logs', auditLogRouter)
 router.use('/', beacoinRouter) // legacy path support: /users/@me/beacoin/*
 router.use('/beacoin', beacoinRouter)
-router.use('/notifications', notificationsRouter)
+router.use('/', notificationsRouter)
 router.use('/moderation', moderationRouter)
 router.use('/moderation/video', videoModerationRouter)
 router.use('/apps', appsRouter)
@@ -47,6 +48,7 @@ router.use('/shop', shopRouter)
 router.use('/interactions', interactionsRouter)
 router.use('/quests', questRouter)
 router.use('/gifting', giftingRouter)
+router.use('/gifs', gifsRouter)
 router.use('/activities', activityRouter)
 router.use('/notes', notesRouter)
 router.use('/upload', uploadRouter)

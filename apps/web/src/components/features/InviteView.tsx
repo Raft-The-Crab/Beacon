@@ -1,27 +1,91 @@
-﻿import { useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { Copy, Check, Share2, Shield, Zap, Globe } from 'lucide-react'
 import { useServerStore } from '../../stores/useServerStore'
 import { useToast } from '../ui'
+import { apiClient } from '../../services/apiClient'
 import styles from '../../styles/modules/features/InviteView.module.css'
 
 export function InviteView() {
     const { currentServer } = useServerStore()
     const { show } = useToast()
     const [copied, setCopied] = useState(false)
+    const [isGenerating, setIsGenerating] = useState(false)
+    const [inviteCode, setInviteCode] = useState<string>('')
 
-    if (!currentServer) return null
+    useEffect(() => {
+        let mounted = true
 
-    // Generate the invite link
-    // If vanityUrl exists, use it. Otherwise use inviteCode + .inv
-    const inviteCode = currentServer.vanityUrl || `Beacon-${currentServer.id.substring(0, 8)}.inv`
-    const inviteLink = `https://beacon.qzz.io/invite/${inviteCode}`
+        const bootstrapInvite = async () => {
+            if (!currentServer?.id) return
+
+            try {
+                const existing = await apiClient.getInvites(currentServer.id)
+                if (!mounted || !existing.success) return
+
+                const firstActive = (Array.isArray(existing.data) ? existing.data : []).find((inv: any) => {
+                    if (!inv?.code) return false
+                    if (!inv.expiresAt) return true
+                    return new Date(inv.expiresAt).getTime() > Date.now()
+                })
+
+                if (firstActive?.code) {
+                    setInviteCode(firstActive.code)
+                    return
+                }
+            } catch {
+                // Fall through to create flow.
+            }
+
+            setIsGenerating(true)
+            try {
+                const created = await apiClient.createInvite(currentServer.id)
+                if (mounted && created.success && created.data?.code) {
+                    setInviteCode(created.data.code)
+                }
+            } finally {
+                if (mounted) setIsGenerating(false)
+            }
+        }
+
+        void bootstrapInvite()
+
+        return () => {
+            mounted = false
+        }
+    }, [currentServer?.id])
+
+    const inviteLink = useMemo(() => {
+        if (!inviteCode) return ''
+        return `https://beacon.qzz.io/invite/${inviteCode}`
+    }, [inviteCode])
 
     const handleCopy = () => {
+        if (!inviteLink) return
         navigator.clipboard.writeText(inviteLink)
         setCopied(true)
         show("Invite link copied!", "success")
         setTimeout(() => setCopied(false), 2000)
     }
+
+    const handleRegenerate = async () => {
+        if (!currentServer?.id) return
+        setIsGenerating(true)
+        try {
+            const created = await apiClient.createInvite(currentServer.id)
+            if (created.success && created.data?.code) {
+                setInviteCode(created.data.code)
+                show('New invite link generated', 'success')
+            } else {
+                show('Could not generate invite link', 'error')
+            }
+        } catch {
+            show('Could not generate invite link', 'error')
+        } finally {
+            setIsGenerating(false)
+        }
+    }
+
+    if (!currentServer) return null
 
     return (
         <div className={styles.container}>
@@ -38,20 +102,24 @@ export function InviteView() {
                 <div className={styles.inputWrapper}>
                     <input
                         readOnly
-                        value={inviteLink}
+                        value={inviteLink || 'Generating invite...'}
                         className={styles.input}
                     />
                     <button
                         className={`${styles.copyBtn} ${copied ? styles.copyBtnSuccess : ''}`}
                         onClick={handleCopy}
+                        disabled={!inviteLink || isGenerating}
                     >
                         {copied ? <Check size={18} /> : <Copy size={18} />}
                         <span>{copied ? 'Copied' : 'Copy'}</span>
                     </button>
                 </div>
                 <div className={styles.hint}>
-                    Your invite link expires in 7 days.
+                    Invite links expire in 7 days. {inviteCode ? 'Use Regenerate if you need a fresh code.' : ''}
                 </div>
+                <button className={styles.copyBtn} onClick={handleRegenerate} disabled={isGenerating} style={{ marginTop: 10 }}>
+                    <span>{isGenerating ? 'Generating...' : 'Regenerate'}</span>
+                </button>
             </div>
 
             <div className={styles.divider} />

@@ -1,14 +1,12 @@
 ﻿import React, { useState } from 'react';
-import { Camera, Edit3, Save, Palette, Globe, Shield, Activity } from 'lucide-react';
+import { Edit3, Save, Palette, Globe, Shield, Activity } from 'lucide-react';
 import { Button, Badge, useToast } from '../ui';
 import { UserPresenceWidget } from './UserPresenceWidget';
 import { api } from '../../lib/api';
 import styles from '../../styles/modules/features/ProfileEnhanced.module.css';
 
 interface ProfileTheme {
-  bannerColor: string;
   accentColor: string;
-  bannerUrl?: string;
 }
 
 export const ProfileEnhanced: React.FC<{ user: any; isOwn?: boolean }> = ({ user, isOwn }) => {
@@ -17,7 +15,6 @@ export const ProfileEnhanced: React.FC<{ user: any; isOwn?: boolean }> = ({ user
   const [loading, setLoading] = useState(false);
   const toast = useToast();
   const [customTheme, setCustomTheme] = useState<ProfileTheme>({
-    bannerColor: user.bannerColor || '#7289da',
     accentColor: user.accentColor || '#5865f2'
   });
 
@@ -26,7 +23,6 @@ export const ProfileEnhanced: React.FC<{ user: any; isOwn?: boolean }> = ({ user
     try {
       await api.patch('/users/profile', {
         bio,
-        bannerColor: customTheme.bannerColor,
         accentColor: customTheme.accentColor
       });
       setIsEditing(false);
@@ -41,17 +37,7 @@ export const ProfileEnhanced: React.FC<{ user: any; isOwn?: boolean }> = ({ user
 
   return (
     <div className={styles.profileCard}>
-      {/* Banner */}
-      <div
-        className={styles.banner}
-        style={{ backgroundColor: customTheme.bannerColor, backgroundImage: customTheme.bannerUrl ? `url(${customTheme.bannerUrl})` : 'none' }}
-      >
-        {isOwn && (
-          <button className={styles.editBannerBtn}>
-            <Camera size={18} />
-          </button>
-        )}
-      </div>
+      <div className={styles.banner} />
 
       {/* Profile Info Overlay */}
       <div className={styles.content}>
@@ -134,8 +120,8 @@ export const ProfileEnhanced: React.FC<{ user: any; isOwn?: boolean }> = ({ user
             <Palette size={16} />
             <input
               type="color"
-              value={customTheme.bannerColor}
-              onChange={(e) => setCustomTheme({ ...customTheme, bannerColor: e.target.value })}
+              value={customTheme.accentColor}
+              onChange={(e) => setCustomTheme({ ...customTheme, accentColor: e.target.value })}
             />
           </div>
           <Button variant="primary" size="sm" onClick={handleSave} loading={loading}>

@@ -215,7 +215,7 @@ router.post('/users/@me/beacoin/redeem', requireAuth, async (req: AuthRequest, r
       return res.status(400).json({ error: 'Promo code is required' })
     }
 
-    const promo = resolvePromoCode(normalizedCode)
+    const promo = resolvePromoCode(normalizedCode, 'redeem')
     if (!promo || (promo.benefit.kind !== 'coins' && promo.benefit.kind !== 'beacon_plus')) {
       return res.status(400).json({ error: 'Invalid or unsupported promo code' })
     }
@@ -356,7 +356,7 @@ router.post('/users/@me/beacoin/coupon/validate', requireAuth, async (req: AuthR
       return res.status(400).json({ error: 'Promo code is required' })
     }
 
-    const promo = resolvePromoCode(code)
+    const promo = resolvePromoCode(code, 'coupon')
     if (!promo) {
       return res.status(400).json({ error: 'Invalid or expired promo code' })
     }

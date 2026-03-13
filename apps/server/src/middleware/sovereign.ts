@@ -1,9 +1,7 @@
 import { Response, NextFunction } from 'express'
 import { AuthRequest } from './auth'
 import fs from 'fs'
-import path from 'path'
-
-const DEVELOPERS_PATH = path.join(process.cwd(), 'apps/server/config/developers.json')
+import { resolveFirstExistingConfigPath } from '../lib/configPaths'
 
 export const isSovereign = (req: AuthRequest, res: Response, next: NextFunction) => {
     const userId = req.user?.id
@@ -13,12 +11,14 @@ export const isSovereign = (req: AuthRequest, res: Response, next: NextFunction)
     }
 
     try {
-        if (!fs.existsSync(DEVELOPERS_PATH)) {
-            console.error('[SOVEREIGN] CRITICAL: developers.json missing!')
+        const developersPath = resolveFirstExistingConfigPath('developers.json')
+
+        if (!developersPath) {
+            console.error('[SOVEREIGN] CRITICAL: developers config missing!')
             return res.status(500).json({ error: 'Security configuration error' })
         }
 
-        const { developers } = JSON.parse(fs.readFileSync(DEVELOPERS_PATH, 'utf-8'))
+        const { developers } = JSON.parse(fs.readFileSync(developersPath, 'utf-8'))
 
         if (Array.isArray(developers) && developers.includes(userId)) {
             console.log(`[SOVEREIGN] Access granted to user: ${userId}`)

@@ -17,12 +17,19 @@ export function AddFriendModal({ onClose }: AddFriendModalProps) {
         if (!inputValue.trim()) return
         setLoading(true)
         try {
-            await api.post("/friends/request", { username: inputValue.trim() })
-            show(`Friend request sent to ${inputValue.trim()}!`, "success")
+            const trimmed = inputValue.trim()
+            const match = trimmed.match(/^(.+?)#(\d{4})$/)
+            const payload = match
+                ? { username: match[1].trim(), discriminator: match[2] }
+                : { username: trimmed }
+
+            await api.post('/friends/request', payload)
+            show(`Friend request sent to ${trimmed}!`, 'success')
             setInputValue("")
             onClose()
-        } catch {
-            show("Could not send friend request. Check the username and try again.", "error")
+        } catch (error: any) {
+            const message = error?.response?.data?.error || 'Could not send friend request. Check the username and try again.'
+            show(message, 'error')
         } finally {
             setLoading(false)
         }
@@ -35,14 +42,14 @@ export function AddFriendModal({ onClose }: AddFriendModalProps) {
                     <UserPlus size={28} />
                 </div>
                 <h2>Add a Friend</h2>
-                <p>You can add friends with their Beacon username. It's case sensitive!</p>
+                <p>Use username or username#1234. Usernames are case-insensitive.</p>
             </div>
 
             <div className={styles.inputSection}>
                 <div className={styles.inputWrapper}>
                     <input
                         type="text"
-                        placeholder="Enter a username..."
+                        placeholder="Enter username or username#1234..."
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddFriend()}

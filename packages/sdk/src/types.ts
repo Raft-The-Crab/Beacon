@@ -1,6 +1,6 @@
 import type { User, Server, Channel, Message, Role, Presence, Permission } from './core-types'
 
-// Re-export types from @beacon/types
+// Re-export SDK core domain types
 export type { User, Server, Channel, Message, Role, Presence, Permission } from './core-types'
 
 /**
@@ -8,10 +8,10 @@ export type { User, Server, Channel, Message, Role, Presence, Permission } from 
  */
 export interface BeaconClientOptions {
   /** Base URL for the REST API */
-  apiUrl: string
+  apiUrl?: string
   
   /** WebSocket server URL */
-  wsUrl: string
+  wsUrl?: string
   
   /** Authentication token (if already authenticated) */
   token?: string

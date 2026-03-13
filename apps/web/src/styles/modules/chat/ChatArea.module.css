@@ -2,7 +2,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--chat-bg);
+  background: transparent;
   min-width: 0;
   position: relative;
   overflow: visible;
@@ -157,7 +157,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  padding: 0 4px 8px 4px;
+  padding: 0 4px 12px 4px;
   position: relative;
   z-index: 1;
 }
@@ -339,8 +339,8 @@
     border: none;
     box-shadow: none;
     margin: 0;
-    height: calc(100dvh - 60px);
-    /* minus bottom server bar */
+    height: 100%;
+    min-height: 0;
   }
 
   .header {
@@ -355,6 +355,7 @@
 
   .headerRight {
     gap: 8px;
+    min-width: 0;
   }
 
   .searchBar {
@@ -380,11 +381,41 @@
     height: 36px;
   }
 
+  .messages {
+    padding: 0 2px calc(10px + env(safe-area-inset-bottom)) 2px;
+  }
+
   .dateSeparator {
     padding: 12px 12px 6px;
   }
 
   .hideOnMobile {
     display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    height: 48px;
+    padding: 6px 8px;
+  }
+
+  .channelName {
+    font-size: 14px;
+  }
+
+  .headerButton {
+    width: 28px;
+    height: 28px;
+    padding: 4px;
+  }
+
+  .headerRight {
+    gap: 4px;
+  }
+
+  .scrollToBottom {
+    right: 10px;
+    bottom: 76px;
   }
 }

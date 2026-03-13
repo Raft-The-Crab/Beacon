@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { MessageReaction } from '../components/features/MessageItem'
 import { PresenceStatus } from '@beacon/types'
 import { api } from '../lib/api'
+import { useAuthStore } from './useAuthStore'
 
 export interface DirectMessage {
   id: string
@@ -53,6 +54,28 @@ interface DMStore {
 
 const EMPTY_ARRAY: any[] = []
 
+function normalizeDMParticipants(recipients: any[]): DMParticipant[] {
+  const currentUserId = useAuthStore.getState().user?.id
+
+  const participants = recipients.map((recipient: any) => ({
+    id: recipient.id || recipient.user?.id,
+    username: recipient.username || recipient.user?.username,
+    avatar: recipient.avatar || recipient.user?.avatar,
+    status: 'offline' as PresenceStatus,
+  }))
+
+  if (!currentUserId) {
+    return participants
+  }
+
+  return participants.sort((left, right) => {
+    const leftIsSelf = left.id === currentUserId
+    const rightIsSelf = right.id === currentUserId
+    if (leftIsSelf === rightIsSelf) return 0
+    return leftIsSelf ? 1 : -1
+  })
+}
+
 export const useDMStore = create<DMStore>((set, get) => ({
   channels: [],
   activeChannel: null,
@@ -64,12 +87,7 @@ export const useDMStore = create<DMStore>((set, get) => ({
       const formatted = data.map((channel: any) => ({
         id: channel.id,
         unreadCount: 0,
-        participants: channel.recipients.map((r: any) => ({
-          id: r.id || r.user?.id,
-          username: r.username || r.user?.username,
-          avatar: r.avatar || r.user?.avatar,
-          status: 'offline'
-        }))
+        participants: normalizeDMParticipants(channel.recipients || [])
       }))
       set({ channels: formatted })
     } catch (e) {
@@ -83,12 +101,7 @@ export const useDMStore = create<DMStore>((set, get) => ({
       const formatted = data.map((channel: any) => ({
         id: channel.id,
         unreadCount: 0,
-        participants: channel.recipients.map((r: any) => ({
-          id: r.id || r.user?.id,
-          username: r.username || r.user?.username,
-          avatar: r.avatar || r.user?.avatar,
-          status: 'offline'
-        }))
+        participants: normalizeDMParticipants(channel.recipients || [])
       }))
       set({ channels: formatted })
     } catch (e) {
@@ -149,12 +162,7 @@ export const useDMStore = create<DMStore>((set, get) => ({
       const { data } = await api.post('/dms', { userIds: [userId] });
       const newChannel: DMChannel = {
         id: data.id,
-        participants: data.recipients.map((r: any) => ({
-          id: r.id || r.user?.id,
-          username: r.username || r.user?.username,
-          avatar: r.avatar || r.user?.avatar,
-          status: 'offline'
-        })),
+        participants: normalizeDMParticipants(data.recipients || []),
         unreadCount: 0,
       }
 
@@ -223,6 +231,7 @@ export const useDMStore = create<DMStore>((set, get) => ({
 
   addReaction: async (channelId: string, messageId: string, emoji: string) => {
     const snapshot = get().messages
+    let removingExistingReaction = false
 
     set((state) => {
       const messages = new Map(state.messages)
@@ -234,6 +243,7 @@ export const useDMStore = create<DMStore>((set, get) => ({
         const existingReaction = reactions.find((r) => r.emoji === emoji)
 
         if (existingReaction) {
+          removingExistingReaction = existingReaction.userReacted
           return {
             ...m,
             reactions: existingReaction.userReacted
@@ -260,7 +270,11 @@ export const useDMStore = create<DMStore>((set, get) => ({
     })
 
     try {
-      await api.put(`/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}/@me`)
+      if (removingExistingReaction) {
+        await api.delete(`/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}/@me`)
+      } else {
+        await api.put(`/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}/@me`)
+      }
     } catch (error) {
       console.error('Failed to sync reaction with server', error)
       set({ messages: snapshot })

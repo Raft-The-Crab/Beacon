@@ -5,6 +5,7 @@ import { useUIStore } from '../../stores/useUIStore'
 import { useProfileArtStore } from '../../stores/useProfileArtStore'
 import { useVoiceStore } from '../../stores/useVoiceStore'
 import { apiClient } from '../../services/apiClient'
+import { voiceManager } from '../../services/voiceManager'
 import { Avatar } from '../ui/Avatar'
 import { Tooltip } from '../ui/Tooltip'
 import { CurrentUserProfileCard } from './CurrentUserProfileCard'
@@ -42,7 +43,9 @@ export function CurrentUserControls() {
     }, [profileNote])
 
     const username = user?.username || 'Guest'
+    const displayName = (user as any)?.displayName?.trim() || username
     const discriminator = user?.discriminator || '0000'
+    const voiceLabel = currentVoiceState?.channelId ? 'In Voice' : null
 
     useEffect(() => {
         if (!isAuthenticated) return
@@ -72,13 +75,14 @@ export function CurrentUserControls() {
                         />
                     </div>
                     <div className={styles.userInfo}>
-                        <div className={styles.userName}>{username}</div>
+                        <div className={styles.userName}>{displayName}</div>
                         <div className={styles.userStatusRow}>
                             {profileNote?.emoji && <span className={styles.miniEmoji}>{profileNote.emoji}</span>}
                             <div className={styles.userStatusText}>
-                                {notePreview || `#${discriminator}`}
+                                {notePreview || `@${username}#${discriminator}`}
                             </div>
                         </div>
+                        {voiceLabel && <div className={styles.voicePill}>{voiceLabel}</div>}
                     </div>
                 </div>
             </CurrentUserProfileCard>
@@ -87,8 +91,14 @@ export function CurrentUserControls() {
                 <Tooltip content={currentVoiceState?.selfMute ? 'Unmute Mic' : 'Mute Mic'} position="top">
                     <button
                         className={`${styles.iconCtrlBtn} ${currentVoiceState?.selfMute ? styles.iconCtrlBtnActive : ''}`}
-                        onClick={() => setSelfMute(!currentVoiceState?.selfMute)}
+                        onClick={() => {
+                            if (!currentVoiceState) return
+                            const next = !currentVoiceState.selfMute
+                            setSelfMute(next)
+                            voiceManager.setMute(currentVoiceState.guildId, next)
+                        }}
                         aria-label={currentVoiceState?.selfMute ? 'Unmute microphone' : 'Mute microphone'}
+                        disabled={!currentVoiceState}
                     >
                         {currentVoiceState?.selfMute ? <MicOff size={16} /> : <Mic size={16} />}
                     </button>
@@ -97,8 +107,14 @@ export function CurrentUserControls() {
                 <Tooltip content={currentVoiceState?.selfDeaf ? 'Undeafen' : 'Deafen'} position="top">
                     <button
                         className={`${styles.iconCtrlBtn} ${currentVoiceState?.selfDeaf ? styles.iconCtrlBtnActive : ''}`}
-                        onClick={() => setSelfDeaf(!currentVoiceState?.selfDeaf)}
+                        onClick={() => {
+                            if (!currentVoiceState) return
+                            const next = !currentVoiceState.selfDeaf
+                            setSelfDeaf(next)
+                            voiceManager.setDeaf(currentVoiceState.guildId, next)
+                        }}
                         aria-label={currentVoiceState?.selfDeaf ? 'Undeafen' : 'Deafen'}
+                        disabled={!currentVoiceState}
                     >
                         {currentVoiceState?.selfDeaf ? <VolumeX size={16} /> : <Volume2 size={16} />}
                     </button>

@@ -5,6 +5,7 @@ import styles from '../../styles/modules/modals/QuickSwitcherModal.module.css'
 import { useDMStore } from '../../stores/useDMStore'
 import { useServerStore } from '../../stores/useServerStore'
 import { useUserListStore } from '../../stores/useUserListStore'
+import { useAuthStore } from '../../stores/useAuthStore'
 
 interface QuickSwitcherModalProps {
     isOpen: boolean
@@ -14,6 +15,7 @@ interface QuickSwitcherModalProps {
 export function QuickSwitcherModal({ isOpen, onClose }: QuickSwitcherModalProps) {
     const [query, setQuery] = useState('')
     const { channels, setActiveChannel } = useDMStore()
+    const user = useAuthStore((state) => state.user)
     const { currentServer } = useServerStore()
     const { friends } = useUserListStore()
 
@@ -25,7 +27,7 @@ export function QuickSwitcherModal({ isOpen, onClose }: QuickSwitcherModalProps)
 
         // Match DMs
         channels.forEach(ch => {
-            const name = ch.participants[0]?.username || 'Unknown'
+            const name = ch.participants.find(p => p.id !== user?.id)?.username || ch.participants[0]?.username || 'Unknown'
             if (name.toLowerCase().includes(q)) {
                 res.push({ type: 'dm', id: ch.id, name, icon: <MessageSquare size={16} /> })
             }

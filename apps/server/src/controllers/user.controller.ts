@@ -5,11 +5,23 @@ import { Request, Response } from 'express';
 import { prisma } from '../db';
 import { redis } from '../services/redis';
 import { CacheService } from '../services/cache';
+import { AuthService } from '../services/auth';
+import { validateUsername } from '../middleware/validation';
+
+function ensurePrisma(res: Response) {
+  if (!prisma) {
+    res.status(503).json({ error: 'User service unavailable. Check the database connection.' });
+    return false;
+  }
+
+  return true;
+}
 
 // GET /users/me
 export async function getMe(req: Request, res: Response) {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!ensurePrisma(res)) return;
 
   try {
     let user: any = null
@@ -19,6 +31,7 @@ export async function getMe(req: Request, res: Response) {
         select: {
           id: true,
           username: true,
+          displayName: true,
           discriminator: true,
           email: true,
           avatar: true,
@@ -28,6 +41,8 @@ export async function getMe(req: Request, res: Response) {
           customStatus: true,
           theme: true,
           developerMode: true,
+          badges: true,
+          isBeaconPlus: true,
           avatarDecorationId: true,
           profileEffectId: true,
           createdAt: true,
@@ -40,6 +55,7 @@ export async function getMe(req: Request, res: Response) {
         select: {
           id: true,
           username: true,
+          displayName: true,
           discriminator: true,
           email: true,
           avatar: true,
@@ -54,12 +70,14 @@ export async function getMe(req: Request, res: Response) {
         ...minimal,
         theme: 'auto',
         developerMode: false,
+        badges: [],
+        isBeaconPlus: false,
         avatarDecorationId: null,
         profileEffectId: null,
       } : null
     }
     if (!user) return res.status(404).json({ error: 'User not found' });
-    return res.json(user);
+    return res.json(AuthService.sanitizeUser(user));
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }
@@ -69,9 +87,10 @@ import { z } from 'zod';
 
 const UpdateProfileSchema = z.object({
   username: z.string().min(2).max(32).optional(),
+  displayName: z.string().min(1).max(32).optional().nullable(),
   bio: z.string().max(190).optional().nullable(),
   avatar: z.string().url().optional().nullable(),
-  banner: z.string().url().optional().nullable(),
+  banner: z.string().trim().min(1).max(512).optional().nullable(),
   theme: z.enum(['auto', 'light', 'dark', 'midnight', 'oled', 'dracula']).optional(),
   developerMode: z.boolean().optional(),
   status: z.enum(['online', 'idle', 'dnd', 'invisible']).optional(),
@@ -84,14 +103,37 @@ const UpdateProfileSchema = z.object({
 export async function updateMe(req: Request, res: Response) {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!ensurePrisma(res)) return;
 
   try {
     const data = UpdateProfileSchema.parse(req.body);
+    const trimmedUsername = data.username?.trim();
+    const trimmedDisplayName = typeof data.displayName === 'string' ? data.displayName.trim() : data.displayName;
+
+    if (trimmedUsername !== undefined) {
+      const validation = validateUsername(trimmedUsername);
+      if (!validation.valid) {
+        return res.status(400).json({ error: validation.error || 'Invalid username' });
+      }
+
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          id: { not: userId },
+          username: { equals: trimmedUsername, mode: 'insensitive' },
+        },
+        select: { id: true },
+      });
+
+      if (existingUser) {
+        return res.status(409).json({ error: 'Username is already taken' });
+      }
+    }
 
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...(data.username !== undefined && { username: data.username }),
+        ...(trimmedUsername !== undefined && { username: trimmedUsername }),
+        ...(trimmedDisplayName !== undefined && { displayName: trimmedDisplayName || null }),
         ...(data.bio !== undefined && { bio: data.bio }),
         ...(data.avatar !== undefined && { avatar: data.avatar }),
         ...(data.banner !== undefined && { banner: data.banner }),
@@ -105,6 +147,7 @@ export async function updateMe(req: Request, res: Response) {
       select: {
         id: true,
         username: true,
+        displayName: true,
         discriminator: true,
         email: true,
         avatar: true,
@@ -114,8 +157,11 @@ export async function updateMe(req: Request, res: Response) {
         customStatus: true,
         theme: true,
         developerMode: true,
+        badges: true,
+        isBeaconPlus: true,
         avatarDecorationId: true,
         profileEffectId: true,
+        createdAt: true,
       },
     });
 
@@ -131,9 +177,12 @@ export async function updateMe(req: Request, res: Response) {
     // Invalidate profile cache
     await CacheService.del(`user:${userId}`);
 
-    return res.json(updated);
-  } catch (err) {
+    return res.json(AuthService.sanitizeUser(updated));
+  } catch (err: any) {
     console.error('updateMe error:', err);
+    if (err?.name === 'ZodError') {
+      return res.status(400).json({ error: 'Invalid profile update payload' });
+    }
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -141,6 +190,7 @@ export async function updateMe(req: Request, res: Response) {
 // GET /users/:userId
 export async function getUser(req: Request, res: Response) {
   const { userId } = req.params;
+  if (!ensurePrisma(res)) return;
 
   try {
     const cached = await CacheService.get(`user:${userId}`);
@@ -153,12 +203,15 @@ export async function getUser(req: Request, res: Response) {
         select: {
           id: true,
           username: true,
+          displayName: true,
           discriminator: true,
           avatar: true,
           banner: true,
           bio: true,
           status: true,
           customStatus: true,
+          badges: true,
+          isBeaconPlus: true,
           avatarDecorationId: true,
           profileEffectId: true,
           createdAt: true,
@@ -171,6 +224,7 @@ export async function getUser(req: Request, res: Response) {
         select: {
           id: true,
           username: true,
+          displayName: true,
           discriminator: true,
           avatar: true,
           banner: true,
@@ -182,14 +236,17 @@ export async function getUser(req: Request, res: Response) {
       })
       user = minimal ? {
         ...minimal,
+        badges: [],
+        isBeaconPlus: false,
         avatarDecorationId: null,
         profileEffectId: null,
       } : null
     }
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    await CacheService.set(`user:${userId}`, user, 600); // 10 min cache
-    return res.json(user);
+    const sanitizedUser = AuthService.sanitizeUser(user)
+    await CacheService.set(`user:${userId}`, sanitizedUser, 600); // 10 min cache
+    return res.json(sanitizedUser);
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }
@@ -199,6 +256,7 @@ export async function getUser(req: Request, res: Response) {
 export async function getMyGuilds(req: Request, res: Response) {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!ensurePrisma(res)) return;
 
   try {
     const memberships = await prisma.guildMember.findMany({
@@ -230,13 +288,14 @@ export async function getMyGuilds(req: Request, res: Response) {
 export async function getMyFriends(req: Request, res: Response) {
   const userId = req.user?.id;
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!ensurePrisma(res)) return;
 
   try {
     const friends = await prisma.friendship.findMany({
       where: {
         OR: [
-          { userId, status: 'accepted' } as any,
-          { friendId: userId, status: 'accepted' } as any,
+          { userId, status: 1 },
+          { friendId: userId, status: 1 },
         ],
       },
       include: {
@@ -258,7 +317,8 @@ export async function getMyFriends(req: Request, res: Response) {
       };
     });
 
-    return res.json(enriched);
+    const deduped = Array.from(new Map(enriched.map((entry: any) => [entry.id, entry])).values())
+    return res.json(deduped);
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }

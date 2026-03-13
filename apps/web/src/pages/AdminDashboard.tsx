@@ -1,46 +1,35 @@
-import { useState } from 'react'
+import { useMemo } from 'react'
 import {
-    Activity, Users, Shield, Server,
-    AlertTriangle, CheckCircle, BarChart3,
-    MessageSquare, RefreshCw
+    Shield, Lock, Activity, FileSearch,
+    Radar, RefreshCw, CheckCircle
 } from 'lucide-react'
 import { Button, Card } from '../components/ui'
+import { useAuthStore } from '../stores/useAuthStore'
 import styles from '../styles/modules/pages/AdminDashboard.module.css'
 
-interface SystemStats {
-    totalUsers: number
-    activeToday: number
-    totalMessages: number
-    serverStatus: 'online' | 'degraded' | 'offline'
-    latency: number
-    cpuUsage: number
-    ramUsage: number
-}
-
-interface ModerationLog {
-    id: string
-    action: string
-    target: string
-    moderator: string
-    timestamp: string
-    reason?: string
-}
-
 export function AdminDashboard() {
-    const [stats] = useState<SystemStats>({
-        totalUsers: 24502,
-        activeToday: 1842,
-        totalMessages: 1204592,
-        serverStatus: 'online',
-        latency: 42,
-        cpuUsage: 12,
-        ramUsage: 45
-    })
-    const [logs] = useState<ModerationLog[]>([
-        { id: '1', action: 'BAN', target: 'SpamBot_99', moderator: 'Admin_Master', timestamp: new Date().toISOString(), reason: 'Spamming advertisement' },
-        { id: '2', action: 'WARN', target: 'PlayerOne', moderator: 'Guardian_Bot', timestamp: new Date().toISOString(), reason: 'Inappropriate language' },
-        { id: '3', action: 'UNBAN', target: 'MisunderstoodUser', moderator: 'Admin_Master', timestamp: new Date().toISOString() },
-    ])
+    const user = useAuthStore((state) => state.user)
+    const hasAccess = useMemo(() => {
+        const badges = new Set((user?.badges || []).map((badge) => String(badge).toLowerCase()))
+        return Boolean(user && (user.developerMode || badges.has('admin') || badges.has('owner')))
+    }, [user])
+
+    if (!hasAccess) {
+        return (
+            <div className={styles.container}>
+                <Card className={styles.panel}>
+                    <div className={styles.panelHeader}>
+                        <h3>Restricted Area</h3>
+                        <Lock size={16} />
+                    </div>
+                    <div style={{ display: 'grid', gap: 16, color: 'var(--text-secondary)' }}>
+                        <p>This dashboard is limited to verified platform administrators.</p>
+                        <p>Required access: platform admin, owner, or developer mode on an authorized account.</p>
+                    </div>
+                </Card>
+            </div>
+        )
+    }
 
     return (
         <div className={styles.container}>
@@ -49,7 +38,7 @@ export function AdminDashboard() {
                     <Shield size={24} className={styles.titleIcon} />
                     <div>
                         <h1>Platform Command Center</h1>
-                        <p>Global oversight and moderation engine</p>
+                        <p>Restricted operational workspace for live moderation and incident response.</p>
                     </div>
                 </div>
                 <div className={styles.headerActions}>
@@ -65,130 +54,96 @@ export function AdminDashboard() {
             </header>
 
             <div className={styles.grid}>
-                {/* Stats row */}
                 <Card className={styles.statCard}>
                     <div className={styles.statIcon} style={{ background: 'rgba(88, 101, 242, 0.1)', color: '#5865f2' }}>
-                        <Users size={20} />
+                        <Activity size={20} />
                     </div>
                     <div className={styles.statInfo}>
-                        <span className={styles.statLabel}>Total Users</span>
-                        <span className={styles.statValue}>{stats.totalUsers.toLocaleString()}</span>
+                        <span className={styles.statLabel}>Operational Access</span>
+                        <span className={styles.statValue}>Verified</span>
                     </div>
-                    <div className={styles.statTrend} style={{ color: '#23a559' }}>+12%</div>
+                    <div className={styles.statTrend} style={{ color: '#23a559' }}>Granted</div>
                 </Card>
 
                 <Card className={styles.statCard}>
                     <div className={styles.statIcon} style={{ background: 'rgba(35, 165, 89, 0.1)', color: '#23a559' }}>
-                        <Activity size={20} />
+                        <Radar size={20} />
                     </div>
                     <div className={styles.statInfo}>
-                        <span className={styles.statLabel}>Active Now</span>
-                        <span className={styles.statValue}>{stats.activeToday.toLocaleString()}</span>
+                        <span className={styles.statLabel}>Live Telemetry</span>
+                        <span className={styles.statValue}>Protected</span>
                     </div>
-                    <div className={styles.statTrend} style={{ color: '#23a559' }}>+5.2%</div>
+                    <div className={styles.statTrend} style={{ color: '#23a559' }}>Ready</div>
                 </Card>
 
                 <Card className={styles.statCard}>
                     <div className={styles.statIcon} style={{ background: 'rgba(240, 178, 50, 0.1)', color: '#f0b232' }}>
-                        <MessageSquare size={20} />
+                        <FileSearch size={20} />
                     </div>
                     <div className={styles.statInfo}>
-                        <span className={styles.statLabel}>Daily Messages</span>
-                        <span className={styles.statValue}>{stats.totalMessages.toLocaleString()}</span>
+                        <span className={styles.statLabel}>Audit Scope</span>
+                        <span className={styles.statValue}>Platform</span>
                     </div>
-                    <div className={styles.statTrend} style={{ color: '#f23f43' }}>-2%</div>
+                    <div className={styles.statTrend} style={{ color: '#f0b232' }}>Sensitive</div>
                 </Card>
 
                 <Card className={styles.statCard}>
                     <div className={styles.statIcon} style={{ background: 'rgba(155, 89, 182, 0.1)', color: '#9b59b2' }}>
-                        <Server size={20} />
+                        <Shield size={20} />
                     </div>
                     <div className={styles.statInfo}>
-                        <span className={styles.statLabel}>API Latency</span>
-                        <span className={styles.statValue}>{stats.latency}ms</span>
+                        <span className={styles.statLabel}>Exposure</span>
+                        <span className={styles.statValue}>Internal Only</span>
                     </div>
-                    <div className={styles.statTrend} style={{ color: '#23a559' }}>Good</div>
+                    <div className={styles.statTrend} style={{ color: '#23a559' }}>Locked</div>
                 </Card>
             </div>
 
             <div className={styles.mainGrid}>
-                {/* Infrastructure Panel */}
                 <Card className={styles.panel}>
                     <div className={styles.panelHeader}>
-                        <h3>Infrastructure Health</h3>
-                        <BarChart3 size={16} />
+                        <h3>Access Discipline</h3>
+                        <Shield size={16} />
                     </div>
                     <div className={styles.metrics}>
                         <div className={styles.metricItem}>
                             <div className={styles.metricHeader}>
-                                <span>CPU Load</span>
-                                <span>{stats.cpuUsage}%</span>
-                            </div>
-                            <div className={styles.progressBar}>
-                                <div className={styles.progressFill} style={{ width: `${stats.cpuUsage}%`, background: stats.cpuUsage > 80 ? '#f23f43' : '#23a559' }} />
+                                <span>Route Guard</span>
+                                <span>Enabled</span>
                             </div>
                         </div>
                         <div className={styles.metricItem}>
                             <div className={styles.metricHeader}>
-                                <span>Memory Usage</span>
-                                <span>{stats.ramUsage}%</span>
-                            </div>
-                            <div className={styles.progressBar}>
-                                <div className={styles.progressFill} style={{ width: `${stats.ramUsage}%`, background: stats.ramUsage > 80 ? '#f23f43' : '#f0b232' }} />
+                                <span>Telemetry Policy</span>
+                                <span>No demos</span>
                             </div>
                         </div>
                     </div>
                     <div className={styles.servicesGrid}>
                         <div className={styles.serviceItem}>
                             <CheckCircle size={14} color="#23a559" />
-                            <span>Gateway_WS_01</span>
+                            <span>Platform admin badge required</span>
                         </div>
                         <div className={styles.serviceItem}>
                             <CheckCircle size={14} color="#23a559" />
-                            <span>API_Rest_Core</span>
+                            <span>Developer mode allowed for trusted operators</span>
                         </div>
                         <div className={styles.serviceItem}>
                             <CheckCircle size={14} color="#23a559" />
-                            <span>Media_RTC_Prox</span>
-                        </div>
-                        <div className={styles.serviceItem}>
-                            <AlertTriangle size={14} color="#f0b232" />
-                            <span>Cache_Redis_Cluster</span>
+                            <span>Unauthorized users are blocked before render</span>
                         </div>
                     </div>
                 </Card>
 
-                {/* Moderation Logs */}
                 <Card className={styles.panel}>
                     <div className={styles.panelHeader}>
-                        <h3>Recent Moderation</h3>
-                        <Shield size={16} />
+                        <h3>Operational Notes</h3>
+                        <FileSearch size={16} />
                     </div>
-                    <div className={styles.tableWrap}>
-                        <table className={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th>Action</th>
-                                    <th>Target</th>
-                                    <th>By</th>
-                                    <th>Time</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {logs.map((log: ModerationLog) => (
-                                    <tr key={log.id}>
-                                        <td>
-                                            <span className={`${styles.actionBadge} ${styles[log.action.toLowerCase()]}`}>
-                                                {log.action}
-                                            </span>
-                                        </td>
-                                        <td>{log.target}</td>
-                                        <td>{log.moderator}</td>
-                                        <td className={styles.timeCell}>{new Date(log.timestamp).toLocaleTimeString()}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div style={{ display: 'grid', gap: 14, color: 'var(--text-secondary)' }}>
+                        <p>This screen no longer exposes fabricated usage counts or fake moderation events.</p>
+                        <p>Connect audited platform telemetry before showing request totals, message volumes, or incident history.</p>
+                        <p>Until then, this dashboard acts as a restricted control surface rather than a demo analytics board.</p>
                     </div>
                 </Card>
             </div>

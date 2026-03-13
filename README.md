@@ -103,7 +103,7 @@ See full docs: [`packages/sdk/README.md`](packages/sdk/README.md)
 
 The Beacon API is RESTful with WebSocket support for real-time features.
 
-**Base URL:** `https://api.beacon.qzz.io` (or `http://localhost:4000/api` locally)
+**Base URL:** `https://api.beacon.qzz.io` (or `http://localhost:8080/api` locally)
 
 **Authentication:** Bearer token in `Authorization` header
 

@@ -1,11 +1,11 @@
 ﻿import { useState, useEffect } from 'react'
-import { Plus, RefreshCw, Trash2, Copy, Check, Shield, Zap, Terminal, ExternalLink, AlertTriangle, Info } from 'lucide-react'
-import { botsApi, Bot } from '../../api/bots'
+import { Plus, RefreshCw, Trash2, Copy, Check, Shield, Zap, Terminal, ExternalLink, AlertTriangle, Info, Bot as BotIcon } from 'lucide-react'
+import { botsApi, Bot as BotModel } from '../../api/bots'
 import { Button } from '../ui/Button'
 import styles from '../../styles/modules/dev/BotConsole.module.css'
 
 export function BotConsole({ applicationId }: { applicationId: string }) {
-    const [bots, setBots] = useState<Bot[]>([])
+    const [bots, setBots] = useState<BotModel[]>([])
     const [loading, setLoading] = useState(true)
     const [creating, setCreating] = useState(false)
     const [newBotName, setNewBotName] = useState('')
@@ -170,7 +170,7 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
 
                 {!loading && bots.length === 0 && !creating && (
                     <div className={styles.empty}>
-                        <div className={styles.emptyIcon}>🤖</div>
+                        <div className={styles.emptyIcon}><BotIcon size={28} /></div>
                         <p>No active bots found for this application.</p>
                         <Button variant="secondary" size="sm" style={{ marginTop: 16 }} onClick={() => setCreating(true)}>
                             Initialize Bot

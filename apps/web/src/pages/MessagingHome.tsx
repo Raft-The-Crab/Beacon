@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from 'react-router-dom'
 import { Virtuoso } from "react-virtuoso"
 import {
   Users,
@@ -16,6 +15,7 @@ import { useDMStore } from "../stores/useDMStore"
 import { useUserListStore } from "../stores/useUserListStore"
 import { useUIStore } from "../stores/useUIStore"
 import { useBeacoinStore } from "../stores/useBeacoinStore"
+import { useAuthStore } from "../stores/useAuthStore"
 
 import { Avatar, Tooltip, Modal } from "../components/ui"
 import { ChatArea } from "../components/chat/ChatArea"
@@ -33,13 +33,14 @@ import { CurrentUserControls } from "../components/features/CurrentUserControls"
 import { AuraOrbs } from "../components/ui/AuraOrbs"
 import { NotificationBell } from "../components/features/NotificationInbox"
 import { UserPopoverCard } from "../components/features/UserPopoverCard"
+import { BeaconPlusStore } from "./BeaconPlusStore"
 import styles from "../styles/modules/pages/MessagingHome.module.css"
 
 type FriendTab = "online" | "all" | "pending" | "blocked"
 
 export function MessagingHome() {
   const { channels, setActiveChannel, activeChannel } = useDMStore()
-  const navigate = useNavigate()
+  const user = useAuthStore((state) => state.user)
   const { friends, blockedUsers, fetchFriends } = useUserListStore()
   const [currentTab, setCurrentTab] = useState<FriendTab>("all")
   const [friendSearch, setFriendSearch] = useState("")
@@ -49,11 +50,15 @@ export function MessagingHome() {
   const [showAddFriend, setShowAddFriend] = useState(false)
   const [showCreateDM, setShowCreateDM] = useState(false)
   const [showDiscover, setShowDiscover] = useState(false)
+  const [showBeaconPlus, setShowBeaconPlus] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const { show } = useToast()
   const ui = useUIStore()
 
   const { fetchWallet } = useBeacoinStore()
+
+  const getDMParticipant = (channel: any) =>
+    channel.participants.find((participant: any) => participant.id !== user?.id) || channel.participants[0]
 
   useEffect(() => {
     const handleOpenBoost = () => setShowBoosting(true)
@@ -162,7 +167,7 @@ export function MessagingHome() {
 
         <button
           className={`${styles.navButton} ${styles.premiumButton} `}
-          onClick={() => navigate('/plus')}
+          onClick={() => setShowBeaconPlus(true)}
         >
           <Crown size={20} color="#f0b232" />
           <span>Beacon+</span>
@@ -198,20 +203,25 @@ export function MessagingHome() {
           </div>
         ) : (
           channels.map((channel) => (
+            (() => {
+              const dmParticipant = getDMParticipant(channel)
+              return (
             <div
               key={channel.id}
               className={`${styles.dmItem} ${activeChannel === channel.id ? styles.dmItemActive : ""} `}
               onClick={() => handleDMClick(channel.id)}
             >
               <Avatar
-                username={channel.participants[0]?.username}
-                status={channel.participants[0]?.status as any}
+                username={dmParticipant?.username}
+                status={dmParticipant?.status as any}
                 size="sm"
               />
               <div className={styles.dmName}>
-                {channel.participants[0]?.username || "Unknown"}
+                {dmParticipant?.username || "Unknown"}
               </div>
             </div>
+              )
+            })()
           ))
         )}
       </div>
@@ -230,7 +240,7 @@ export function MessagingHome() {
   return (
     <div className={styles.pageWrapper}>
       <AuraOrbs />
-      <WorkspaceLayout sidebar={sidebar} rightPanel={rightPanel}>
+      <WorkspaceLayout showServerRail sidebar={sidebar} rightPanel={rightPanel}>
         {!activeChannel ? (
           <div className={styles.friendsWrapper}>
             {/* Top Bar */}
@@ -366,6 +376,12 @@ export function MessagingHome() {
               ✕
             </button>
             <ServerDiscovery />
+          </div>
+        </Modal>
+
+        <Modal isOpen={showBeaconPlus} onClose={() => setShowBeaconPlus(false)} size="xl" noPadding={true} hideHeader={true}>
+          <div style={{ height: '86vh', maxHeight: '86vh', overflow: 'auto', background: 'var(--bg-primary)' }}>
+            <BeaconPlusStore onClose={() => setShowBeaconPlus(false)} />
           </div>
         </Modal>
 

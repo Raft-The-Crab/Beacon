@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import { getConfigCandidatePaths } from './configPaths'
 
 export type PromoCodeBenefit =
   | { kind: 'percent'; value: number }
@@ -8,6 +9,7 @@ export type PromoCodeBenefit =
 
 interface PromoDefinition {
   code: string
+  source: 'coupon' | 'redeem'
   benefit: PromoCodeBenefit
   description: string
   active: boolean
@@ -25,16 +27,10 @@ interface PromoConfigEntry {
   expiresAt?: unknown
 }
 
-function getPromoConfigPaths(): string[] {
-  return [
-    path.resolve(process.cwd(), 'config', 'coupon-codes.json'),
-    path.resolve(__dirname, '../../config/coupon-codes.json'),
-    path.resolve(process.cwd(), 'config', 'redeem-codes.json'),
-    path.resolve(__dirname, '../../config/redeem-codes.json'),
-    // Legacy combined file fallback
-    path.resolve(process.cwd(), 'config', 'promo-codes.json'),
-    path.resolve(__dirname, '../../config/promo-codes.json'),
-  ]
+function getPromoConfigPaths(source: 'coupon' | 'redeem'): string[] {
+  return source === 'coupon'
+    ? getConfigCandidatePaths('coupon-codes.json')
+    : getConfigCandidatePaths('redeem-codes.json')
 }
 
 function isActiveByDate(promo: PromoDefinition, now: Date): boolean {
@@ -45,7 +41,7 @@ function isActiveByDate(promo: PromoDefinition, now: Date): boolean {
   return true
 }
 
-function parsePromoConfig(entries: PromoConfigEntry[]): PromoDefinition[] {
+function parsePromoConfig(entries: PromoConfigEntry[], source: 'coupon' | 'redeem'): PromoDefinition[] {
   return entries
     .map((entry): PromoDefinition | null => {
       const code = typeof entry.code === 'string' ? entry.code.trim().toUpperCase() : ''
@@ -59,6 +55,7 @@ function parsePromoConfig(entries: PromoConfigEntry[]): PromoDefinition[] {
       if (!code || !kind || Number.isNaN(value)) return null
       return {
         code,
+        source,
         benefit: { kind, value },
         description,
         active,
@@ -71,15 +68,17 @@ function parsePromoConfig(entries: PromoConfigEntry[]): PromoDefinition[] {
 
 function loadPromoDefinitions(): PromoDefinition[] {
   const aggregated: PromoDefinition[] = []
-  for (const configPath of getPromoConfigPaths()) {
-    try {
-      if (!fs.existsSync(configPath)) continue
-      const raw = fs.readFileSync(configPath, 'utf8')
-      const parsed = JSON.parse(raw)
-      if (!Array.isArray(parsed)) continue
-      aggregated.push(...parsePromoConfig(parsed as PromoConfigEntry[]))
-    } catch (err) {
-      console.error('[promoCodes] Failed to load promo config:', err)
+  for (const source of ['coupon', 'redeem'] as const) {
+    for (const configPath of getPromoConfigPaths(source)) {
+      try {
+        if (!fs.existsSync(configPath)) continue
+        const raw = fs.readFileSync(configPath, 'utf8')
+        const parsed = JSON.parse(raw)
+        if (!Array.isArray(parsed)) continue
+        aggregated.push(...parsePromoConfig(parsed as PromoConfigEntry[], source))
+      } catch (err) {
+        console.error('[promoCodes] Failed to load promo config:', err)
+      }
     }
   }
 
@@ -95,17 +94,17 @@ export function normalizePromoCode(input?: unknown): string | null {
   return normalized.length > 0 ? normalized : null
 }
 
-export function resolvePromoCode(input?: unknown): PromoDefinition | null {
+export function resolvePromoCode(input?: unknown, source: 'any' | 'coupon' | 'redeem' = 'any'): PromoDefinition | null {
   const code = normalizePromoCode(input)
   if (!code) return null
   const now = new Date()
-  const promo = loadPromoDefinitions().find((item) => item.code === code)
+  const promo = loadPromoDefinitions().find((item) => item.code === code && (source === 'any' || item.source === source))
   if (!promo || !promo.active || !isActiveByDate(promo, now)) return null
   return promo
 }
 
 export function applyPercentPromo(baseCost: number, input?: unknown): { cost: number; code: string | null; discountPercent: number } {
-  const promo = resolvePromoCode(input)
+  const promo = resolvePromoCode(input, 'coupon')
   if (!promo || promo.benefit.kind !== 'percent') {
     return { cost: baseCost, code: null, discountPercent: 0 }
   }
@@ -116,7 +115,7 @@ export function applyPercentPromo(baseCost: number, input?: unknown): { cost: nu
 }
 
 export function getCoinPromoAmount(input?: unknown): { amount: number; code: string | null } {
-  const promo = resolvePromoCode(input)
+  const promo = resolvePromoCode(input, 'redeem')
   if (!promo || promo.benefit.kind !== 'coins') {
     return { amount: 0, code: null }
   }

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Search, Users, TrendingUp, Compass, ArrowRight, Gamepad2, Music, Code, Palette, BookOpen, Globe } from 'lucide-react'
 import { apiClient } from '../../services/apiClient'
+import { useServerStore } from '../../stores/useServerStore'
+import { useToast } from '../ui'
+import { useNavigate } from 'react-router-dom'
 import styles from '../../styles/modules/features/ServerDiscovery.module.css'
 
 export interface DiscoverableServer {
@@ -34,10 +37,14 @@ function formatCount(n: number): string {
 }
 
 export function ServerDiscovery({ onJoin }: { onJoin?: (guildId: string) => void }) {
+    const { joinGuild } = useServerStore()
+    const toast = useToast()
+    const navigate = useNavigate()
     const [searchQuery, setSearchQuery] = useState('')
     const [activeCategory, setActiveCategory] = useState('all')
     const [servers, setServers] = useState<DiscoverableServer[]>([])
     const [loading, setLoading] = useState(true)
+    const [joiningId, setJoiningId] = useState<string | null>(null)
 
     useEffect(() => {
         const fetchServers = async () => {
@@ -59,6 +66,26 @@ export function ServerDiscovery({ onJoin }: { onJoin?: (guildId: string) => void
     }, [searchQuery, activeCategory])
 
     const featuredServers = servers.filter((s: DiscoverableServer) => s.featured)
+
+    const handleJoin = async (server: DiscoverableServer) => {
+        if (joiningId) return
+        setJoiningId(server.id)
+
+        try {
+            if (onJoin) {
+                await Promise.resolve(onJoin(server.id))
+            } else {
+                await joinGuild(server.id)
+            }
+
+            toast.success(`Joined ${server.name}`)
+            navigate(`/channels/${server.id}`)
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to join server')
+        } finally {
+            setJoiningId(null)
+        }
+    }
 
     return (
         <div className={styles.discovery}>
@@ -140,8 +167,8 @@ export function ServerDiscovery({ onJoin }: { onJoin?: (guildId: string) => void
                                     <span><span className={styles.onlineDot} /> {formatCount(server.onlineCount)}</span>
                                     <span><Users size={13} /> {formatCount(server.memberCount)}</span>
                                 </div>
-                                <button className={styles.joinBtn} onClick={() => onJoin?.(server.id)}>
-                                    Join <ArrowRight size={14} />
+                                <button className={styles.joinBtn} onClick={() => handleJoin(server)} disabled={joiningId === server.id}>
+                                    {joiningId === server.id ? 'Joining...' : <>Join <ArrowRight size={14} /></>}
                                 </button>
                             </div>
                         </div>

@@ -15,6 +15,16 @@ const getHeaders = () => ({
     'Authorization': `Bearer ${localStorage.getItem('beacon_token') || localStorage.getItem('token') || ''}`
 })
 
+const normalizeBot = (payload: any, applicationId: string, fallbackName: string = 'Beacon Bot'): Bot => ({
+    id: payload?.id || '',
+    name: payload?.name || fallbackName,
+    avatar: payload?.avatar,
+    token: payload?.token,
+    applicationId: payload?.applicationId || applicationId,
+    ownerId: payload?.ownerId || '',
+    createdAt: payload?.createdAt || new Date().toISOString(),
+})
+
 export const botsApi = {
     create: async (data: { name: string; applicationId: string }) => {
         const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${data.applicationId}/bot`, {
@@ -26,7 +36,8 @@ export const botsApi = {
             const error = await res.json()
             throw new Error(error.error || 'Failed to create bot')
         }
-        return res.json() as Promise<Bot>
+        const bot = await res.json()
+        return normalizeBot(bot, data.applicationId, data.name)
     },
 
     get: async (applicationId: string) => {
@@ -34,7 +45,8 @@ export const botsApi = {
             headers: getHeaders()
         })
         if (!res.ok) throw new Error('Failed to fetch bot details')
-        return res.json() as Promise<Bot>
+        const bot = await res.json()
+        return normalizeBot(bot, applicationId)
     },
 
     list: async (applicationId: string) => {
@@ -43,7 +55,7 @@ export const botsApi = {
         })
         if (!res.ok) throw new Error('Failed to fetch application bots')
         const app = await res.json()
-        return app.bot ? [app.bot] : []
+        return app.bot ? [normalizeBot(app.bot, applicationId, app.name || 'Beacon Bot')] : []
     },
 
     update: async (applicationId: string, data: Partial<{ name: string; avatar: string }>) => {
@@ -56,7 +68,8 @@ export const botsApi = {
             const error = await res.json()
             throw new Error(error.error || 'Failed to update bot')
         }
-        return res.json() as Promise<Bot>
+        const updated = await res.json()
+        return normalizeBot(updated, applicationId, updated?.displayName || updated?.username || 'Beacon Bot')
     },
 
     regenerateToken: async (applicationId: string) => {

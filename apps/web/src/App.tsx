@@ -1,10 +1,11 @@
 import React, { Suspense, lazy, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { MainLayout } from './components/layout/MainLayout'
-import { ToastContainer, useToast } from './components/ui'
+import { Modal, ToastContainer, useToast } from './components/ui'
 import { wsClient, WebSocketEvent } from './services'
+import { apiClient } from './services/apiClient'
 import { useMessageStore } from './stores/useMessageStore'
 import { usePinnedMessagesStore } from './stores/usePinnedMessagesStore'
 import { useServerStore } from './stores/useServerStore'
@@ -13,7 +14,9 @@ import { useDMStore } from './stores/useDMStore'
 import { useAuthStore } from './stores/useAuthStore'
 import { useBeacoinStore } from './stores/useBeacoinStore'
 import { usePresenceStore } from './stores/usePresenceStore'
+import { useNotificationStore } from './stores/useNotificationStore'
 import { useUIStore } from './stores/useUIStore'
+import { useVoiceStore } from './stores/useVoiceStore'
 import { activitySync } from './services/ActivitySyncService'
 import { HelmetProvider } from 'react-helmet-async'
 import { ModalManager } from './components/modals'
@@ -32,6 +35,7 @@ const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login }
 const MessagingHome = lazy(() => import('./pages/MessagingHome').then(m => ({ default: m.MessagingHome })))
 const DeveloperPortal = lazy(() => import('./pages/DeveloperPortal').then(m => ({ default: m.DeveloperPortal })))
 const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })))
+const MobileSplash = lazy(() => import('./pages/MobileSplash').then(m => ({ default: m.MobileSplash })))
 const UserProfile = lazy(() => import('./pages/UserProfile').then(m => ({ default: m.UserProfile })))
 const ServerSettings = lazy(() => import('./pages/ServerSettings').then(m => ({ default: m.ServerSettings })))
 const VoiceChannel = lazy(() => import('./pages/VoiceChannel').then(m => ({ default: m.VoiceChannel })))
@@ -52,12 +56,30 @@ const BeaconPlusStore = lazy(() => import('./pages/BeaconPlusStore').then(m => (
 const SafetyHub = lazy(() => import('./pages/SafetyHub').then(m => ({ default: m.SafetyHub })))
 const PartnerPortal = lazy(() => import('./pages/PartnerPortal').then(m => ({ default: m.PartnerPortal })))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
+const Discovery = lazy(() => import('./pages/Discovery').then(m => ({ default: m.Discovery })))
+const CommunityHub = lazy(() => import('./pages/CommunityHub').then(m => ({ default: m.CommunityHub })))
+const AppDirectory = lazy(() => import('./pages/AppDirectory').then(m => ({ default: m.AppDirectory })))
 
 function RouteFallback() {
   return (
     <div style={{ height: '100%', width: '100%', display: 'grid', placeItems: 'center', color: 'var(--text-muted)' }}>
       Loading...
     </div>
+  )
+}
+
+// Renders Beacon+ as a modal route similar to in-app overlays.
+function ShopRoute() {
+  const navigate = useNavigate()
+  const handleClose = () => navigate(-1)
+  return (
+    <Modal isOpen={true} onClose={handleClose} size="xl" noPadding={true} hideHeader={true}>
+      <div style={{ height: '86vh', maxHeight: '86vh', overflow: 'hidden', background: 'var(--bg-primary)', borderRadius: 'var(--radius-2xl)' }}>
+        <Suspense fallback={<RouteFallback />}>
+          <BeaconPlusStore onClose={handleClose} />
+        </Suspense>
+      </div>
+    </Modal>
   )
 }
 
@@ -70,6 +92,8 @@ export function App() {
   const pinMessage = usePinnedMessagesStore((s) => s.pinMessage)
   const unpinMessage = usePinnedMessagesStore((s) => s.unpinMessage)
   const setPresence = usePresenceStore((s) => s.setPresence)
+  const addNotification = useNotificationStore((s) => s.addNotification)
+  const fetchNotifications = useNotificationStore((s) => s.fetchNotifications)
 
   const isMobilePlatform = isAndroid()
 
@@ -83,6 +107,10 @@ export function App() {
   const fetchWallet = useBeacoinStore(s => s.fetchWallet)
   const checkSession = useAuthStore(s => s.checkSession)
   const user = useAuthStore(s => s.user)
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated)
+  const isAuthLoading = useAuthStore(s => s.isLoading)
+  const setVoiceUserId = useVoiceStore((s) => s.setUserId)
+  const hasAdminAccess = Boolean(user && (user.developerMode || user.badges?.includes('admin') || user.badges?.includes('owner')))
 
   // Hydrate auth state from token/cookie on initial mount.
   useEffect(() => {
@@ -97,13 +125,31 @@ export function App() {
         eagerLoadServers(),
         eagerLoadFriends(),
         eagerLoadChannels(),
-        fetchWallet()
+        fetchWallet(),
+        fetchNotifications(),
       ]).catch(err => console.error('Initial eager load failed', err))
 
       // Start Activity Sync Service
       activitySync.start();
     }
-  }, [user?.id, eagerLoadServers, eagerLoadFriends, eagerLoadChannels, fetchWallet])
+  }, [user?.id, eagerLoadServers, eagerLoadFriends, eagerLoadChannels, fetchWallet, fetchNotifications])
+
+  useEffect(() => {
+    setVoiceUserId(user?.id || null)
+  }, [user?.id, setVoiceUserId])
+
+  // Keep gateway websocket in sync with auth session so events reach all clients.
+  useEffect(() => {
+    const token = useAuthStore.getState().isAuthenticated ? apiClient.getAccessToken() : null
+    if (!token) {
+      wsClient.disconnect()
+      return
+    }
+    void wsClient.connect(token)
+    return () => {
+      wsClient.disconnect()
+    }
+  }, [isAuthenticated, user?.id])
 
   // Eager-load critical routes after first paint while leaving the rest lazy.
   useEffect(() => {
@@ -164,10 +210,25 @@ export function App() {
           break
         case 'MESSAGE_REACTION_ADD':
         case 'MESSAGE_REACTION_REMOVE':
+        case 'MESSAGE_REACTION':
           handleMessageUpdate(data.channelId || data.channel_id, data.messageId, { reactions: data.reactions })
           break
         case 'PRESENCE_UPDATE':
           setPresence(data.user_id, data.status, data.custom_status, data.activities)
+          break
+        case 'NOTIFICATION_CREATE':
+          addNotification({
+            id: String(data.id || Date.now()),
+            type: data.type || 'info',
+            priority: 'high',
+            title: data.title || 'New notification',
+            body: data.body || '',
+            createdAt: data.createdAt,
+            avatarUrl: data.avatarUrl,
+            userId: data.userId,
+            serverId: data.serverId,
+            channelId: data.channelId,
+          } as any)
           break
         default:
           break
@@ -178,9 +239,14 @@ export function App() {
     return () => {
       wsClient.off('*', handler)
     }
-  }, [handleMessageCreate, handleMessageUpdate, handleMessageDelete, pinMessage, unpinMessage])
+  }, [handleMessageCreate, handleMessageUpdate, handleMessageDelete, pinMessage, unpinMessage, setPresence, addNotification])
 
   const location = useLocation()
+  const appRouteRequiresAuth = location.pathname.startsWith('/channels') || location.pathname.startsWith('/server/') || location.pathname === '/voice'
+
+  if (isAuthLoading && appRouteRequiresAuth) {
+    return <RouteFallback />
+  }
 
   return (
     <AnimatePresence>
@@ -202,54 +268,54 @@ export function App() {
                 <Suspense fallback={<RouteFallback />}>
                   <Routes location={location}>
                   {/* Entry Point */}
-                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/" element={isMobilePlatform ? <MobileSplash /> : <LandingPage />} />
+                  <Route path="/welcome" element={<MobileSplash />} />
                   <Route path="/landing" element={<LandingPage />} />
                   <Route path="/login" element={<Login />} />
 
-                  {/* Legal & About (Windows or Non-Android only) */}
-                  {!isMobilePlatform && (
-                    <>
-                      <Route path="/terms" element={<Terms />} />
-                      <Route path="/privacy" element={<Privacy />} />
-                      <Route path="/license" element={<License />} />
-                      <Route path="/safety" element={<TOS />} />
-                      <Route path="/about" element={<AboutUs />} />
-                      <Route path="/contact" element={<Contact />} />
-                      <Route path="/docs" element={<DocsHome />} />
-                      <Route path="/docs/getting-started" element={<GettingStarted />} />
-                      <Route path="/docs/mission" element={<Mission />} />
-                      <Route path="/docs/sdk-tutorial" element={<SDKTutorial />} />
-                      <Route path="/docs/api-reference" element={<APIReference />} />
-                      <Route path="/docs/gateway-events" element={<GatewayDocs />} />
-                      <Route path="/docs/bot-commands" element={<BotCommands />} />
-                    </>
-                  )}
+                  {/* Public informational routes */}
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/license" element={<License />} />
+                  <Route path="/safety" element={<TOS />} />
+                  <Route path="/about" element={<AboutUs />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/docs" element={<DocsHome />} />
+                  <Route path="/docs/getting-started" element={<GettingStarted />} />
+                  <Route path="/docs/mission" element={<Mission />} />
+                  <Route path="/docs/sdk-tutorial" element={<SDKTutorial />} />
+                  <Route path="/docs/api-reference" element={<APIReference />} />
+                  <Route path="/docs/gateway-events" element={<GatewayDocs />} />
+                  <Route path="/docs/bot-commands" element={<BotCommands />} />
+                  <Route path="/discovery" element={<Discovery />} />
+                  <Route path="/community" element={<CommunityHub />} />
+                  <Route path="/apps" element={<AppDirectory />} />
 
                   {/* Main App Routes (Universal) */}
-                  <Route path="/channels" element={<Navigate to="/channels/@me" replace />} />
-                  <Route path="/channels/@me" element={<MessagingHome />} />
-                  <Route path="/channels/:serverId" element={<MainLayout />} />
-                  <Route path="/channels/:serverId/:channelId" element={<MainLayout />} />
+                  <Route path="/channels" element={isAuthenticated ? <Navigate to="/channels/@me" replace /> : <Navigate to="/login" replace />} />
+                  <Route path="/channels/@me" element={isAuthenticated ? <MessagingHome /> : <Navigate to="/login" replace />} />
+                  <Route path="/channels/:serverId" element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />} />
+                  <Route path="/channels/:serverId/:channelId" element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />} />
 
                   {/* Developer Features (Windows Only) */}
                   {!isMobilePlatform && (
                     <>
                       <Route path="/developer" element={<DeveloperPortal />} />
-                      <Route path="/admin" element={<AdminDashboard />} />
+                      <Route path="/admin" element={user ? (hasAdminAccess ? <AdminDashboard /> : <Navigate to="/channels/@me" replace />) : <Navigate to="/login" replace />} />
                     </>
                   )}
 
                   {/* Universal Sub-routes */}
                   <Route path="/user/:userId" element={<UserProfile />} />
-                  <Route path="/server/:serverId/settings" element={<ServerSettings />} />
-                  <Route path="/voice" element={<VoiceChannel />} />
-                  <Route path="/plus" element={<BeaconPlusStore />} />
-                  <Route path="/shop" element={<BeaconPlusStore />} />
+                  <Route path="/server/:serverId/settings" element={isAuthenticated ? <ServerSettings /> : <Navigate to="/login" replace />} />
+                  <Route path="/voice" element={isAuthenticated ? <VoiceChannel /> : <Navigate to="/login" replace />} />
+                  <Route path="/plus" element={<ShopRoute />} />
+                  <Route path="/shop" element={<ShopRoute />} />
                   <Route path="/safety-hub" element={<SafetyHub />} />
                   <Route path="/partner" element={<PartnerPortal />} />
 
                   {/* Redirect everything else to Messaging Home */}
-                  <Route path="*" element={<Navigate to="/channels/@me" replace />} />
+                  <Route path="*" element={<Navigate to={user ? "/channels/@me" : "/"} replace />} />
                   </Routes>
                 </Suspense>
                 <ToastContainer toasts={toasts} onRemove={remove} />

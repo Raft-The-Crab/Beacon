@@ -65,6 +65,11 @@ export const claimReward = async (req: AuthRequest, res: Response) => {
         const wallet = await db.beacoinWallet.findUnique({ where: { userId } })
         if (!wallet) return res.status(404).json({ error: 'Wallet not found' })
 
+        // Beacon+ users earn base reward plus a 50% bonus.
+        const userRecord = await db.user.findUnique({ where: { id: userId }, select: { isBeaconPlus: true } })
+        const bonusRate = userRecord?.isBeaconPlus ? 0.5 : 0
+        const finalReward = Math.floor(uq.quest.reward * (1 + bonusRate))
+
         await db.$transaction([
             db.userQuest.update({
                 where: { id: uq.id },
@@ -72,20 +77,20 @@ export const claimReward = async (req: AuthRequest, res: Response) => {
             }),
             db.beacoinWallet.update({
                 where: { id: wallet.id },
-                data: { balance: { increment: uq.quest.reward } }
+                data: { balance: { increment: finalReward } }
             }),
             db.beacoinTransaction.create({
                 data: {
                     walletId: wallet.id,
                     fromUserId: userId,
                     type: BeacoinTxType.EARN,
-                    amount: uq.quest.reward,
-                    reason: `Quest reward: ${uq.quest.title}`
+                    amount: finalReward,
+                    reason: `Quest reward: ${uq.quest.title}${userRecord?.isBeaconPlus ? ' (+50% Beacon+ bonus)' : ''}`
                 }
             })
         ])
 
-        res.json({ success: true, reward: uq.quest.reward })
+        res.json({ success: true, reward: finalReward, baseReward: uq.quest.reward, bonusRate, totalMultiplier: 1 + bonusRate })
     } catch (err) {
         console.error('[QuestController] claimReward error:', err)
         res.status(500).json({ error: 'Internal server error', details: err instanceof Error ? err.message : String(err) })

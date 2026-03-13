@@ -1,5 +1,7 @@
 .container {
   position: relative;
+  display: block;
+  width: 100%;
 }
 
 .trigger {
@@ -7,10 +9,15 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
+  width: 100%;
   color: inherit;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--beacon-brand);
+  outline-offset: 3px;
+  border-radius: var(--radius-xl);
 }
 
 .menu {
@@ -23,9 +30,9 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
-  z-index: 9999;
+  z-index: 13050;
   animation: slideUp 0.15s ease-out;
-  overflow: visible;
+  overflow: auto;
   padding: var(--space-xs);
   will-change: transform, opacity;
   transform: translateZ(0);
@@ -85,7 +92,7 @@
 .item:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
-  transform: translateX(4px);
+  transform: translateX(2px);
 }
 
 .item.default:active {

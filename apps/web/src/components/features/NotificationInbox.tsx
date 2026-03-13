@@ -1,20 +1,9 @@
 ﻿import { useEffect, useRef } from 'react'
 import { Bell, X, Check, CheckCheck, MessageCircle, UserPlus, AtSign, Heart, Info } from 'lucide-react'
-import { useNotificationStore } from '../../stores/useNotificationStore'
+import { useNotificationStore, type SmartNotification } from '../../stores/useNotificationStore'
 import styles from '../../styles/modules/features/NotificationInbox.module.css'
 
-// Define local types if not exported by the store
 type NotificationType = 'message' | 'mention' | 'friend_request' | 'friend_accept' | 'reaction' | 'system' | 'dm' | 'call' | 'info' | 'server_invite'
-interface Notification {
-  id: string
-  type: NotificationType
-  title: string
-  body: string
-  createdAt: string
-  read: boolean
-  avatarUrl?: string
-  link?: string
-}
 
 function getNotifIcon(type: NotificationType) {
   switch (type) {
@@ -38,8 +27,12 @@ function timeAgo(iso: string) {
 }
 
 export function NotificationBell() {
-  const { unreadCount, dropdownOpen, toggleDropdown, setDropdownOpen } = useNotificationStore()
+  const { unreadCount, dropdownOpen, toggleDropdown, setDropdownOpen, fetchNotifications } = useNotificationStore()
   const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    void fetchNotifications()
+  }, [fetchNotifications])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -50,6 +43,11 @@ export function NotificationBell() {
     if (dropdownOpen) document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [dropdownOpen, setDropdownOpen])
+
+  useEffect(() => {
+    if (!dropdownOpen) return
+    void fetchNotifications()
+  }, [dropdownOpen, fetchNotifications])
 
   return (
     <div ref={ref} className={styles.bellWrap}>
@@ -77,12 +75,12 @@ function NotificationDropdown() {
         <span className={styles.dropdownTitle}>Notifications</span>
         <div className={styles.dropdownActions}>
           {notifications.some((n) => !n.read) && (
-            <button className={styles.actionBtn} onClick={markAllRead} title="Mark all read">
+            <button className={styles.actionBtn} onClick={() => void markAllRead()} title="Mark all read">
               <CheckCheck size={15} />
             </button>
           )}
           {notifications.length > 0 && (
-            <button className={styles.actionBtn} onClick={clearAll} title="Clear all">
+            <button className={styles.actionBtn} onClick={() => void clearAll()} title="Clear all">
               <X size={15} />
             </button>
           )}
@@ -111,14 +109,14 @@ function NotificationDropdown() {
 }
 
 function NotifItem({ notif, onRead, onDelete }: {
-  notif: Notification
-  onRead: (id: string) => void
-  onDelete: (id: string) => void
+  notif: SmartNotification
+  onRead: (id: string) => Promise<void>
+  onDelete: (id: string) => Promise<void>
 }) {
   return (
     <div
       className={`${styles.item} ${!notif.read ? styles.unread : ''}`}
-      onClick={() => !notif.read && onRead(notif.id)}
+      onClick={() => { if (!notif.read) void onRead(notif.id) }}
     >
       <div className={`${styles.iconWrap} ${styles[notif.type]}`}>
         {notif.avatarUrl
@@ -132,11 +130,11 @@ function NotifItem({ notif, onRead, onDelete }: {
       </div>
       <div className={styles.itemActions}>
         {!notif.read && (
-          <button className={styles.readBtn} onClick={(e) => { e.stopPropagation(); onRead(notif.id) }} title="Mark read">
+          <button className={styles.readBtn} onClick={(e) => { e.stopPropagation(); void onRead(notif.id) }} title="Mark read">
             <Check size={13} />
           </button>
         )}
-        <button className={styles.deleteBtn} onClick={(e) => { e.stopPropagation(); onDelete(notif.id) }} title="Remove">
+        <button className={styles.deleteBtn} onClick={(e) => { e.stopPropagation(); void onDelete(notif.id) }} title="Remove">
           <X size={13} />
         </button>
       </div>

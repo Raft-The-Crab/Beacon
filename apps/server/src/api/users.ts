@@ -15,7 +15,7 @@ router.get('/me', getMe);
 router.patch('/me', updateMe);
 router.delete('/me', deleteMe);
 router.get('/me/guilds', cacheResponse(60), getMyGuilds);
-router.get('/me/friends', cacheResponse(60), getMyFriends);
+router.get('/me/friends', getMyFriends);
 router.patch('/me/e2ee', updateE2EEKeys);
 
 // Security

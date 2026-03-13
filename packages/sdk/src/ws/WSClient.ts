@@ -36,7 +36,7 @@ export class WSClient {
   private connected: boolean = false
 
   constructor(
-    private options: BeaconClientOptions,
+    private options: Required<BeaconClientOptions>,
     private token: string,
     private events: BeaconEventEmitter
   ) {}

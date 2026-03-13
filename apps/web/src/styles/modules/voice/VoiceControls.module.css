@@ -81,10 +81,9 @@
   to { opacity: 1; }
 }
 
-.mutedIcon,
-.videoIcon {
-  font-size: 12px;
-  opacity: 0.7;
+.stateIcon {
+  opacity: 0.75;
+  color: var(--text-muted);
 }
 
 .controls {
@@ -100,7 +99,6 @@
   border: none;
   background: var(--bg-tertiary);
   color: var(--text-primary);
-  font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;

@@ -1,0 +1,135 @@
+.shell {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(89, 119, 255, 0.35), transparent 42%),
+    radial-gradient(circle at 85% 25%, rgba(20, 184, 166, 0.24), transparent 40%),
+    linear-gradient(180deg, #070b14 0%, #0f172a 50%, #090d18 100%);
+  padding: 24px;
+}
+
+.backdropGlow {
+  position: absolute;
+  inset: -20%;
+  background: conic-gradient(from 0deg, rgba(99, 102, 241, 0.14), rgba(16, 185, 129, 0.1), rgba(14, 165, 233, 0.14), rgba(99, 102, 241, 0.14));
+  filter: blur(90px);
+  animation: slowSpin 22s linear infinite;
+}
+
+.gridTexture {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle at center, black 45%, transparent 90%);
+}
+
+.card {
+  position: relative;
+  z-index: 2;
+  width: min(460px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(7, 12, 22, 0.72);
+  border-radius: 28px;
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+  padding: 30px 22px;
+  text-align: center;
+  animation: riseIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.brand {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(218, 227, 255, 0.9);
+  margin-bottom: 14px;
+}
+
+.title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(1.9rem, 6.4vw, 2.8rem);
+  line-height: 1.05;
+  margin: 0;
+  color: #ffffff;
+  letter-spacing: -0.03em;
+}
+
+.subtitle {
+  margin: 14px auto 24px;
+  max-width: 34ch;
+  color: rgba(214, 222, 240, 0.86);
+  font-size: 0.96rem;
+  line-height: 1.55;
+}
+
+.actions {
+  display: grid;
+  gap: 10px;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  border: none;
+  border-radius: 14px;
+  min-height: 48px;
+  font-size: 0.95rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.2s ease;
+}
+
+.primaryBtn {
+  color: #ffffff;
+  background: linear-gradient(135deg, #4f7bff 0%, #2dd4bf 100%);
+  box-shadow: 0 10px 30px rgba(47, 111, 255, 0.35);
+}
+
+.secondaryBtn {
+  color: #dbe4ff;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.primaryBtn:hover,
+.secondaryBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.legal {
+  margin-top: 18px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(186, 197, 223, 0.72);
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slowSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

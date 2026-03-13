@@ -1,10 +1,4 @@
 {
-    "developers": [
-        "YOUR_USER_ID_HERE",
-        "SYSTEM_ADMIN_ID"
-    ],
-    "clearanceLevels": {
-        "YOUR_USER_ID_HERE": "SOVEREIGN",
-        "SYSTEM_ADMIN_ID": "SOVEREIGN"
-    }
+    "developers": [],
+    "clearanceLevels": {}
 }

@@ -72,7 +72,6 @@ export async function updateChannel(req: Request, res: Response) {
       include: { guild: true },
     });
     if (!channel) return res.status(404).json({ error: 'Channel not found' });
-    if (channel.guild?.ownerId !== userId) return res.status(403).json({ error: 'Insufficient permissions' });
 
     const updated = await prisma.channel.update({
       where: { id: channelId },
@@ -105,7 +104,6 @@ export async function deleteChannel(req: Request, res: Response) {
       include: { guild: true },
     });
     if (!channel) return res.status(404).json({ error: 'Channel not found' });
-    if (channel.guild?.ownerId !== userId) return res.status(403).json({ error: 'Insufficient permissions' });
 
     await prisma.channel.delete({ where: { id: channelId } });
 

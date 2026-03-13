@@ -7,7 +7,6 @@ import { useDMStore } from '../../stores/useDMStore'
 import { Button, Modal, useToast } from '../ui'
 import { Avatar } from '../ui/Avatar'
 import { UserBadges, BotTag } from '../ui/UserBadges'
-import { ProfileArtPicker } from '../features/ProfileArtPicker'
 import { useProfileArtStore, type ProfileArt } from '../../stores/useProfileArtStore'
 import { apiClient } from '../../services/apiClient'
 import styles from '../../styles/modules/modals/UserProfileModal.module.css'
@@ -22,25 +21,44 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
   const navigate = useNavigate()
   const { show: showToast } = useToast()
   const { user: currentUser } = useAuthStore()
-  const { friends, blockedUsers, addFriend, removeFriend, blockUser, unblockUser } = useUserListStore()
+  const { friends, blockedUsers, fetchFriends, removeFriend, blockUser, unblockUser } = useUserListStore()
   const { createDMChannel, setActiveChannel } = useDMStore()
 
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [profileNote, setProfileNote] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [friendsReady, setFriendsReady] = useState(false)
+  const [sendingFriendRequest, setSendingFriendRequest] = useState(false)
+  const [openingDm, setOpeningDm] = useState(false)
+  const [pendingRequestSent, setPendingRequestSent] = useState(false)
 
-  const isFriend = friends.some(f => f.id === userId)
+  const isFriend = friends.some((friend: any) => {
+    const targetId = user?.id || userId
+    if (friend?.id && targetId && friend.id === targetId) return true
+    if (friend?.username && user?.username) {
+      const sameUser = friend.username.toLowerCase() === user.username.toLowerCase()
+      const sameDiscriminator = String(friend.discriminator || '0000') === String(user.discriminator || '0000')
+      if (sameUser && sameDiscriminator) return true
+    }
+    return false
+  })
   const isBlocked = blockedUsers.includes(userId || '')
 
   // Profile art
   const { arts } = useProfileArtStore()
   const isSelf = !!currentUser && (currentUser.id === userId || currentUser.id === user?.id)
-  const canUseSocialActions = !!currentUser && !!user && !isSelf
+  const canUseSocialActions = !!currentUser && !!user && !isSelf && friendsReady
+  const canSendFriendRequest = canUseSocialActions && !isFriend && !pendingRequestSent
+
+  const formatSafeDate = (value?: string) => {
+    if (!value) return 'Unknown'
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return 'Unknown'
+    return parsed.toLocaleDateString()
+  }
 
   const frameArt = user?.avatarDecorationId ? arts.find((a: ProfileArt) => a.id === user.avatarDecorationId) : null
-  const bannerArt = user?.banner ? (arts.find((a: ProfileArt) => a.id === user.banner) || ({ preview: `url(${user.banner}) center/cover no-repeat` } as any)) : null
-  const effectArt = user?.profileEffectId ? arts.find((a: ProfileArt) => a.id === user.profileEffectId) : null
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -75,11 +93,14 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
     if (isOpen) {
       fetchUser()
+      setFriendsReady(false)
+      setPendingRequestSent(false)
+      void fetchFriends().finally(() => setFriendsReady(true))
     }
-  }, [userId, isOpen])
+  }, [userId, isOpen, fetchFriends])
 
   const handleAddFriend = async () => {
-    if (!user) return
+    if (!user || sendingFriendRequest || pendingRequestSent || isFriend) return
 
     if (isSelf) {
       showToast('You cannot add yourself as a friend', 'warning')
@@ -87,13 +108,29 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
     }
 
     try {
-      addFriend({
-        ...user,
-        status: user.status || 'online',
-      })
-      showToast(`Sent friend request to ${user.username}`, 'success')
+      setSendingFriendRequest(true)
+      const payload = user.discriminator
+        ? { username: user.username, discriminator: user.discriminator }
+        : { username: user.username }
+      const response = await apiClient.request('POST', '/friends/request', payload)
+      if (!response.success) {
+        const errMsg = String(response.error || '').toLowerCase()
+        if (errMsg.includes('already') || errMsg.includes('pending') || errMsg.includes('exists')) {
+          setPendingRequestSent(true)
+          await fetchFriends()
+          showToast('Friend request is already pending or connected.', 'info')
+          return
+        }
+        showToast(response.error || 'Failed to send friend request', 'error')
+        return
+      }
+      setPendingRequestSent(true)
+      showToast(`Sent friend request to ${user.displayName || user.username}`, 'success')
+      await fetchFriends()
     } catch (err) {
       showToast('Failed to add friend', 'error')
+    } finally {
+      setSendingFriendRequest(false)
     }
   }
 
@@ -101,7 +138,9 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
     if (!userId) return
 
     try {
+      await apiClient.request('DELETE', `/friends/${userId}`)
       removeFriend(userId)
+      await fetchFriends()
       showToast(`Removed ${user?.username} from friends`, 'info')
     } catch (err) {
       showToast('Failed to remove friend', 'error')
@@ -125,7 +164,7 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
   }
 
   const handleMessage = async () => {
-    if (!user) return
+    if (!user || openingDm) return
 
     if (isSelf) {
       showToast('Open your own DM list from Home instead', 'info')
@@ -133,6 +172,20 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
     }
 
     try {
+      setOpeningDm(true)
+      const existingDM = useDMStore.getState().channels.find((channel: any) =>
+        Array.isArray(channel.participants) &&
+        channel.participants.some((participant: any) => participant.id === user.id) &&
+        channel.participants.length === 2
+      )
+
+      if (existingDM) {
+        setActiveChannel(existingDM.id)
+        navigate('/channels/@me')
+        onClose()
+        return
+      }
+
       // Create DM channel with this user
       const dmChannelId = await createDMChannel({
         id: user.id,
@@ -147,6 +200,8 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
       onClose()
     } catch (err) {
       showToast('Failed to open conversation', 'error')
+    } finally {
+      setOpeningDm(false)
     }
   }
 
@@ -172,15 +227,18 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" noPadding hideHeader>
+    <Modal isOpen={isOpen} onClose={onClose} size="md" noPadding hideHeader transparent>
       <div className={styles.container}>
+        {/* Banner */}
         <div
           className={styles.banner}
-          style={bannerArt ? { background: (bannerArt as any).imageUrl ? `url(${(bannerArt as any).imageUrl}) center/cover no-repeat` : bannerArt.preview } : undefined}
+          style={
+            user.banner
+              ? { backgroundImage: `url(${user.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+              : { background: 'linear-gradient(135deg, #4a00e0 0%, #7b2ff7 50%, #c471ed 100%)' }
+          }
         />
-
-        <div className={`${styles.profileCard} ${effectArt ? styles.hasEffect : ''}`}>
-          {effectArt && <div className={`${styles.profileEffect} ${styles[effectArt.animation || '']}`} />}
+        <div className={styles.profileCard}>
           <div className={styles.profileHeader}>
             <div className={styles.avatarWrapper}>
               <Avatar
@@ -197,10 +255,10 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
           <div className={styles.info}>
             <h1 className={styles.username}>
-              {user.username}
+              {user.displayName || user.username}
               {user.bot && <BotTag />}
-              <span className={styles.discriminator}>#{user.discriminator || '0000'}</span>
             </h1>
+            <p className={styles.handle}>@{user.username}{user.discriminator ? `#${user.discriminator}` : ''}</p>
             <UserBadges badges={user.badges} isBot={user.bot} size="md" />
             {user.customStatus && <p className={styles.customStatus}>{user.customStatus}</p>}
             {profileNote && (profileNote.text || profileNote.musicMetadata?.title) && (
@@ -220,18 +278,25 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
             <div className={styles.actions}>
               <Button variant="primary" onClick={handleMessage} fullWidth>
                 <MessageCircle size={18} />
-                Message
+                {openingDm ? 'Opening...' : 'Message'}
               </Button>
               {!user.bot && (
                 <div className={styles.buttonGroup}>
-                  <Button
-                    variant={isFriend ? 'secondary' : 'primary'}
-                    onClick={isFriend ? handleRemoveFriend : handleAddFriend}
-                    fullWidth
-                  >
-                    {isFriend ? <UserX size={18} /> : <UserPlus size={18} />}
-                    {isFriend ? 'Remove Friend' : 'Add Friend'}
-                  </Button>
+                  {(isFriend || canSendFriendRequest) && (
+                    <Button
+                      variant={isFriend ? 'secondary' : 'primary'}
+                      onClick={isFriend ? handleRemoveFriend : handleAddFriend}
+                      fullWidth
+                    >
+                      {isFriend ? <UserX size={18} /> : <UserPlus size={18} />}
+                      {isFriend ? 'Remove Friend' : sendingFriendRequest ? 'Sending...' : 'Add Friend'}
+                    </Button>
+                  )}
+                  {!isFriend && pendingRequestSent && (
+                    <Button variant="secondary" fullWidth>
+                      Pending Request
+                    </Button>
+                  )}
                   <Button
                     variant={isBlocked ? 'danger' : 'secondary'}
                     onClick={handleToggleBlock}
@@ -249,13 +314,8 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
         <div className={styles.body}>
           <div className={styles.section}>
             <h3>BEACON MEMBER SINCE</h3>
-            <p>{new Date(user.joinedAt).toLocaleDateString()}</p>
+            <p>{formatSafeDate(user.joinedAt)}</p>
           </div>
-          {isSelf && (
-            <div className={styles.section}>
-              <ProfileArtPicker />
-            </div>
-          )}
         </div>
       </div>
     </Modal>

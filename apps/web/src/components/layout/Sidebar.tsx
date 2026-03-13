@@ -37,11 +37,12 @@ function isVoiceLike(channel: any) {
 }
 
 // ── Channel button with right-click context menu ──────────────────
-function ChannelButton({ channel, isActive, onClick, onCreateChannel }: {
+function ChannelButton({ channel, isActive, onClick, onCreateChannel, onDeleteChannel }: {
   channel: any
   isActive: boolean
   onClick: () => void
   onCreateChannel?: () => void
+  onDeleteChannel?: (channel: any) => void
 }) {
   const [muted, setMuted] = useState(false)
   const ctxMenu = useContextMenuTrigger([
@@ -87,7 +88,7 @@ function ChannelButton({ channel, isActive, onClick, onCreateChannel }: {
       id: 'delete',
       label: 'Delete Channel',
       icon: <Trash2 size={15} />,
-      onClick: () => { },
+      onClick: () => onDeleteChannel?.(channel),
       danger: true,
     },
   ])
@@ -125,7 +126,7 @@ function CategoryHeader({ category, isCollapsed, onToggle, onCreateChannel }: {
       id: 'create-channel',
       label: 'Create Channel',
       icon: <Plus size={15} />,
-      onClick: () => openCreateChannelModal(),
+      onClick: () => onCreateChannel(),
     },
     {
       id: 'create-category',
@@ -223,7 +224,7 @@ function UncategorizedHeader({ label, isCollapsed, onToggle }: {
 }
 
 // ── Uncategorized section component ──
-function CategorySection({ label, channels, currentChannelId, handleChannelClick, isCollapsed, onToggle }: any) {
+function CategorySection({ label, channels, currentChannelId, handleChannelClick, isCollapsed, onToggle, onDeleteChannel }: any) {
   return (
     <div className={styles.category}>
       <UncategorizedHeader
@@ -246,6 +247,7 @@ function CategorySection({ label, channels, currentChannelId, handleChannelClick
                 channel={channel}
                 isActive={currentChannelId === channel.id}
                 onClick={() => handleChannelClick(channel.id)}
+                onDeleteChannel={onDeleteChannel}
               />
             ))}
           </motion.div>
@@ -262,6 +264,7 @@ export function Sidebar() {
   const currentChannelId = useUIStore(state => state.currentChannelId)
   const setShowServerSettings = useUIStore(state => state.setShowServerSettings)
   const leaveGuild = useServerStore(state => state.leaveGuild)
+  const deleteChannel = useServerStore(state => state.deleteChannel)
   const { show } = useToast()
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
   const [showServerMenu, setShowServerMenu] = useState(false)
@@ -289,6 +292,23 @@ export function Sidebar() {
       return next
     })
   }, [])
+
+  const handleDeleteChannel = useCallback(async (channel: any) => {
+    if (!currentServer?.id || !channel?.id) return
+    const ok = confirm(`Delete channel "${channel.name || 'Unnamed'}"? This cannot be undone.`)
+    if (!ok) return
+
+    try {
+      await deleteChannel(currentServer.id, channel.id)
+      if (currentChannelId === channel.id) {
+        navigate(`/channels/${currentServer.id}`)
+      }
+      show('Channel deleted', 'success')
+    } catch (err: any) {
+      const message = err?.response?.data?.error || 'Unable to delete channel'
+      show(message, 'error')
+    }
+  }, [currentServer, currentChannelId, deleteChannel, navigate, show])
 
   const handleChannelClick = useCallback((channelId: string) => {
     if (!currentServer) return
@@ -420,6 +440,7 @@ export function Sidebar() {
                             isActive={currentChannelId === channel.id}
                             onClick={() => handleChannelClick(channel.id)}
                             onCreateChannel={() => openCreateChannelModal(undefined, category.id)}
+                            onDeleteChannel={handleDeleteChannel}
                           />
                         ))}
                       </motion.div>
@@ -437,6 +458,7 @@ export function Sidebar() {
                 handleChannelClick={handleChannelClick}
                 isCollapsed={collapsedCategories.has('__text__')}
                 onToggle={() => toggleCategory('__text__')}
+                onDeleteChannel={handleDeleteChannel}
               />
             )}
 
@@ -448,6 +470,7 @@ export function Sidebar() {
                 handleChannelClick={handleChannelClick}
                 isCollapsed={collapsedCategories.has('__voice__')}
                 onToggle={() => toggleCategory('__voice__')}
+                onDeleteChannel={handleDeleteChannel}
               />
             )}
           </>

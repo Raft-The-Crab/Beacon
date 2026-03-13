@@ -3,6 +3,7 @@
  */
 
 import React from 'react';
+import { Mic, MicOff, Headphones, HeadphoneOff, Video, VideoOff, MonitorUp, PhoneOff } from 'lucide-react';
 import { useVoiceStore } from '../../stores/useVoiceStore';
 import { voiceManager } from '../../services/voiceManager';
 import styles from '../../styles/modules/voice/VoiceControls.module.css';
@@ -59,8 +60,8 @@ export const VoiceControls: React.FC = () => {
             <div className={styles.avatar} />
             <span className={styles.username}>User {user.userId}</span>
             {user.speaking && <div className={styles.speakingIndicator} />}
-            {user.selfMute && <span className={styles.mutedIcon}>🔇</span>}
-            {user.selfVideo && <span className={styles.videoIcon}>📹</span>}
+            {user.selfMute && <MicOff size={14} className={styles.stateIcon} />}
+            {user.selfVideo && <Video size={14} className={styles.stateIcon} />}
           </div>
         ))}
       </div>
@@ -71,7 +72,7 @@ export const VoiceControls: React.FC = () => {
           onClick={handleToggleMute}
           title={currentVoiceState.selfMute ? 'Unmute' : 'Mute'}
         >
-          {currentVoiceState.selfMute ? '🔇' : '🔊'}
+          {currentVoiceState.selfMute ? <MicOff size={18} /> : <Mic size={18} />}
         </button>
 
         <button
@@ -79,7 +80,7 @@ export const VoiceControls: React.FC = () => {
           onClick={handleToggleDeaf}
           title={currentVoiceState.selfDeaf ? 'Undeafen' : 'Deafen'}
         >
-          {currentVoiceState.selfDeaf ? '🔕' : '🔔'}
+          {currentVoiceState.selfDeaf ? <HeadphoneOff size={18} /> : <Headphones size={18} />}
         </button>
 
         <button
@@ -87,7 +88,7 @@ export const VoiceControls: React.FC = () => {
           onClick={handleToggleVideo}
           title={currentVoiceState.selfVideo ? 'Stop Video' : 'Start Video'}
         >
-          {currentVoiceState.selfVideo ? '📹' : '📷'}
+          {currentVoiceState.selfVideo ? <Video size={18} /> : <VideoOff size={18} />}
         </button>
 
         <button
@@ -95,7 +96,7 @@ export const VoiceControls: React.FC = () => {
           onClick={handleScreenShare}
           title="Share Screen"
         >
-          🖥️
+          <MonitorUp size={18} />
         </button>
 
         <button
@@ -103,7 +104,7 @@ export const VoiceControls: React.FC = () => {
           onClick={handleDisconnect}
           title="Disconnect"
         >
-          📞
+          <PhoneOff size={18} />
         </button>
       </div>
     </div>

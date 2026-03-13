@@ -105,7 +105,7 @@ export function MainLayout() {
 
   if (serverId && servers.length === 0) {
     return (
-      <WorkspaceLayout sidebar={<div className={styles.loadingSidebar} />}>
+      <WorkspaceLayout showServerRail sidebar={<div className={styles.loadingSidebar} />}>
         <div className={styles.loadingView}>
           <div className={styles.spinner}></div>
           <span>Syncing Beacon...</span>
@@ -116,7 +116,7 @@ export function MainLayout() {
 
   if (serverId && !targetServer) {
     return (
-      <WorkspaceLayout sidebar={<div className={styles.loadingSidebar} />}>
+      <WorkspaceLayout showServerRail sidebar={<div className={styles.loadingSidebar} />}>
         <div className={styles.loadingView}>
           <span>Server not found or loading...</span>
         </div>
@@ -126,6 +126,7 @@ export function MainLayout() {
 
   return (
     <WorkspaceLayout
+      showServerRail
       sidebar={<Sidebar />}
       rightPanel={showMemberList ? <MemberList /> : undefined}
     >

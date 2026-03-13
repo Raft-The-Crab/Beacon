@@ -1,5 +1,6 @@
 import React from 'react'
 import type { UserBadge } from '@beacon/types'
+import { Tooltip } from './Tooltip'
 import styles from '../../styles/modules/ui/UserBadges.module.css'
 
 // ── CUSTOM SVG BADGE COMPONENTS (God-Tier Aesthetics) ──
@@ -81,7 +82,7 @@ const VerifiedSVG = ({ size }: { size: number }) => (
 )
 
 interface UserBadgesProps {
-  badges?: UserBadge[]
+  badges?: Array<UserBadge | string>
   isBot?: boolean
   size?: 'sm' | 'md'
 }
@@ -99,7 +100,23 @@ const BADGE_CONFIG: Record<UserBadge, { element: React.FC<{ size: number }>; lab
 }
 
 export function UserBadges({ badges = [], isBot, size = 'sm' }: UserBadgesProps) {
-  const allBadges = [...badges]
+  const allBadges = Array.from(new Set(
+    badges
+      .map((badge) => {
+        switch (String(badge)) {
+          case 'APP_OWNER': return 'owner'
+          case 'SYSTEM_ADMIN': return 'admin'
+          case 'PLATFORM_MODERATOR': return 'moderator'
+          case 'BEACON_PLUS': return 'beacon_plus'
+          case 'EARLY_SUPPORTER': return 'early_supporter'
+          case 'BUG_HUNTER': return 'bug_hunter'
+          case 'SERVER_OWNER': return 'server_owner'
+          case 'VERIFIED': return 'verified'
+          default: return String(badge).toLowerCase()
+        }
+      })
+      .filter((badge): badge is UserBadge => badge in BADGE_CONFIG)
+  ))
   if (isBot && !allBadges.includes('bot')) allBadges.push('bot')
   if (allBadges.length === 0) return null
 
@@ -110,13 +127,13 @@ export function UserBadges({ badges = [], isBot, size = 'sm' }: UserBadgesProps)
         if (!config) return null
         const SvgIcon = config.element
         return (
-          <span
-            key={badge}
-            className={`${styles.badge} ${styles[config.className]}`}
-            title={config.label}
-          >
-            <SvgIcon size={size === 'sm' ? 16 : 22} />
-          </span>
+          <Tooltip key={badge} content={config.label} position="top" delay={400}>
+            <span
+              className={`${styles.badge} ${styles[config.className]}`}
+            >
+              <SvgIcon size={size === 'sm' ? 16 : 22} />
+            </span>
+          </Tooltip>
         )
       })}
     </span>

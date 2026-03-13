@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useCallback } from 'react'
+﻿import { useState, useRef, useCallback, useEffect } from 'react'
 import { Send, Plus, Smile, Volume2, Image as ImageIcon, X, File, Sparkles, Reply } from 'lucide-react'
 import { Button, Tooltip, EmojiPicker, GifPicker } from '../ui'
 import { StickerPicker } from './StickerPicker'
@@ -50,6 +50,7 @@ export function MessageInput({
   const [scheduledTime, setScheduledTime] = useState('')
   const [attachments, setAttachments] = useState<UploadedFile[]>([])
   const [uploading, setUploading] = useState(false)
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
 
   // Slash command state
   const [showSlashPicker, setShowSlashPicker] = useState(false)
@@ -68,6 +69,33 @@ export function MessageInput({
   const gifButtonRef = useRef<HTMLButtonElement>(null)
   const emojiButtonRef = useRef<HTMLButtonElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return
+
+    const vv = window.visualViewport
+    const handleViewportChange = () => {
+      if (window.innerWidth > 768) {
+        setKeyboardOffset(0)
+        return
+      }
+
+      const delta = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop))
+      const isKeyboardLikelyOpen = delta > 100
+      setKeyboardOffset(isKeyboardLikelyOpen ? delta : 0)
+    }
+
+    vv.addEventListener('resize', handleViewportChange)
+    vv.addEventListener('scroll', handleViewportChange)
+    window.addEventListener('orientationchange', handleViewportChange)
+    handleViewportChange()
+
+    return () => {
+      vv.removeEventListener('resize', handleViewportChange)
+      vv.removeEventListener('scroll', handleViewportChange)
+      window.removeEventListener('orientationchange', handleViewportChange)
+    }
+  }, [])
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.currentTarget.value.slice(0, MAX_MESSAGE_LENGTH)
@@ -138,13 +166,27 @@ export function MessageInput({
       case 'unflip':
         setMessage(prev => prev.replace(/^\/\S*/, '┬─┬ ノ( ゜-゜ノ)'))
         break
+      case 'roll': {
+        const match = message.match(/^\/roll\s*(\d+)?/)
+        const sides = match?.[1] ? Math.min(parseInt(match[1]), 1000) : 6
+        const result = Math.floor(Math.random() * sides) + 1
+        setMessage(`🎲 Rolled a d${sides}: **${result}**`)
+        break
+      }
+      case 'flip':
+        setMessage(Math.random() < 0.5 ? '🪙 Heads!' : '🪙 Tails!')
+        break
+      case 'rps': {
+        const rpChoices = ['🪨 Rock!', '📄 Paper!', '✂️ Scissors!']
+        setMessage(rpChoices[Math.floor(Math.random() * rpChoices.length)])
+        break
+      }
+      case 'gif':
+        setShowGifPicker(true)
+        setMessage('')
+        break
       default:
-        // Replace the slash command token with the command + space so user can type args
-        if (command.usage) {
-          setMessage('/' + command.name + ' ')
-        } else {
-          setMessage('/' + command.name + ' ')
-        }
+        setMessage('/' + command.name + ' ')
     }
     setShowSlashPicker(false)
     setSlashQuery('')
@@ -316,7 +358,11 @@ export function MessageInput({
   }
 
   return (
-    <div className={styles.inputContainer} ref={containerRef}>
+    <div
+      className={styles.inputContainer}
+      ref={containerRef}
+      style={{ '--keyboard-offset': `${keyboardOffset}px` } as React.CSSProperties}
+    >
       {/* Reply preview bar */}
       {replyingTo && (
         <div className={styles.replyPreview}>
@@ -384,6 +430,7 @@ export function MessageInput({
       <div className={styles.inputWrapper}>
         <Tooltip content="Add files" position="top">
           <button
+            type="button"
             className={styles.iconButton}
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
@@ -397,6 +444,7 @@ export function MessageInput({
           ref={fileInputRef}
           type="file"
           multiple
+          onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
           onChange={handleFileSelect}
           style={{ display: 'none' }}
           accept="*/*"
@@ -419,6 +467,7 @@ export function MessageInput({
           <div className={styles.pickerWrapper}>
             <Tooltip content="Add GIF" position="top">
               <button
+                type="button"
                 ref={gifButtonRef}
                 className={styles.iconButton}
                 onClick={() => {
@@ -442,6 +491,7 @@ export function MessageInput({
           <div className={styles.pickerWrapper}>
             <Tooltip content="Add emoji" position="top">
               <button
+                type="button"
                 ref={emojiButtonRef}
                 className={styles.iconButton}
                 onClick={() => {
@@ -465,6 +515,7 @@ export function MessageInput({
           <div className={styles.pickerWrapper}>
             <Tooltip content="Add sticker" position="top">
               <button
+                type="button"
                 className={styles.iconButton}
                 onClick={() => {
                   setShowStickerPicker(!showStickerPicker)
@@ -488,7 +539,7 @@ export function MessageInput({
 
           {onVoiceClick && (
             <Tooltip content="Send voice message" position="top">
-              <button className={styles.iconButton} onClick={onVoiceClick} aria-label="Send voice message">
+              <button type="button" className={styles.iconButton} onClick={onVoiceClick} aria-label="Send voice message">
                 <Volume2 size={20} />
               </button>
             </Tooltip>

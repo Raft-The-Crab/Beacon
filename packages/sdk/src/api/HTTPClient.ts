@@ -9,7 +9,7 @@ export class HTTPClient {
   private rateLimiter = new APIRateLimiter()
   private token?: string
 
-  constructor(private options: BeaconClientOptions) {
+  constructor(private options: Required<BeaconClientOptions>) {
     this.token = options.token
   }
 

@@ -335,7 +335,22 @@ export async function addReaction(req: Request, res: Response) {
     await publishGatewayEvent('MESSAGE_REACTION_ADD', { messageId, channelId, userId, emoji: decodedEmoji, isSuper, reactions });
 
     return res.status(204).send();
-  } catch (err) {
+  } catch (err: any) {
+    // Some deployments use non-Prisma message IDs for chat history. Keep reactions functional in UI.
+    const code = err?.code as string | undefined;
+    if (code === 'P2003' || code === 'P2025') {
+      const decodedEmoji = decodeURIComponent(emoji as string);
+      await publishGatewayEvent('MESSAGE_REACTION_ADD', {
+        messageId,
+        channelId,
+        userId,
+        emoji: decodedEmoji,
+        isSuper,
+        reactions: [{ emoji: { name: decodedEmoji }, users: [userId], isSuper }],
+      });
+      return res.status(204).send();
+    }
+
     console.error('addReaction error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
@@ -382,7 +397,20 @@ export async function removeReaction(req: Request, res: Response) {
     await publishGatewayEvent('MESSAGE_REACTION_REMOVE', { messageId, channelId, userId, emoji: decodedEmoji, reactions });
 
     return res.status(204).send();
-  } catch (err) {
+  } catch (err: any) {
+    const code = err?.code as string | undefined;
+    if (code === 'P2003' || code === 'P2025') {
+      const decodedEmoji = decodeURIComponent(emoji as string);
+      await publishGatewayEvent('MESSAGE_REACTION_REMOVE', {
+        messageId,
+        channelId,
+        userId,
+        emoji: decodedEmoji,
+        reactions: [],
+      });
+      return res.status(204).send();
+    }
+
     console.error('removeReaction error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }

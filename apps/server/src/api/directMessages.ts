@@ -10,6 +10,22 @@ import { ChannelType } from '@prisma/client';
 
 const router = Router();
 
+function orderRecipientsForClient<T extends { id: string }>(recipients: T[], currentUserId: string) {
+  return [...recipients].sort((left, right) => {
+    const leftIsSelf = left.id === currentUserId
+    const rightIsSelf = right.id === currentUserId
+    if (leftIsSelf === rightIsSelf) return 0
+    return leftIsSelf ? 1 : -1
+  })
+}
+
+function serializeDmChannel<T extends { recipients?: Array<{ id: string }> }>(channel: T, currentUserId: string) {
+  return {
+    ...channel,
+    recipients: orderRecipientsForClient(channel.recipients || [], currentUserId)
+  }
+}
+
 // Get all DM channels for current user
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   const userId = req.user?.id;
@@ -42,7 +58,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
       }
     });
 
-    return res.json(dmChannels);
+    return res.json(dmChannels.map((channel) => serializeDmChannel(channel, userId)));
   } catch (error: any) {
     console.error('Failed to get DM channels. name:', error.name, 'message:', error.message);
     if (error.meta) console.error('Prisma Meta:', error.meta);
@@ -71,9 +87,19 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
             { recipients: { some: { id: allMembers[0] } } },
             { recipients: { some: { id: allMembers[1] } } }
           ]
+        },
+        include: {
+          recipients: {
+            select: {
+              id: true,
+              username: true,
+              avatar: true,
+              customStatus: true,
+            }
+          },
         }
       });
-      if (existing) return res.json(existing);
+      if (existing) return res.json(serializeDmChannel(existing, userId));
     }
 
     // Create new DM channel
@@ -90,7 +116,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
       }
     });
 
-    return res.status(201).json(channel);
+    return res.status(201).json(serializeDmChannel(channel, userId));
   } catch (error) {
     console.error('Failed to create DM channel', error);
     return res.status(500).json({ error: 'Internal server error' });

@@ -9,24 +9,50 @@ export type PresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible'
 function decorateSystemUser(user: User | null): User | null {
   if (!user) return null
 
+  const normalizedBadges = new Set(
+    (user.badges || []).map((badge) => {
+      switch (badge) {
+        case 'owner':
+        case 'admin':
+        case 'moderator':
+        case 'beacon_plus':
+        case 'bot':
+        case 'early_supporter':
+        case 'bug_hunter':
+        case 'server_owner':
+        case 'verified':
+          return badge
+        default:
+          return String(badge)
+            .toLowerCase()
+            .replace('app_owner', 'owner')
+            .replace('system_admin', 'admin')
+            .replace('platform_moderator', 'moderator')
+      }
+    })
+  )
+
+  if ((user as User & { isBeaconPlus?: boolean }).isBeaconPlus) {
+    normalizedBadges.add('beacon_plus')
+  }
+
   const isRaft =
     user.username?.toLowerCase() === 'raftthecrab' &&
     String(user.discriminator || '').trim() === '1452'
 
-  if (!isRaft) return user
-
-  const badges = new Set(user.badges || [])
-  badges.add('admin')
-  badges.add('verified')
+  if (isRaft) {
+    normalizedBadges.add('admin')
+    normalizedBadges.add('verified')
+  }
 
   return {
     ...user,
-    badges: Array.from(badges),
+    badges: Array.from(normalizedBadges) as User['badges'],
   }
 }
 
 interface AuthState {
-  user: (User & { activities?: UserActivity[]; theme?: string }) | null
+  user: (User & { activities?: UserActivity[]; theme?: string; isBeaconPlus?: boolean }) | null
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
@@ -37,7 +63,7 @@ interface AuthState {
   register: (username: string, email: string, password: string) => Promise<void>
   logout: () => void
   checkSession: () => Promise<void>
-  updateProfile: (data: Partial<User & { theme?: string; activities?: UserActivity[] }>) => Promise<void>
+  updateProfile: (data: Partial<User & { theme?: string; activities?: UserActivity[]; isBeaconPlus?: boolean }>) => Promise<void>
   updateStatus: (update: {
     statusText?: string,
     statusEmoji?: string,

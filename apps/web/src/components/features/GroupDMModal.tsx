@@ -22,9 +22,11 @@ function normalizeApiBaseUrl(rawUrl: string): string {
 }
 
 const API_BASE = normalizeApiBaseUrl(
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_BACKEND_URL ||
-  '/api'
+  import.meta.env.DEV
+    ? '/api'
+    : (import.meta.env.VITE_API_URL ||
+      import.meta.env.VITE_BACKEND_URL ||
+      '/api')
 );
 
 function getToken() {

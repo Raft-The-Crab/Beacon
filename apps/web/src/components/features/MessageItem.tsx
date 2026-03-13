@@ -4,6 +4,7 @@ import type { UserBadge } from '@beacon/types'
 import { Avatar, Tooltip, EmojiPicker } from '../ui'
 import { UserBadges, BotTag } from '../ui/UserBadges'
 import { useAuthStore } from '../../stores/useAuthStore'
+import { useUIStore } from '../../stores/useUIStore'
 import { MarkdownRenderer } from '../ui/MarkdownRenderer'
 import { useProfileArtStore } from '../../stores/useProfileArtStore'
 import { UserPopoverCard } from './UserPopoverCard'
@@ -20,13 +21,14 @@ interface MessageItemProps {
   id: string
   authorId?: string
   authorName: string
+  authorIsBeaconPlus?: boolean
   authorAvatar?: string
+  authorBanner?: string
   authorStatus?: 'online' | 'idle' | 'dnd' | 'offline'
   authorCustomStatus?: string
   authorBio?: string
   authorJoinedAt?: string
   authorRoles?: { name: string; color: string }[]
-  authorBannerColor?: string
   authorAvatarDecorationId?: string | null
   content: string
   timestamp: string
@@ -41,6 +43,7 @@ interface MessageItemProps {
   onDelete?: () => void
   onEdit?: () => void
   onPin?: () => void
+  onComponentInteraction?: (component: any, values?: string[]) => void | Promise<void>
   showActions?: boolean
   isContinuing?: boolean
   isEncrypted?: boolean
@@ -67,13 +70,14 @@ export const MessageItem = React.memo(function MessageItem({
   id: _id,
   authorId,
   authorName,
+  authorIsBeaconPlus,
   authorAvatar,
+  authorBanner,
   authorStatus = 'offline',
   authorCustomStatus,
   authorBio,
   authorJoinedAt,
   authorRoles,
-  authorBannerColor,
   authorAvatarDecorationId,
   content,
   timestamp,
@@ -88,6 +92,7 @@ export const MessageItem = React.memo(function MessageItem({
   onDelete,
   onEdit,
   onPin,
+  onComponentInteraction,
   showActions,
   isContinuing,
   isEncrypted,
@@ -105,30 +110,53 @@ export const MessageItem = React.memo(function MessageItem({
   const [isTranslating, setIsTranslating] = useState(false)
   const { user } = useAuthStore()
 
-  // Normalize reaction objects to { emoji, count, userReacted }
-  const normalizedReactions: MessageReaction[] = (reactions || []).map((r: any) => {
-    // server shape: { emoji: { name }, users: [userId] }
-    if (r && r.users) {
-      const emojiName = r.emoji?.name || r.emoji
-      const users: string[] = r.users || []
-      return {
-        emoji: typeof emojiName === 'string' ? emojiName : emojiName?.name || '•',
-        count: users.length,
-        userReacted: !!(user && users.includes(user.id)),
-        isSuper: r.isSuper || false
+  // Normalize reaction shapes from optimistic client, grouped gateway payloads, and raw DB rows.
+  const normalizedReactions: MessageReaction[] = (() => {
+    const grouped = new Map<string, MessageReaction>()
+
+    for (const reaction of reactions || []) {
+      const r: any = reaction
+      const emojiName = String(r?.emoji?.name || r?.emoji || '').trim()
+      if (!emojiName) continue
+
+      if (Array.isArray(r.users)) {
+        grouped.set(emojiName, {
+          emoji: emojiName,
+          count: r.users.length,
+          userReacted: !!(user && r.users.includes(user.id)),
+          isSuper: !!r.isSuper,
+        })
+        continue
       }
+
+      if (typeof r.count === 'number') {
+        grouped.set(emojiName, {
+          emoji: emojiName,
+          count: r.count,
+          userReacted: !!r.userReacted,
+          isSuper: !!r.isSuper,
+        })
+        continue
+      }
+
+      // Raw DB row shape: { emoji: string, userId: string, isSuper?: boolean }
+      const existing = grouped.get(emojiName) || { emoji: emojiName, count: 0, userReacted: false, isSuper: false }
+      const isCurrentUser = !!(user && r.userId && r.userId === user.id)
+      grouped.set(emojiName, {
+        emoji: emojiName,
+        count: existing.count + 1,
+        userReacted: existing.userReacted || isCurrentUser,
+        isSuper: existing.isSuper || !!r.isSuper,
+      })
     }
 
-    // client optimistic shape: { emoji, count, userReacted, isSuper }
-    return {
-      emoji: r.emoji,
-      count: r.count || 0,
-      userReacted: !!r.userReacted,
-      isSuper: !!r.isSuper
-    }
-  })
+    return Array.from(grouped.values()).filter((r) => r.count > 0)
+  })()
   const { arts, equippedFrame } = useProfileArtStore()
-  const isSelf = !!user && (authorId === user.id || authorName === user.username || authorName === 'You')
+  const chatBubbleStyle = useUIStore((state) => state.chatBubbleStyle)
+  const chatBubbleIntensity = useUIStore((state) => state.chatBubbleIntensity)
+  const hasBeaconPlus = Boolean(authorIsBeaconPlus)
+  const isSelf = !!user && (authorId === user.id || authorId === 'current-user')
   const displayAuthorName = isSelf ? (user?.username || authorName) : authorName
   const displayAuthorAvatar = isSelf ? (user?.avatar || authorAvatar) : authorAvatar
   const displayAuthorStatus = (isSelf ? user?.status : authorStatus) || 'offline'
@@ -140,6 +168,9 @@ export const MessageItem = React.memo(function MessageItem({
       : status === 'sending'
         ? styles.ownStatusSending
         : styles.ownStatusMuted
+  const selfBubbleClass = isSelf && hasBeaconPlus
+    ? `${styles.plusBubble} ${styles[`plusBubble${chatBubbleStyle.charAt(0).toUpperCase()}${chatBubbleStyle.slice(1)}`]} ${styles[`plusBubbleIntensity${chatBubbleIntensity.charAt(0).toUpperCase()}${chatBubbleIntensity.slice(1)}`]}`
+    : ''
 
   return (
     <div
@@ -165,12 +196,13 @@ export const MessageItem = React.memo(function MessageItem({
         <div className={styles.continueTime}>{timestamp}</div>
       )}
 
-      <div className={styles.content}>
+      <div className={`${styles.content} ${selfBubbleClass}`}>
         {!isContinuing && (
           <div className={styles.header}>
             <UserPopoverCard
               username={displayAuthorName}
               avatar={displayAuthorAvatar}
+              banner={authorBanner}
               status={displayAuthorStatus as any}
               customStatus={authorCustomStatus || (isSelf ? (user?.statusText || user?.customStatus || undefined) : undefined) || undefined}
               badges={authorBadges || (isSelf ? user?.badges : undefined)}
@@ -178,7 +210,6 @@ export const MessageItem = React.memo(function MessageItem({
               bio={authorBio || (isSelf ? user?.bio || undefined : 'A Beacon user exploring the cosmos.')}
               joinedAt={authorJoinedAt}
               roles={authorRoles && authorRoles.length > 0 ? authorRoles : isSelf ? [{ name: 'You', color: '#5865f2' }] : []}
-              bannerColor={authorBannerColor || '#5865f2'}
               avatarDecorationId={authorAvatarDecorationId || (isSelf ? user?.avatarDecorationId : undefined)}
             >
               <span className={styles.author}>{displayAuthorName}</span>
@@ -213,7 +244,7 @@ export const MessageItem = React.memo(function MessageItem({
               <div className={styles.translationDivider} />
               <div className={styles.translationHeader}>
                 <Languages size={12} />
-                <span>Translated by Beacon AI</span>
+                 <span>Translated</span>
               </div>
               <MarkdownRenderer content={translatedContent} />
             </div>
@@ -308,14 +339,54 @@ export const MessageItem = React.memo(function MessageItem({
                           className={`${styles.componentButton} ${styles['buttonStyle' + (comp.style || 1)]}`}
                           disabled={comp.disabled}
                           onClick={() => {
-                            // In a real environment, send WSS event INTERACTION_CREATE or POST /api/interactions
-                            console.log('[Gateway Event] INTERACTION_CREATE:', { customId: comp.custom_id || comp.customId, messageId: _id })
+                            if (comp.url && Number(comp.style || 1) === 5) {
+                              window.open(comp.url, '_blank', 'noopener,noreferrer')
+                              return
+                            }
+
+                            void onComponentInteraction?.(comp)
                           }}
                         >
                           {comp.label}
                         </button>
                       )
                     }
+
+                    if ([3, 5, 6, 7, 8].includes(comp.type)) {
+                      const isMultiSelect = Number(comp.max_values ?? comp.maxValues ?? 1) > 1
+                      const options = Array.isArray(comp.options) ? comp.options : []
+
+                      return (
+                        <div key={j} className={styles.selectWrapper}>
+                          <select
+                            className={styles.selectMenu}
+                            disabled={comp.disabled || options.length === 0}
+                            multiple={isMultiSelect}
+                            defaultValue={isMultiSelect ? [] : ''}
+                            onChange={(event) => {
+                              const selectedValues = Array.from(event.currentTarget.selectedOptions).map((option) => option.value)
+                              void onComponentInteraction?.(comp, selectedValues)
+                            }}
+                          >
+                            {!isMultiSelect && (
+                              <option value="" disabled>
+                                {comp.placeholder || 'Select an option'}
+                              </option>
+                            )}
+                            {options.length === 0 ? (
+                              <option value="" disabled>
+                                {comp.placeholder || 'Dynamic dropdowns are not available here yet'}
+                              </option>
+                            ) : options.map((option: any, optionIndex: number) => (
+                              <option key={optionIndex} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )
+                    }
+
                     return null
                   })}
                 </div>
@@ -458,12 +529,60 @@ export const MessageItem = React.memo(function MessageItem({
                 }
                 setIsTranslating(true)
                 try {
-                  await new Promise((r) => setTimeout(r, 800))
-                  const isCJK = /[\u4e00-\u9fa5\u3040-\u309f\u30a0-\u30ff]/.test(content)
-                  const translation = isCJK
-                    ? `[English]: ${content} (Simulation)`
-                    : `[Target Language]: ${content} (Beacon AI Titan III)`
-                  setTranslatedContent(translation)
+                  const userLang = (navigator.language || 'en').split('-')[0]
+                  const text = content.slice(0, 1000)
+                  const q = encodeURIComponent(text)
+
+                  // Try Google unofficial translate endpoint (client=gtx, no key needed)
+                  const gtxUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(userLang)}&dt=t&dt=ld&q=${q}`
+                  let translated: string | null = null
+                  let detectedLang = ''
+
+                  try {
+                    const res = await fetch(gtxUrl, { signal: AbortSignal.timeout(6000) })
+                    if (res.ok) {
+                      const data = await res.json() as [Array<[string, string]>, unknown, string]
+                      translated = (data[0] || []).map(pair => pair[0] || '').join('')
+                      detectedLang = data[2] || ''
+                    }
+                  } catch {
+                    // fallback: MyMemory — detect language heuristically
+                    const src = /[\u4e00-\u9fff\u3440-\u4dbf]/.test(text) ? 'zh'
+                      : /[\u3040-\u309f\u30a0-\u30ff]/.test(text) ? 'ja'
+                      : /[\uac00-\ud7af]/.test(text) ? 'ko'
+                      : /[\u0600-\u06ff]/.test(text) ? 'ar'
+                      : /[\u0400-\u04ff]/.test(text) ? 'ru'
+                      : 'en'
+                    const tgt = src === userLang ? 'en' : userLang
+                    const mmRes = await fetch(
+                      `https://api.mymemory.translated.net/get?q=${q}&langpair=${src}|${tgt}`,
+                      { signal: AbortSignal.timeout(7000) }
+                    )
+                    const mmJson = await mmRes.json() as { responseStatus: number; responseData: { translatedText: string } }
+                    if (mmJson.responseStatus === 200 && mmJson.responseData?.translatedText) {
+                      translated = mmJson.responseData.translatedText
+                      detectedLang = src
+                    }
+                  }
+
+                  if (!translated) {
+                    setTranslatedContent('Translation unavailable.')
+                    return
+                  }
+
+                  // If already in user's language, offer English instead
+                  if (detectedLang && detectedLang === userLang) {
+                    try {
+                      const langName = new Intl.DisplayNames([userLang], { type: 'language' }).of(detectedLang)
+                      setTranslatedContent(`Already in ${langName || detectedLang}.`)
+                    } catch {
+                      setTranslatedContent('Already in your language.')
+                    }
+                  } else {
+                    setTranslatedContent(translated)
+                  }
+                } catch {
+                  setTranslatedContent('Translation service offline.')
                 } finally {
                   setIsTranslating(false)
                 }

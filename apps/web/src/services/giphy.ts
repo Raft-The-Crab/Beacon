@@ -1,5 +1,5 @@
-// GIF API Service — resilient fallback system
-// Uses Giphy public beta key (no signup needed)
+// GIF API Service
+// Enforces free-tier limits client-side to avoid exhausting API quota.
 
 export interface GiphyGif {
     id: string
@@ -16,15 +16,104 @@ export interface GiphySearchResponse {
     pagination: { total_count: number; count: number; offset: number }
 }
 
-// Fallback: use Giphy's public beta key (rate-limited but works without signup)
-const GIPHY_PUBLIC_BETA = 'cw66S06W1tJ69tTSOsh9S8Q0S77vS3N4'
+const GIPHY_CONFIGURED_KEY =
+    import.meta.env.VITE_GIPHY_API_KEY ||
+    'cw66S06W1tJ69tTSOsh9S8Q0S77vS3N4'
 const GIPHY_API_BASE = 'https://api.giphy.com/v1/gifs'
+const GIPHY_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
+const GIPHY_RATE_LIMIT_FREE = 100
+const GIPHY_RATE_LIMIT_BEACON_PLUS = 240
+const GIPHY_LIMIT_STORAGE_KEY = 'beacon_giphy_rate_limit_v2'
+
+export type GiphyUsageTier = 'free' | 'beacon_plus'
+
+interface RateLimitState {
+    startedAt: number
+    count: number
+    tier: GiphyUsageTier
+}
+
+interface GiphyRequestOptions {
+    tier?: GiphyUsageTier
+}
 
 class GifService {
-    async searchGifs(query: string, limit = 20, offset = 0): Promise<GiphySearchResponse> {
-        // Try Giphy public beta key first (most reliable free option)
+    private getRateLimitState(tier: GiphyUsageTier): RateLimitState {
+        if (typeof window === 'undefined') {
+            return { startedAt: Date.now(), count: 0, tier }
+        }
+
+        try {
+            const raw = window.localStorage.getItem(GIPHY_LIMIT_STORAGE_KEY)
+            if (!raw) return { startedAt: Date.now(), count: 0, tier }
+
+            const parsed = JSON.parse(raw) as RateLimitState
+            if (!parsed?.startedAt || typeof parsed.count !== 'number') {
+                return { startedAt: Date.now(), count: 0, tier }
+            }
+
+            const expired = Date.now() - parsed.startedAt >= GIPHY_RATE_LIMIT_WINDOW_MS
+            const tierChanged = parsed.tier !== tier
+            if (expired || tierChanged) {
+                return { startedAt: Date.now(), count: 0, tier }
+            }
+
+            return parsed
+        } catch {
+            return { startedAt: Date.now(), count: 0, tier }
+        }
+    }
+
+    private setRateLimitState(state: RateLimitState) {
+        if (typeof window === 'undefined') return
+        try {
+            window.localStorage.setItem(GIPHY_LIMIT_STORAGE_KEY, JSON.stringify(state))
+        } catch {
+            // Ignore storage failures and keep runtime behavior working.
+        }
+    }
+
+    private getHourlyLimitForTier(tier: GiphyUsageTier) {
+        return tier === 'beacon_plus' ? GIPHY_RATE_LIMIT_BEACON_PLUS : GIPHY_RATE_LIMIT_FREE
+    }
+
+    private consumeRateLimitOrThrow(tier: GiphyUsageTier) {
+        const state = this.getRateLimitState(tier)
+        const maxRequests = this.getHourlyLimitForTier(tier)
+
+        if (state.count >= maxRequests) {
+            const minutesLeft = Math.max(
+                1,
+                Math.ceil((GIPHY_RATE_LIMIT_WINDOW_MS - (Date.now() - state.startedAt)) / 60000)
+            )
+            throw new Error(`GIPHY hourly limit reached (${maxRequests}/hour for ${tier === 'beacon_plus' ? 'Beacon+' : 'Free'}). Try again in ~${minutesLeft} min.`)
+        }
+
+        this.setRateLimitState({
+            startedAt: state.startedAt,
+            count: state.count + 1,
+            tier,
+        })
+    }
+
+    private async request(path: 'search' | 'trending', params: URLSearchParams, tier: GiphyUsageTier): Promise<GiphySearchResponse> {
+        this.consumeRateLimitOrThrow(tier)
+
+        const response = await fetch(`${GIPHY_API_BASE}/${path}?${params}`)
+        if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error('GIPHY returned 429 (rate limited). Please wait and try again.')
+            }
+            throw new Error(`GIPHY request failed (${response.status})`)
+        }
+
+        return response.json()
+    }
+
+    async searchGifs(query: string, limit = 20, offset = 0, options: GiphyRequestOptions = {}): Promise<GiphySearchResponse> {
+        const tier = options.tier || 'free'
         const params = new URLSearchParams({
-            api_key: GIPHY_PUBLIC_BETA,
+            api_key: GIPHY_CONFIGURED_KEY,
             q: query,
             limit: limit.toString(),
             offset: offset.toString(),
@@ -32,37 +121,19 @@ class GifService {
             lang: 'en'
         })
 
-        try {
-            const response = await fetch(`${GIPHY_API_BASE}/search?${params}`)
-            if (response.ok) {
-                return response.json()
-            }
-        } catch {
-            // Giphy failed, fall through
-        }
-
-        // Fallback: return empty if all APIs fail
-        return { data: [], pagination: { total_count: 0, count: 0, offset: 0 } }
+        return this.request('search', params, tier)
     }
 
-    async getTrending(limit = 20, offset = 0): Promise<GiphySearchResponse> {
+    async getTrending(limit = 20, offset = 0, options: GiphyRequestOptions = {}): Promise<GiphySearchResponse> {
+        const tier = options.tier || 'free'
         const params = new URLSearchParams({
-            api_key: GIPHY_PUBLIC_BETA,
+            api_key: GIPHY_CONFIGURED_KEY,
             limit: limit.toString(),
             offset: offset.toString(),
             rating: 'g'
         })
 
-        try {
-            const response = await fetch(`${GIPHY_API_BASE}/trending?${params}`)
-            if (response.ok) {
-                return response.json()
-            }
-        } catch {
-            // Failed
-        }
-
-        return { data: [], pagination: { total_count: 0, count: 0, offset: 0 } }
+        return this.request('trending', params, tier)
     }
 }
 

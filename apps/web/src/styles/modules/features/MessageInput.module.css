@@ -1,5 +1,6 @@
 .inputContainer {
-  padding: 0 16px 24px;
+  --keyboard-offset: 0px;
+  padding: 0 16px 16px;
   background: transparent;
   position: relative;
   z-index: 20;
@@ -178,9 +179,11 @@
   align-items: flex-end;
   gap: 8px;
   padding: 8px 16px;
-  background: #27272a;
-  border-radius: 8px;
-  border: none;
+  background: linear-gradient(180deg, rgba(37, 39, 46, 0.92), rgba(23, 24, 31, 0.95));
+  border-radius: 16px;
+  border: 1px solid rgba(132, 145, 255, 0.16);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 30px rgba(6, 8, 14, 0.38);
   transition: all 0.2s ease;
   position: relative;
 }
@@ -197,8 +200,9 @@
 }
 
 .inputWrapper:focus-within {
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 0 0 1px var(--beacon-brand);
+  background: linear-gradient(180deg, rgba(48, 52, 64, 0.95), rgba(23, 26, 36, 0.98));
+  border-color: rgba(126, 141, 255, 0.62);
+  box-shadow: 0 0 0 1px rgba(126, 141, 255, 0.35), 0 16px 36px rgba(28, 38, 90, 0.34);
 }
 
 .inputWrapper:focus-within::before {
@@ -211,13 +215,13 @@
   border: none !important;
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 400;
   resize: none;
   outline: none;
-  max-height: 200px;
-  min-height: 20px !important;
-  line-height: 1.4;
+  max-height: 220px;
+  min-height: 24px !important;
+  line-height: 1.45;
   padding: 0 !important;
   box-shadow: none !important;
   -webkit-appearance: none;
@@ -226,7 +230,8 @@
 
 .textarea::placeholder {
   color: var(--text-muted);
-  font-weight: 400;
+  font-weight: 500;
+  font-size: 15px;
 }
 
 .iconButton {
@@ -259,7 +264,7 @@
 .actions {
   display: flex;
   gap: 4px;
-  align-items: center;
+  align-items: flex-end;
   margin-bottom: 0;
 }
 
@@ -270,9 +275,12 @@
 
 .sendButton {
   flex-shrink: 0;
-  margin-left: 8px;
+  margin-left: 4px;
   width: 38px;
   height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0 !important;
   border-radius: 50% !important;
   background: linear-gradient(135deg, var(--beacon-brand) 0%, #5865F2 100%) !important;
@@ -280,10 +288,18 @@
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+.sendButton svg {
+  transform: translateX(0.5px);
+}
+
 .sendButton:hover:not(:disabled) {
-  transform: rotate(-5deg);
+  transform: translateY(-1px);
   box-shadow: 0 8px 25px rgba(88, 101, 242, 0.6) !important;
   filter: brightness(1.2);
+}
+
+.sendButton:disabled {
+  opacity: 0.7;
 }
 
 .sendButton:active:not(:disabled) {
@@ -307,13 +323,13 @@
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Mobile ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 @media (max-width: 768px) {
   .inputContainer {
-    padding: 0 12px 12px;
+    padding: 0 8px calc(8px + env(safe-area-inset-bottom) + var(--keyboard-offset));
   }
 
   .inputWrapper {
-    padding: 8px 12px;
+    padding: 6px 8px;
     border-radius: var(--radius-xl);
-    gap: 8px;
+    gap: 4px;
     box-shadow: var(--shadow-sm);
   }
 
@@ -323,18 +339,23 @@
   }
 
   .iconButton {
-    width: 44px;
-    height: 44px;
+    width: 34px;
+    height: 34px;
   }
 
   .sendButton {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
+    margin-left: 0;
   }
 
   .charCount {
-    min-width: 44px;
-    font-size: 10px;
+    display: none;
+  }
+
+  .textarea,
+  .textarea::placeholder {
+    font-size: 16px;
   }
 
   .attachmentPreview {

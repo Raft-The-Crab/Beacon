@@ -1,9 +1,32 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
-export default defineConfig({
+function normalizeProxyTarget(rawValue: string | undefined, fallback: string): string {
+  const value = rawValue?.trim()
+
+  if (!value || value.startsWith('/')) {
+    return fallback
+  }
+
+  if (value.startsWith('ws://')) {
+    return `http://${value.slice('ws://'.length)}`
+  }
+
+  if (value.startsWith('wss://')) {
+    return `https://${value.slice('wss://'.length)}`
+  }
+
+  return value
+}
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const apiProxyTarget = normalizeProxyTarget(env.VITE_BACKEND_URL, 'http://localhost:8080')
+  const gatewayProxyTarget = normalizeProxyTarget(env.VITE_GATEWAY_URL, 'http://localhost:4001')
+
+  return {
   plugins: [
     react({
       jsxRuntime: 'automatic',
@@ -25,27 +48,28 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'beacon.qzz.io',
+      'www.beacon.qzz.io',
+      '.devtunnels.ms',
+      '.asse.devtunnels.ms',
+    ],
     strictPort: true,
     hmr: {
       overlay: true,
     },
     proxy: {
-      '/api/moderation': {
-        target: process.env.VITE_MODERATION_API || 'http://localhost:8081',
-        changeOrigin: true,
-      },
-      '/api/media': {
-        target: process.env.VITE_MEDIA_API || 'http://localhost:8081',
-        changeOrigin: true,
-      },
       '/api': {
-        target: process.env.VITE_BACKEND_URL || 'http://localhost:4000',
+        target: apiProxyTarget,
         changeOrigin: true,
         timeout: 10000,
       },
       '/gateway': {
-        target: process.env.VITE_GATEWAY_URL || 'ws://localhost:4001',
+        target: gatewayProxyTarget,
         ws: true,
+        changeOrigin: true,
       }
     }
   },
@@ -87,17 +111,11 @@ export default defineConfig({
           if (id.includes('/pages/ServerSettings')) {
             return 'page-server-settings';
           }
-          if (id.includes('/pages/Shop') || id.includes('/stores/useShopStore')) {
-            return 'page-shop';
-          }
           if (id.includes('/pages/Quests') || id.includes('/stores/useQuestStore')) {
             return 'page-quests';
           }
           if (id.includes('/components/settings')) {
             return 'settings-components';
-          }
-          if (id.includes('/components/modals')) {
-            return 'modal-components';
           }
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -131,7 +149,9 @@ export default defineConfig({
   },
 
   define: {
+    global: 'globalThis',
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
+}
 })

@@ -20,7 +20,7 @@ export interface UploadOptions {
 class FileUploadService {
   private apiUrl: string
 
-  constructor(apiUrl: string = import.meta.env.VITE_API_URL || 'http://localhost:4000/api') {
+  constructor(apiUrl: string = (import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || '/api'))) {
     this.apiUrl = apiUrl
   }
 

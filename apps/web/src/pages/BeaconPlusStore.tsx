@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { AnimatePresence } from 'framer-motion'
-import { Crown, Coins, Sparkles, Shield, Zap, ShoppingBag, Palette, Paintbrush, AlertCircle } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Crown, Coins, Sparkles, Shield, Zap, ShoppingBag, Palette, Paintbrush, AlertCircle, X } from 'lucide-react'
 import { useBeacoinStore } from '../stores/useBeacoinStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useShopStore } from '../stores/useShopStore'
@@ -8,12 +8,13 @@ import { useTranslationStore } from '../stores/useTranslationStore'
 import { api } from '../lib/api'
 import { Button } from '../components/ui'
 import { CelebrationAnimation } from '../components/animations/CelebrationAnimation'
+import { CrateAnimation } from '../components/animations/CrateAnimation'
 import { GiftingModal } from '../components/modals/GiftingModal'
 import styles from '../styles/modules/pages/BeaconPlusStore.module.css'
 
 const PLANS = {
-    monthly: { cost: 1250, label: 'mo' },
-    yearly: { cost: 10000, label: 'yr' },
+    monthly: { cost: 1500, label: 'mo' },
+    yearly: { cost: 11500, label: 'yr' },
 }
 
 interface CosmeticWithDetails {
@@ -23,7 +24,6 @@ interface CosmeticWithDetails {
     color?: string
     description?: string
     type?: 'avatar' | 'profile' | 'theme'
-    bannerColor?: string
     accentColor?: string
 }
 
@@ -40,7 +40,7 @@ function CosmeticLoadingSkeleton() {
     )
 }
 
-export function BeaconPlusStore() {
+export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
     const { t } = useTranslationStore()
     const [activeTab, setActiveTab] = useState<'plus' | 'decorations' | 'effects' | 'themes'>('plus')
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly')
@@ -48,6 +48,7 @@ export function BeaconPlusStore() {
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
     const [successType, setSuccessType] = useState<'plus' | 'cosmetic' | null>(null)
+    const [successRewardLabel, setSuccessRewardLabel] = useState('')
     const [searchQuery, setSearchQuery] = useState('')
 
     const { balance, isLoading: walletLoading, purchaseSubscription, fetchWallet } = useBeacoinStore()
@@ -96,12 +97,15 @@ export function BeaconPlusStore() {
     const getEffectivePrice = (price: number) => Math.floor(price * (1 - discount / 100))
 
     const FEATURES = [
-        { icon: <Sparkles size={16} />, label: tr('marketplace.plus.features.animated', 'Animated Avatar & Profile Banner') },
-        { icon: <Zap size={16} />, label: tr('marketplace.plus.features.emojis', 'Custom Emojis Everywhere') },
-        { icon: <Zap size={16} />, label: tr('marketplace.plus.features.uploads', 'Larger File Uploads (500MB)') },
-        { icon: <Shield size={16} />, label: tr('marketplace.plus.features.streaming', 'HD Streaming & Screen Share') },
-        { icon: <Crown size={16} />, label: tr('marketplace.plus.features.badge', 'Exclusive Beacon+ Badge') },
-        { icon: <Coins size={16} />, label: tr('marketplace.plus.features.bonus', 'Monthly Beacoin Bonus (100 coins)') },
+        { icon: <Sparkles size={16} />, label: tr('marketplace.plus.features.animated', 'Animated Avatar & Profile Assets') },
+        { icon: <Zap size={16} />, label: tr('marketplace.plus.features.emojis', 'Use All Server Emojis Everywhere') },
+        { icon: <Zap size={16} />, label: tr('marketplace.plus.features.uploads', 'Larger File Uploads (500 MB)') },
+        { icon: <Shield size={16} />, label: tr('marketplace.plus.features.streaming', 'HD Streaming & Screen Share (1080p)') },
+        { icon: <Crown size={16} />, label: tr('marketplace.plus.features.badge', 'Exclusive Beacon+ Crown Badge') },
+        { icon: <Coins size={16} />, label: tr('marketplace.plus.features.bonus', 'Quest Beacoin Bonus (+50% daily rewards)') },
+        { icon: <Sparkles size={16} />, label: tr('marketplace.plus.features.gifs', 'Premium GIFs via KLIPY (100 req/min)') },
+        { icon: <Palette size={16} />, label: tr('marketplace.plus.features.themes', 'Exclusive Profile Themes & Effects') },
+        { icon: <Shield size={16} />, label: tr('marketplace.plus.features.priority', 'Priority Support & Early Access') },
     ]
 
     useEffect(() => {
@@ -149,6 +153,7 @@ export function BeaconPlusStore() {
         try {
             await purchaseSubscription(selectedPlan, couponCode || undefined)
             setSuccessType('plus')
+            setSuccessRewardLabel(selectedPlan === 'yearly' ? 'Beacon+ Yearly' : 'Beacon+ Monthly')
             setSuccess(true)
         } catch (err: any) {
             setError(err?.message || 'Purchase failed. Please try again.')
@@ -190,6 +195,7 @@ export function BeaconPlusStore() {
         try {
             await purchaseCosmetic(item.id, couponCode || undefined)
             setSuccessType('cosmetic')
+            setSuccessRewardLabel(item.name)
             setSuccess(true)
         } catch (err: any) {
             setError(err.message || 'Failed to buy item.')
@@ -210,6 +216,16 @@ export function BeaconPlusStore() {
             <div className={styles.container}>
                 <AnimatePresence>
                     {isPlusSuccess && <CelebrationAnimation key="celebration" />}
+                    {!isPlusSuccess && (
+                        <CrateAnimation
+                            key="crate-reveal"
+                            isOpen
+                            reward={{
+                                icon: '🎁',
+                                label: successRewardLabel || 'New reward unlocked',
+                            }}
+                        />
+                    )}
                 </AnimatePresence>
                 <div className={styles.successScreen}>
                     <div className="atmos-bg">
@@ -237,6 +253,15 @@ export function BeaconPlusStore() {
     return (
         <div className={styles.container}>
             <header className={styles.hero}>
+                {onClose && (
+                    <button
+                        className={styles.closeBtn}
+                        onClick={onClose}
+                        aria-label="Close shop"
+                    >
+                        <X size={20} />
+                    </button>
+                )}
                 <div className="atmos-bg">
                     <div className="atmos-orb" style={{ top: '-10%', right: '-10%', background: 'var(--beacon-brand)' }} />
                     <div className="atmos-orb" style={{ bottom: '-10%', left: '-10%', background: '#949cf7', animationDelay: '-12s' }} />
@@ -286,6 +311,14 @@ export function BeaconPlusStore() {
             </div>
 
             <main className={styles.shopContent}>
+                <AnimatePresence mode="wait" initial={false}>
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.24, ease: 'easeOut' }}
+                    >
                 {activeTab === 'plus' && (
                     <div className={styles.plansSection}>
                         <div className={styles.toggle}>
@@ -418,13 +451,16 @@ export function BeaconPlusStore() {
 
                                 return (
                                     <div key={item.id} className={styles.cosmeticCard} style={{ '--accent': accentColor } as any}>
-                                        <div className={styles.cosmeticPreview} style={{ background: activeTab === 'themes' ? item.bannerColor : activeTab === 'effects' ? `radial-gradient(circle at center, ${accentColor}20, transparent)` : 'transparent' }}>
+                                        <div className={styles.cosmeticPreview} style={{ background: activeTab === 'themes' ? `linear-gradient(135deg, rgba(10, 14, 24, 0.96), ${accentColor}22)` : activeTab === 'effects' ? `radial-gradient(circle at center, ${accentColor}20, transparent)` : 'transparent' }}>
                                             {activeTab === 'themes' ? (
                                                 <div style={{ width: '100%', height: '100%', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
                                                     <div style={{ fontSize: '12px', fontWeight: 600, opacity: 0.8 }}>Theme Preview</div>
-                                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                                        <div style={{ width: '40px', height: '40px', backgroundColor: item.bannerColor, borderRadius: '8px', border: '2px solid rgba(255,255,255,0.3)' }} />
-                                                        <div style={{ width: '40px', height: '40px', backgroundColor: item.accentColor, borderRadius: '8px', border: '2px solid rgba(255,255,255,0.3)' }} />
+                                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                        <div style={{ width: '48px', height: '48px', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.18)', background: `linear-gradient(135deg, ${accentColor}, rgba(255,255,255,0.12))`, boxShadow: `0 10px 24px ${accentColor}33` }} />
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                                                            <div style={{ height: '10px', borderRadius: '999px', background: 'rgba(255,255,255,0.18)' }} />
+                                                            <div style={{ height: '10px', width: '60%', borderRadius: '999px', background: `${accentColor}80` }} />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -471,6 +507,8 @@ export function BeaconPlusStore() {
                         </div>
                     </div>
                 )}
+                    </motion.div>
+                </AnimatePresence>
             </main>
             {gifting && <GiftingModal item={gifting} onClose={() => setGifting(null)} />}
         </div>

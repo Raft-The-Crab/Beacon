@@ -7,18 +7,20 @@ interface WorkspaceLayoutProps {
     sidebar?: React.ReactNode
     children: React.ReactNode
     rightPanel?: React.ReactNode
+    showServerRail?: boolean
 }
 
 export function WorkspaceLayout({
     sidebar,
     children,
-    rightPanel
+    rightPanel,
+    showServerRail = false,
 }: WorkspaceLayoutProps) {
     const { showMobileSidebar, setShowMobileSidebar } = useUIStore()
 
     return (
         <div className={styles.container}>
-            <ServerList />
+            {showServerRail && <ServerList />}
 
             {/* Mobile Drawer Backdrop */}
             {showMobileSidebar && (

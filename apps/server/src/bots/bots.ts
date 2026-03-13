@@ -7,6 +7,8 @@ export interface BotContext {
     content?: string; // For onMessage
     commandName?: string; // For onCommand
     options?: any[]; // For onCommand
+    interactionData?: any;
+    sourceMessageId?: string;
     history: string[];
     memory?: {
         insights: string[];
@@ -32,11 +34,57 @@ export interface BotEmbed {
     image?: string;
 }
 
+export interface BotButtonComponent {
+    type?: 'button';
+    customId?: string;
+    label?: string;
+    style?: 'primary' | 'secondary' | 'success' | 'danger' | 'link';
+    emoji?: string;
+    url?: string;
+    disabled?: boolean;
+}
+
+export interface BotSelectOption {
+    label: string;
+    value: string;
+    description?: string;
+    emoji?: string;
+    default?: boolean;
+}
+
+export interface BotSelectComponent {
+    type?: 'string' | 'user' | 'role' | 'channel' | 'mentionable' | 'select';
+    customId: string;
+    placeholder?: string;
+    minValues?: number;
+    maxValues?: number;
+    disabled?: boolean;
+    options?: BotSelectOption[];
+}
+
+export interface BotActionRow {
+    components: Array<BotButtonComponent | BotSelectComponent>;
+}
+
+export interface BotCard {
+    title?: string;
+    description?: string;
+    color?: string | number;
+    thumbnail?: string;
+    image?: string;
+    fields?: { name: string; value: string; inline?: boolean }[];
+    footer?: string;
+    timestamp?: boolean;
+    author?: { name: string; iconUrl?: string; url?: string };
+}
+
 export interface BotResponse {
     content: string;
     embeds?: BotEmbed[];
+    cards?: BotCard[];
     metadata?: any;
     actions?: BotAction[];
+    components?: BotActionRow[];
     ephemeral?: boolean; // only visible to command sender
     deleteOriginal?: boolean; // automatically delete the command message
     threadId?: string; // respond in a specific thread
@@ -176,6 +224,10 @@ export abstract class BaseBot {
 
     /** Fallback: handle mention/natural language */
     abstract onMessage(content: string, context: BotContext): Promise<BotResponse>;
+
+    async onComponentInteraction(_data: any, _context: BotContext): Promise<BotResponse | null> {
+        return null;
+    }
 }
 
 // ─── Bot Framework ───────────────────────────────────────────────────────────
@@ -262,6 +314,8 @@ export class BotFramework {
             userId: interaction.member?.user?.id || interaction.user?.id,
             channelId: interaction.channelId,
             guildId: interaction.guildId,
+            interactionData: interaction.data,
+            sourceMessageId: interaction.message?.id,
             history: [],
             commandName: interaction.data?.name,
             options: interaction.data?.options,
@@ -279,6 +333,10 @@ export class BotFramework {
         // 2. Native bot commands
         if (interaction.type === 2) {
             return bot.handleSlashCommand(`/${interaction.data.name}`, context);
+        }
+
+        if (interaction.type === 3) {
+            return bot.onComponentInteraction(interaction.data, context);
         }
 
         return null;
