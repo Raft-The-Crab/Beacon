@@ -1,0 +1,80 @@
+# ════════════════════════════════════════════════════════════════════════════════
+# BEACON SERVER — ClawCloud Docker Image
+# ────────────────────────────────────────────────────────────────────────────────
+# ClawCloud cannot connect GitHub repos directly, so this Dockerfile clones the
+# repo at build time and produces a self-contained production image.
+#
+# Build args (set in ClawCloud build config or pass with --build-arg):
+#   GITHUB_REPO    — full HTTPS clone URL  (default: Beacon public repo)
+#   GIT_BRANCH     — branch to clone       (default: main)
+#   GITHUB_TOKEN   — optional PAT for private repos (leave blank for public)
+# ════════════════════════════════════════════════════════════════════════════════
+
+ARG GITHUB_REPO=https://github.com/Raft-The-Crab/Beacon.git
+ARG GIT_BRANCH=main
+
+# ── Stage 1: Clone + Build ───────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+
+ARG GITHUB_REPO
+ARG GIT_BRANCH
+ARG GITHUB_TOKEN
+
+WORKDIR /build
+
+RUN apk add --no-cache git openssl g++ make python3
+
+# Clone — supports public repos without a token, or private repos with one
+RUN if [ -n "$GITHUB_TOKEN" ]; then \
+      REPO_URL=$(echo "$GITHUB_REPO" | sed "s|https://|https://${GITHUB_TOKEN}@|"); \
+      git clone --depth=1 --branch "$GIT_BRANCH" "$REPO_URL" . ; \
+    else \
+      git clone --depth=1 --branch "$GIT_BRANCH" "$GITHUB_REPO" . ; \
+    fi
+
+# Install all workspace dependencies from the monorepo root
+RUN npm install --legacy-peer-deps
+
+# Build the shared types package (optional — if it exists)
+RUN if [ -d "packages/types" ] && [ -f "packages/types/package.json" ]; then \
+      cd packages/types && (npm run build 2>/dev/null || true); \
+    fi
+
+# Generate Prisma client + compile server TypeScript
+WORKDIR /build/apps/server
+RUN npx prisma generate
+RUN npx tsc --skipLibCheck
+
+# ── Stage 2: Lean production image ──────────────────────────────────────────
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache openssl
+
+# Copy only what's needed to run
+COPY --from=builder /build/node_modules              ./node_modules
+COPY --from=builder /build/packages/types            ./packages/types
+COPY --from=builder /build/apps/server/node_modules  ./apps/server/node_modules
+COPY --from=builder /build/apps/server/dist          ./apps/server/dist
+COPY --from=builder /build/apps/server/prisma        ./apps/server/prisma
+COPY --from=builder /build/apps/server/config        ./apps/server/config
+COPY --from=builder /build/apps/server/package*.json ./apps/server/
+COPY --from=builder /build/apps/server/server-*.js   ./apps/server/
+
+# Regenerate Prisma client against the lean runtime
+WORKDIR /app/apps/server
+RUN npx prisma generate
+
+# ────────────────────────────────────────────────────────────────────────────
+# Ports:
+#   8080 — REST API (Express)
+#   4001 — WebSocket gateway
+# ────────────────────────────────────────────────────────────────────────────
+EXPOSE 8080 4001
+
+# Health-check so ClawCloud/orchestrators know when the container is ready
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget -qO- http://localhost:8080/api/health || exit 1
+
+CMD ["node", "server-clawcloud.js"]
