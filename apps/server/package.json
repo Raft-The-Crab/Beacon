@@ -6,7 +6,7 @@
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:ws\"",
     "dev:api": "tsx watch src/api-server.ts",
     "dev:ws": "tsx watch src/ws-server.ts",
-    "build": "npx prisma generate && tsc --skipLibCheck || cd .",
+    "build": "npx prisma generate && tsc --skipLibCheck",
     "start": "node server-railway.js",
     "start:api": "node dist/src/api-server.js",
     "start:ws": "node dist/src/ws-server.js",
