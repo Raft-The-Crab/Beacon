@@ -80,13 +80,36 @@ class RedisService {
   private resolveRedisUrl(): string {
     const nodeEnv = (process.env.NODE_ENV || 'development').toLowerCase();
     const forceEnable = String(process.env.REDIS_FORCE_ENABLE || '').toLowerCase() === 'true';
+    const isRailway = !!(process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_SERVICE_ID);
+    const isClawCloud = !!(process.env.CLAWCLOUD_PUBLIC_URL || process.env.CLAWCLOUD_URL);
 
     const explicit = (process.env.REDIS_URL || '').trim();
     const publicUrl = (process.env.REDIS_URL_PUBLIC || '').trim();
     const privateUrl = (process.env.REDIS_URL_PRIVATE || '').trim();
 
     if (nodeEnv === 'production') {
-      return privateUrl || explicit || publicUrl || 'redis://localhost:6379';
+      if (isRailway) {
+        // Railway cannot resolve private cluster DNS (e.g. *.svc), so prefer public Redis endpoints.
+        if (publicUrl) {
+          return publicUrl;
+        }
+        if (explicit && (!this.isInternalClusterHost(explicit) || forceEnable)) {
+          return explicit;
+        }
+        if (privateUrl && forceEnable) {
+          return privateUrl;
+        }
+        return explicit || publicUrl || privateUrl || 'redis://localhost:6379';
+      }
+
+      if (isClawCloud) {
+        return privateUrl || explicit || publicUrl || 'redis://localhost:6379';
+      }
+
+      if (explicit && (!this.isInternalClusterHost(explicit) || forceEnable)) {
+        return explicit;
+      }
+      return privateUrl || publicUrl || explicit || 'redis://localhost:6379';
     }
 
     if (publicUrl) {
@@ -127,6 +150,14 @@ class RedisService {
 
     const forceEnable = String(process.env.REDIS_FORCE_ENABLE || '').toLowerCase() === 'true';
     const nodeEnv = (process.env.NODE_ENV || 'development').toLowerCase();
+    const isRailway = !!(process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_SERVICE_ID);
+
+    if (!forceEnable && isRailway && this.isInternalClusterHost(raw)) {
+      return {
+        enabled: false,
+        reason: 'REDIS_URL points to cluster-internal DNS and is unreachable from Railway. Set REDIS_URL_PUBLIC or clear REDIS_URL_PRIVATE for Railway.',
+      };
+    }
 
     if (!forceEnable && nodeEnv !== 'production') {
       if (this.isInternalClusterHost(raw)) {

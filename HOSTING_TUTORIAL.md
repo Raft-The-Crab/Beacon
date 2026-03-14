@@ -41,7 +41,7 @@ DATABASE_URL=postgresql://postgres:Alixisjacob12345*@db.cikitgsftvtpnjdiigxf.sup
 MONGO_URI=mongodb+srv://Beacon:Alixisjacob12345*@cluster0.t2pcffo.mongodb.net/?retryWrites=true&w=majority
 MONGO_URI_SECONDARY=mongodb+srv://Beacon-1:Alixisjacob12345*@bytebot.thcrueg.mongodb.net/?retryWrites=true&w=majority
 
-REDIS_URL_PRIVATE=redis://default:dlkngb7h@beacon-redis-redis.ns-hh1bxkxc.svc:6379
+REDIS_URL_PRIVATE=
 REDIS_URL_PUBLIC=redis://default:dlkngb7h@dbprovider.ap-southeast-1.clawcloudrun.com:34053
 REDIS_URL=redis://localhost:6379
 REDIS_FORCE_ENABLE=false
@@ -234,7 +234,21 @@ If logs show `DATABASE_URL not set` or `localhost:27017`:
 3. Redeploy latest commit after saving variables.
 4. Check startup log line `[Railway] Env presence:` to verify keys are true.
 
+If logs show `Redis ... ENOTFOUND ... .svc` on Railway:
+
+1. Set `REDIS_URL_PRIVATE=` (blank) in Railway.
+2. Set `REDIS_URL_PUBLIC` to your internet-reachable Redis endpoint.
+3. Keep `REDIS_FORCE_ENABLE=false`.
+4. Redeploy.
+
+If logs show `Can't reach database server at db.<ref>.supabase.co:5432`:
+
+1. Verify your Supabase project is active and not paused.
+2. Confirm Railway region egress to port `5432` is allowed.
+3. If direct host remains blocked, switch to Supabase pooler connection string from Supabase dashboard.
+4. Redeploy after updating `DATABASE_URL`.
+
 If logs show `keep-alive ... /health (404)`:
 
-1. Latest code now tries `/api/version` fallback.
+1. Latest code now self-pings local `/api/version` in Railway.
 2. Redeploy latest `main` so this fix is active.

@@ -56,14 +56,9 @@ if (process.env.ENABLE_WS_SERVER === 'true') {
 const PING_INTERVAL_MS = 3 * 60 * 1000;
 
 function buildPingUrl() {
-  const domain = process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL;
-  if (domain) {
-    const base = domain.startsWith('http') ? domain : `https://${domain}`;
-    return `${base}/health`;
-  }
-
+  // Keepalive is process-local in Railway to avoid ingress path/proxy mismatches.
   const port = process.env.PORT || 8080;
-  return `http://localhost:${port}/health`;
+  return `http://localhost:${port}/api/version`;
 }
 
 function selfPing() {
@@ -71,20 +66,7 @@ function selfPing() {
   const lib = url.startsWith('https') ? https : http;
 
   const req = lib.get(url, (res) => {
-    if (res.statusCode === 404 && url.endsWith('/health')) {
-      // Some reverse-proxy setups route /api only; try API version endpoint.
-      const fallbackUrl = url.replace(/\/health$/, '/api/version');
-      const fallbackReq = lib.get(fallbackUrl, (fallbackRes) => {
-        console.log(`[Railway] keep-alive ping ${fallbackUrl} (${fallbackRes.statusCode})`);
-        fallbackRes.resume();
-      });
-      fallbackReq.on('error', (err) => {
-        console.warn(`[Railway] keep-alive ping failed: ${err.message}`);
-      });
-      fallbackReq.setTimeout(10000, () => fallbackReq.destroy());
-    } else {
-      console.log(`[Railway] keep-alive ping ${url} (${res.statusCode})`);
-    }
+    console.log(`[Railway] keep-alive ping ${url} (${res.statusCode})`);
     res.resume();
   });
 
