@@ -1,0 +1,37 @@
+name: Publish beacon-sdk
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/sdk/**'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Build & Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install workspace deps
+        run: npm install --legacy-peer-deps
+
+      - name: Build SDK
+        run: npm run build --prefix packages/sdk
+
+      - name: Publish beacon-sdk to npm
+        run: npm publish --prefix packages/sdk --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

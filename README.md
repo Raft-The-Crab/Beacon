@@ -6,6 +6,14 @@ Beacon is a next-generation messaging platform where premium communication is fr
 
 ---
 
+# 📡 Beacon v1.2.0
+
+**The Zero-Barrier, Developer-First Communication Platform**
+
+Beacon is a next-generation messaging platform where premium communication is free, private, and open to developers. No subscriptions. No paywalls. No data harvesting. Built on modern, secure infrastructure with a thriving bot ecosystem.
+
+---
+
 ## ⚡ Core Features
 
 ### Communication
@@ -21,7 +29,7 @@ Beacon is a next-generation messaging platform where premium communication is fr
 
 ### Developer Features
 - **Bot Framework** — Build powerful bots with `beacon-sdk`, our official TypeScript SDK
-- **REST API** — Full-featured REST API for bot development (v2.0+ compatible)
+- **REST API** — Full-featured REST API for bot development (v1.2.0)
 - **Webhooks** — Server and user webhooks for event-driven automation
 - **Type-Safe** — Full TypeScript support with optional type packages
 
@@ -29,20 +37,61 @@ Beacon is a next-generation messaging platform where premium communication is fr
 - **Web** — Modern single-page app with responsive design (mobile, tablet, desktop)
 - **Desktop** — Native Windows support via Tauri desktop framework
 - **Mobile** — Android support via Capacitor with native integrations
-- **API Clients** — Official clients for TypeScript/JavaScript, with community packages for other languages
 
 ---
 
-## 🚀 Getting Started with Beacon
+## 🏗️ Infrastructure
+
+Beacon uses a three-tier deployment, all in Singapore (`asia-southeast1`):
+
+| Service | Platform | Role | Resources |
+|---------|----------|------|-----------|
+| **API + Gateway** | Railway | REST API & WebSocket gateway | 1 vCPU / 512 MB |
+| **Main Server** | ClawCloud | Full API image + SWI-Prolog moderation | 0.6 vCPU / 1112 MB |
+| **AI Service** | ClawCloud | ONNX inference + yt-dlp + Redis | 0.6 vCPU / 1112 MB |
+| **Web Frontend** | Static CDN | React SPA | — |
+
+### Docker Images (GitHub Container Registry)
+
+Built and published automatically on every push to `main`:
+
+```
+ghcr.io/raft-the-crab/beacon-server:latest   # API + Gateway (Node.js + SWI-Prolog)
+ghcr.io/raft-the-crab/beacon-ai:latest       # AI service (Python + ONNX + yt-dlp)
+```
+
+---
+
+## 🤖 AI Service
+
+The `beacon-ai` container runs a lightweight Python Flask service designed to fit within the ClawCloud allocation:
+
+| Component | Memory |
+|-----------|--------|
+| ONNX model (DistilBERT) | ~450 MB |
+| Redis cache (bundled) | ~140 MB |
+| Flask + yt-dlp + deps | ~150 MB |
+| **Total** | **~740 MB / 1112 MB** |
+
+**Routes:**
+- `GET  /health` — liveness check
+- `POST /extract` — audio/video URL extraction via yt-dlp
+- `POST /analyze` — ONNX content classification (graceful fallback if no model)
+
+The ONNX model is optional. Place it at `apps/server/ai/models/moderation.onnx` before building to bake it into the image, or download it at runtime via `download_model.py`.
+
+---
+
+## 🚀 Getting Started
 
 Beacon is a proprietary closed-source platform. Source code is not publicly available.
 
-**Want to build a bot?** Use the public SDK below.
+**Want to build a bot?** Use the public SDK below.  
 **Using Beacon?** Visit [beacon.qzz.io](https://beacon.qzz.io) to sign up.
 
 ---
 
-## 📡 Bot SDK Usage
+## 📡 Bot SDK (beacon-sdk)
 
 ### Installation
 
@@ -71,97 +120,62 @@ client.on('messageCreate', async (message) => {
 await client.login()
 ```
 
-### Available Commands
+### Key Exports
 
 ```typescript
-// Messages
-await message.reply('Hello!')
-await message.edit('Updated message')
-await message.delete()
+// Core
+BeaconClient, BotFramework, Client, AIClient
 
-// Embeds
-const embed = {
-  title: 'Hello',
-  description: 'World',
-  color: 0xff6b6b,
-  fields: [{ name: 'Field', value: 'Value' }]
-}
-await channel.send({ embeds: [embed] })
+// REST APIs
+MessagesAPI, ServersAPI, ChannelsAPI, UsersAPI, RolesAPI
+PresenceAPI, VoiceAPI, NotificationsAPI, WebhooksAPI, InvitesAPI
 
-// Permissions
-const member = await guild.members.fetch(userId)
-await member.setRoles(['roleId1', 'roleId2'])
+// Builders
+CommandBuilder, EmbedBuilder, ButtonBuilder, SelectMenuBuilder
+ActionRowBuilder, ModalBuilder, PollBuilder, CardBuilder
+
+// Utilities
+Gateway, Intents, RestClient, Collection, InteractionContext
 ```
 
 See full docs: [`packages/sdk/README.md`](packages/sdk/README.md)
 
 ---
 
-## 📚 API Documentation
+## 📚 API Reference
 
-### REST API
+**Base URL:** `https://api.beacon.qzz.io/api`  
+**Alt (Railway):** `https://beacon-v1-api.up.railway.app/api`  
+**WebSocket:** `wss://gateway.beacon.qzz.io`  
+**Auth:** `Authorization: Bot <token>` or `Authorization: Bearer <token>`
 
-The Beacon API is RESTful with WebSocket support for real-time features.
+Endpoints: Auth, Users, Servers, Channels, Messages, Voice, Webhooks, Notifications, Invites
 
-**Base URL:** `https://api.beacon.qzz.io` (or `http://localhost:8080/api` locally)
-
-**Authentication:** Bearer token in `Authorization` header
-
-Example:
-```bash
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-  https://api.beacon.qzz.io/users/@me
-```
-
-### Available Endpoints
-
-- **Users** — Profile, settings, notifications, friends
-- **Guilds** — Server management, members, roles, invites
-- **Channels** — Messages, threads, pins, reaction categories
-- **Messages** — Send/edit/delete, embeds, attachments
-- **Voice** — Channel state, RTC offer/answer
-- **Webhooks** — Event subscriptions
-
-### WebSocket (Real-Time)
-
-Connect to `wss://gateway.beacon.qzz.io` for:
-- Message events (new, edit, delete)
-- User presence updates
-- Voice state changes
-- Typing indicators
-- Custom bot events
+Full reference: [beacon.qzz.io/docs/api](https://beacon.qzz.io/docs/api)
 
 ---
 
 ## 🛡️ Security
 
-Beacon takes security seriously:
+- ✅ Input validation on all user-supplied data
+- ✅ Rate limiting per endpoint (300 req/15min general · 5 req/15min auth)
+- ✅ Helmet.js headers (CSP, HSTS, X-Frame-Options)
+- ✅ bcrypt password hashing
+- ✅ JWT-based auth with refresh tokens
+- ✅ SSRF protection in AI extraction endpoint
+- ✅ SWI-Prolog rules engine for content moderation
 
-- ✅ **Input Validation** — All user inputs validated before database operations
-- ✅ **Rate Limiting** — Per-endpoint rate limits prevent abuse
-  - General: 300 req/15min
-  - Auth: 5 req/15min  
-  - Guild management: 20 req/1min
-  - Message send: 60 req/1min
-- ✅ **CSRF Protection** — Double-submit cookie pattern
-- ✅ **Helmet.js** — CSP, HSTS, X-Frame-Options, and more
-- ✅ **IP Blocklist** — Automatic blocking with appeal mechanism
-- ✅ **Password Security** — bcrypt hashing with salt rounds
-- ✅ **JWT Tokens** — Secure token-based authentication
-- ✅ **HTTPS Enforced** — Production requires HTTPS
-
-**Report Security Issues:** Security vulnerabilities should be reported privately to [security@beacon.qzz.io](mailto:security@beacon.qzz.io)
+**Report vulnerabilities:** [security@beacon.qzz.io](mailto:security@beacon.qzz.io)
 
 ---
 
 ## 📦 Package Versions
 
-This is Beacon **v1.0.0**, with all packages synchronized:
-
-| Package | Version | NPM |
-|---------|---------|-----|
-| beacon-sdk | 1.1.0 | [`npm`](https://npmjs.com/package/beacon-sdk) |
-| @beacon/types | 1.0.0 | [`npm`](https://npmjs.com/package/@beacon/types) |
+| Package | Version |
+|---------|---------|
+| beacon-sdk | 1.2.0 |
+| @beacon/types | 1.0.0 |
+| @beacon/server | 1.0.0 |
 
 ---
 
@@ -174,11 +188,10 @@ Beacon is proprietary software. Source provided for transparency among authorize
 ## 🙋 Support
 
 - **GitHub Issues** — [Report bugs](https://github.com/Raft-The-Crab/Beacon/issues)
-- **Documentation** — [Full API docs](https://docs.beacon.qzz.io)
+- **Documentation** — [beacon.qzz.io/docs](https://beacon.qzz.io/docs)
 - **Email** — [support@beacon.qzz.io](mailto:support@beacon.qzz.io)
 
 ---
 
-**Built with ❤️ by the Beacon team**
-
-*Beacon 1.0.0 - The future of communication is decentralized, secure, and open to all developers.*
+**Built with ❤️ by the Beacon team**  
+*Beacon v1.2.0 — The future of communication is secure, open, and developer-first.*
