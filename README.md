@@ -20,7 +20,7 @@ Beacon is a next-generation messaging platform where premium communication is fr
 - **Security-First** — Input validation, rate limiting, CSRF protection, IP blocklists, and comprehensive security middleware
 
 ### Developer Features
-- **Bot Framework** — Build powerful bots with `@beacon/sdk`, our official TypeScript SDK
+- **Bot Framework** — Build powerful bots with `beacon-sdk`, our official TypeScript SDK
 - **REST API** — Full-featured REST API for bot development (v2.0+ compatible)
 - **Webhooks** — Server and user webhooks for event-driven automation
 - **Type-Safe** — Full TypeScript support with optional type packages
@@ -47,15 +47,15 @@ Beacon is a proprietary closed-source platform. Source code is not publicly avai
 ### Installation
 
 ```bash
-npm install @beacon/sdk
+npm install beacon-sdk
 # or
-pnpm add @beacon/sdk
+pnpm add beacon-sdk
 ```
 
 ### Basic Example
 
 ```typescript
-import { BeaconClient } from '@beacon/sdk'
+import { BeaconClient } from 'beacon-sdk'
 
 const client = new BeaconClient({
   token: process.env.BEACON_TOKEN!,
@@ -160,8 +160,7 @@ This is Beacon **v1.0.0**, with all packages synchronized:
 
 | Package | Version | NPM |
 |---------|---------|-----|
-| @beacon/sdk | 1.0.0 | [`npm`](https://npmjs.com/package/@beacon/sdk) |
-| @beacon/api-client | 1.0.0 | [`npm`](https://npmjs.com/package/@beacon/api-client) |
+| beacon-sdk | 1.1.0 | [`npm`](https://npmjs.com/package/beacon-sdk) |
 | @beacon/types | 1.0.0 | [`npm`](https://npmjs.com/package/@beacon/types) |
 
 ---

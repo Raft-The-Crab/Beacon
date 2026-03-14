@@ -53,6 +53,9 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         method: 'GET',
         url: `/channels/${channelId}/messages`,
         params: { limit: 50, before }
+      }, {
+        retries: 1,
+        retryDelay: 250,
       })
 
       if (response.success && response.data) {

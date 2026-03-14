@@ -6,6 +6,43 @@ import { applyPercentPromo, getCoinPromoAmount, normalizePromoCode, resolvePromo
 
 const router = Router()
 
+function isDailyRewardReason(reason?: string | null) {
+  return typeof reason === 'string' && reason.toLowerCase().startsWith('daily check-in reward')
+}
+
+function toUtcDateKey(value: Date | string) {
+  const date = value instanceof Date ? value : new Date(value)
+  return date.toISOString().slice(0, 10)
+}
+
+function calculateDailyClaimState(transactions: Array<{ createdAt: Date; reason: string }>) {
+  const uniqueDates = Array.from(
+    new Set(
+      transactions
+        .filter((entry) => isDailyRewardReason(entry.reason))
+        .map((entry) => toUtcDateKey(entry.createdAt))
+    )
+  ).sort((left, right) => right.localeCompare(left))
+
+  if (uniqueDates.length === 0) {
+    return { streak: 0, lastDailyClaim: null as string | null }
+  }
+
+  let streak = 1
+  for (let index = 1; index < uniqueDates.length; index += 1) {
+    const previous = new Date(`${uniqueDates[index - 1]}T00:00:00.000Z`)
+    const current = new Date(`${uniqueDates[index]}T00:00:00.000Z`)
+    const deltaDays = Math.round((previous.getTime() - current.getTime()) / 86400000)
+    if (deltaDays !== 1) break
+    streak += 1
+  }
+
+  return {
+    streak,
+    lastDailyClaim: `${uniqueDates[0]}T00:00:00.000Z`,
+  }
+}
+
 // GET /users/@me/beacoin — get balance + transactions
 router.get('/users/@me/beacoin', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
@@ -27,6 +64,18 @@ router.get('/users/@me/beacoin', requireAuth, async (req: AuthRequest, res: Resp
       take: 50,
     })
 
+    const dailyTransactions = await db.beacoinTransaction.findMany({
+      where: {
+        walletId: wallet.id,
+        reason: { startsWith: 'Daily check-in reward' },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 365,
+      select: { createdAt: true, reason: true },
+    })
+
+    const dailyState = calculateDailyClaimState(dailyTransactions)
+
     const formatted = transactions.map((t) => ({
       id: t.id,
       type: t.fromUserId === userId ? (t.type === 'EARN' ? 'earn' : 'transfer_out') : 'transfer_in',
@@ -37,7 +86,12 @@ router.get('/users/@me/beacoin', requireAuth, async (req: AuthRequest, res: Resp
       toUserId: t.toUserId,
     }))
 
-    res.json({ balance: wallet.balance, transactions: formatted })
+    res.json({
+      balance: wallet.balance,
+      transactions: formatted,
+      streak: dailyState.streak,
+      lastDailyClaim: dailyState.lastDailyClaim,
+    })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Internal server error' })
@@ -386,7 +440,30 @@ router.post('/users/@me/beacoin/daily', requireAuth, async (req: AuthRequest, re
       update: {},
     })
 
-    const amount = 50
+    const dailyTransactions = await db.beacoinTransaction.findMany({
+      where: {
+        walletId: wallet.id,
+        reason: { startsWith: 'Daily check-in reward' },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 365,
+      select: { createdAt: true, reason: true },
+    })
+
+    const dailyState = calculateDailyClaimState(dailyTransactions)
+    const todayKey = toUtcDateKey(new Date())
+    if (dailyState.lastDailyClaim && toUtcDateKey(dailyState.lastDailyClaim) === todayKey) {
+      return res.status(409).json({ error: 'Daily reward already claimed today' })
+    }
+
+    const mostRecentClaimKey = dailyState.lastDailyClaim ? toUtcDateKey(dailyState.lastDailyClaim) : null
+    const yesterday = new Date()
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1)
+    const isContinuingStreak = mostRecentClaimKey === toUtcDateKey(yesterday)
+    const nextStreak = isContinuingStreak ? dailyState.streak + 1 : 1
+    const streakBonus = nextStreak % 7 === 0 ? 25 : 0
+    const amount = 50 + streakBonus
+    const reason = streakBonus > 0 ? `Daily check-in reward + ${streakBonus} streak bonus` : 'Daily check-in reward'
 
     await db.beacoinWallet.update({
       where: { userId },
@@ -398,13 +475,13 @@ router.post('/users/@me/beacoin/daily', requireAuth, async (req: AuthRequest, re
         walletId: wallet.id,
         type: BeacoinTxType.EARN,
         amount,
-        reason: 'Daily check-in reward',
+        reason,
         fromUserId: userId,
         toUserId: userId,
       },
     })
 
-    res.json({ success: true, amount, transaction })
+    res.json({ success: true, amount, streak: nextStreak, lastDailyClaim: transaction.createdAt, transaction })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Internal server error' })

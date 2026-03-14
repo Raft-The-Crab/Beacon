@@ -1,19 +1,8 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import type { APIResponse } from '@beacon/types'
+import { API_BASE_URL } from '../config/endpoints'
 
-function normalizeApiBaseUrl(rawUrl: string): string {
-  const trimmed = rawUrl.trim().replace(/\/+$/, '')
-  if (!trimmed) return '/api'
-  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`
-}
-
-const API_URL = import.meta.env.DEV
-  ? '/api'
-  : normalizeApiBaseUrl(
-      import.meta.env.VITE_API_URL ||
-      import.meta.env.VITE_BACKEND_URL ||
-      '/api'
-    )
+const API_URL = API_BASE_URL
 let csrfBootstrapPromise: Promise<void> | null = null
 
 interface RetryConfig {
@@ -33,11 +22,20 @@ const defaultRetryConfig: RetryConfig = {
 
 export const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 second timeout
 })
+
+function getAuthToken(): string | null {
+  return (
+    localStorage.getItem('beacon_token') ||
+    localStorage.getItem('token') ||
+    localStorage.getItem('accessToken')
+  )
+}
 
 async function ensureCsrfToken(): Promise<void> {
   const existingToken = getCookie('csrf_token')
@@ -59,7 +57,7 @@ async function ensureCsrfToken(): Promise<void> {
 
 // Request interceptor
 api.interceptors.request.use(async (config: any) => {
-  const token = localStorage.getItem('beacon_token')
+  const token = getAuthToken()
   if (token) {
     if (config.headers && typeof config.headers.set === 'function') {
       config.headers.set('Authorization', `Bearer ${token}`)
@@ -151,7 +149,17 @@ export async function apiRequest<T = any>(
   _retryConfig?: Partial<RetryConfig>
 ): Promise<APIResponse<T>> {
   try {
-    const response = await api.request(config)
+    const resolvedConfig = _retryConfig
+      ? {
+          ...config,
+          _retryConfig: {
+            ...defaultRetryConfig,
+            ..._retryConfig,
+          },
+        }
+      : config
+
+    const response = await api.request(resolvedConfig as AxiosRequestConfig)
     // The interceptor already unwrapped `response.data`. We re-wrap it to maintain the APIResponse contract.
     return { success: true, data: response.data as T }
   } catch (error) {

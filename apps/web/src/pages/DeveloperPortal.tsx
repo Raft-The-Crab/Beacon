@@ -11,6 +11,7 @@ import { WorkspaceLayout } from '../components/layout/WorkspaceLayout'
 import { apiClient } from '../services/apiClient'
 // Tooltip removed as it was unused
 import styles from '../styles/modules/pages/DeveloperPortal.module.css'
+import { WEB_SDK_ENDPOINTS } from '../lib/beaconSdk'
 
 interface Application {
   id: string
@@ -27,6 +28,28 @@ interface Application {
 
 type Tab = 'apps' | 'analytics' | 'status' | 'showcase'
 
+type HealthResponse = {
+  status?: string
+  services?: {
+    postgres?: string
+    redis?: string
+    mongodb?: string
+    postgresLatency?: string
+  }
+  queue?: {
+    waiting?: number
+    processing?: number
+  }
+  timestamp?: string
+}
+
+type AiHealthResponse = {
+  status?: string
+  configured?: boolean
+  modelStatus?: string
+  latencyMs?: number
+}
+
 export function DeveloperPortal() {
   const { show: showToast } = useToast()
   const [activeTab, setActiveTab] = useState<Tab>('apps')
@@ -36,6 +59,37 @@ export function DeveloperPortal() {
   const [loading, setLoading] = useState(true)
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [isBotModalOpen, setIsBotModalOpen] = useState(false)
+  const [health, setHealth] = useState<HealthResponse | null>(null)
+  const [aiHealth, setAiHealth] = useState<AiHealthResponse | null>(null)
+  const [healthLoading, setHealthLoading] = useState(true)
+
+  const fetchHealth = async () => {
+    setHealthLoading(true)
+    try {
+      const root = WEB_SDK_ENDPOINTS.apiUrl.replace(/\/?api\/?$/i, '')
+      const res = await fetch(`${root}/health`, { method: 'GET', credentials: 'include' })
+      const json = await res.json().catch(() => ({}))
+      setHealth(json || null)
+    } catch {
+      setHealth(null)
+    } finally {
+      setHealthLoading(false)
+    }
+  }
+
+
+  const fetchAiHealth = async () => {
+    try {
+      const { success, data } = await apiClient.request('GET', '/ai/status')
+      if (success && data) {
+        setAiHealth(data)
+      } else {
+        setAiHealth(null)
+      }
+    } catch {
+      setAiHealth(null)
+    }
+  }
 
   const fetchApps = async () => {
     try {
@@ -54,6 +108,15 @@ export function DeveloperPortal() {
 
   useEffect(() => {
     fetchApps()
+    void fetchHealth()
+    void fetchAiHealth()
+
+    const interval = setInterval(() => {
+      void fetchHealth()
+      void fetchAiHealth()
+    }, 45000)
+
+    return () => clearInterval(interval)
   }, [])
 
   const handleCreateApp = async () => {
@@ -143,14 +206,18 @@ export function DeveloperPortal() {
   const rightPanel = (
     <div className={styles.metricsPanel}>
       <h3 className={styles.panelTitle}>Platform Health</h3>
-      <div className={styles.statusCard}>
+      <div className={`${styles.statusCard} ${health?.status === 'healthy' ? styles.statusCardHealthy : styles.statusCardDegraded}`}>
         <div className={styles.statusHeader}>
-          <Activity size={18} style={{ color: '#2ea043' }} />
-          <span>Operational</span>
+          <Activity size={18} style={{ color: health?.status === 'healthy' ? '#2ea043' : '#f23f43' }} />
+          <span>{healthLoading ? 'Checking...' : (health?.status === 'healthy' ? 'Operational' : 'Degraded')}</span>
         </div>
         <div className={styles.statusDetails}>
-          All systems are performing normally.
-          <br />99.98% global uptime.
+          {healthLoading
+            ? 'Running a live backend health probe.'
+            : health?.status === 'healthy'
+              ? 'All core services are responding.'
+              : 'One or more backend services are degraded.'}
+          <br />Live data from Beacon API health endpoint.
         </div>
       </div>
 
@@ -160,8 +227,30 @@ export function DeveloperPortal() {
           <div className={styles.miniStatLabel}>Apps</div>
         </div>
         <div className={styles.miniStatCard}>
-          <div className={styles.miniStatValue}>12ms</div>
-          <div className={styles.miniStatLabel}>Avg Latency</div>
+          <div className={styles.miniStatValue}>{health?.services?.postgresLatency || 'N/A'}</div>
+          <div className={styles.miniStatLabel}>DB Latency</div>
+        </div>
+      </div>
+
+      <div className={styles.miniStats}>
+        <div className={styles.miniStatCard}>
+          <div className={styles.miniStatValue}>{aiHealth?.modelStatus === 'reachable' ? 'Live' : aiHealth?.configured ? 'Down' : 'Unset'}</div>
+          <div className={styles.miniStatLabel}>AI Model</div>
+        </div>
+        <div className={styles.miniStatCard}>
+          <div className={styles.miniStatValue}>{typeof aiHealth?.latencyMs === 'number' ? `${aiHealth.latencyMs}ms` : 'N/A'}</div>
+          <div className={styles.miniStatLabel}>AI Latency</div>
+        </div>
+      </div>
+
+      <div className={styles.miniStats}>
+        <div className={styles.miniStatCard}>
+          <div className={styles.miniStatValue}>{health?.queue?.waiting ?? 0}</div>
+          <div className={styles.miniStatLabel}>Queue Waiting</div>
+        </div>
+        <div className={styles.miniStatCard}>
+          <div className={styles.miniStatValue}>{health?.queue?.processing ?? 0}</div>
+          <div className={styles.miniStatLabel}>Queue Processing</div>
         </div>
       </div>
     </div>
@@ -182,6 +271,24 @@ export function DeveloperPortal() {
             </div>
 
             <section className={styles.appsSection}>
+              <div className={styles.overviewGrid}>
+                <div className={styles.overviewCard}>
+                  <div className={styles.overviewLabel}>Control Plane</div>
+                  <div className={styles.overviewValue}>{health?.status === 'healthy' ? 'ONLINE' : 'DEGRADED'}</div>
+                  <div className={styles.overviewHint}>Live heartbeat from API health endpoint.</div>
+                </div>
+                <div className={styles.overviewCard}>
+                  <div className={styles.overviewLabel}>AI Runtime</div>
+                  <div className={styles.overviewValue}>{aiHealth?.modelStatus === 'reachable' ? 'REACHABLE' : aiHealth?.configured ? 'UNREACHABLE' : 'NOT SET'}</div>
+                  <div className={styles.overviewHint}>Dedicated probe through /api/ai/status.</div>
+                </div>
+                <div className={styles.overviewCard}>
+                  <div className={styles.overviewLabel}>Queue Pressure</div>
+                  <div className={styles.overviewValue}>{health?.queue?.waiting ?? 0}</div>
+                  <div className={styles.overviewHint}>Messages waiting in moderation queue.</div>
+                </div>
+              </div>
+
               <div className={styles.appsHeader}>
                 <h2>My Applications</h2>
                 <div className={styles.appCount}>{apps.length}</div>
@@ -247,7 +354,7 @@ export function DeveloperPortal() {
               <p className={styles.subtitle}>Real-time performance metrics and API usage data across your applications.</p>
             </div>
 
-            <div className={styles.miniStats} style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: 32 }}>
+            <div className={styles.analyticsGrid}>
               <div className={styles.miniStatCard}>
                 <div className={styles.miniStatValue}>Live</div>
                 <div className={styles.miniStatLabel}>Request telemetry unlocks when production traffic is connected.</div>
@@ -262,8 +369,8 @@ export function DeveloperPortal() {
               </div>
             </div>
 
-            <div className="glass-card" style={{ padding: 40, height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-              <div style={{ textAlign: 'center' }}>
+            <div className={styles.analyticsPlaceholder}>
+              <div className={styles.analyticsPlaceholderInner}>
                 <BarChart3 size={48} style={{ marginBottom: 16, opacity: 0.5 }} />
                 <h3>Traffic Insights</h3>
                 <p>Connect your first bot to start generating traffic data.</p>
@@ -279,11 +386,11 @@ export function DeveloperPortal() {
               <p className={styles.subtitle}>Current health monitoring for Beacon Core and regional infrastructure.</p>
             </div>
 
-            <div style={{ display: 'grid', gap: 16 }}>
-              <StatusRow icon={<Server size={18} />} name="Global Gateway (US-East)" status="Healthy" latency="8ms" />
-              <StatusRow icon={<Database size={18} />} name="Primary Database Cluster" status="Healthy" latency="4ms" />
-              <StatusRow icon={<Cpu size={18} />} name="AI Inference Engine" status="Healthy" latency="124ms" />
-              <StatusRow icon={<Globe size={18} />} name="CDN Content Delivery" status="Healthy" latency="2ms" />
+            <div className={styles.statusGrid}>
+              <StatusRow icon={<Server size={18} />} name="API Gateway" status={health?.status === 'healthy' ? 'Healthy' : 'Degraded'} latency="Live" />
+              <StatusRow icon={<Database size={18} />} name="Primary Database Cluster" status={(health?.services?.postgres || 'unknown') === 'connected' ? 'Healthy' : 'Degraded'} latency={health?.services?.postgresLatency || 'N/A'} />
+              <StatusRow icon={<Cpu size={18} />} name="AI Moderation Pipeline" status={aiHealth?.modelStatus === 'reachable' ? 'Healthy' : aiHealth?.configured ? 'Degraded' : 'Unknown'} latency={typeof aiHealth?.latencyMs === 'number' ? `${aiHealth.latencyMs}ms` : 'N/A'} />
+              <StatusRow icon={<Globe size={18} />} name="Redis + Realtime Cache" status={(health?.services?.redis || 'unknown') === 'connected' ? 'Healthy' : 'Degraded'} latency="Live" />
             </div>
           </div>
         )}
@@ -331,20 +438,21 @@ export function DeveloperPortal() {
 }
 
 function StatusRow({ icon, name, status, latency }: { icon: React.ReactNode, name: string, status: string, latency: string }) {
+  const tone = status.toLowerCase() === 'healthy' ? 'healthy' : status.toLowerCase() === 'unknown' ? 'unknown' : 'degraded'
   return (
-    <div className="glass-card" style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <div style={{ color: 'var(--beacon-brand)' }}>{icon}</div>
-        <span style={{ fontWeight: 600 }}>{name}</span>
+    <div className={`${styles.statusRow} glass-card`}>
+      <div className={styles.statusPrimary}>
+        <div className={styles.statusIcon}>{icon}</div>
+        <span className={styles.statusName}>{name}</span>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Clock size={14} style={{ color: 'var(--text-muted)' }} />
-          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{latency}</span>
+      <div className={styles.statusMeta}>
+        <div className={styles.statusLatency}>
+          <Clock size={14} className={styles.statusLatencyIcon} />
+          <span className={styles.statusLatencyValue}>{latency}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2ea043' }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#2ea043', textTransform: 'uppercase' }}>{status}</span>
+        <div className={`${styles.statusSummary} ${tone === 'healthy' ? styles.statusHealthy : tone === 'unknown' ? styles.statusUnknown : styles.statusDegraded}`}>
+          <div className={styles.statusDot} />
+          <span>{status}</span>
         </div>
       </div>
     </div>

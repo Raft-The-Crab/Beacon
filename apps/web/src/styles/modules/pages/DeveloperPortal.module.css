@@ -80,6 +80,9 @@
   overflow-y: auto;
   position: relative;
   overflow-x: hidden;
+  background:
+    radial-gradient(900px 420px at 10% -10%, rgba(88, 101, 242, 0.14) 0%, transparent 70%),
+    radial-gradient(560px 300px at 90% 0%, rgba(46, 160, 67, 0.12) 0%, transparent 70%);
 }
 
 .heroSection {
@@ -115,9 +118,48 @@
   z-index: 2;
 }
 
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.overviewCard {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  padding: 14px 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.overviewLabel {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+.overviewValue {
+  font-size: 20px;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.overviewHint {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 .appsHeader {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -138,7 +180,7 @@
 
 .appsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px;
 }
 
@@ -282,9 +324,17 @@
 
 .statusCard {
   padding: 16px;
-  background: rgba(35, 165, 89, 0.05);
-  border: 1px solid rgba(35, 165, 89, 0.15);
   border-radius: var(--radius-md);
+}
+
+.statusCardHealthy {
+  background: rgba(35, 165, 89, 0.08);
+  border: 1px solid rgba(35, 165, 89, 0.18);
+}
+
+.statusCardDegraded {
+  background: rgba(242, 63, 67, 0.08);
+  border: 1px solid rgba(242, 63, 67, 0.18);
 }
 
 .statusHeader {
@@ -304,16 +354,116 @@
 }
 
 .miniStats {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.analyticsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.analyticsPlaceholder {
+  padding: 40px;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.analyticsPlaceholderInner {
+  text-align: center;
+}
+
+.statusGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.statusRow {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.statusPrimary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.statusIcon {
+  color: var(--beacon-brand);
+  flex: 0 0 auto;
+}
+
+.statusName {
+  font-weight: 600;
+}
+
+.statusMeta {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.statusLatency {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusLatencyIcon {
+  color: var(--text-muted);
+}
+
+.statusLatencyValue {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.statusSummary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.statusHealthy {
+  color: #2ea043;
+}
+
+.statusDegraded {
+  color: #f23f43;
+}
+
+.statusUnknown {
+  color: #d29922;
 }
 
 .miniStatCard {
   padding: 20px;
-  background: rgba(255, 255, 255, 0.02);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .miniStatValue {
@@ -433,9 +583,69 @@
     font-size: 2.2rem;
   }
 
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .appsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .miniStats {
+    grid-template-columns: 1fr;
+  }
+
+  .analyticsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .analyticsPlaceholder {
+    padding: 24px;
+    min-height: 220px;
+  }
+
+  .statusRow {
+    padding: 16px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .statusPrimary {
+    width: 100%;
+  }
+
+  .statusMeta {
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
   .quickStartCard {
     flex-direction: column;
     text-align: center;
     padding: 32px 24px;
+  }
+
+  .overviewGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .contentWrapper {
+    padding: 18px 14px;
+  }
+
+  .title {
+    font-size: 1.85rem;
+  }
+
+  .overviewValue,
+  .miniStatValue {
+    font-size: 18px;
+  }
+
+  .appCardContent {
+    padding: 20px 16px;
   }
 }

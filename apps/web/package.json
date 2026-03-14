@@ -18,9 +18,9 @@
     "android:sync": "cd ../mobile && npm run sync"
   },
   "dependencies": {
-    "@beacon/api-client": "file:../../packages/api-client",
+    "beacon-sdk": "file:../../packages/sdk",
     "@beacon/types": "file:../../packages/types",
-    "@capacitor/browser": "^8.0.1",
+    "@capacitor/browser": "^6.0.0",
     "@capacitor/core": "^6.0.0",
     "@capacitor/haptics": "^6.0.0",
     "@capacitor/local-notifications": "^6.0.0",

@@ -6,6 +6,7 @@ import React from 'react';
 import { Mic, MicOff, Headphones, HeadphoneOff, Video, VideoOff, MonitorUp, PhoneOff } from 'lucide-react';
 import { useVoiceStore } from '../../stores/useVoiceStore';
 import { voiceManager } from '../../services/voiceManager';
+import { useToast } from '../ui/Toast';
 import styles from '../../styles/modules/voice/VoiceControls.module.css';
 
 export const VoiceControls: React.FC = () => {
@@ -14,13 +15,19 @@ export const VoiceControls: React.FC = () => {
   const setSelfDeaf = useVoiceStore(state => state.setSelfDeaf);
   const setSelfVideo = useVoiceStore(state => state.setSelfVideo);
   const voiceUsers = useVoiceStore(state => state.voiceUsers);
+  const { show } = useToast();
 
   if (!currentVoiceState) return null;
 
-  const handleToggleMute = () => {
+  const handleToggleMute = async () => {
     const newMuted = !currentVoiceState.selfMute;
     setSelfMute(newMuted);
-    voiceManager.setMute(currentVoiceState.guildId, newMuted);
+    try {
+      await voiceManager.setMute(currentVoiceState.guildId, newMuted);
+    } catch (error) {
+      setSelfMute(true);
+      show(error instanceof Error ? error.message : 'Failed to change microphone state.', 'error');
+    }
   };
 
   const handleToggleDeaf = () => {
@@ -29,17 +36,22 @@ export const VoiceControls: React.FC = () => {
     voiceManager.setDeaf(currentVoiceState.guildId, newDeafened);
   };
 
-  const handleToggleVideo = () => {
+  const handleToggleVideo = async () => {
     const newVideo = !currentVoiceState.selfVideo;
     setSelfVideo(newVideo);
-    voiceManager.setVideo(currentVoiceState.guildId, newVideo);
+    try {
+      await voiceManager.setVideo(currentVoiceState.guildId, newVideo);
+    } catch (error) {
+      setSelfVideo(false);
+      show(error instanceof Error ? error.message : 'Failed to change camera state.', 'error');
+    }
   };
 
   const handleScreenShare = async () => {
     try {
       await voiceManager.startScreenShare(currentVoiceState.guildId);
     } catch (error) {
-      console.error('Screen share failed:', error);
+      show(error instanceof Error ? error.message : 'Screen share failed.', 'error');
     }
   };
 

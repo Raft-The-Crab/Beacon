@@ -58,6 +58,20 @@ export function CurrentUserControls() {
         })
     }, [isAuthenticated])
 
+    useEffect(() => {
+        const handleNoteUpdated = (event: Event) => {
+            const customEvent = event as CustomEvent<ProfileNote>
+            if (customEvent.detail) {
+                setProfileNote(customEvent.detail)
+            }
+        }
+
+        window.addEventListener('beacon:profile-note-updated', handleNoteUpdated as EventListener)
+        return () => {
+            window.removeEventListener('beacon:profile-note-updated', handleNoteUpdated as EventListener)
+        }
+    }, [])
+
     if (!isAuthenticated) return null
 
     return (
@@ -95,7 +109,9 @@ export function CurrentUserControls() {
                             if (!currentVoiceState) return
                             const next = !currentVoiceState.selfMute
                             setSelfMute(next)
-                            voiceManager.setMute(currentVoiceState.guildId, next)
+                            void voiceManager.setMute(currentVoiceState.guildId, next).catch(() => {
+                                setSelfMute(true)
+                            })
                         }}
                         aria-label={currentVoiceState?.selfMute ? 'Unmute microphone' : 'Mute microphone'}
                         disabled={!currentVoiceState}

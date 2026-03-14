@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { MessageSquarePlus, Search, User } from 'lucide-react'
 import { useUserListStore } from '../../stores/useUserListStore'
 import { useDMStore } from '../../stores/useDMStore'
+import { api } from '../../lib/api'
 import { Avatar } from '../ui'
 import styles from '../../styles/modules/features/CreateDMModal.module.css'
 
@@ -10,21 +11,42 @@ interface CreateDMModalProps {
 }
 
 export function CreateDMModal({ onClose }: CreateDMModalProps) {
-    const { friends } = useUserListStore()
-    const { createDMChannel, setActiveChannel } = useDMStore()
+    const { friends, fetchFriends } = useUserListStore()
+    const { fetchChannels, setActiveChannel } = useDMStore()
     const [searchQuery, setSearchQuery] = useState('')
+    const [selectedFriendIds, setSelectedFriendIds] = useState<string[]>([])
+    const [isCreatingGroup, setIsCreatingGroup] = useState(false)
 
     const filteredFriends = friends.filter((f: any) =>
-        f.username.toLowerCase().includes(searchQuery.toLowerCase())
+        (f.username || '').toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    const handleSelectFriend = async (friendId: string) => {
+    React.useEffect(() => {
+        if (friends.length === 0) {
+            void fetchFriends()
+        }
+    }, [friends.length, fetchFriends])
+
+    const handleSelectFriend = (friendId: string) => {
+        setSelectedFriendIds(prev => prev.includes(friendId)
+            ? prev.filter(id => id !== friendId)
+            : prev.length >= 9 ? prev : [...prev, friendId])
+    }
+
+    const handleCreateGroupDM = async () => {
+        if (selectedFriendIds.length === 0) return
+        setIsCreatingGroup(true)
         try {
-            const channelId = await createDMChannel(friendId)
-            setActiveChannel(channelId)
+            const { data } = await api.post('/dms', { userIds: selectedFriendIds })
+            await fetchChannels()
+            if (data?.id) {
+                setActiveChannel(data.id)
+            }
             onClose()
         } catch (error) {
-            console.error('Failed to create DM channel', error)
+            console.error('Failed to create group DM', error)
+        } finally {
+            setIsCreatingGroup(false)
         }
     }
 
@@ -64,7 +86,9 @@ export function CreateDMModal({ onClose }: CreateDMModalProps) {
                                 />
                                 <span className={styles.username}>{friend.username}</span>
                             </div>
-                            <div className={styles.checkbox} />
+                            <div className={styles.checkbox}>
+                                {selectedFriendIds.includes(friend.id) ? '✓' : ''}
+                            </div>
                         </div>
                     ))
                 ) : (
@@ -76,8 +100,12 @@ export function CreateDMModal({ onClose }: CreateDMModalProps) {
             </div>
 
             <div className={styles.footer}>
-                <button className={styles.createBtn} disabled={true}>
-                    Create Group DM
+                <button
+                    className={styles.createBtn}
+                    disabled={selectedFriendIds.length === 0 || isCreatingGroup}
+                    onClick={() => void handleCreateGroupDM()}
+                >
+                    {isCreatingGroup ? 'Creating Group DM...' : `Create Group DM (${selectedFriendIds.length})`}
                 </button>
             </div>
         </div>

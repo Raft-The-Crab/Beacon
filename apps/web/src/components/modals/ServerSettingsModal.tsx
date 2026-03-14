@@ -10,6 +10,7 @@ import WebhooksManager from './WebhooksManager'
 import { AuditLogModal } from './AuditLogModal'
 import { SoundManager } from '../features/SoundManager'
 import { useRolesStore } from '../../stores/useRolesStore'
+import { useUIStore } from '../../stores/useUIStore'
 import styles from '../../styles/modules/modals/ServerSettingsModal.module.css'
 
 interface ServerSettingsModalProps {
@@ -19,12 +20,28 @@ interface ServerSettingsModalProps {
 
 type SettingsTab = 'overview' | 'channels' | 'members' | 'roles' | 'moderation' | 'audit_logs' | 'webhooks' | 'assets' | 'soundboard'
 
+interface EditableChannel {
+  id: string
+  name: string
+  type: string
+  topic?: string | null
+  slowmode?: number | null
+  nsfw?: boolean | null
+}
+
 export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProps) {
-  const { currentServer, updateGuild, deleteGuild } = useServerStore()
+  const { currentServer, updateGuild, deleteGuild, deleteChannel, updateChannel, fetchGuild } = useServerStore()
   const { fetchRoles } = useRolesStore()
+  const { setShowCreateChannel, setCreateChannelContext } = useUIStore()
   const [activeTab, setActiveTab] = useState<SettingsTab>('overview')
   const [serverName, setServerName] = useState(currentServer?.name || '')
   const [loading, setLoading] = useState(false)
+  const [editingChannel, setEditingChannel] = useState<EditableChannel | null>(null)
+  const [channelName, setChannelName] = useState('')
+  const [channelTopic, setChannelTopic] = useState('')
+  const [channelSlowmode, setChannelSlowmode] = useState('0')
+  const [channelNsfw, setChannelNsfw] = useState(false)
+  const [channelSaving, setChannelSaving] = useState(false)
   const toast = useToast()
 
   if (!currentServer) return null
@@ -34,6 +51,19 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
       fetchRoles(currentServer.id)
     }
   }, [activeTab, currentServer.id, fetchRoles])
+
+  useEffect(() => {
+    setServerName(currentServer.name || '')
+  }, [currentServer.id, currentServer.name])
+
+  useEffect(() => {
+    if (!editingChannel) return
+
+    setChannelName(editingChannel.name || '')
+    setChannelTopic(editingChannel.topic || '')
+    setChannelSlowmode(String(editingChannel.slowmode || 0))
+    setChannelNsfw(Boolean(editingChannel.nsfw))
+  }, [editingChannel])
 
   const channels = currentServer.channels || []
 
@@ -57,7 +87,60 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
     }
   }
 
-  // Placeholder create channel flow is triggered inline where needed
+  const handleDeleteChannel = async (channelId: string, channelName: string) => {
+    if (!currentServer) return
+    const confirmed = window.confirm(`Delete #${channelName}? This cannot be undone.`)
+    if (!confirmed) return
+
+    try {
+      await deleteChannel(currentServer.id, channelId)
+      await fetchGuild(currentServer.id)
+      toast.success('Channel deleted')
+    } catch {
+      toast.error('Failed to delete channel')
+    }
+  }
+
+  const handleOpenCreateChannel = () => {
+    setCreateChannelContext('text')
+    setShowCreateChannel(true)
+  }
+
+  const handleOpenEditChannel = (channel: EditableChannel) => {
+    setEditingChannel(channel)
+  }
+
+  const handleCloseEditChannel = () => {
+    if (channelSaving) return
+    setEditingChannel(null)
+  }
+
+  const handleSaveChannel = async () => {
+    if (!currentServer || !editingChannel || !channelName.trim()) return
+
+    const parsedSlowmode = Number(channelSlowmode)
+    if (!Number.isFinite(parsedSlowmode) || parsedSlowmode < 0) {
+      toast.error('Slowmode must be 0 or greater')
+      return
+    }
+
+    setChannelSaving(true)
+    try {
+      await updateChannel(currentServer.id, editingChannel.id, {
+        name: channelName.trim(),
+        topic: channelTopic.trim() || undefined,
+        slowmode: Math.floor(parsedSlowmode),
+        nsfw: channelNsfw,
+      })
+      await fetchGuild(currentServer.id)
+      toast.success('Channel updated')
+      setEditingChannel(null)
+    } catch {
+      toast.error('Failed to update channel')
+    } finally {
+      setChannelSaving(false)
+    }
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" transparent noPadding hideHeader>
@@ -182,7 +265,7 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
               <div className={styles.section}>
                 <div className={styles.headerRow}>
                   <h2 className={styles.headerTitle}>Server Channels</h2>
-                  <Button variant="primary" size="sm" onClick={() => toast.success('Create channel (placeholder)')}>
+                  <Button variant="primary" size="sm" onClick={handleOpenCreateChannel}>
                     <Plus size={16} />
                     Create Channel
                   </Button>
@@ -200,8 +283,8 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
                         </div>
                       </div>
                       <div className={styles.listItemActions}>
-                        <button className={styles.iconBtn} title="Edit Channel"><Edit2 size={16} /></button>
-                        <button className={styles.iconBtnDanger} title="Delete Channel"><Trash2 size={16} /></button>
+                        <button className={styles.iconBtn} title="Edit Channel" onClick={() => handleOpenEditChannel(channel)}><Edit2 size={16} /></button>
+                        <button className={styles.iconBtnDanger} title="Delete Channel" onClick={() => handleDeleteChannel(channel.id, channel.name)}><Trash2 size={16} /></button>
                       </div>
                     </div>
                   ))}
@@ -210,25 +293,25 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
             )}
 
             {activeTab === 'roles' && (
-              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
+              <div className={`${styles.section} ${styles.sectionEmbedded}`}>
                 <RoleManager serverId={currentServer.id} />
               </div>
             )}
 
             {activeTab === 'assets' && (
-              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
+              <div className={`${styles.section} ${styles.sectionEmbedded}`}>
                 <AssetManager guildId={currentServer.id} />
               </div>
             )}
 
             {activeTab === 'members' && (
-              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
+              <div className={`${styles.section} ${styles.sectionEmbedded}`}>
                 <ModerationManager guildId={currentServer.id} />
               </div>
             )}
 
             {activeTab === 'audit_logs' && (
-              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
+              <div className={`${styles.section} ${styles.sectionEmbedded}`}>
                 <AuditLogModal
                   guildId={currentServer.id}
                   guildName={currentServer.name}
@@ -239,7 +322,7 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
             )}
 
             {activeTab === 'webhooks' && (
-              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
+              <div className={`${styles.section} ${styles.sectionEmbedded}`}>
                 <WebhooksManager
                   guildId={currentServer.id}
                   channels={currentServer.channels || []}
@@ -250,13 +333,64 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
             )}
 
             {activeTab === 'soundboard' && (
-              <div className={styles.section} style={{ height: 'min(600px, 68vh)', minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
+              <div className={`${styles.section} ${styles.sectionEmbedded}`}>
                 <SoundManager guildId={currentServer.id} />
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <Modal isOpen={!!editingChannel} onClose={handleCloseEditChannel} title="Edit Channel" size="md">
+        <div className={styles.channelForm}>
+          <div className={styles.formGroup}>
+            <label>Channel Name</label>
+            <Input
+              value={channelName}
+              onChange={(e) => setChannelName(e.target.value)}
+              placeholder="general"
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Topic</label>
+            <Input
+              value={channelTopic}
+              onChange={(e) => setChannelTopic(e.target.value)}
+              placeholder="What belongs in this channel?"
+            />
+          </div>
+
+          <div className={styles.channelMetaGrid}>
+            <div className={styles.formGroup}>
+              <label>Slowmode Seconds</label>
+              <Input
+                type="number"
+                min="0"
+                max="21600"
+                value={channelSlowmode}
+                onChange={(e) => setChannelSlowmode(e.target.value)}
+              />
+            </div>
+
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={channelNsfw}
+                onChange={(e) => setChannelNsfw(e.target.checked)}
+              />
+              Mark channel as NSFW
+            </label>
+          </div>
+
+          <div className={styles.channelActions}>
+            <Button variant="ghost" onClick={handleCloseEditChannel} disabled={channelSaving}>Cancel</Button>
+            <Button variant="primary" onClick={handleSaveChannel} disabled={!channelName.trim() || channelSaving}>
+              {channelSaving ? 'Saving...' : 'Save Channel'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </Modal>
   )
 }

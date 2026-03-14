@@ -11,6 +11,7 @@ import auditLogRouter from './auditLogs'
 import beacoinRouter from './beacoin'
 import notificationsRouter from './notifications'
 import moderationRouter from './moderation'
+import aiRouter from './ai'
 import analyticsRouter from './analytics'
 import videoModerationRouter from './videoModeration'
 import appsRouter from './apps'
@@ -40,6 +41,7 @@ router.use('/', beacoinRouter) // legacy path support: /users/@me/beacoin/*
 router.use('/beacoin', beacoinRouter)
 router.use('/', notificationsRouter)
 router.use('/moderation', moderationRouter)
+router.use('/ai', aiRouter)
 router.use('/moderation/video', videoModerationRouter)
 router.use('/apps', appsRouter)
 router.use('/analytics', analyticsRouter)

@@ -7,6 +7,7 @@ import { Router, Response } from 'express';
 import { prisma } from '../db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { ChannelType } from '@prisma/client';
+import { generateShortId } from '../utils/id';
 
 const router = Router();
 
@@ -105,6 +106,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     // Create new DM channel
     const channel = await prisma.channel.create({
       data: {
+          id: generateShortId('c', 12),
         name: name || '',
         type: allMembers.length > 2 ? ChannelType.GROUP_DM : ChannelType.DM,
         recipients: {

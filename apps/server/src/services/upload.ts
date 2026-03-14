@@ -1,6 +1,7 @@
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import streamifier from 'streamifier';
 import { AuthRequest } from '../middleware/auth';
+import { StorageService } from './storage';
 
 // Primary Config
 const primaryConfig = {
@@ -21,10 +22,12 @@ export interface UploadResult {
   height?: number;
   bytes: number;
   resource_type: string;
+  r2_backup_url?: string;
 }
 
 export class FileUploadService {
   private currentProvider: 'primary' | 'secondary' = 'primary';
+  private readonly r2BackupEnabled = (process.env.R2_BACKUP_ENABLED || 'true').toLowerCase() !== 'false';
 
   constructor() {
     this.configurePrimary();
@@ -75,6 +78,13 @@ export class FileUploadService {
     });
   }
 
+  private inferMimeType(resourceType: string, format: string): string {
+    const safeFormat = String(format || '').toLowerCase();
+    if (resourceType === 'image') return `image/${safeFormat || 'jpeg'}`;
+    if (resourceType === 'video') return `video/${safeFormat || 'mp4'}`;
+    return 'application/octet-stream';
+  }
+
   /**
    * General file upload
    */
@@ -108,6 +118,21 @@ export class FileUploadService {
       chunk_size: 6000000 // 6MB chunks for reliability
     });
 
+    let r2BackupUrl: string | undefined;
+    if (this.r2BackupEnabled && StorageService.isConfigured()) {
+      try {
+        const ext = result.format ? `.${result.format}` : '';
+        const filename = `${result.public_id.replace(/[^a-zA-Z0-9/_-]/g, '_')}${ext}`;
+        r2BackupUrl = await StorageService.uploadFile(
+          buffer,
+          filename,
+          this.inferMimeType(result.resource_type, result.format)
+        );
+      } catch (backupError) {
+        console.warn('[UploadService] R2 backup upload failed:', backupError);
+      }
+    }
+
     return {
       url: result.url,
       secure_url: result.secure_url,
@@ -116,7 +141,8 @@ export class FileUploadService {
       width: result.width,
       height: result.height,
       bytes: result.bytes,
-      resource_type: result.resource_type
+      resource_type: result.resource_type,
+      r2_backup_url: r2BackupUrl,
     };
   }
 

@@ -2,15 +2,28 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 
-const accountId = process.env.R2_ACCOUNT_ID || 'dummy-account-id';
-const accessKeyId = process.env.R2_ACCESS_KEY_ID || 'dummy-access-key';
-const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || 'dummy-secret-key';
-const bucketName = process.env.R2_BUCKET_NAME || 'beacon-storage';
-const publicUrl = process.env.R2_PUBLIC_URL || `https://pub-${accountId}.r2.dev`;
+const providedEndpoint = process.env.R2_ENDPOINT_URL || 'https://ce5094f80c8353520bdc4ec96628e6c5.r2.cloudflarestorage.com/beaconstorage';
+const parsedEndpoint = (() => {
+    try {
+        return new URL(providedEndpoint);
+    } catch {
+        return null;
+    }
+})();
+
+const accountId = process.env.R2_ACCOUNT_ID || parsedEndpoint?.hostname.split('.')[0] || '';
+const accessKeyId = process.env.R2_ACCESS_KEY_ID || '';
+const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
+const bucketFromEndpoint = parsedEndpoint?.pathname?.replace(/^\/+/, '').split('/')[0] || '';
+const bucketName = process.env.R2_BUCKET_NAME || bucketFromEndpoint || 'beaconstorage';
+const endpoint = process.env.R2_ENDPOINT || (parsedEndpoint ? `${parsedEndpoint.protocol}//${parsedEndpoint.host}` : `https://${accountId}.r2.cloudflarestorage.com`);
+const publicUrl = process.env.R2_PUBLIC_URL || `${endpoint}/${bucketName}`;
+
+const r2Configured = Boolean(accessKeyId && secretAccessKey && endpoint && bucketName);
 
 const s3Client = new S3Client({
     region: 'auto',
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    endpoint,
     credentials: {
         accessKeyId,
         secretAccessKey,
@@ -18,10 +31,18 @@ const s3Client = new S3Client({
 });
 
 export class StorageService {
+    static isConfigured(): boolean {
+        return r2Configured;
+    }
+
     /**
      * Uploads a file buffer to Cloudflare R2 via AWS SDK.
      */
     static async uploadFile(buffer: Buffer, filename: string, mimeType?: string): Promise<string> {
+        if (!r2Configured) {
+            throw new Error('R2 storage is not configured');
+        }
+
         const ext = path.extname(filename);
         const id = uuidv4();
         const storedFilename = `${id}${ext}`;

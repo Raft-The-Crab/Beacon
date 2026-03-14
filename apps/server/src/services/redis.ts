@@ -5,9 +5,20 @@ class RedisService {
   private subClient: Redis;
   private offline = false;
   private offlineLogged = false;
+  private readonly enabled: boolean;
+  private readonly disabledReason: string | null;
+  private readonly redisUrl: string;
+  private readonly channelSubscribers = new Map<string, Set<(message: any) => void>>();
+  private readonly subscribedChannels = new Set<string>();
+  private lastOfflineLogAt = 0;
+  private lastOfflineSignature = '';
 
   constructor() {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrl = this.resolveRedisUrl();
+    this.redisUrl = redisUrl;
+    const redisConfig = this.getRedisConfig(redisUrl);
+    this.enabled = redisConfig.enabled;
+    this.disabledReason = redisConfig.reason;
 
     const baseOptions = {
       retryStrategy: (times: number) => {
@@ -28,6 +39,15 @@ class RedisService {
     this.client = new Redis(redisUrl, baseOptions);
     this.subClient = new Redis(redisUrl, baseOptions);
 
+    if (!this.enabled) {
+      this.offline = true;
+      this.offlineLogged = true;
+      if (this.disabledReason) {
+        console.warn(`[Redis] disabled: ${this.disabledReason}`);
+      }
+      return;
+    }
+
     this.client.on('ready', () => {
       this.offline = false;
       this.offlineLogged = false;
@@ -40,19 +60,104 @@ class RedisService {
 
     this.client.on('error', (err) => this.markOffline(err, 'client'));
     this.subClient.on('error', (err) => this.markOffline(err, 'subscriber'));
+    this.subClient.on('message', (channel, message) => {
+      const subscribers = this.channelSubscribers.get(channel);
+      if (!subscribers || subscribers.size === 0) return;
+
+      let parsedMessage: any = message;
+      try {
+        parsedMessage = JSON.parse(message);
+      } catch {
+        // Keep raw string payload when the publisher did not send JSON.
+      }
+
+      for (const callback of subscribers) {
+        callback(parsedMessage);
+      }
+    });
+  }
+
+  private resolveRedisUrl(): string {
+    const nodeEnv = (process.env.NODE_ENV || 'development').toLowerCase();
+    const forceEnable = String(process.env.REDIS_FORCE_ENABLE || '').toLowerCase() === 'true';
+
+    const explicit = (process.env.REDIS_URL || '').trim();
+    const publicUrl = (process.env.REDIS_URL_PUBLIC || '').trim();
+    const privateUrl = (process.env.REDIS_URL_PRIVATE || '').trim();
+
+    if (nodeEnv === 'production') {
+      return privateUrl || explicit || publicUrl || 'redis://localhost:6379';
+    }
+
+    if (publicUrl) {
+      return publicUrl;
+    }
+
+    if (explicit && (!this.isInternalClusterHost(explicit) || forceEnable)) {
+      return explicit;
+    }
+
+    if (privateUrl) {
+      return privateUrl;
+    }
+
+    return explicit || 'redis://localhost:6379';
+  }
+
+  private isInternalClusterHost(redisUrl: string): boolean {
+    try {
+      const host = new URL(redisUrl).hostname.toLowerCase();
+      return host.endsWith('.svc') || host.endsWith('.cluster.local');
+    } catch {
+      return false;
+    }
+  }
+
+  private getRedisConfig(redisUrl: string): { enabled: boolean; reason: string | null } {
+    const raw = redisUrl.trim();
+    const normalized = raw.toLowerCase();
+
+    if (!normalized) {
+      return { enabled: false, reason: 'REDIS_URL is empty' };
+    }
+
+    if (normalized.includes('localhost') || normalized.includes('127.0.0.1') || normalized.includes('::1')) {
+      return { enabled: false, reason: 'REDIS_URL points to local placeholder' };
+    }
+
+    const forceEnable = String(process.env.REDIS_FORCE_ENABLE || '').toLowerCase() === 'true';
+    const nodeEnv = (process.env.NODE_ENV || 'development').toLowerCase();
+
+    if (!forceEnable && nodeEnv !== 'production') {
+      if (this.isInternalClusterHost(raw)) {
+        return {
+          enabled: false,
+          reason: `REDIS host is cluster-internal and unreachable from local dev. Set REDIS_URL_PUBLIC for local use, or set REDIS_FORCE_ENABLE=true if you are inside that private network.`,
+        };
+      }
+    }
+
+    return { enabled: true, reason: null };
   }
 
   private markOffline(error: unknown, context: string) {
     this.offline = true;
-    if (!this.offlineLogged) {
+    const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    const signature = `${context}:${message}`;
+    const now = Date.now();
+    const shouldLog = !this.offlineLogged || signature !== this.lastOfflineSignature || now - this.lastOfflineLogAt > 60_000;
+
+    if (shouldLog) {
       this.offlineLogged = true;
-      console.error(`[Redis] ${context} error, entering fallback mode:`, error);
+      this.lastOfflineLogAt = now;
+      this.lastOfflineSignature = signature;
+      console.warn(`[Redis] ${context} error, entering fallback mode: ${message}`);
     }
   }
 
   private async safe<T>(op: () => Promise<T>, fallback: T, context: string): Promise<T> {
     try {
-      if (this.offline) return fallback;
+      if (!this.enabled || this.offline) return fallback;
       return await op();
     } catch (error) {
       this.markOffline(error, context);
@@ -60,15 +165,105 @@ class RedisService {
     }
   }
 
-  async connect() {
+  private waitForReady(client: Redis, context: string): Promise<void> {
+    if ((client as any).status === 'ready') {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error(`[Redis] Timed out waiting for ${context} client to become ready`));
+      }, 6000);
+
+      const handleReady = () => {
+        cleanup();
+        resolve();
+      };
+
+      const handleFailure = (error?: Error) => {
+        cleanup();
+        reject(error || new Error(`[Redis] ${context} client closed before becoming ready`));
+      };
+
+      const cleanup = () => {
+        clearTimeout(timeout);
+        client.off('ready', handleReady);
+        client.off('end', handleFailure);
+        client.off('close', handleFailure);
+        client.off('error', handleFailure);
+      };
+
+      client.once('ready', handleReady);
+      client.once('end', handleFailure);
+      client.once('close', handleFailure);
+      client.once('error', handleFailure);
+    });
+  }
+
+  private async ensureSubscriberReady(): Promise<boolean> {
+    if (!this.enabled) {
+      this.offline = true;
+      return false;
+    }
+
     try {
-      await Promise.all([this.client.connect(), this.subClient.connect()]);
+      const status = (this.subClient as any).status;
+      if (status !== 'ready' && status !== 'connecting') {
+        await this.subClient.connect();
+      }
+
+      await this.waitForReady(this.subClient, 'subscriber');
+      this.offline = false;
+      this.offlineLogged = false;
+      return true;
+    } catch (error) {
+      this.markOffline(error, 'subscriber');
+      return false;
+    }
+  }
+
+  private async ensureClientReady(): Promise<boolean> {
+    if (!this.enabled) {
+      this.offline = true;
+      return false;
+    }
+
+    try {
+      const status = (this.client as any).status;
+      if (status !== 'ready' && status !== 'connecting') {
+        await this.client.connect();
+      }
+
+      await this.waitForReady(this.client, 'client');
+      this.offline = false;
+      this.offlineLogged = false;
+      return true;
+    } catch (error) {
+      this.markOffline(error, 'client');
+      return false;
+    }
+  }
+
+  async connect() {
+    if (!this.enabled) {
+      this.offline = true;
+      return;
+    }
+
+    const [clientReady, subscriberReady] = await Promise.all([
+      this.ensureClientReady(),
+      this.ensureSubscriberReady(),
+    ]);
+
+    if (clientReady && subscriberReady) {
       this.offline = false;
       this.offlineLogged = false;
       console.log('Redis Service Connected');
-    } catch (error) {
-      this.markOffline(error, 'connect');
+      return;
     }
+
+    this.offline = true;
   }
 
   // Presence Management
@@ -182,16 +377,24 @@ class RedisService {
   }
 
   subscribe(channel: string, callback: (message: any) => void) {
-    if (this.offline) return;
+    if (!this.enabled) return;
 
-    this.subClient.subscribe(channel).catch((error) => this.markOffline(error, 'subscribe'));
-    this.subClient.on('message', (ch, msg) => {
-      if (ch !== channel) return;
-      try {
-        callback(JSON.parse(msg));
-      } catch {
-        callback(msg);
-      }
+    const subscribers = this.channelSubscribers.get(channel) || new Set<(message: any) => void>();
+    subscribers.add(callback);
+    this.channelSubscribers.set(channel, subscribers);
+
+    if (this.subscribedChannels.has(channel)) {
+      return;
+    }
+
+    void this.ensureSubscriberReady().then((ready) => {
+      if (!ready || this.subscribedChannels.has(channel)) return;
+
+      this.subClient.subscribe(channel)
+        .then(() => {
+          this.subscribedChannels.add(channel);
+        })
+        .catch((error) => this.markOffline(error, 'subscribe'));
     });
   }
 
@@ -323,12 +526,28 @@ class RedisService {
   }
 
   get status(): string {
-    if (this.offline) return 'offline';
+    if (!this.enabled || this.offline) return 'offline';
     return (this.client as any).status || 'unknown';
   }
 
-  async ping() {
-    return await this.safe(() => this.client.ping(), 'PONG', 'ping');
+  get isEnabled(): boolean {
+    return this.enabled;
+  }
+
+  get disabledConfigReason(): string | null {
+    return this.disabledReason;
+  }
+
+  async ping(): Promise<'PONG' | null> {
+    const ready = await this.ensureClientReady();
+    if (!ready) return null;
+
+    try {
+      return await this.client.ping();
+    } catch (error) {
+      this.markOffline(error, 'ping');
+      return null;
+    }
   }
 
   async sismember(key: string, member: string) {
@@ -353,6 +572,7 @@ class RedisService {
 
   // Event Delegation for Pub/Sub
   on(event: string, listener: (...args: any[]) => void) {
+    if (!this.enabled) return this;
     this.subClient.on(event, listener);
     return this;
   }

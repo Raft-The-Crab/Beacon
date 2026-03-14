@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useCallback } from 'react'
 import { useServerStore } from '../../stores/useServerStore'
 import { useUIStore } from '../../stores/useUIStore'
+import { apiClient } from '../../services/apiClient'
 
 import { useToast } from '../ui'
 import { CurrentUserControls } from '../features/CurrentUserControls'
@@ -99,7 +100,7 @@ function ChannelButton({ channel, isActive, onClick, onCreateChannel, onDeleteCh
 
   return (
     <button
-      {...ctxMenu}
+      onContextMenu={ctxMenu}
       className={`${styles.channel} ${isActive ? styles.activeChannel : ''} ${muted ? styles.mutedChannel : ''} ${unreadCount > 0 && !isActive ? styles.unreadChannel : ''}`}
       onClick={onClick}
     >
@@ -159,7 +160,7 @@ function CategoryHeader({ category, isCollapsed, onToggle, onCreateChannel }: {
 
   return (
     <div
-      {...ctxMenu}
+      onContextMenu={ctxMenu}
       className={styles.categoryHeader}
       onClick={onToggle}
       style={{ cursor: 'pointer' }}
@@ -202,7 +203,7 @@ function UncategorizedHeader({ label, isCollapsed, onToggle }: {
 
   return (
     <div
-      {...ctxMenu}
+      onContextMenu={ctxMenu}
       className={styles.categoryHeader}
       onClick={onToggle}
       style={{ cursor: 'pointer' }}
@@ -310,6 +311,26 @@ export function Sidebar() {
     }
   }, [currentServer, currentChannelId, deleteChannel, navigate, show])
 
+  const handleInvitePeople = useCallback(async () => {
+    if (!currentServer) return
+    try {
+      const res = await apiClient.createInvite(currentServer.id)
+      const code = String(
+        res?.data?.code ||
+        res?.data?.inviteCode ||
+        ''
+      ).trim()
+      if (code) {
+        await navigator.clipboard.writeText(`${window.location.origin}/invite/${code}`)
+        show('Invite link copied!', 'success')
+      } else {
+        show('Failed to generate invite link', 'error')
+      }
+    } catch {
+      show('Failed to create invite', 'error')
+    }
+  }, [currentServer, show])
+
   const handleChannelClick = useCallback((channelId: string) => {
     if (!currentServer) return
     const channel = allChannels.find((ch: any) => ch.id === channelId)
@@ -326,7 +347,7 @@ export function Sidebar() {
     { id: 'create-category', label: 'Create Category', icon: <FolderPlus size={15} />, onClick: () => openCreateChannelModal('category') },
     { id: 'd1', divider: true, label: '' },
     { id: 'copy-id', label: 'Copy Server ID', icon: <Copy size={15} />, onClick: () => currentServer && navigator.clipboard.writeText(currentServer.id) },
-    { id: 'invite', label: 'Invite People', icon: <Link size={15} />, onClick: () => currentServer && navigator.clipboard.writeText(`https://beacon.qzz.io/invite/${currentServer.id}`) },
+    { id: 'invite', label: 'Invite People', icon: <Link size={15} />, onClick: () => void handleInvitePeople() },
   ])
 
   const memberCount = currentServer?.members?.length || 0
@@ -334,7 +355,7 @@ export function Sidebar() {
   return (
     <div className={`${styles.sidebar} glass`}>
       <div
-        {...serverCtxMenu}
+        onContextMenu={serverCtxMenu}
         className={styles.header}
         style={currentServer?.banner ? {
           backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), var(--bg-secondary)), url(${currentServer.banner})`,
@@ -379,7 +400,7 @@ export function Sidebar() {
               <FolderPlus size={15} /> Create Category
             </button>
             <div className={styles.serverMenuDivider} />
-            <button className={styles.serverMenuItem} onClick={() => { navigator.clipboard.writeText(`https://beacon.qzz.io/invite/${currentServer.id}`); setShowServerMenu(false) }}>
+            <button className={styles.serverMenuItem} onClick={() => { void handleInvitePeople(); setShowServerMenu(false) }}>
               <Link size={15} /> Invite People
             </button>
             <button className={styles.serverMenuItem} onClick={() => { navigator.clipboard.writeText(currentServer.id); setShowServerMenu(false) }}>
@@ -406,7 +427,7 @@ export function Sidebar() {
         )}
       </AnimatePresence>
 
-      <div className={styles.channels}>
+      <div className={styles.channels} onContextMenu={serverCtxMenu}>
         {!currentServer ? (
           <div className={styles.emptyState}>
             <span className={styles.emptyText}>Select a server to view channels</span>

@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
@@ -25,29 +25,32 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const apiProxyTarget = normalizeProxyTarget(env.VITE_BACKEND_URL, 'http://localhost:8080')
   const gatewayProxyTarget = normalizeProxyTarget(env.VITE_GATEWAY_URL, 'http://localhost:4001')
+  const workspaceRoot = searchForWorkspaceRoot(process.cwd())
+  const reactPlugin = react({
+    jsxRuntime: 'automatic',
+  }) as any
+  const tailwindPlugin = tailwindcss() as any
 
   return {
   plugins: [
-    react({
-      jsxRuntime: 'automatic',
-    }),
-    tailwindcss(),
+    reactPlugin,
+    tailwindPlugin,
   ],
 
   resolve: {
     alias: {
       '@beacon/types': path.resolve(__dirname, '../../packages/types/src'),
-      '@beacon/api-client': path.resolve(__dirname, '../../packages/api-client/src'),
-      '@beacon/sdk': path.resolve(__dirname, '../../packages/sdk/src'),
+      'beacon-sdk': path.resolve(__dirname, '../../packages/sdk/src'),
       '@': path.resolve(__dirname, './src'),
-      'react': path.resolve(__dirname, './node_modules/react'),
-      'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
     },
   },
 
   server: {
     port: 5173,
     host: true,
+    fs: {
+      allow: [workspaceRoot, path.resolve(__dirname, '../../assets')],
+    },
     allowedHosts: [
       'localhost',
       '127.0.0.1',
@@ -139,7 +142,7 @@ export default defineConfig(({ mode }) => {
       'framer-motion',
       'lucide-react',
     ],
-    exclude: ['@beacon/types', '@beacon/api-client', '@beacon/sdk'],
+    exclude: ['@beacon/types', 'beacon-sdk'],
   },
 
   esbuild: {

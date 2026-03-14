@@ -1,3 +1,6 @@
+import { API_BASE_URL } from '../config/endpoints';
+import { WEB_SDK_ENDPOINTS } from '../lib/beaconSdk';
+
 class ApiClient {
     private token: string | null = null;
     private baseUrl: string;
@@ -5,33 +8,9 @@ class ApiClient {
     private csrfInitPromise: Promise<void> | null = null;
     private maxCsrfRetries: number = 3;
 
-    private normalizeApiBaseUrl(rawUrl: string): string {
-        const trimmed = rawUrl.trim().replace(/\/+$/, '');
-        if (!trimmed) return '/api';
-        return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
-    }
-
     constructor() {
-        this.token = localStorage.getItem('token') || localStorage.getItem('beacon_token');
-        
-        // Determine API base URL
-        // In development with Vite proxy: use relative /api path
-        // In production: use same origin or configured URL
-        const isDev = import.meta.env.DEV;
-        const configUrl =
-            import.meta.env.VITE_API_URL ||
-            import.meta.env.VITE_BACKEND_URL ||
-            '';
-        
-        if (isDev) {
-            // Development: rely on proxy configured in vite.config.ts
-            this.baseUrl = '/api';
-        } else if (configUrl) {
-            this.baseUrl = this.normalizeApiBaseUrl(configUrl);
-        } else {
-            // Production: use configured URL or default
-            this.baseUrl = this.normalizeApiBaseUrl(`${window.location.origin}/api`);
-        }
+        this.token = localStorage.getItem('token') || localStorage.getItem('beacon_token') || localStorage.getItem('accessToken');
+        this.baseUrl = WEB_SDK_ENDPOINTS.apiUrl || API_BASE_URL;
         
         console.log('[API] Using base URL:', this.baseUrl);
         
@@ -121,6 +100,9 @@ class ApiClient {
         data?: any,
         retryOnCsrf: boolean = true
     ): Promise<{ success: boolean; data?: any; error?: string }> {
+        // Refresh token from localStorage in case another flow updated it.
+        this.token = localStorage.getItem('token') || localStorage.getItem('beacon_token') || localStorage.getItem('accessToken');
+
         // Ensure CSRF token is initialized before making mutation requests
         if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
             if (this.csrfInitPromise) {

@@ -4,6 +4,8 @@ export interface BotContext {
     userId: string;
     channelId: string;
     guildId?: string;
+    memberRoleIds?: string[];
+    memberPermissions?: bigint;
     content?: string; // For onMessage
     commandName?: string; // For onCommand
     options?: any[]; // For onCommand
@@ -113,6 +115,8 @@ export interface SlashCommand {
     description: string;
     options?: SlashCommandOption[];
     cooldownMs?: number; // per-user cooldown
+    requiredRoleIds?: string[];
+    requiredPermissions?: Array<bigint | string | number>;
     handler: (args: Record<string, any>, context: BotContext) => Promise<BotResponse>;
 }
 
@@ -182,6 +186,31 @@ export abstract class BaseBot {
         const cmd = this.commands.get(cmdName);
 
         if (!cmd) return null;
+
+        if (cmd.requiredRoleIds?.length) {
+            const memberRoles = new Set(context.memberRoleIds || []);
+            const hasRole = cmd.requiredRoleIds.some(roleId => memberRoles.has(roleId));
+            if (!hasRole) {
+                return {
+                    content: `❌ You are missing the required role to run \`/${cmdName}\`.`,
+                    ephemeral: true,
+                };
+            }
+        }
+
+        if (cmd.requiredPermissions?.length) {
+            const memberPerms = context.memberPermissions ?? 0n;
+            const hasAllPerms = cmd.requiredPermissions.every((perm) => {
+                const required = BigInt(perm as any);
+                return (memberPerms & required) === required;
+            });
+            if (!hasAllPerms) {
+                return {
+                    content: `❌ You are missing the required permissions to run \`/${cmdName}\`.`,
+                    ephemeral: true,
+                };
+            }
+        }
 
         // Cooldown check
         if (cmd.cooldownMs && this.isOnCooldown(cmdName, context.userId)) {
@@ -306,14 +335,20 @@ export class BotFramework {
         return null;
     }
 
-    async handleInteraction(interaction: any): Promise<BotResponse | null> {
-        const bot = this.botsByAppId.get(interaction.applicationId);
+    async handleInteraction(interaction: any, fallbackBot?: BaseBot): Promise<BotResponse | null> {
+        const bot = this.botsByAppId.get(interaction.applicationId)
+            || fallbackBot
+            || this.botsByName.get('official beacon bot')
+            || this.botsByName.get('beacon bot')
+            || this.bots.values().next().value;
         if (!bot) return null;
 
         const context: BotContext = {
             userId: interaction.member?.user?.id || interaction.user?.id,
             channelId: interaction.channelId,
             guildId: interaction.guildId,
+            memberRoleIds: Array.isArray(interaction.member?.roles) ? interaction.member.roles : [],
+            memberPermissions: interaction.member?.permissions !== undefined ? BigInt(interaction.member.permissions) : undefined,
             interactionData: interaction.data,
             sourceMessageId: interaction.message?.id,
             history: [],
@@ -332,7 +367,56 @@ export class BotFramework {
 
         // 2. Native bot commands
         if (interaction.type === 2) {
-            return bot.handleSlashCommand(`/${interaction.data.name}`, context);
+            const args: Record<string, any> = {};
+            const options = Array.isArray(interaction.data?.options) ? interaction.data.options : [];
+            for (const opt of options) {
+                if (opt?.name) {
+                    args[opt.name] = opt.value;
+                }
+            }
+
+            const cmd = bot.commands.get(interaction.data.name);
+            if (!cmd) {
+                return null;
+            }
+
+            if (cmd.requiredRoleIds?.length) {
+                const memberRoles = new Set(context.memberRoleIds || []);
+                const hasRole = cmd.requiredRoleIds.some(roleId => memberRoles.has(roleId));
+                if (!hasRole) {
+                    return {
+                        content: `❌ You are missing the required role to run \`/${interaction.data.name}\`.`,
+                        ephemeral: true,
+                    };
+                }
+            }
+
+            if (cmd.requiredPermissions?.length) {
+                const memberPerms = context.memberPermissions ?? 0n;
+                const hasAllPerms = cmd.requiredPermissions.every((perm) => {
+                    const required = BigInt(perm as any);
+                    return (memberPerms & required) === required;
+                });
+                if (!hasAllPerms) {
+                    return {
+                        content: `❌ You are missing the required permissions to run \`/${interaction.data.name}\`.`,
+                        ephemeral: true,
+                    };
+                }
+            }
+
+            if (cmd.cooldownMs && bot.isOnCooldown(interaction.data.name, context.userId)) {
+                return {
+                    content: `⏳ Command \`/${interaction.data.name}\` is on cooldown. Try again shortly.`,
+                    ephemeral: true,
+                };
+            }
+
+            const response = await cmd.handler(args, context);
+            if (cmd.cooldownMs) {
+                bot.setCooldown(interaction.data.name, context.userId, cmd.cooldownMs);
+            }
+            return response;
         }
 
         if (interaction.type === 3) {

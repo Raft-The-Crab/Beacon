@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@beacon/types": "file:../../packages/types",
-    "@beacon/api-client": "file:../../packages/api-client",
+    "beacon-sdk": "file:../../packages/sdk",
     "@capacitor/core": "^7.0.0",
     "@capacitor/android": "^7.0.0"
   },

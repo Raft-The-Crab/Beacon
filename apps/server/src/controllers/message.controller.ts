@@ -7,6 +7,7 @@ import { prisma } from '../db';
 import { publishGatewayEvent } from '../services/gatewayPublisher';
 import { redis } from '../services/redis';
 import { serializeBigInt } from '../utils/serializeBigInt';
+import { generateShortId } from '../utils/id';
 
 // ─────────────────────────────────────────────────────────────
 // GET /channels/:channelId/messages
@@ -122,6 +123,7 @@ export async function createThread(req: Request, res: Response) {
   try {
     const thread = await prisma.channel.create({
       data: {
+        id: generateShortId('c', 12),
         name,
         type: 'THREAD',
         parentId: channelId,

@@ -272,3 +272,94 @@
     cursor: not-allowed;
     filter: grayscale(1);
 }
+
+@media (max-width: 640px) {
+    .container {
+        padding: 16px;
+        max-width: 100%;
+    }
+
+    .header {
+        margin-bottom: 16px;
+    }
+
+    .guildInfo {
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .guildInfo h1 {
+        font-size: 17px;
+        line-height: 1.3;
+        word-break: break-word;
+    }
+
+    .guildInfo p {
+        font-size: 12px;
+    }
+
+    .guildIcon,
+    .guildIconPlaceholder {
+        width: 48px;
+        height: 48px;
+    }
+
+    .statsRow {
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .statCard {
+        padding: 12px 8px;
+    }
+
+    .statValue {
+        font-size: 20px;
+    }
+
+    .progressSection {
+        margin-bottom: 20px;
+    }
+
+    .perkItem {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .perkName {
+        font-size: 13px;
+    }
+
+    .perkLevel {
+        font-size: 11px;
+    }
+
+    .boostBtn {
+        padding: 14px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 420px) {
+    .statsRow {
+        grid-template-columns: 1fr;
+    }
+
+    .marker {
+        width: 20px;
+        height: 20px;
+    }
+
+    .marker span {
+        font-size: 9px;
+    }
+
+    .perkIcon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .boostBtn {
+        font-size: 14px;
+    }
+}

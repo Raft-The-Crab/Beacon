@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Gift, X, Search, Send } from 'lucide-react'
 import { Button } from '../ui'
 import { useShopStore } from '../../stores/useShopStore'
+import { useUserListStore } from '../../stores/useUserListStore'
 import { api } from '../../lib/api'
 import styles from '../../styles/components/modals/GiftingModal.module.css'
 
@@ -20,17 +21,59 @@ export function GiftingModal({ item, onClose }: GiftingModalProps) {
     const [sendAnimation, setSendAnimation] = useState<'idle' | 'launch' | 'success'>('idle')
 
     const { sendGift } = useShopStore()
+    const { friends, fetchFriends } = useUserListStore()
+
+    const mappedFriends = friends.map((friend: any) => ({
+        id: friend.id,
+        username: friend.username,
+        displayName: friend.displayName,
+        discriminator: friend.discriminator || '0000',
+        avatar: friend.avatar,
+        banner: friend.banner,
+        avatarDecorationId: friend.avatarDecorationId,
+    }))
+
+    useEffect(() => {
+        void fetchFriends()
+    }, [fetchFriends])
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!search.trim()) return
-        try {
-            const { data } = await api.get(`/friends/search?query=${search}`)
-            setResults(data)
-        } catch (err) {
-            console.error('Search failed')
+        const query = search.trim().toLowerCase()
+        if (!query) {
+            setResults(mappedFriends)
+            return
         }
+        try {
+            const { data } = await api.get('/friends/search', { params: { query } })
+            const remoteRows = Array.isArray(data) ? data : []
+            if (remoteRows.length > 0) {
+                setResults(remoteRows.map((friend: any) => ({
+                    id: friend.id,
+                    username: friend.username,
+                    displayName: friend.displayName,
+                    discriminator: friend.discriminator || '0000',
+                    avatar: friend.avatar,
+                    banner: friend.banner,
+                    avatarDecorationId: friend.avatarDecorationId,
+                })))
+                return
+            }
+        } catch {
+            // Fall back to local filtering below.
+        }
+
+        setResults(mappedFriends.filter((friend: any) => {
+            const tag = `${friend.username}#${friend.discriminator}`.toLowerCase()
+            const displayName = String(friend.displayName || '').toLowerCase()
+            return friend.username.toLowerCase().includes(query) || displayName.includes(query) || tag.includes(query)
+        }))
     }
+
+    // Keep result list populated without requiring a search round-trip.
+    useEffect(() => {
+        setResults(mappedFriends)
+    }, [friends])
 
     const handleSend = async () => {
         if (!selectedFriend) return
@@ -68,7 +111,7 @@ export function GiftingModal({ item, onClose }: GiftingModalProps) {
                         <div className={`${styles.success} ${styles.successAnimated}`}>
                             <Send size={48} />
                             <h3>Gift Sent!</h3>
-                            <p>Your gift has been sent to {selectedFriend.username}.</p>
+                            <p>Your gift has been sent to {selectedFriend.displayName || selectedFriend.username}.</p>
                         </div>
                     ) : (
                         <>
@@ -96,7 +139,7 @@ export function GiftingModal({ item, onClose }: GiftingModalProps) {
                                                 onClick={() => setSelectedFriend(f)}
                                             >
                                                 <img src={f.avatar || '/default-avatar.png'} alt={f.username} />
-                                                <span>{f.username}#{f.discriminator}</span>
+                                                <span>{f.displayName || f.username}#{f.discriminator}</span>
                                             </button>
                                         ))
                                     )}

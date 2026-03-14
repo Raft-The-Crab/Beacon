@@ -55,30 +55,30 @@
   color: var(--text-secondary);
   background: var(--bg-hover);
   padding: 4px 10px;
-
-  .statusPill {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: var(--radius-xl);
-    animation: statusBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  .statusDot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    animation: pulse 1.4s infinite;
-  }
-
-  @keyframes statusBounceIn {
-    0% { opacity: 0; transform: scale(0.8); }
-    100% { opacity: 1; transform: scale(1); }
-  }
   border-radius: var(--radius-xl);
+}
+
+.statusPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-xl);
+  animation: statusBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 1.4s infinite;
+}
+
+@keyframes statusBounceIn {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 .speakingDot {
@@ -145,6 +145,60 @@
   flex: 1;
   display: flex;
   overflow: hidden;
+  position: relative;
+}
+
+.mediaNotice {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 16px;
+  z-index: 30;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(240, 178, 50, 0.35);
+  background: rgba(240, 178, 50, 0.13);
+  color: #ffd680;
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mediaNoticeActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mediaNoticeButton {
+  border: 1px solid rgba(255, 214, 128, 0.35);
+  background: rgba(255, 214, 128, 0.12);
+  color: #ffe7b5;
+  border-radius: var(--radius-xl);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.mediaNoticeButton:hover {
+  background: rgba(255, 214, 128, 0.2);
+}
+
+.mediaNoticeButtonSecondary {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.mediaNoticeButtonSecondary:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 
 /* Video area */
@@ -156,6 +210,10 @@
   padding: 20px;
   overflow: hidden;
   transition: all 0.3s ease;
+}
+
+.videoAreaWithNotice {
+  padding-top: 68px;
 }
 
 .videoAreaShrunk {
@@ -610,4 +668,122 @@
   background: rgba(237, 66, 69, 0.85);
   color: #fff;
   transform: none;
+}
+
+@media (max-width: 960px) {
+  .topBar {
+    height: auto;
+    min-height: 52px;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .topLeft {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .serverLabel {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidePanel {
+    width: 240px;
+  }
+
+  .controls {
+    height: auto;
+    padding: 10px 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .controlsLeft,
+  .controlsRight {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .controlsCenter {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .controlBtn,
+  .leaveBtn {
+    min-width: 68px;
+    padding: 9px 12px;
+  }
+
+  .videoGrid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .videoArea {
+    padding: 12px;
+  }
+
+  .videoAreaWithNotice {
+    padding-top: 92px;
+  }
+
+  .mediaNotice {
+    left: 12px;
+    right: 12px;
+    top: 10px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .mediaNoticeActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .sidePanel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: min(88vw, 300px);
+    z-index: 22;
+    box-shadow: -12px 0 24px rgba(0, 0, 0, 0.28);
+  }
+
+  .videoGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .controls {
+    padding: 8px;
+  }
+
+  .controlsLeft {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .controlsCenter {
+    order: 1;
+  }
+
+  .controlsRight {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .controlLabel {
+    font-size: 10px;
+  }
 }

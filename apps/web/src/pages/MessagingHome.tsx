@@ -16,6 +16,7 @@ import { useUserListStore } from "../stores/useUserListStore"
 import { useUIStore } from "../stores/useUIStore"
 import { useBeacoinStore } from "../stores/useBeacoinStore"
 import { useAuthStore } from "../stores/useAuthStore"
+import { api } from "../lib/api"
 
 import { Avatar, Tooltip, Modal } from "../components/ui"
 import { ChatArea } from "../components/chat/ChatArea"
@@ -42,6 +43,7 @@ export function MessagingHome() {
   const { channels, setActiveChannel, activeChannel } = useDMStore()
   const user = useAuthStore((state) => state.user)
   const { friends, blockedUsers, fetchFriends } = useUserListStore()
+  const [pendingFriends, setPendingFriends] = useState<any[]>([])
   const [currentTab, setCurrentTab] = useState<FriendTab>("all")
   const [friendSearch, setFriendSearch] = useState("")
   const [showWallet, setShowWallet] = useState(false)
@@ -59,6 +61,15 @@ export function MessagingHome() {
 
   const getDMParticipant = (channel: any) =>
     channel.participants.find((participant: any) => participant.id !== user?.id) || channel.participants[0]
+
+  const loadPendingFriends = async () => {
+    try {
+      const { data } = await api.get('/friends/pending')
+      setPendingFriends(Array.isArray(data) ? data : [])
+    } catch {
+      setPendingFriends([])
+    }
+  }
 
   useEffect(() => {
     const handleOpenBoost = () => setShowBoosting(true)
@@ -80,6 +91,10 @@ export function MessagingHome() {
       void fetchFriends()
     }
   }, [friends.length, fetchFriends])
+
+  useEffect(() => {
+    void loadPendingFriends()
+  }, [])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -104,11 +119,12 @@ export function MessagingHome() {
   const getTabFriends = () => {
     const base =
       currentTab === "online" ? onlineFriends
+        : currentTab === "pending" ? pendingFriends
         : currentTab === "blocked" ? blockedFriendsList
           : allFriends
     if (!friendSearch.trim()) return base
     return base.filter((f) =>
-      f.username.toLowerCase().includes(friendSearch.toLowerCase())
+      `${f.displayName || ''} ${f.username}`.toLowerCase().includes(friendSearch.toLowerCase())
     )
   }
 
@@ -118,7 +134,7 @@ export function MessagingHome() {
     switch (currentTab) {
       case "online": return `Online — ${onlineFriends.length} `
       case "all": return `All Friends — ${allFriends.length} `
-      case "pending": return `Pending — 0`
+      case "pending": return `Pending — ${pendingFriends.length}`
       case "blocked": return `Blocked — ${blockedFriendsList.length} `
     }
   }
@@ -138,6 +154,26 @@ export function MessagingHome() {
       case "idle": return "Idle"
       case "dnd": return "Do Not Disturb"
       default: return "Offline"
+    }
+  }
+
+  const handleAcceptPending = async (friendId: string, username: string) => {
+    try {
+      await api.put(`/friends/${friendId}/accept`)
+      show(`Accepted friend request from ${username}`, 'success')
+      await Promise.all([fetchFriends(), loadPendingFriends()])
+    } catch {
+      show('Failed to accept friend request', 'error')
+    }
+  }
+
+  const handleDeclinePending = async (friendId: string, username: string) => {
+    try {
+      await api.delete(`/friends/${friendId}`)
+      show(`Declined friend request from ${username}`, 'info')
+      await loadPendingFriends()
+    } catch {
+      show('Failed to decline friend request', 'error')
     }
   }
 
@@ -320,24 +356,51 @@ export function MessagingHome() {
                         className={styles.friendRow}
                       >
                         <UserPopoverCard
+                          userId={friend.id}
                           username={friend.username}
+                          displayName={friend.displayName ?? undefined}
+                          banner={friend.banner ?? undefined}
                           avatar={friend.avatar ?? undefined}
                           status={friend.status as any}
-                          bio="A Beacon user."
-                          roles={[{ name: 'Member', color: '#5865f2' }]}
+                          customStatus={friend.customStatus ?? undefined}
+                          bio={friend.bio ?? undefined}
+                          badges={friend.badges}
+                          joinedAt={friend.createdAt}
+                          avatarDecorationId={friend.avatarDecorationId ?? undefined}
+                          profileEffectId={friend.profileEffectId ?? undefined}
+                          onAddFriend={undefined}
                         >
                           <Avatar
-                            username={friend.username}
+                            username={friend.displayName || friend.username}
                             src={friend.avatar ?? undefined}
                             status={friend.status as any}
                             size="md"
+                            avatarDecorationId={friend.avatarDecorationId ?? undefined}
                           />
                         </UserPopoverCard>
                         <div className={styles.friendInfo}>
-                          <div className={styles.friendName}>{friend.username}</div>
+                          <div className={styles.friendName}>{friend.displayName || friend.username}</div>
                           <div style={{ color: getStatusColor(friend.status), fontSize: 12 }}>
-                            {getStatusLabel(friend.status)}
+                            {friend.customStatus || getStatusLabel(friend.status)}
                           </div>
+                          {currentTab === 'pending' && (
+                            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                              <button
+                                className={styles.pendingActionBtn}
+                                type="button"
+                                onClick={() => void handleAcceptPending(friend.id, friend.username)}
+                              >
+                                Accept
+                              </button>
+                              <button
+                                className={styles.pendingActionBtn}
+                                type="button"
+                                onClick={() => void handleDeclinePending(friend.id, friend.username)}
+                              >
+                                Ignore
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -360,18 +423,23 @@ export function MessagingHome() {
           <InviteView />
         </Modal>
         <Modal isOpen={showAddFriend} onClose={() => setShowAddFriend(false)} size="md" noPadding={true}>
-          <AddFriendModal onClose={() => setShowAddFriend(false)} />
+          <AddFriendModal
+            onClose={() => setShowAddFriend(false)}
+            onSuccess={() => {
+              void loadPendingFriends()
+              void fetchFriends()
+            }}
+          />
         </Modal>
         <Modal isOpen={showCreateDM} onClose={() => setShowCreateDM(false)} size="sm" noPadding={true}>
           <CreateDMModal onClose={() => setShowCreateDM(false)} />
         </Modal>
 
         <Modal isOpen={showDiscover} onClose={() => setShowDiscover(false)} size="lg" noPadding={true} hideHeader={true}>
-          <div style={{ height: '80vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', position: 'relative' }}>
+          <div className={styles.discoveryModalShell}>
             <button
               onClick={() => setShowDiscover(false)}
-              className="glass-hover"
-              style={{ position: 'absolute', top: 16, right: 16, zIndex: 100, width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.5)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              className={styles.discoveryCloseButton}
             >
               ✕
             </button>
@@ -380,7 +448,7 @@ export function MessagingHome() {
         </Modal>
 
         <Modal isOpen={showBeaconPlus} onClose={() => setShowBeaconPlus(false)} size="xl" noPadding={true} hideHeader={true}>
-          <div style={{ height: '86vh', maxHeight: '86vh', overflow: 'auto', background: 'var(--bg-primary)' }}>
+          <div className={styles.beaconPlusModalShell}>
             <BeaconPlusStore onClose={() => setShowBeaconPlus(false)} />
           </div>
         </Modal>

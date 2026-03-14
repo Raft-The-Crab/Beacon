@@ -70,10 +70,27 @@ export class AuthController {
             if (!userId) return res.status(401).json({ error: 'Unauthorized' });
             if (!prisma) return res.status(503).json({ error: 'User service unavailable. Check the database connection.' });
 
-            const user = await prisma.user.findUnique({
-                where: { id: userId },
-                select: { id: true, username: true, displayName: true, email: true, avatar: true, discriminator: true, badges: true, status: true, customStatus: true }
-            });
+            let user: any = null
+            try {
+                user = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { id: true, username: true, displayName: true, email: true, avatar: true, discriminator: true, badges: true, status: true, customStatus: true }
+                });
+            } catch (selectError) {
+                console.warn('AuthController.getMe full select failed, falling back to minimal profile:', selectError)
+                user = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { id: true, username: true, displayName: true, email: true, avatar: true, discriminator: true }
+                });
+                if (user) {
+                    user = {
+                        ...user,
+                        badges: [],
+                        status: 'online',
+                        customStatus: null,
+                    }
+                }
+            }
 
             if (!user) return res.status(404).json({ error: 'User not found' });
 

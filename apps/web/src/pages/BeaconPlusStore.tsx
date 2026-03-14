@@ -50,6 +50,7 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
     const [successType, setSuccessType] = useState<'plus' | 'cosmetic' | null>(null)
     const [successRewardLabel, setSuccessRewardLabel] = useState('')
     const [searchQuery, setSearchQuery] = useState('')
+    const [showPurchaseConfirm, setShowPurchaseConfirm] = useState(false)
 
     const { balance, isLoading: walletLoading, purchaseSubscription, fetchWallet } = useBeacoinStore()
     const { user } = useAuthStore()
@@ -103,7 +104,7 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
         { icon: <Shield size={16} />, label: tr('marketplace.plus.features.streaming', 'HD Streaming & Screen Share (1080p)') },
         { icon: <Crown size={16} />, label: tr('marketplace.plus.features.badge', 'Exclusive Beacon+ Crown Badge') },
         { icon: <Coins size={16} />, label: tr('marketplace.plus.features.bonus', 'Quest Beacoin Bonus (+50% daily rewards)') },
-        { icon: <Sparkles size={16} />, label: tr('marketplace.plus.features.gifs', 'Premium GIFs via KLIPY (100 req/min)') },
+        { icon: <Sparkles size={16} />, label: tr('marketplace.plus.features.gifs', 'Expanded GIPHY access (240 req/hour)') },
         { icon: <Palette size={16} />, label: tr('marketplace.plus.features.themes', 'Exclusive Profile Themes & Effects') },
         { icon: <Shield size={16} />, label: tr('marketplace.plus.features.priority', 'Priority Support & Early Access') },
     ]
@@ -148,6 +149,17 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
             setError(`You need ${needed.toLocaleString()} more Beacoins for this plan.`)
             return
         }
+        // If already subscribed to monthly, block repurchasing the same plan
+        if (hasBeaconPlus && selectedPlan === 'monthly') {
+            setError('You already have an active Beacon+ Monthly subscription.')
+            return
+        }
+        setShowPurchaseConfirm(true)
+    }
+
+    const confirmPurchasePlus = async () => {
+        setShowPurchaseConfirm(false)
+        if (!user || purchasing) return
         setError('')
         setPurchasing('plus')
         try {
@@ -511,6 +523,23 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
                 </AnimatePresence>
             </main>
             {gifting && <GiftingModal item={gifting} onClose={() => setGifting(null)} />}
+
+            {/* Purchase Confirmation Dialog */}
+            {showPurchaseConfirm && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+                    <div style={{ background: 'var(--bg-secondary)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 'var(--radius-xl)', padding: '32px', maxWidth: 400, width: '90%', textAlign: 'center' }}>
+                        <Crown size={48} style={{ color: 'var(--beacon-brand)', marginBottom: 16 }} />
+                        <h2 style={{ margin: '0 0 8px', fontWeight: 700 }}>Confirm Purchase</h2>
+                        <p style={{ color: 'var(--text-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
+                            You're about to purchase <strong>Beacon+ {selectedPlan === 'yearly' ? 'Yearly' : 'Monthly'}</strong> for <strong>{cost.toLocaleString()} Beacoins</strong>. This will be deducted from your wallet immediately.
+                        </p>
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                            <Button variant="ghost" onClick={() => setShowPurchaseConfirm(false)}>Cancel</Button>
+                            <Button variant="primary" onClick={confirmPurchasePlus}>Confirm Purchase</Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

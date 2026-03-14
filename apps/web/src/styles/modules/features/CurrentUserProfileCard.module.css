@@ -19,11 +19,12 @@
 
 .popover {
   position: fixed;
-  width: 220px;
+  width: 280px;
   background: var(--bg-tertiary);
   border-radius: 14px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
-  z-index: 9999;
+  z-index: 100000;
+  pointer-events: auto;
   overflow: hidden;
 }
 
@@ -69,6 +70,52 @@
   gap: 2px;
 }
 
+.menuHeader {
+  padding: 4px 4px 6px;
+}
+
+.menuTitle {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.menuSubtitle {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.quickActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.quickActionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.quickActionBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
 .actionRow {
   display: flex;
   align-items: center;
@@ -100,13 +147,51 @@
 }
 
 .subRow {
-  padding-left: 24px !important;
+  padding-left: 20px !important;
   font-size: 12px !important;
   opacity: 0.9;
+}
+
+.accountRow {
+  align-items: flex-start;
+}
+
+.accountMeta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.accountName {
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accountHandle {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accountCurrentTag {
+  color: #2ea043;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  margin-top: 2px;
 }
 
 .divider {
   height: 1px;
   background: rgba(255,255,255,0.06);
-  margin: 4px 6px;
+  margin: 3px 6px;
 }

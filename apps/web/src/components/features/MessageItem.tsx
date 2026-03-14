@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react'
 import { Smile, Edit, Trash2, File, Pin, Shield, Languages } from 'lucide-react'
 import type { UserBadge } from '@beacon/types'
 import { Avatar, Tooltip, EmojiPicker } from '../ui'
-import { UserBadges, BotTag } from '../ui/UserBadges'
+import { BotTag } from '../ui/UserBadges'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useUIStore } from '../../stores/useUIStore'
 import { MarkdownRenderer } from '../ui/MarkdownRenderer'
@@ -21,6 +21,7 @@ interface MessageItemProps {
   id: string
   authorId?: string
   authorName: string
+  authorDisplayName?: string
   authorIsBeaconPlus?: boolean
   authorAvatar?: string
   authorBanner?: string
@@ -30,6 +31,8 @@ interface MessageItemProps {
   authorJoinedAt?: string
   authorRoles?: { name: string; color: string }[]
   authorAvatarDecorationId?: string | null
+  authorProfileEffectId?: string | null
+  moderationUserId?: string
   content: string
   timestamp: string
   edited?: boolean
@@ -70,6 +73,7 @@ export const MessageItem = React.memo(function MessageItem({
   id: _id,
   authorId,
   authorName,
+  authorDisplayName,
   authorIsBeaconPlus,
   authorAvatar,
   authorBanner,
@@ -79,6 +83,8 @@ export const MessageItem = React.memo(function MessageItem({
   authorJoinedAt,
   authorRoles,
   authorAvatarDecorationId,
+  authorProfileEffectId,
+  moderationUserId,
   content,
   timestamp,
   edited,
@@ -160,7 +166,10 @@ export const MessageItem = React.memo(function MessageItem({
   const displayAuthorName = isSelf ? (user?.username || authorName) : authorName
   const displayAuthorAvatar = isSelf ? (user?.avatar || authorAvatar) : authorAvatar
   const displayAuthorStatus = (isSelf ? user?.status : authorStatus) || 'offline'
-  const frameArt = isSelf ? arts.find(a => a.id === equippedFrame) : null
+  // Show frame for self using equipped frame; show correct frame for others using their decoration ID
+  const frameArt = isSelf
+    ? arts.find(a => a.id === equippedFrame)
+    : (authorAvatarDecorationId ? arts.find(a => a.id === authorAvatarDecorationId) : null)
   const isMentioned = (!!user && content.includes(`@${user.username}`)) || content.includes('@You') || content.includes('@everyone') || content.includes('@here')
   const ownStatusClass =
     status === 'read'
@@ -168,8 +177,21 @@ export const MessageItem = React.memo(function MessageItem({
       : status === 'sending'
         ? styles.ownStatusSending
         : styles.ownStatusMuted
-  const selfBubbleClass = isSelf && hasBeaconPlus
-    ? `${styles.plusBubble} ${styles[`plusBubble${chatBubbleStyle.charAt(0).toUpperCase()}${chatBubbleStyle.slice(1)}`]} ${styles[`plusBubbleIntensity${chatBubbleIntensity.charAt(0).toUpperCase()}${chatBubbleIntensity.slice(1)}`]}`
+  const resolveBubbleStyle = (effectId?: string | null) => {
+    switch (effectId) {
+      case 'effect-nebula-pulse':
+        return 'aurora'
+      case 'effect-cyber-static':
+        return 'carbon'
+      default:
+        return null
+    }
+  }
+
+  const effectiveBubbleStyle = resolveBubbleStyle(isSelf ? user?.profileEffectId : authorProfileEffectId) || (isSelf ? chatBubbleStyle : null)
+  const effectiveBubbleIntensity = isSelf ? chatBubbleIntensity : 'medium'
+  const bubbleClass = hasBeaconPlus && effectiveBubbleStyle
+    ? `${styles.plusBubble} ${styles[`plusBubble${effectiveBubbleStyle.charAt(0).toUpperCase()}${effectiveBubbleStyle.slice(1)}`]} ${styles[`plusBubbleIntensity${effectiveBubbleIntensity.charAt(0).toUpperCase()}${effectiveBubbleIntensity.slice(1)}`]}`
     : ''
 
   return (
@@ -196,11 +218,13 @@ export const MessageItem = React.memo(function MessageItem({
         <div className={styles.continueTime}>{timestamp}</div>
       )}
 
-      <div className={`${styles.content} ${selfBubbleClass}`}>
+      <div className={`${styles.content} ${bubbleClass}`}>
         {!isContinuing && (
           <div className={styles.header}>
             <UserPopoverCard
+              userId={moderationUserId}
               username={displayAuthorName}
+              displayName={authorDisplayName}
               avatar={displayAuthorAvatar}
               banner={authorBanner}
               status={displayAuthorStatus as any}
@@ -211,11 +235,11 @@ export const MessageItem = React.memo(function MessageItem({
               joinedAt={authorJoinedAt}
               roles={authorRoles && authorRoles.length > 0 ? authorRoles : isSelf ? [{ name: 'You', color: '#5865f2' }] : []}
               avatarDecorationId={authorAvatarDecorationId || (isSelf ? user?.avatarDecorationId : undefined)}
+              enableModerationActions
             >
               <span className={styles.author}>{displayAuthorName}</span>
             </UserPopoverCard>
             {isBot && <BotTag />}
-            <UserBadges badges={authorBadges} isBot={isBot} size="sm" />
             <span className={styles.time}>{timestamp}</span>
             {isPinned && (
               <span className={styles.pinnedBadge}>

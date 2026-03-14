@@ -31,7 +31,7 @@
     "deploy:server": "cd apps/server && railway up",
     "deploy:github": "git push origin main && git push origin --tags",
     "install:all": "npm install && cd apps/web && npm install && cd ../server && npm install && cd ../desktop && npm install && cd ../mobile && npm install",
-    "install:packages": "cd packages/types && npm install && cd ../api-client && npm install && cd ../sdk && npm install",
+    "install:packages": "cd packages/types && npm install && cd ../sdk && npm install",
     "prisma:generate": "cd apps/server && npx prisma generate",
     "prisma:migrate": "cd apps/server && npx prisma migrate deploy",
     "prisma:push": "cd apps/server && npx prisma db push",
@@ -41,11 +41,16 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/cookie-parser": "^1.4.10",
+    "@types/cookie-parser": "1.4.6",
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "@types/express": "4.17.25",
+    "@types/express-serve-static-core": "4.19.8",
+    "@types/cookie-parser": "1.4.6"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",
@@ -53,6 +58,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
     "bcryptjs": "^3.0.3",
+    "beacon-sdk": "^1.1.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",

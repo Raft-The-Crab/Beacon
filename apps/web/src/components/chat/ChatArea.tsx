@@ -49,6 +49,10 @@ export function ChatArea({ channelId }: ChatAreaProps) {
   const dmChannel = useDMStore((state) => state.channels.find((channel: any) => channel.id === channelId))
   const isDMChannel = !!dmChannel && !currentChannel
   const dmRecipient = dmChannel?.participants?.find((participant: any) => participant.id !== user?.id)?.username || dmChannel?.participants?.[0]?.username || 'Direct Message'
+  const dmParticipantCount = dmChannel?.participants?.length || 1
+  const dmCallName = isDMChannel
+    ? (dmParticipantCount > 2 ? `Group Call (${dmParticipantCount} members)` : `Call with ${dmRecipient}`)
+    : ''
   const channelDisplayName = isDMChannel ? dmRecipient : (currentChannel?.name || 'general')
 
   const toggleMemberList = useUIStore(state => state.toggleMemberList)
@@ -79,6 +83,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
     return {
       id: isSelf ? user?.id : targetAuthorId,
       name: isSelf ? (user?.username || 'You') : (author.username || message.authorName || message.authorId || 'Unknown User'),
+      displayName: isSelf ? (user as any)?.displayName : author.displayName,
       avatar: isSelf ? (user?.avatar || author.avatar) : (author.avatar || message.authorAvatar),
       banner: isSelf ? (user as any)?.banner : (author.banner || message.authorBanner),
       status: (isSelf ? user?.status : author.status || memberRecord?.status) || 'offline',
@@ -87,6 +92,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       joinedAt: author.createdAt || memberRecord?.joinedAt,
       roles,
       avatarDecorationId: isSelf ? user?.avatarDecorationId : author.avatarDecorationId,
+      profileEffectId: isSelf ? (user as any)?.profileEffectId : author.profileEffectId,
       badges: isSelf ? user?.badges : author.badges,
       isBeaconPlus: Boolean(
         isSelf
@@ -98,6 +104,8 @@ export function ChatArea({ channelId }: ChatAreaProps) {
 
   const [showPinnedModal, setShowPinnedModal] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
+  const [membersForModal, setMembersForModal] = useState<any[]>([])
+  const [membersLoading, setMembersLoading] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const editingMessageId = useUIStore(state => state.editingMessageId)
   const editingMessageContent = useUIStore(state => state.editingMessageContent)
@@ -107,6 +115,73 @@ export function ChatArea({ channelId }: ChatAreaProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const channelType = String(currentChannel?.type ?? '').toLowerCase()
   const isVoiceLikeChannel = channelType === 'voice' || channelType === '2' || channelType === 'stage' || channelType === '13'
+  const canStartCall = isVoiceLikeChannel || isDMChannel
+
+  const openCall = useCallback(() => {
+    if (isDMChannel) {
+      const callName = encodeURIComponent(dmCallName || 'Direct Message Call')
+      navigate(`/voice?guildId=dm&channelId=${encodeURIComponent(channelId)}&name=${callName}&server=Direct%20Messages`)
+      return
+    }
+
+    navigate(`/voice?guildId=${currentServer?.id}&channelId=${currentChannel?.id}&name=${encodeURIComponent(currentChannel?.name || 'Voice Channel')}`)
+  }, [channelId, currentChannel?.id, currentChannel?.name, currentServer?.id, dmCallName, isDMChannel, navigate])
+
+  const getMemberStatusLabel = (status?: string) => {
+    if (status === 'online') return 'Online'
+    if (status === 'idle') return 'Idle'
+    if (status === 'dnd') return 'Do Not Disturb'
+    if (status === 'invisible') return 'Invisible'
+    return 'Offline'
+  }
+
+  const loadMembersForModal = useCallback(async () => {
+    const guildId = currentServer?.id
+    if (!guildId) {
+      setMembersForModal(Array.isArray(currentServer?.members) ? currentServer.members : [])
+      return
+    }
+
+    setMembersLoading(true)
+    try {
+      const res = await apiClient.getGuildMembers(guildId)
+      if (res.success && Array.isArray(res.data)) {
+        setMembersForModal(res.data)
+      } else {
+        setMembersForModal(Array.isArray(currentServer?.members) ? currentServer.members : [])
+      }
+    } catch {
+      setMembersForModal(Array.isArray(currentServer?.members) ? currentServer.members : [])
+    } finally {
+      setMembersLoading(false)
+    }
+  }, [currentServer?.id, currentServer?.members])
+
+  useEffect(() => {
+    if (!showMembersModal) return
+    void loadMembersForModal()
+  }, [showMembersModal, loadMembersForModal])
+
+  useEffect(() => {
+    const handleStatusUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent<{ userId?: string; status?: string }>
+      const userId = customEvent.detail?.userId
+      const status = customEvent.detail?.status
+      if (!userId || !status) return
+
+      setMembersForModal((prev) => prev.map((member: any) => {
+        const memberUserId = member.userId || member.user?.id || member.id
+        return memberUserId === userId
+          ? { ...member, status }
+          : member
+      }))
+    }
+
+    window.addEventListener('beacon:user-status-updated', handleStatusUpdated as EventListener)
+    return () => {
+      window.removeEventListener('beacon:user-status-updated', handleStatusUpdated as EventListener)
+    }
+  }, [])
 
   const appendInteractionMessage = useCallback((payload: any) => {
     if (!payload || payload.flags === 64) return false
@@ -182,35 +257,6 @@ export function ChatArea({ channelId }: ChatAreaProps) {
 
   const handleSendMessage = async (content: string, gifUrl?: string, attachments?: UploadedFile[]) => {
     if ((!content.trim() && !gifUrl && !attachments?.length) || !channelId) return
-
-    // Slash command detection
-    if (content.startsWith('/') && !content.includes('\n')) {
-      const parts = content.slice(1).split(' ')
-      const commandName = parts[0]
-      const args = parts.slice(1).join(' ')
-
-      // Execute as interaction
-      try {
-        const res = await apiClient.executeInteraction({
-          type: InteractionType.APPLICATION_COMMAND,
-          channelId,
-          data: {
-            name: commandName,
-            options: [{ name: 'input', value: args }] // Simplified arg passing for now
-          }
-        })
-
-        if (res.success) {
-          handleInteractionResult(res.data, `Command /${commandName}`)
-          return
-        }
-
-        show(res.error || `Command /${commandName} failed`, 'error')
-      } catch (err) {
-        console.warn('Slash command failed:', err)
-        show(`Command /${commandName} failed`, 'error')
-      }
-    }
 
     const messageAttachments = attachments?.map(att => ({
       id: att.id,
@@ -327,7 +373,8 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       const res = await apiClient.executeInteraction({
         type: InteractionType.MESSAGE_COMPONENT,
         channelId,
-        guildId: currentServer?.id,
+        guildId: currentServer?.id ?? undefined,
+        applicationId: (message as any).applicationId || (message as any).author?.applicationId,
         message: {
           id: message.id,
           content: message.content,
@@ -368,18 +415,18 @@ export function ChatArea({ channelId }: ChatAreaProps) {
             )}
             <span className={styles.channelName}>{channelDisplayName}</span>
           </div>
-          {isVoiceLikeChannel && (
+          {canStartCall && (
             <div className={styles.voiceActions}>
               <button 
                 className={styles.headerButton} 
-                onClick={() => navigate(`/voice?guildId=${currentServer?.id}&channelId=${currentChannel?.id}&name=${encodeURIComponent(currentChannel?.name || 'Voice Channel')}`)}
+                onClick={openCall}
                 aria-label="Start voice call"
               >
                 <Phone size={20} />
               </button>
               <button 
                 className={styles.headerButton} 
-                onClick={() => navigate(`/voice?guildId=${currentServer?.id}&channelId=${currentChannel?.id}&name=${encodeURIComponent(currentChannel?.name || 'Voice Channel')}`)}
+                onClick={openCall}
                 aria-label="Start video call"
               >
                 <Video size={20} />
@@ -488,7 +535,8 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                       <MessageItem
                         id={msg.id}
                         authorId={author.id}
-                        authorName={author.name}
+                        authorName={author.displayName || author.name}
+                        authorDisplayName={author.displayName}
                         authorIsBeaconPlus={author.isBeaconPlus}
                         authorAvatar={author.avatar || undefined}
                         authorBanner={author.banner || undefined}
@@ -498,6 +546,9 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                         authorJoinedAt={author.joinedAt}
                         authorRoles={author.roles}
                         authorAvatarDecorationId={author.avatarDecorationId}
+                        authorProfileEffectId={author.profileEffectId}
+                        authorBadges={author.badges}
+                        moderationUserId={author.id || undefined}
                         content={msg.content}
                         timestamp={(() => { const _td = msg.createdAt ? new Date(msg.createdAt) : null; return _td && !isNaN(_td.getTime()) ? _td.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '' })()}
                         attachments={msg.attachments}
@@ -508,7 +559,11 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                         isEncrypted={!!msg.nonce || !!msg.encryptedContent} // Logic for E2EE
                         showActions={!msg.localOnly}
                         isContinuing={isContinuing}
-                        canDelete={msg.authorId === 'current-user' || (!!user && (msg.authorId === user.id || msg.author?.id === user.id))}
+                        canDelete={
+                          msg.authorId === 'current-user' ||
+                          (!!user && (msg.authorId === user.id || msg.author?.id === user.id)) ||
+                          (!!user && !!currentServer && currentServer.ownerId === user.id)
+                        }
                         canEdit={msg.authorId === 'current-user' || (!!user && (msg.authorId === user.id || msg.author?.id === user.id))}
                         onDelete={() => handleDeleteMessage(msg.id)}
                         onEdit={() => handleStartEditingMessage(msg.id, msg.content)}
@@ -620,18 +675,21 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         onClose={() => setShowMembersModal(false)}
         title="Members"
       >
-        <div>
-          {!currentServer?.members ? (
+        <div className={styles.membersModalList}>
+          {membersLoading ? (
             <p>Loading members...</p>
-          ) : currentServer.members.length === 0 ? (
+          ) : membersForModal.length === 0 ? (
             <p>No members in this server.</p>
           ) : (
-            currentServer.members.map((m: any) => (
-              <div key={m.userId} style={{ padding: 8, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            membersForModal.map((m: any) => (
+              <div key={m.userId || m.id} className={styles.memberModalRow}>
                 <Avatar username={m.username || m.userId} src={m.avatar} size="sm" />
-                <div>
-                  <div style={{ fontWeight: 600 }}>{m.username || m.userId}</div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>{m.role || ''}</div>
+                <div className={styles.memberModalMeta}>
+                  <div className={styles.memberModalName}>{m.username || m.user?.username || m.userId || m.id}</div>
+                  <div className={styles.memberModalSub}>
+                    {m.role ? `${m.role} • ` : ''}
+                    {getMemberStatusLabel(m.status)}
+                  </div>
                 </div>
               </div>
             ))

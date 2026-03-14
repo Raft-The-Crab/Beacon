@@ -5,6 +5,16 @@ import { useToast } from '../ui'
 import { apiClient } from '../../services/apiClient'
 import styles from '../../styles/modules/features/InviteView.module.css'
 
+function extractInviteCode(payload: any): string {
+    return String(
+        payload?.code ||
+        payload?.inviteCode ||
+        payload?.data?.code ||
+        payload?.data?.inviteCode ||
+        ''
+    ).trim()
+}
+
 export function InviteView() {
     const { currentServer } = useServerStore()
     const { show } = useToast()
@@ -39,8 +49,9 @@ export function InviteView() {
             setIsGenerating(true)
             try {
                 const created = await apiClient.createInvite(currentServer.id)
-                if (mounted && created.success && created.data?.code) {
-                    setInviteCode(created.data.code)
+                const code = extractInviteCode(created)
+                if (mounted && created.success && code) {
+                    setInviteCode(code)
                 }
             } finally {
                 if (mounted) setIsGenerating(false)
@@ -56,7 +67,7 @@ export function InviteView() {
 
     const inviteLink = useMemo(() => {
         if (!inviteCode) return ''
-        return `https://beacon.qzz.io/invite/${inviteCode}`
+        return `${window.location.origin}/invite/${inviteCode}`
     }, [inviteCode])
 
     const handleCopy = () => {
@@ -72,8 +83,9 @@ export function InviteView() {
         setIsGenerating(true)
         try {
             const created = await apiClient.createInvite(currentServer.id)
-            if (created.success && created.data?.code) {
-                setInviteCode(created.data.code)
+            const code = extractInviteCode(created)
+            if (created.success && code) {
+                setInviteCode(code)
                 show('New invite link generated', 'success')
             } else {
                 show('Could not generate invite link', 'error')

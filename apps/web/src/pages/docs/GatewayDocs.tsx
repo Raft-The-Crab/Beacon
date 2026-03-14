@@ -1,4 +1,4 @@
-﻿import { DocsLayout } from '../../components/layout/DocsLayout'
+import { DocsLayout } from '../../components/layout/DocsLayout'
 import styles from '../../styles/modules/pages/Docs.module.css'
 
 export function GatewayDocs() {
@@ -6,281 +6,109 @@ export function GatewayDocs() {
     <DocsLayout>
       <div className={`${styles.docsContent} animate-fadeIn`}>
         <header className={styles.docsHeader}>
-          <h1 className="accent-text">Gateway & Real-Time Events</h1>
-          <p>Get instant updates via WebSocket — messages, reactions, member changes, and more, as they happen.</p>
+          <h1 className="accent-text">Gateway and Real-Time Events</h1>
+          <p>Use the Beacon gateway for live events, low-latency bots, and resilient reconnect handling in production.</p>
         </header>
 
         <section className={styles.docsSection}>
-          <h2>What is the Gateway?</h2>
-          <p>
-            The REST API is great for one-off requests, but if you want to <em>react</em> to things as they happen —
-            like a new message arriving or a user joining a server — you need the Gateway. It's a persistent WebSocket
-            connection that Beacon uses to push events to your bot in real time.
-          </p>
-          <p>
-            The official SDK handles all the plumbing for you (connecting, heartbeating, reconnecting). But if you're
-            building something custom, here's how it works.
-          </p>
-        </section>
-
-        <section className={styles.docsSection}>
-          <h2>Connecting</h2>
-          <p>Connect to the Gateway URL using any standard WebSocket client:</p>
+          <h2>Gateway URL</h2>
           <div className={styles.infoBox}>
             <code>wss://gateway.beacon.qzz.io/?v=1&encoding=json</code>
           </div>
-          <p>
-            Once connected, Beacon will immediately send you a <strong>Hello</strong> packet (opcode 10) that tells you
-            how often to send heartbeats. After that, you send an <strong>Identify</strong> packet with your token to start receiving events.
-          </p>
+          <p>Connect with standard WebSocket clients. After connect, wait for Hello (op 10), then send Identify (op 2).</p>
         </section>
 
         <section className={styles.docsSection}>
-          <h2>Packet Format</h2>
-          <p>Every message over the Gateway follows this structure:</p>
+          <h2>Packet Shape</h2>
           <div className={styles.codeBlock}>
             <pre>{`{
-  "op": 0,        // Opcode (what kind of packet this is)
-  "d": { ... },   // The payload data
-  "s": 42,        // Sequence number — used to resume sessions
-  "t": "EVENT"    // Event name (only present on dispatch packets)
+  "op": 0,
+  "d": { },
+  "s": 14,
+  "t": "MESSAGE_CREATE"
 }`}</pre>
           </div>
         </section>
 
         <section className={styles.docsSection}>
-          <h2>Opcodes</h2>
+          <h2>Lifecycle</h2>
           <table className={styles.table}>
             <thead>
-              <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Direction</th>
-                <th>Description</th>
-              </tr>
+              <tr><th>Step</th><th>Action</th><th>Details</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td>0</td>
-                <td>Dispatch</td>
-                <td>Receive</td>
-                <td>An event fired (e.g. a new message). This is most of what you'll see.</td>
-              </tr>
-              <tr>
-                <td>1</td>
-                <td>Heartbeat</td>
-                <td>Send/Receive</td>
-                <td>Keep the connection alive. Send at the interval from the Hello packet.</td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>Identify</td>
-                <td>Send</td>
-                <td>Log in with your token and specify which intents you need.</td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>Presence Update</td>
-                <td>Send</td>
-                <td>Update your bot's status (e.g. "Playing something").</td>
-              </tr>
-              <tr>
-                <td>6</td>
-                <td>Resume</td>
-                <td>Send</td>
-                <td>Reconnect and catch up on missed events using your last sequence number.</td>
-              </tr>
-              <tr>
-                <td>10</td>
-                <td>Hello</td>
-                <td>Receive</td>
-                <td>First thing you receive after connecting. Contains the heartbeat interval.</td>
-              </tr>
-              <tr>
-                <td>11</td>
-                <td>Heartbeat ACK</td>
-                <td>Receive</td>
-                <td>Beacon acknowledging your heartbeat. If this stops, reconnect.</td>
-              </tr>
+              <tr><td>1</td><td>Connect</td><td>Open WebSocket to gateway URL.</td></tr>
+              <tr><td>2</td><td>Hello</td><td>Receive heartbeat interval in payload.</td></tr>
+              <tr><td>3</td><td>Identify</td><td>Send token and intents.</td></tr>
+              <tr><td>4</td><td>Heartbeat</td><td>Send op 1 on interval and track ACK.</td></tr>
+              <tr><td>5</td><td>Dispatch</td><td>Process events and store latest sequence.</td></tr>
+              <tr><td>6</td><td>Resume</td><td>Reconnect using session id + sequence after drop.</td></tr>
             </tbody>
           </table>
         </section>
 
         <section className={styles.docsSection}>
+          <h2>Identify Example</h2>
+          <div className={styles.codeBlock}>
+            <pre>{`{
+  "op": 2,
+  "d": {
+    "token": "YOUR_BOT_TOKEN",
+    "intents": ["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES"],
+    "properties": {
+      "os": "linux",
+      "browser": "beacon-sdk",
+      "device": "beacon-sdk"
+    }
+  }
+}`}</pre>
+          </div>
+        </section>
+
+        <section className={styles.docsSection}>
           <h2>Intents</h2>
-          <p>
-            Intents control which events your bot receives. You declare them in your Identify payload.
-            Only request the intents you actually need — it keeps your bot lean.
-          </p>
           <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Intent</th>
-                <th>Events included</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Intent</th><th>Purpose</th></tr></thead>
             <tbody>
-              <tr>
-                <td><code>GUILDS</code></td>
-                <td>Guild create/update/delete, channel changes, role changes</td>
-              </tr>
-              <tr>
-                <td><code>GUILD_MEMBERS</code></td>
-                <td>Member join/leave/update — requires approval for large bots</td>
-              </tr>
-              <tr>
-                <td><code>GUILD_MESSAGES</code></td>
-                <td>Message create/update/delete in guild channels</td>
-              </tr>
-              <tr>
-                <td><code>DIRECT_MESSAGES</code></td>
-                <td>Messages in DMs with your bot</td>
-              </tr>
-              <tr>
-                <td><code>MESSAGE_REACTIONS</code></td>
-                <td>Reaction add/remove on messages</td>
-              </tr>
+              <tr><td><code>GUILDS</code></td><td>Guild metadata, channels, and role events</td></tr>
+              <tr><td><code>GUILD_MEMBERS</code></td><td>Member join and leave lifecycle</td></tr>
+              <tr><td><code>GUILD_MESSAGES</code></td><td>Guild message create, update, delete</td></tr>
+              <tr><td><code>DIRECT_MESSAGES</code></td><td>Direct message events</td></tr>
+              <tr><td><code>MESSAGE_REACTIONS</code></td><td>Reaction add and remove events</td></tr>
             </tbody>
           </table>
         </section>
 
         <section className={styles.docsSection}>
           <h2>Common Events</h2>
-
-          <div className={styles.eventItem}>
-            <h3>READY</h3>
-            <p>Fired after a successful Identify. Contains your bot's user object and initial guild list. Store the <code>session_id</code> for resuming.</p>
-          </div>
-
-          <div className={styles.eventItem}>
-            <h3>MESSAGE_CREATE</h3>
-            <p>A message was sent in a channel your bot can see. The payload is a full Message object including author, channel, and guild IDs.</p>
-          </div>
-
-          <div className={styles.eventItem}>
-            <h3>MESSAGE_UPDATE</h3>
-            <p>A message was edited. The payload may be partial — only changed fields are guaranteed.</p>
-          </div>
-
-          <div className={styles.eventItem}>
-            <h3>MESSAGE_DELETE</h3>
-            <p>A message was deleted. Contains the message ID and channel ID only (not the message content).</p>
-          </div>
-
-          <div className={styles.eventItem}>
-            <h3>GUILD_MEMBER_ADD</h3>
-            <p>Someone joined a server. Requires the <code>GUILD_MEMBERS</code> intent.</p>
-          </div>
-
-          <div className={styles.eventItem}>
-            <h3>PRESENCE_UPDATE</h3>
-            <p>A user's status or activity changed in a shared server.</p>
-          </div>
-
-          <div className={styles.eventItem}>
-            <h3>TYPING_START</h3>
-            <p>Someone started typing in a channel. Useful for "typing..." indicators.</p>
-          </div>
+          <div className={styles.endpointCard}><div className={styles.endpointHeader}><span className={styles.methodGet}>EVENT</span><span className={styles.path}>READY</span></div><p>Initial authenticated state. Save session id for resume.</p></div>
+          <div className={styles.endpointCard}><div className={styles.endpointHeader}><span className={styles.methodGet}>EVENT</span><span className={styles.path}>MESSAGE_CREATE</span></div><p>New message payload for channels your bot can access.</p></div>
+          <div className={styles.endpointCard}><div className={styles.endpointHeader}><span className={styles.methodGet}>EVENT</span><span className={styles.path}>MESSAGE_UPDATE</span></div><p>Partial updates when message content or metadata changes.</p></div>
+          <div className={styles.endpointCard}><div className={styles.endpointHeader}><span className={styles.methodGet}>EVENT</span><span className={styles.path}>GUILD_MEMBER_ADD</span></div><p>A new user joined a guild.</p></div>
         </section>
 
         <section className={styles.docsSection}>
-          <h2>Using the SDK</h2>
-          <p>
-            The official <code>@beacon/sdk</code> package handles all Gateway internals automatically.
-            Here's how to get started:
-          </p>
-
-          <h3>Installation</h3>
+          <h2>SDK Usage</h2>
           <div className={styles.codeBlock}>
-            <pre>{`npm install @beacon/sdk`}</pre>
-          </div>
+            <pre>{`import { BeaconClient } from 'beacon-sdk'
 
-          <h3>Quick Start</h3>
-          <div className={styles.codeBlock}>
-            <pre>{`import { BeaconClient } from '@beacon/sdk'
-
-const client = new BeaconClient({ token: process.env.BEACON_TOKEN })
+const client = new BeaconClient({
+  token: process.env.BOT_TOKEN,
+  wsUrl: process.env.BEACON_GATEWAY_URL
+})
 
 client.on('ready', () => {
-  console.log(\`✅ Logged in as \${client.user?.username}\`)
-  console.log('📡 Gateway connected')
+  console.log('Gateway connected')
+})
+
+client.on('messageCreate', async (msg) => {
+  if (msg.author.bot) return
+  if (msg.content === '!health') await msg.reply('ok')
 })
 
 client.login()`}</pre>
           </div>
-
-          <h3>Listening to Events (OOP Classes)</h3>
-          <p>
-            All events emit rich class instances, not raw JSON.
-            You can call methods directly on the objects you receive:
-          </p>
-          <div className={styles.codeBlock}>
-            <pre>{`// Message class — reply, delete, pin, react
-client.on('messageCreate', async (msg) => {
-  if (msg.content === '!ping') {
-    await msg.reply('Pong! 🏓')
-  }
-})
-
-// Access cached Guild and Channel objects
-client.on('guildCreate', (guild) => {
-  console.log(\`Joined: \${guild.name} (\${guild.memberCount} members)\`)
-})
-
-// Use Channel.send() for rich messages
-const channel = client.channels.get(channelId)
-await channel.send({
-  content: 'Hello from @beacon/sdk!',
-  embeds: [embed]
-})`}</pre>
-          </div>
-
-          <h3>Builders</h3>
-          <p>Use the builder pattern to create embeds, buttons, polls, and commands:</p>
-          <div className={styles.codeBlock}>
-            <pre>{`import { EmbedBuilder, ButtonBuilder, ActionRowBuilder } from '@beacon/sdk'
-
-// Embed
-const embed = new EmbedBuilder()
-  .setTitle('Server Stats')
-  .setColor(0x5865f2)
-  .addField('Members', '1,234', true)
-  .addField('Channels', '42', true)
-  .setTimestamp()
-  .build()
-
-// Interactive Button
-const row = new ActionRowBuilder()
-  .addButton(
-    new ButtonBuilder()
-      .setLabel('View Dashboard')
-      .setStyle('PRIMARY')
-      .setCustomId('open_dashboard')
-      .build()
-  )
-  .build()`}</pre>
-          </div>
-
-          <h3>Client Options</h3>
-          <div className={styles.codeBlock}>
-            <pre>{`const client = new BeaconClient({
-  token: 'Bot YOUR_TOKEN',        // Required
-  intents: Intents.DEFAULT,       // Gateway intents bitmask
-  gateway: {
-    url: 'wss://gateway.beacon.qzz.io',
-    version: 10,
-  },
-  rest: {
-    baseURL: 'https://api.beacon.qzz.io/api',
-    timeout: 15000,
-  },
-})`}</pre>
-          </div>
         </section>
-
-        <div className={styles.infoBox} style={{ marginTop: 'var(--space-2xl)' }}>
-          <strong>Tip:</strong> Use the <a href="/docs/sdk-tutorial">official Beacon SDK</a> and you won't have to implement any of this manually — it handles heartbeating, reconnections, and event parsing for you.
-        </div>
       </div>
     </DocsLayout>
   )

@@ -1,12 +1,12 @@
-﻿import { Home, Plus, Compass, Folder, Settings, UserPlus, LogOut, Copy, Hash, Zap } from 'lucide-react'
+import { Home, Plus, Compass, Folder, Settings, UserPlus, LogOut, Copy, Hash, Zap } from 'lucide-react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useServerStore } from '../../stores/useServerStore'
 import { useUIStore } from '../../stores/useUIStore'
 import { openCreateServerModal, openCreateChannelModal } from '../../utils/modals'
 import { useContextMenuTrigger } from '../ui/ContextMenu'
-import { Tooltip, useToast } from '../ui'
-import { apiClient } from '../../services/apiClient'
+import { Modal, Tooltip, useToast } from '../ui'
 import styles from '../../styles/modules/layout/ServerList.module.css'
 
 function ServerIconShell({ children }: { children: React.ReactNode }) {
@@ -22,7 +22,7 @@ function ServerIconShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ── Individual server button with its own context menu ──────
+// -- Individual server button with its own context menu ------
 function ServerButton({ server, isActive, onClick }: {
   server: any
   isActive: boolean
@@ -82,7 +82,7 @@ function ServerButton({ server, isActive, onClick }: {
       id: 'copy-id',
       label: 'Copy Server ID',
       icon: <Copy size={16} />,
-      shortcut: '⌘C',
+      shortcut: '?C',
       onClick: () => {
         navigator.clipboard.writeText(server.id)
         show('Server ID copied!', 'success')
@@ -148,16 +148,18 @@ function ServerButton({ server, isActive, onClick }: {
   )
 }
 
-// ── Main ServerList ──────────────────────────────────────────
+// -- Main ServerList ------------------------------------------
 export function ServerList() {
   const navigate = useNavigate()
+  const [showJoinModal, setShowJoinModal] = useState(false)
+  const [joinInput, setJoinInput] = useState('')
+  const joinInputRef = useRef<HTMLInputElement>(null)
   const { show } = useToast()
   const servers = useServerStore(state => state.servers)
   const folders = useServerStore(state => state.folders)
   const currentServerId = useServerStore(state => state.currentServerId)
   const setCurrentServer = useServerStore(state => state.setCurrentServer)
   const fetchGuild = useServerStore(state => state.fetchGuild)
-  const joinGuild = useServerStore(state => state.joinGuild)
   const toggleFolder = useServerStore(state => state.toggleFolder)
 
   const serversInFolders = new Set(folders.flatMap(f => f.serverIds))
@@ -197,28 +199,21 @@ export function ServerList() {
     return bareCode?.[1] || trimmed
   }
 
-  const handleJoinByInvite = async () => {
-    const input = window.prompt('Paste an invite code or invite link to join a server:')
-    if (!input) return
+  const handleJoinByInvite = () => {
+    setJoinInput('')
+    setShowJoinModal(true)
+    setTimeout(() => joinInputRef.current?.focus(), 50)
+  }
 
-    const inviteCode = extractInviteCode(input)
+  const handleJoinSubmit = async () => {
+    if (!joinInput.trim()) return
+    const inviteCode = extractInviteCode(joinInput)
     if (!inviteCode) {
       show('Invalid invite code', 'error')
       return
     }
-
-    try {
-      const response = await apiClient.joinByInvite(inviteCode)
-      if (!response.success || !response.data?.id) {
-        throw new Error(response.error || 'Failed to join server')
-      }
-
-      const joinedGuildId = response.data.id as string
-      await joinGuild(joinedGuildId)
-      show(`Joined ${response.data.name || 'server'}!`, 'success')
-    } catch (err: any) {
-      show(err?.message || 'Could not join server with that invite', 'error')
-    }
+    setShowJoinModal(false)
+    navigate(`/invite/${encodeURIComponent(inviteCode)}`)
   }
 
   const addMenuTrigger = useContextMenuTrigger([
@@ -242,8 +237,46 @@ export function ServerList() {
     },
   ])
 
+  const leftRailMenuTrigger = useContextMenuTrigger([
+    {
+      id: 'create-channel',
+      label: 'Create Channel',
+      icon: <Hash size={16} />,
+      onClick: () => openCreateChannelModal('text'),
+    },
+    {
+      id: 'create-category',
+      label: 'Create Category',
+      icon: <Folder size={16} />,
+      onClick: () => openCreateChannelModal('category'),
+    },
+    {
+      id: 'divider-1',
+      label: '',
+      divider: true,
+    },
+    {
+      id: 'create-server',
+      label: 'Create a Server',
+      icon: <Plus size={16} />,
+      onClick: () => openCreateServerModal(),
+    },
+    {
+      id: 'join-server',
+      label: 'Join a Server',
+      icon: <UserPlus size={16} />,
+      onClick: handleJoinByInvite,
+    },
+    {
+      id: 'explore',
+      label: 'Explore Communities',
+      icon: <Compass size={16} />,
+      onClick: () => navigate('/discovery'),
+    },
+  ])
+
   return (
-    <div className={styles.serverList}>
+    <div className={styles.serverList} onContextMenu={leftRailMenuTrigger}>
       {/* Home */}
       <Tooltip content="Home" position="right">
         <button
@@ -309,6 +342,7 @@ export function ServerList() {
         />
       ))}
 
+
       {/* Add / Create server */}
       <Tooltip content="Add a server" position="right">
         <button
@@ -335,6 +369,43 @@ export function ServerList() {
           </ServerIconShell>
         </button>
       </Tooltip>
+
+      {/* Join by Invite Modal */}
+      <Modal
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        title="Join a Server"
+        size="sm"
+        className={styles.joinModal}
+      >
+        <div className={styles.joinModalBody}>
+          <p className={styles.joinModalDescription}>Paste an invite link or code below.</p>
+          <input
+            ref={joinInputRef}
+            type="text"
+            placeholder="Invite code or URL"
+            value={joinInput}
+            onChange={e => setJoinInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') void handleJoinSubmit() }}
+            className={styles.joinInput}
+          />
+          <div className={styles.joinActions}>
+            <button
+              onClick={() => setShowJoinModal(false)}
+              className={styles.joinSecondaryButton}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => void handleJoinSubmit()}
+              disabled={!joinInput.trim()}
+              className={styles.joinPrimaryButton}
+            >
+              Join
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

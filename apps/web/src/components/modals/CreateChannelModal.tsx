@@ -74,7 +74,7 @@ export function CreateChannelModal({ isOpen, onClose }: CreateChannelModalProps)
 
     setIsLoading(true)
     setError(null)
-    const normalizedName = type === 'category' ? channelName : channelName.toLowerCase().replace(/\s+/g, '-')
+    const normalizedName = type === 'category' ? channelName : channelName.trim()
     createChannel(currentServer.id, normalizedName, type.toUpperCase(), createChannelParentId ?? undefined).then(() => {
       setShowCreateChannel(false)
       onClose()

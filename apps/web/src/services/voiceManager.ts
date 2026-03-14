@@ -35,6 +35,26 @@ class VoiceManagerClass {
   private animationId: number | null = null;
   private hasWarnedMissingMedia = false;
 
+  private getMediaErrorMessage(error: unknown, device: 'microphone' | 'camera' | 'screen'): string {
+    const err = error as { name?: string; message?: string };
+    const name = err?.name || 'UnknownError';
+
+    if (name === 'NotAllowedError' || name === 'SecurityError') {
+      return `Permission denied for ${device}. Please allow browser access and try again.`;
+    }
+    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+      return `No ${device} device was found on this system.`;
+    }
+    if (name === 'NotReadableError' || name === 'TrackStartError') {
+      return `The ${device} is currently unavailable or in use by another app.`;
+    }
+    if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') {
+      return `The requested ${device} settings are not supported on this device.`;
+    }
+
+    return err?.message || `Failed to access ${device}.`;
+  }
+
   private getPeerConnections(): RTCPeerConnection[] {
     return Array.from(this.peers.values())
       .map((peer) => (peer as any)?._pc as RTCPeerConnection | undefined)
@@ -215,33 +235,75 @@ class VoiceManagerClass {
     }
 
     try {
-      this.localStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 48000,
-          channelCount: 2
-        },
-        video: options.video || false
-      });
+      const audioConstraints: MediaTrackConstraints = {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        sampleRate: 48000,
+        channelCount: 2,
+      };
+
+      const preferredVideo = !!options.video;
+      let mediaError: unknown = null;
+
+      try {
+        this.localStream = await navigator.mediaDevices.getUserMedia({
+          audio: audioConstraints,
+          video: preferredVideo,
+        });
+      } catch (error) {
+        mediaError = error;
+
+        // If camera capture fails, still attempt audio-only so voice can work.
+        if (preferredVideo) {
+          try {
+            this.localStream = await navigator.mediaDevices.getUserMedia({
+              audio: audioConstraints,
+              video: false,
+            });
+            console.warn('Video device unavailable, joined with audio-only stream:', error);
+          } catch {
+            // Ignore and continue to the video-only fallback below.
+          }
+        }
+
+        // If microphone capture fails, still attempt video-only.
+        if (!this.localStream && preferredVideo) {
+          try {
+            this.localStream = await navigator.mediaDevices.getUserMedia({
+              audio: false,
+              video: true,
+            });
+            console.warn('Microphone unavailable, joined with video-only stream:', error);
+          } catch {
+            // Ignore and fall through to listen-only mode.
+          }
+        }
+
+        if (!this.localStream) {
+          throw mediaError;
+        }
+      }
 
       this.initAudioContext();
-      this.localAnalyzer = this.audioCtx!.createAnalyser();
-      const source = this.audioCtx!.createMediaStreamSource(this.localStream);
-      source.connect(this.localAnalyzer);
+      const audioTracks = this.localStream.getAudioTracks();
+      if (audioTracks.length > 0) {
+        this.localAnalyzer = this.audioCtx!.createAnalyser();
+        const source = this.audioCtx!.createMediaStreamSource(this.localStream);
+        source.connect(this.localAnalyzer);
+        this.startAnalysisLoop();
+        audioTracks.forEach(t => t.enabled = !options.mute);
+      }
 
-      this.startAnalysisLoop();
-
-      this.localStream.getAudioTracks().forEach(t => t.enabled = !options.mute);
+      const hasVideoTrack = this.localStream.getVideoTracks().length > 0;
 
       this.currentGuildId = guildId;
       this.currentChannelId = channelId;
 
       this.syncLocalVoiceState({
-        selfMute: !!options.mute,
+        selfMute: audioTracks.length === 0 ? true : !!options.mute,
         selfDeaf: !!options.deaf,
-        selfVideo: !!options.video,
+        selfVideo: hasVideoTrack,
         selfStream: true,
         speaking: false,
       });
@@ -358,10 +420,49 @@ class VoiceManagerClass {
     return sum / data.length / 255;
   }
 
-  setMute(guildId: string, mute: boolean): void {
-    if (this.localStream) {
-      this.localStream.getAudioTracks().forEach(track => track.enabled = !mute);
+  async setMute(guildId: string, mute: boolean): Promise<void> {
+    if (!this.localStream) {
+      throw new Error('Not connected to voice');
     }
+
+    const audioTracks = this.localStream.getAudioTracks();
+
+    // If unmuting without an audio track (e.g. initial permission failure),
+    // attempt to reacquire mic so voice can recover without rejoining.
+    if (!mute && audioTracks.length === 0) {
+      try {
+        const micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 48000,
+            channelCount: 2,
+          },
+          video: false,
+        });
+
+        const micTrack = micStream.getAudioTracks()[0];
+        if (!micTrack) {
+          throw new Error('No microphone track available.');
+        }
+
+        this.localStream.addTrack(micTrack);
+        const peers = this.getPeerConnections();
+        peers.forEach((pc) => {
+          pc.addTrack(micTrack, this.localStream as MediaStream);
+        });
+      } catch (error) {
+        this.syncLocalVoiceState({ selfMute: true });
+        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { mute: true });
+        throw new Error(this.getMediaErrorMessage(error, 'microphone'));
+      }
+    }
+
+    this.localStream.getAudioTracks().forEach((track) => {
+      track.enabled = !mute;
+    });
+
     this.syncLocalVoiceState({ selfMute: mute });
     wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { mute });
   }
@@ -372,8 +473,10 @@ class VoiceManagerClass {
     this.emit('deafenStateChange', { guildId, deaf });
   }
 
-  setVideo(guildId: string, enabled: boolean): void {
-    if (!this.localStream) return;
+  async setVideo(guildId: string, enabled: boolean): Promise<void> {
+    if (!this.localStream) {
+      throw new Error('Not connected to voice');
+    }
 
     const existingTrack = this.localStream.getVideoTracks()[0] || null;
 
@@ -393,9 +496,12 @@ class VoiceManagerClass {
       return;
     }
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then((videoStream) => {
+    try {
+      const videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       const track = videoStream.getVideoTracks()[0];
-      if (!track || !this.localStream) return;
+      if (!track || !this.localStream) {
+        throw new Error('No camera track available.');
+      }
 
       this.localStream.addTrack(track);
 
@@ -413,16 +519,20 @@ class VoiceManagerClass {
 
       this.syncLocalVoiceState({ selfVideo: true });
       wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true });
-    }).catch((error) => {
-      console.warn('[VoiceManager] Failed to enable camera track:', error);
+    } catch (error) {
       this.syncLocalVoiceState({ selfVideo: false });
       wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false });
-    });
+      throw new Error(this.getMediaErrorMessage(error, 'camera'));
+    }
   }
 
   async startScreenShare(guildId: string): Promise<void> {
     if (!this.localStream) {
       throw new Error('Not connected to voice');
+    }
+
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      throw new Error('Screen sharing is not supported in this browser');
     }
 
     const peerConnections = this.getPeerConnections();
@@ -443,15 +553,24 @@ class VoiceManagerClass {
         localVideoSenders.forEach((sender) => {
           void sender.replaceTrack(cameraTrack);
         });
+        this.syncLocalVoiceState({ selfVideo: true });
+        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true });
       } else {
         localVideoSenders.forEach((sender) => {
           void sender.replaceTrack(null);
         });
+        this.syncLocalVoiceState({ selfVideo: false });
+        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false });
       }
       return;
     }
 
-    const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    let displayStream: MediaStream;
+    try {
+      displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    } catch (error) {
+      throw new Error(this.getMediaErrorMessage(error, 'screen'));
+    }
     const displayTrack = displayStream.getVideoTracks()[0];
 
     if (!displayTrack) {
@@ -472,10 +591,14 @@ class VoiceManagerClass {
         localVideoSenders.forEach((sender) => {
           void sender.replaceTrack(cameraTrack);
         });
+        this.syncLocalVoiceState({ selfVideo: true });
+        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true });
       } else {
         localVideoSenders.forEach((sender) => {
           void sender.replaceTrack(null);
         });
+        this.syncLocalVoiceState({ selfVideo: false });
+        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false });
       }
     };
 

@@ -23,11 +23,11 @@ npm install beacon.js
 
 ---
 
-### 💻 @beacon/sdk
+### 💻 beacon-sdk
 **Client SDK** - Build apps and clients for Beacon
 
 ```bash
-npm install @beacon/sdk
+npm install beacon-sdk
 ```
 
 - Authentication & user management
@@ -37,19 +37,6 @@ npm install @beacon/sdk
 - Presence & typing indicators
 
 [📖 Documentation](./sdk/README.md)
-
----
-
-### 🌐 @beacon/api-client
-**REST API Client** - Low-level HTTP client for Beacon API
-
-```bash
-npm install @beacon/api-client
-```
-
-- Direct REST API access
-- Rate limiting handled
-- TypeScript types included
 
 ---
 
@@ -93,10 +80,10 @@ client.on('messageCreate', async (msg) => {
 client.login()
 ```
 
-### Building a Client (@beacon/sdk)
+### Building a Client (beacon-sdk)
 
 ```typescript
-import { BeaconClient } from '@beacon/sdk'
+import { BeaconClient } from 'beacon-sdk'
 
 const beacon = new BeaconClient({
   apiUrl: 'https://api.beacon.qzz.io',
@@ -125,8 +112,7 @@ Contributions are welcome! Please read our contributing guidelines.
 ## 📄 License
 
 - **beacon.js**: PROPRIETARY (free to use for building bots)
-- **@beacon/sdk**: MIT
-- **@beacon/api-client**: MIT
+- **beacon-sdk**: MIT
 - **@beacon/types**: MIT
 
 ## 🔗 Links

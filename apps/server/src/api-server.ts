@@ -1,10 +1,27 @@
-import 'dotenv/config';
+import fs from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
 import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import compression from 'compression';
+
+const nodeEnv = process.env.NODE_ENV || 'development'
+const inferredServerRoot = process.cwd().endsWith(path.join('apps', 'server'))
+    ? process.cwd()
+    : path.resolve(process.cwd(), 'apps', 'server')
+
+const baseEnvPath = path.join(inferredServerRoot, '.env')
+if (fs.existsSync(baseEnvPath)) {
+    dotenv.config({ path: baseEnvPath })
+}
+
+const envModePath = path.join(inferredServerRoot, `.env.${nodeEnv}`)
+if (fs.existsSync(envModePath)) {
+    dotenv.config({ path: envModePath, override: true })
+}
 
 // Configure global connection pooling
 http.globalAgent.maxSockets = 500;
@@ -14,6 +31,7 @@ import { moderationService } from './services/moderation'
 import { priorityQueue } from './services/priorityQueue'
 import { getProfile } from './utils/autoTune'
 import { sanitizeBody } from './utils/sanitize'
+import { resolveServerSdkConfig } from './lib/beaconSdk'
 
 import { ipBlockMiddleware, generalLimiter, authLimiter, sanitizeHeaders, csrfProtection, generateCSRFToken } from './middleware/security'
 import { responseWrapper } from './middleware/responseWrapper'
@@ -25,6 +43,7 @@ import activityRouter from './routes/activity.routes'
 import uploadRouter from './routes/upload.routes'
 
 const profile = getProfile('clawcloud-api')
+const sdkConfig = resolveServerSdkConfig()
 
 if (process.env.NODE_ENV === 'production') {
     process.env.NODE_OPTIONS = `--max-old-space-size=${profile.heapLimitMB} --optimize-for-size`
@@ -81,8 +100,44 @@ app.use('/api/', generalLimiter)
 app.use(responseWrapper)
 
 const server = http.createServer(app)
-const PORT = process.env.PORT || 8080
+const BASE_PORT = Number(process.env.PORT || 8080)
 let lastPostgresHealthErrorLogAt = 0
+
+async function listenWithPortFallback(basePort: number): Promise<number> {
+    const maxLocalAttempts = 8
+    const isProd = process.env.NODE_ENV === 'production'
+    const firstPort = Number.isFinite(basePort) && basePort > 0 ? basePort : 8080
+
+    const tryListen = (port: number) => new Promise<number>((resolve, reject) => {
+        const onError = (err: any) => {
+            server.off('listening', onListening)
+            reject(err)
+        }
+        const onListening = () => {
+            server.off('error', onError)
+            resolve(port)
+        }
+
+        server.once('error', onError)
+        server.once('listening', onListening)
+        server.listen(port)
+    })
+
+    for (let i = 0; i < maxLocalAttempts; i++) {
+        const port = firstPort + i
+        try {
+            return await tryListen(port)
+        } catch (err: any) {
+            if (err?.code === 'EADDRINUSE' && !isProd) {
+                console.warn(`⚠️  Port ${port} already in use, trying ${port + 1}...`)
+                continue
+            }
+            throw err
+        }
+    }
+
+    throw new Error(`No open port found starting at ${firstPort}`)
+}
 
 async function connectPostgresWithRetry(maxAttempts = 5, baseDelayMs = 800): Promise<boolean> {
     if (!prisma) return false
@@ -143,6 +198,10 @@ app.get('/health', async (_req: express.Request, res: express.Response) => {
             status: 'healthy',
             service: 'beacon-api',
             timestamp: new Date().toISOString(),
+            sdk: {
+                apiUrl: sdkConfig.apiUrl,
+                wsUrl: sdkConfig.wsUrl,
+            },
             memory: {
                 rss: `${Math.round(mem.rss / 1024 / 1024)} MB`,
                 heapUsed: `${Math.round(mem.heapUsed / 1024 / 1024)} MB`,
@@ -259,31 +318,43 @@ const start = async () => {
                 console.warn('⚠️  PostgreSQL unavailable at startup. Server continues in degraded mode and will retry on next queries.')
             }
         }
-        // Initialize Redis in background — don't block server startup
-        redis.connect().catch(err => {
-            console.warn('⚠️  Redis connection failed (Continuing in degraded mode):', err.message);
-        });
+        // Initialize Redis in background when configured — don't block server startup.
+        if (redis.isEnabled) {
+            redis.connect().catch(err => {
+                console.warn('⚠️  Redis connection failed (Continuing in degraded mode):', err.message)
+            })
+        } else {
+            const reason = redis.disabledConfigReason ? `: ${redis.disabledConfigReason}` : ''
+            console.log(`⚪ Redis disabled${reason}`)
+        }
 
-        server.listen(PORT, () => {
-            console.log(`\n✨ API running on http://localhost:${PORT}`)
+        const activePort = await listenWithPortFallback(BASE_PORT)
+        console.log(`\n✨ API running on http://localhost:${activePort}`)
 
-            // Initialize moderation pipeline + priority queue
-            moderationService.init()
-            moderationService.initQueue()
+            const moderationEnabled = process.env.ENABLE_MODERATION !== 'false'
+            const botSystemEnabled = process.env.ENABLE_BOT_SYSTEM !== 'false'
 
-            // Initialize Bot System (Official Beacon Bot)
-            import('./bots/index.js').then(async ({ initBotSystem }) => {
-                await initBotSystem();
-                console.log('✅ Bot System: Ready')
-            }).catch(err => {
-                console.error('❌ Failed to initialize Bot System:', err);
-            });
+            if (moderationEnabled) {
+                moderationService.init()
+                moderationService.initQueue()
+                console.log('✅ Moderation + Priority Queue: Ready')
+            } else {
+                console.log('⚪ Moderation disabled by ENABLE_MODERATION=false')
+            }
 
-            console.log('✅ Moderation + Priority Queue + Bot System: Ready')
+            if (botSystemEnabled) {
+                import('./bots/index.js').then(async ({ initBotSystem }) => {
+                    await initBotSystem()
+                    console.log('✅ Bot System: Ready')
+                }).catch(err => {
+                    console.error('❌ Failed to initialize Bot System:', err)
+                })
+            } else {
+                console.log('⚪ Bot System disabled by ENABLE_BOT_SYSTEM=false')
+            }
 
-            startKeepAlive(PORT)
+            startKeepAlive(activePort)
             startMemoryWatchdog()
-        })
     } catch (err) {
         console.error('❌ Failed to start API:', err)
         process.exit(1)

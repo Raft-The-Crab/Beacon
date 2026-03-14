@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+﻿import { useMemo, useState, useEffect } from 'react'
 import { Shield, Plus, Edit2, Trash2, Users, ChevronDown, ChevronUp, Copy } from 'lucide-react'
 import { Button, Input, Modal, RoleColorPicker } from '../ui'
 import { IconPicker } from '../ui/IconPicker'
@@ -58,6 +58,7 @@ const permissionGroups: { name: string; permissions: { key: Permission; label: s
 export function RoleManager({ serverId }: RoleManagerProps) {
   const { getRoles, addRole, updateRole, deleteRole } = useRolesStore()
   const roles = getRoles(serverId)
+  const sortedRoles = useMemo(() => [...roles].sort((a, b) => b.position - a.position), [roles])
 
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -66,6 +67,17 @@ export function RoleManager({ serverId }: RoleManagerProps) {
   const [newRoleName, setNewRoleName] = useState('')
   const [newRoleColor, setNewRoleColor] = useState('#99aab5')
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['General Permissions'])
+
+  useEffect(() => {
+    if (selectedRole && !roles.some((role) => role.id === selectedRole.id)) {
+      setSelectedRole(null)
+      return
+    }
+
+    if (!selectedRole && sortedRoles.length > 0) {
+      setSelectedRole(sortedRoles[0])
+    }
+  }, [roles, sortedRoles, selectedRole])
 
   const handleCreateFromTemplate = (template: RoleTemplate) => {
     const newRole: Role = {
@@ -163,9 +175,7 @@ export function RoleManager({ serverId }: RoleManagerProps) {
         </div>
 
         <div className={styles.rolesList}>
-          {roles
-            .sort((a, b) => b.position - a.position)
-            .map((role, index) => (
+          {sortedRoles.map((role, index) => (
               <div
                 key={role.id}
                 draggable
@@ -182,7 +192,7 @@ export function RoleManager({ serverId }: RoleManagerProps) {
                   e.preventDefault()
                   if (draggedRoleIndex === null || draggedRoleIndex === index) return
 
-                  const newRoles = [...roles]
+                  const newRoles = [...sortedRoles]
                   const [draggedItem] = newRoles.splice(draggedRoleIndex, 1)
                   newRoles.splice(index, 0, draggedItem)
 

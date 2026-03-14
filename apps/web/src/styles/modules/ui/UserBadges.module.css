@@ -1,34 +1,36 @@
 .badges {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    margin-left: 4px;
+    gap: 5px;
+    margin-left: 6px;
     vertical-align: middle;
 }
 
 .sm .badge {
-    width: 16px;
-    height: 16px;
+    min-width: 18px;
+    height: 18px;
 }
 
 .md .badge {
-    width: 20px;
-    height: 20px;
+    min-width: 22px;
+    height: 22px;
 }
 
 .badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    padding: 2px;
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 999px;
+    padding: 2px 5px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
     cursor: default;
     flex-shrink: 0;
 }
 
 .badge:hover {
-    transform: scale(1.2);
+    transform: translateY(-1px) scale(1.06);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
 }
 
 /* Badge variants */
@@ -48,8 +50,8 @@
 }
 
 .beaconPlus {
-    color: #7b2ff7;
-    background: rgba(123, 47, 247, 0.15);
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.2);
 }
 
 .bot {

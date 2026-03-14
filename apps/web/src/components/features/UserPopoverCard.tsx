@@ -1,14 +1,20 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
-import { BadgeCheck, MessageSquare, Shield, UserPlus } from 'lucide-react'
+import { BadgeCheck, Ban, MessageSquare, Shield, UserPlus, UserX } from 'lucide-react'
 import { Avatar } from '../ui'
 import { UserBadges } from '../ui/UserBadges'
 import type { UserBadge } from '@beacon/types'
 import { useTranslationStore } from '../../stores/useTranslationStore'
+import { useAuthStore } from '../../stores/useAuthStore'
+import { useServerStore } from '../../stores/useServerStore'
+import { apiClient } from '../../services/apiClient'
+import { useToast } from '../ui'
 
 interface UserPopoverCardProps {
+    userId?: string
     username: string
+    displayName?: string
     avatar?: string
     banner?: string
     status?: 'online' | 'idle' | 'dnd' | 'offline'
@@ -23,10 +29,13 @@ interface UserPopoverCardProps {
     children: React.ReactNode  // The trigger element
     onMessage?: () => void
     onAddFriend?: () => void
+    enableModerationActions?: boolean
 }
 
 export function UserPopoverCard({
+    userId,
     username,
+    displayName,
     avatar,
     banner,
     status = 'online',
@@ -40,9 +49,14 @@ export function UserPopoverCard({
     children,
     onMessage,
     onAddFriend,
+    enableModerationActions = false,
 }: UserPopoverCardProps) {
     const { t } = useTranslationStore()
+    const { user } = useAuthStore()
+    const currentServer = useServerStore((state) => state.currentServer)
+    const { show } = useToast()
     const [isOpen, setIsOpen] = useState(false)
+    const [isModerating, setIsModerating] = useState(false)
     const [position, setPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 })
     const triggerRef = useRef<HTMLDivElement>(null)
     const popoverRef = useRef<HTMLDivElement>(null)
@@ -73,6 +87,11 @@ export function UserPopoverCard({
         setIsOpen(!isOpen)
     }
 
+    const handleContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault()
+        handleClick(e)
+    }
+
     // Close on outside click
     useEffect(() => {
         if (!isOpen) return
@@ -99,16 +118,63 @@ export function UserPopoverCard({
     }, [isOpen])
 
     const parsedJoinedAt = joinedAt ? new Date(joinedAt) : null
+    const headlineName = displayName || username
     const dateStr = parsedJoinedAt && !Number.isNaN(parsedJoinedAt.getTime())
         ? parsedJoinedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
         : 'Unknown'
     const memberSince = t('user_profile.joined_at', { date: dateStr, defaultValue: `Member since ${dateStr}` })
     const hasAdmin = (badges || []).includes('admin')
     const hasVerified = (badges || []).includes('verified')
+    const canModerateMember = Boolean(
+        enableModerationActions &&
+        currentServer?.id &&
+        user?.id &&
+        userId &&
+        userId !== user.id
+    )
+
+    const runKick = async () => {
+        if (!currentServer?.id || !userId) return
+        if (!window.confirm(`Kick ${headlineName} from this server?`)) return
+        setIsModerating(true)
+        try {
+            const result = await apiClient.kickMember(currentServer.id, userId)
+            if (result.success) {
+                show('Member kicked', 'success')
+                setIsOpen(false)
+                return
+            }
+            show(result.error || 'Failed to kick member', 'error')
+        } catch {
+            show('Failed to kick member', 'error')
+        } finally {
+            setIsModerating(false)
+        }
+    }
+
+    const runBan = async () => {
+        if (!currentServer?.id || !userId) return
+        const reason = window.prompt(`Ban reason for ${headlineName} (optional):`) || undefined
+        if (!window.confirm(`Ban ${headlineName} from this server?`)) return
+        setIsModerating(true)
+        try {
+            const result = await apiClient.banMember(currentServer.id, userId, reason)
+            if (result.success) {
+                show('Member banned', 'success')
+                setIsOpen(false)
+                return
+            }
+            show(result.error || 'Failed to ban member', 'error')
+        } catch {
+            show('Failed to ban member', 'error')
+        } finally {
+            setIsModerating(false)
+        }
+    }
 
     return (
         <>
-            <div ref={triggerRef} onClick={handleClick} style={{ cursor: 'pointer', display: 'inline' }}>
+            <div ref={triggerRef} onClick={handleClick} onContextMenu={handleContextMenu} style={{ cursor: 'pointer', display: 'inline' }}>
                 {children}
             </div>
 
@@ -129,16 +195,21 @@ export function UserPopoverCard({
                                 style={banner ? { backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                             />
                             <div className="-mt-7 px-4">
-                                <Avatar src={avatar} alt={username} size="lg" status={status} username={username} avatarDecorationId={avatarDecorationId} />
+                                <Avatar src={avatar} alt={headlineName} size="lg" status={status} username={headlineName} avatarDecorationId={avatarDecorationId} />
                             </div>
 
                             <div className="space-y-3 p-4">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[17px] font-bold tracking-tight text-zinc-50">{username}</span>
-                                    {hasVerified && <BadgeCheck size={15} className="text-emerald-400" />}
-                                    {hasAdmin && <Shield size={15} className="text-red-400" />}
-                                    {isBot && <span className="rounded-md bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-200">BOT</span>}
-                                    <UserBadges badges={badges} isBot={isBot} size="sm" />
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[17px] font-bold tracking-tight text-zinc-50">{headlineName}</span>
+                                        {hasVerified && <BadgeCheck size={15} className="text-emerald-400" />}
+                                        {hasAdmin && <Shield size={15} className="text-red-400" />}
+                                        {isBot && <span className="rounded-md bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-200">BOT</span>}
+                                        <UserBadges badges={badges} isBot={isBot} size="sm" />
+                                    </div>
+                                    {displayName && (
+                                        <div className="text-[12px] text-zinc-400">@{username}</div>
+                                    )}
                                 </div>
 
                                 {customStatus && (
@@ -201,6 +272,35 @@ export function UserPopoverCard({
                                                 <UserPlus size={16} />
                                             </button>
                                         )}
+                                    </div>
+                                )}
+
+                                {canModerateMember && (
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 text-xs font-semibold text-amber-200 transition hover:border-amber-300/50 hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                                            onClick={(event) => {
+                                                event.stopPropagation()
+                                                void runKick()
+                                            }}
+                                            disabled={isModerating}
+                                            title="Kick member"
+                                        >
+                                            <UserX size={14} />
+                                            Kick
+                                        </button>
+                                        <button
+                                            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-red-400/30 bg-red-500/10 px-3 text-xs font-semibold text-red-200 transition hover:border-red-300/50 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                                            onClick={(event) => {
+                                                event.stopPropagation()
+                                                void runBan()
+                                            }}
+                                            disabled={isModerating}
+                                            title="Ban member"
+                                        >
+                                            <Ban size={14} />
+                                            Ban
+                                        </button>
                                     </div>
                                 )}
                             </div>

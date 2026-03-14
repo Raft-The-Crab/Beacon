@@ -6,9 +6,10 @@ import styles from '../../styles/modules/features/AddFriendModal.module.css'
 
 interface AddFriendModalProps {
     onClose: () => void
+    onSuccess?: () => void
 }
 
-export function AddFriendModal({ onClose }: AddFriendModalProps) {
+export function AddFriendModal({ onClose, onSuccess }: AddFriendModalProps) {
     const [inputValue, setInputValue] = useState('')
     const [loading, setLoading] = useState(false)
     const { show } = useToast()
@@ -26,6 +27,7 @@ export function AddFriendModal({ onClose }: AddFriendModalProps) {
             await api.post('/friends/request', payload)
             show(`Friend request sent to ${trimmed}!`, 'success')
             setInputValue("")
+            onSuccess?.()
             onClose()
         } catch (error: any) {
             const message = error?.response?.data?.error || 'Could not send friend request. Check the username and try again.'

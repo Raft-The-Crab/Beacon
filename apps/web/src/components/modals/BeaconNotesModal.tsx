@@ -1,6 +1,6 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { Music, Smile, Loader2 } from 'lucide-react'
-import { Modal, Input, Button, EmojiPicker } from '../ui'
+import { Modal, Input, Button, EmojiPicker, useToast } from '../ui'
 import { apiClient } from '../../services/apiClient'
 import { MusicScrubber } from '../ui/MusicScrubber'
 import { fetchMusicMetadata, type MusicMetadata } from '../../services/musicMetadata'
@@ -22,6 +22,8 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
 
     const [isSaving, setIsSaving] = useState(false)
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false)
+    const emojiBtnRef = useRef<HTMLButtonElement>(null)
+    const toast = useToast()
 
     useEffect(() => {
         if (!isOpen) return
@@ -62,15 +64,15 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
         return () => clearTimeout(timer);
     }, [musicUrl]);
 
-    const handleEmojiSelect = (e: any) => {
-        setEmoji(e.native || e)
+    const handleEmojiSelect = (selectedEmoji: string) => {
+        setEmoji(selectedEmoji)
         setIsEmojiPickerOpen(false)
     }
 
     const handleSave = async () => {
         setIsSaving(true)
         try {
-            await apiClient.request('PUT', '/notes/profile/me', {
+            const res = await apiClient.request('PUT', '/notes/profile/me', {
                 text,
                 emoji,
                 musicUrl: musicUrl || null,
@@ -84,9 +86,35 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
                     platform: metadata.platform,
                 } : null,
             })
+
+            if (!res.success) {
+                toast.error(res.error || 'Failed to save Beacon Note')
+                return
+            }
+
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('beacon:profile-note-updated', {
+                    detail: {
+                        text,
+                        emoji,
+                        musicUrl: musicUrl || null,
+                        musicMetadata: metadata ? {
+                            title: metadata.title,
+                            artist: metadata.artist,
+                            thumbnail: metadata.thumbnail,
+                            platform: metadata.platform,
+                            start: clipStart,
+                            duration: clipDuration,
+                        } : null,
+                    },
+                }))
+            }
+
+            toast.success('Beacon Note updated')
             onClose()
         } catch (err) {
             console.error(err)
+            toast.error('Failed to save Beacon Note')
         } finally {
             setIsSaving(false)
         }
@@ -136,6 +164,7 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
                     <label className={styles.label}>Profile Note</label>
                     <div className={styles.statusInputArea}>
                         <button
+                            ref={emojiBtnRef}
                             className={styles.emojiBtn}
                             onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
                         >
@@ -153,6 +182,7 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
                                 <EmojiPicker
                                     onSelect={handleEmojiSelect}
                                     onClose={() => setIsEmojiPickerOpen(false)}
+                                    anchorElement={emojiBtnRef.current}
                                 />
                             </div>
                         )}

@@ -2,6 +2,21 @@ import { prisma } from '../db'
 import crypto from 'crypto'
 
 export class AppsService {
+    private static generateBotToken(): string {
+        return `beacon/bot_${crypto.randomBytes(32).toString('hex')}`;
+    }
+
+    private static toReadableError(error: any): Error {
+        const code = error?.code;
+        if (code === 'P2021') {
+            return new Error('Application tables are missing in the current database. Run prisma db push or migrations.');
+        }
+        if (code === 'P2002') {
+            return new Error('An application or bot with these values already exists.');
+        }
+        return error instanceof Error ? error : new Error('Unknown application service error');
+    }
+
     static async getUserApps(ownerId: string) {
         try {
             return await (prisma.application as any).findMany({
@@ -16,14 +31,18 @@ export class AppsService {
     }
 
     static async createApp(ownerId: string, name: string, description?: string) {
-        return (prisma.application as any).create({
-            data: {
-                name,
-                description,
-                ownerId
-            },
-            include: { bot: true }
-        })
+        try {
+            return await (prisma.application as any).create({
+                data: {
+                    name,
+                    description,
+                    ownerId
+                },
+                include: { bot: true }
+            })
+        } catch (error) {
+            throw AppsService.toReadableError(error)
+        }
     }
 
     static async getApp(id: string) {
@@ -34,53 +53,57 @@ export class AppsService {
     }
 
     static async createBot(applicationId: string) {
-        const token = `bot_${crypto.randomBytes(32).toString('hex')}`
+        const token = AppsService.generateBotToken()
 
-        const app = await prisma.application.findUnique({
-            where: { id: applicationId },
-            include: { bot: true }
-        })
-        if (!app) throw new Error('Application not found')
-
-        // If bot already exists, just regenerate token
-        if (app.bot) {
-            return prisma.bot.update({
-                where: { applicationId },
-                data: { token }
+        try {
+            const app = await prisma.application.findUnique({
+                where: { id: applicationId },
+                include: { bot: true }
             })
-        }
+            if (!app) throw new Error('Application not found')
 
-        // Generate discriminator
-        let discriminator = Math.floor(1000 + Math.random() * 9000).toString()
-        let isUnique = false
-        while (!isUnique) {
-            const exists = await prisma.user.findUnique({
-                where: { username_discriminator: { username: app.name.slice(0, 32), discriminator } }
+            // If bot already exists, just regenerate token
+            if (app.bot) {
+                return prisma.bot.update({
+                    where: { applicationId },
+                    data: { token }
+                })
+            }
+
+            // Generate discriminator
+            let discriminator = Math.floor(1000 + Math.random() * 9000).toString()
+            let isUnique = false
+            while (!isUnique) {
+                const exists = await prisma.user.findUnique({
+                    where: { username_discriminator: { username: app.name.slice(0, 32), discriminator } }
+                })
+                if (!exists) isUnique = true
+                else discriminator = Math.floor(1000 + Math.random() * 9000).toString()
+            }
+
+            // Create the backing user for the bot
+            const botUser = await prisma.user.create({
+                data: {
+                    email: `bot_${app.id}@beacon-bot.internal`,
+                    username: app.name.slice(0, 32),
+                    displayName: app.name,
+                    password: crypto.randomBytes(16).toString('hex'),
+                    discriminator,
+                    bot: true,
+                    avatar: app.icon
+                }
             })
-            if (!exists) isUnique = true
-            else discriminator = Math.floor(1000 + Math.random() * 9000).toString()
+
+            return prisma.bot.create({
+                data: {
+                    applicationId,
+                    token,
+                    userId: botUser.id
+                }
+            });
+        } catch (error) {
+            throw AppsService.toReadableError(error)
         }
-
-        // Create the backing user for the bot
-        const botUser = await prisma.user.create({
-            data: {
-                email: `bot_${app.id}@beacon-bot.internal`,
-                username: app.name.slice(0, 32),
-                displayName: app.name,
-                password: crypto.randomBytes(16).toString('hex'),
-                discriminator,
-                bot: true,
-                avatar: app.icon
-            }
-        });
-
-        return prisma.bot.create({
-            data: {
-                applicationId,
-                token,
-                userId: botUser.id
-            }
-        });
     }
 
     static async deleteBot(applicationId: string) {
@@ -97,7 +120,7 @@ export class AppsService {
     }
 
     static async regenerateBotToken(applicationId: string) {
-        const token = `bot_${crypto.randomBytes(32).toString('hex')}`
+        const token = AppsService.generateBotToken()
         return await prisma.bot.update({
             where: { applicationId },
             data: { token }

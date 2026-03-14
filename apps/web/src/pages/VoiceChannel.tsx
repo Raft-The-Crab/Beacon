@@ -9,6 +9,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useVoiceStore } from '../stores/useVoiceStore'
 import { voiceManager } from '../services/voiceManager'
 import { Avatar } from '../components/ui'
+import { useToast } from '../components/ui/Toast'
 import { ServerSoundboard } from '../components/features/ServerSoundboard'
 import styles from '../styles/modules/pages/VoiceChannel.module.css'
 
@@ -36,6 +37,7 @@ export function VoiceChannel() {
   const user = useAuthStore((s) => s.user)
   const voiceUsers = useVoiceStore((s) => s.voiceUsers)
   const currentVoiceState = useVoiceStore((s) => s.currentVoiceState)
+  const { show } = useToast()
 
   const [isMuted, setIsMuted] = useState(false)
   const [isDeafened, setIsDeafened] = useState(false)
@@ -47,13 +49,28 @@ export function VoiceChannel() {
   const [participants, setParticipants] = useState<VoiceParticipant[]>([])
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting')
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({})
+  const [mediaNotice, setMediaNotice] = useState<string | null>(null)
 
   // Join Voice Channel on Mount
   useEffect(() => {
     if (channelId) {
       setConnectionStatus('connecting')
+      setMediaNotice(null)
       voiceManager.joinChannel(guildId, channelId)
-        .then(() => setConnectionStatus('connected'))
+        .then(() => {
+          setConnectionStatus('connected')
+          const stream = voiceManager.getLocalStream()
+          const audioTracks = stream?.getAudioTracks()?.length || 0
+          const videoTracks = stream?.getVideoTracks()?.length || 0
+
+          if (audioTracks === 0 && videoTracks === 0) {
+            setMediaNotice('Joined in listen-only mode. Microphone/camera were not available.')
+          } else if (audioTracks === 0 && videoTracks > 0) {
+            setMediaNotice('Joined with camera only. Microphone was not available.')
+          } else if (audioTracks > 0 && videoTracks === 0) {
+            setMediaNotice('Joined with microphone only. Camera was not available.')
+          }
+        })
         .catch(() => setConnectionStatus('failed'))
     }
 
@@ -129,11 +146,16 @@ export function VoiceChannel() {
     navigate(-1)
   }
 
-  const handleToggleMute = () => {
-    if (!currentVoiceState) return
-    const next = !currentVoiceState.selfMute
-    voiceManager.setMute(guildId, next)
-    setIsMuted(next)
+  const handleToggleMute = async () => {
+    const next = currentVoiceState ? !currentVoiceState.selfMute : !isMuted
+    try {
+      await voiceManager.setMute(guildId, next)
+      setIsMuted(next)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to change microphone state.'
+      show(message, 'error')
+      setIsMuted(true)
+    }
   }
 
   const toggleDeafen = () => {
@@ -142,16 +164,21 @@ export function VoiceChannel() {
     voiceManager.setDeaf(guildId, next)
     setIsDeafened(next)
     if (next) {
-      voiceManager.setMute(guildId, true)
+      void voiceManager.setMute(guildId, true)
       setIsMuted(true)
     }
   }
 
-  const handleToggleVideo = () => {
-    if (!currentVoiceState) return
-    const next = !currentVoiceState.selfVideo
-    voiceManager.setVideo(guildId, next)
-    setIsVideoOn(next)
+  const handleToggleVideo = async () => {
+    const next = currentVoiceState ? !currentVoiceState.selfVideo : !isVideoOn
+    try {
+      await voiceManager.setVideo(guildId, next)
+      setIsVideoOn(next)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to change camera state.'
+      show(message, 'error')
+      setIsVideoOn(false)
+    }
   }
 
   const toggleScreenShare = async () => {
@@ -159,7 +186,8 @@ export function VoiceChannel() {
       await voiceManager.startScreenShare(guildId)
       setIsScreenSharing((prev) => !prev)
     } catch (err) {
-      console.error('Screen share failed:', err)
+      const message = err instanceof Error ? err.message : 'Failed to start screen sharing.'
+      show(message, 'error')
       setIsScreenSharing(false)
     }
   }
@@ -168,6 +196,57 @@ export function VoiceChannel() {
     setParticipants((ps) =>
       ps.map((p) => (p.id === user?.id ? { ...p, isHandRaised: !isHandRaised } : p))
     )
+  }
+
+  const handleRetryMedia = async () => {
+    const stream = voiceManager.getLocalStream()
+    const audioTracks = stream?.getAudioTracks()?.length || 0
+    const videoTracks = stream?.getVideoTracks()?.length || 0
+
+    const errors: string[] = []
+
+    if (audioTracks === 0) {
+      try {
+        await voiceManager.setMute(guildId, false)
+        setIsMuted(false)
+      } catch (err) {
+        errors.push(err instanceof Error ? err.message : 'Microphone is still unavailable.')
+      }
+    }
+
+    if (videoTracks === 0) {
+      try {
+        await voiceManager.setVideo(guildId, true)
+        setIsVideoOn(true)
+      } catch (err) {
+        errors.push(err instanceof Error ? err.message : 'Camera is still unavailable.')
+      }
+    }
+
+    const refreshedStream = voiceManager.getLocalStream()
+    const refreshedAudioTracks = refreshedStream?.getAudioTracks()?.length || 0
+    const refreshedVideoTracks = refreshedStream?.getVideoTracks()?.length || 0
+
+    if (refreshedAudioTracks > 0 && refreshedVideoTracks > 0) {
+      setMediaNotice(null)
+      show('Microphone and camera are now available.', 'success')
+      return
+    }
+
+    if (refreshedAudioTracks > 0 && refreshedVideoTracks === 0) {
+      setMediaNotice('Joined with microphone only. Camera was not available.')
+      return
+    }
+
+    if (refreshedAudioTracks === 0 && refreshedVideoTracks > 0) {
+      setMediaNotice('Joined with camera only. Microphone was not available.')
+      return
+    }
+
+    setMediaNotice('Joined in listen-only mode. Microphone/camera were not available.')
+    if (errors.length > 0) {
+      show(errors[0], 'error')
+    }
   }
 
   const speakingCount = participants.filter((p) => p.isSpeaking && !p.isMuted).length
@@ -242,8 +321,25 @@ export function VoiceChannel() {
 
       {/* Main content */}
       <div className={styles.main}>
+        {mediaNotice && (
+          <div className={styles.mediaNotice} role="status" aria-live="polite">
+            <span>{mediaNotice}</span>
+            <div className={styles.mediaNoticeActions}>
+              <button type="button" className={styles.mediaNoticeButton} onClick={handleRetryMedia}>
+                Retry media access
+              </button>
+              <button
+                type="button"
+                className={`${styles.mediaNoticeButton} ${styles.mediaNoticeButtonSecondary}`}
+                onClick={() => setMediaNotice(null)}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
         {/* Video grid */}
-        <div className={`${styles.videoArea} ${sidePanel ? styles.videoAreaShrunk : ''}`}>
+        <div className={`${styles.videoArea} ${sidePanel ? styles.videoAreaShrunk : ''} ${mediaNotice ? styles.videoAreaWithNotice : ''}`}>
           {participants.length === 0 ? (
             <div className={styles.emptyVoice}>
               <Volume2 size={56} className={styles.emptyIcon} />

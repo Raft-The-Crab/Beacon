@@ -239,8 +239,8 @@ export class OfficialBeaconBot extends BaseBot {
         const recentTopics = context.memory?.topics || [];
 
         try {
-            const AI_ENDPOINT = process.env.CLAWCLOUD_AI_URL || process.env.AI_MODERATION_ENDPOINT || 'http://localhost:11434/v1/chat/completions';
-            const AI_MODEL = process.env.AI_MODERATION_MODEL || 'llama3';
+            const AI_ENDPOINT = process.env.AI_ASSISTANT_ENDPOINT || process.env.AI_CHAT_ENDPOINT || 'http://localhost:11434/v1/chat/completions';
+            const AI_MODEL = process.env.AI_ASSISTANT_MODEL || process.env.AI_CHAT_MODEL || 'qwen2.5:3b';
             const AI_API_KEY = process.env.CLAWCLOUD_API_KEY || process.env.AI_API_KEY || 'sk-none';
 
             const systemPrompt = `You are the Official Beacon Bot, the primary system authority and AI assistant for the Beacon messaging platform. 

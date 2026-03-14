@@ -86,7 +86,7 @@ Using Zustand for state:
 
 - `websocket.ts` - WebSocket client
 - `tenor.ts` - Tenor GIF API client
-- API client from `@beacon/api-client` package
+- SDK client from `beacon-sdk` package
 
 ## Styling
 

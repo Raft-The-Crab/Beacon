@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { MessageCircle, UserPlus, UserX, Loader2 } from 'lucide-react'
+import { MessageCircle, UserPlus, UserX, Loader2, Crown, Sparkles, CalendarClock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useUserListStore } from '../../stores/useUserListStore'
@@ -59,6 +59,24 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
   }
 
   const frameArt = user?.avatarDecorationId ? arts.find((a: ProfileArt) => a.id === user.avatarDecorationId) : null
+  const profileEffectClass = user?.profileEffectId === 'effect-nebula-pulse'
+    ? styles.effectNebula
+    : user?.profileEffectId === 'effect-cyber-static'
+      ? styles.effectCyber
+      : ''
+  const relationshipLabel = isSelf
+    ? 'You'
+    : isBlocked
+      ? 'Blocked'
+      : isFriend
+        ? 'Friend'
+        : pendingRequestSent
+          ? 'Pending Request'
+          : 'Not Connected'
+  const badgeCount = Array.isArray(user?.badges) ? user.badges.length : 0
+  const profileEffectLabel = user?.profileEffectId
+    ? user.profileEffectId.replace(/^effect-/, '').replace(/-/g, ' ')
+    : 'None'
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -228,17 +246,29 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md" noPadding hideHeader transparent>
-      <div className={styles.container}>
+      <div className={`${styles.container} ${profileEffectClass}`}>
         {/* Banner */}
         <div
           className={styles.banner}
           style={
             user.banner
               ? { backgroundImage: `url(${user.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-              : { background: 'linear-gradient(135deg, #4a00e0 0%, #7b2ff7 50%, #c471ed 100%)' }
+              : { background: 'linear-gradient(135deg, #0f766e 0%, #06b6d4 48%, #f59e0b 100%)' }
           }
         />
         <div className={styles.profileCard}>
+          {profileNote && (profileNote.text || profileNote.musicMetadata?.title) && (
+            <div className={styles.topNoteBubble}>
+              <div className={styles.noteEmoji}>{profileNote.emoji || '✨'}</div>
+              <div className={styles.noteContent}>
+                {profileNote.text && <p className={styles.noteText}>{profileNote.text}</p>}
+                {profileNote.musicMetadata?.title && (
+                  <p className={styles.noteMusic}>Listening to {profileNote.musicMetadata.title}</p>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className={styles.profileHeader}>
             <div className={styles.avatarWrapper}>
               <Avatar
@@ -254,24 +284,20 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
           </div>
 
           <div className={styles.info}>
-            <h1 className={styles.username}>
-              {user.displayName || user.username}
-              {user.bot && <BotTag />}
-            </h1>
-            <p className={styles.handle}>@{user.username}{user.discriminator ? `#${user.discriminator}` : ''}</p>
+            <div className={styles.identityStack}>
+              <h1 className={styles.username}>
+                {user.displayName || user.username}
+                {user.bot && <BotTag />}
+              </h1>
+              <p className={styles.handle}>@{user.username}{user.discriminator ? `#${user.discriminator}` : ''}</p>
+            </div>
             <UserBadges badges={user.badges} isBot={user.bot} size="md" />
+            <div className={styles.pillRow}>
+              <span className={styles.metaPill}>{relationshipLabel}</span>
+              <span className={styles.metaPill}>{user.isBeaconPlus ? 'Beacon+' : 'Standard'}</span>
+              <span className={styles.metaPill}>{user.status || 'offline'}</span>
+            </div>
             {user.customStatus && <p className={styles.customStatus}>{user.customStatus}</p>}
-            {profileNote && (profileNote.text || profileNote.musicMetadata?.title) && (
-              <div className={styles.noteBubble}>
-                <div className={styles.noteEmoji}>{profileNote.emoji || '✨'}</div>
-                <div className={styles.noteContent}>
-                  {profileNote.text && <p className={styles.noteText}>{profileNote.text}</p>}
-                  {profileNote.musicMetadata?.title && (
-                    <p className={styles.noteMusic}>Listening to {profileNote.musicMetadata.title}</p>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           {canUseSocialActions && (
@@ -312,9 +338,29 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
         </div>
 
         <div className={styles.body}>
+          <div className={styles.summaryGrid}>
+            <div className={styles.summaryCard}>
+              <span><Crown size={12} /> Membership</span>
+              <strong>{user.isBeaconPlus ? 'Beacon+ Active' : 'Free Member'}</strong>
+            </div>
+            <div className={styles.summaryCard}>
+              <span><Sparkles size={12} /> Profile Effect</span>
+              <strong>{profileEffectLabel}</strong>
+            </div>
+            <div className={styles.summaryCardWide}>
+              <span><Sparkles size={12} /> Badges</span>
+              <strong>{badgeCount > 0 ? `${badgeCount} equipped` : 'No badges yet'}</strong>
+            </div>
+          </div>
+
+          <div className={styles.section}>
+            <h3>ABOUT</h3>
+            <p>{user.bio || 'No bio set yet.'}</p>
+          </div>
+
           <div className={styles.section}>
             <h3>BEACON MEMBER SINCE</h3>
-            <p>{formatSafeDate(user.joinedAt)}</p>
+            <p className={styles.memberSinceRow}><CalendarClock size={14} /> {formatSafeDate(user.joinedAt)}</p>
           </div>
         </div>
       </div>

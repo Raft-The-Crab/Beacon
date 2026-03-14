@@ -1,364 +1,138 @@
-# @beacon/sdk
+# beacon-sdk
 
-Official JavaScript/TypeScript SDK for Beacon - A comprehensive client library for building real-time communication applications.
+Official JavaScript and TypeScript SDK for Beacon.
 
-## Features
+Production version documented here: 1.2.0.
 
-- 🔐 **Authentication** - Complete auth flow with token management
-- 💬 **Real-time Messaging** - WebSocket-based instant messaging
-- 🎙️ **Voice & Video** - WebRTC voice and video calls
-- 👥 **User Management** - Presence, profiles, and relationships
-- 🏢 **Server Management** - Channels, roles, and permissions
-- 📡 **Event System** - Type-safe event emitters and handlers
-- 📦 **TypeScript First** - Full type definitions included
-- ⚡ **Performance** - Optimized for large-scale applications
-
-## Installation
+## Install
 
 ```bash
-npm install @beacon/sdk
-# or
-pnpm add @beacon/sdk
-# or
-yarn add @beacon/sdk
+npm install beacon-sdk
 ```
 
 ## Quick Start
 
-```typescript
-import { BeaconClient } from '@beacon/sdk'
+```ts
+import { BeaconClient } from 'beacon-sdk'
+import 'dotenv/config'
 
-// Initialize client (defaults to api.beacon.qzz.io + gateway.beacon.qzz.io)
-const beacon = new BeaconClient()
-
-// Authenticate (stores access token internally)
-await beacon.login('user@example.com', 'password')
-
-// Listen for messages
-beacon.on('message', (message) => {
-  console.log(`${message.author?.username ?? 'Unknown'}: ${message.content}`)
+const client = new BeaconClient({
+  token: process.env.BOT_TOKEN,
+  apiUrl: process.env.BEACON_API_URL,
+  wsUrl: process.env.BEACON_GATEWAY_URL,
+  reconnect: true,
+  reconnectAttempts: 10,
+  reconnectDelay: 2000,
 })
 
-// Send a message
-await beacon.messages.send('channel-id', {
-  content: 'Hello, Beacon!'
+client.on('ready', () => {
+  console.log('online as', client.user?.username)
 })
 
-// Connect to WebSocket
-await beacon.connect()
+client.on('messageCreate', async (msg) => {
+  if (msg.author.bot) return
+  if (msg.content === '!ping') await msg.reply('Pong')
+})
+
+client.login()
 ```
 
-## API Reference
+## Runtime URLs
 
-### Authentication
+- API: https://api.beacon.qzz.io/api
+- Railway API: https://beacon-v1-api.up.railway.app/api
+- Gateway: wss://gateway.beacon.qzz.io
 
-```typescript
-// Login with email and password (recommended)
-await beacon.login(email, password)
+## Main Exports
 
-// Register and authenticate
-await beacon.register(email, username, password)
+- BeaconClient
+- BotFramework
+- AuthAPI
+- MessagesAPI
+- ServersAPI
+- ChannelsAPI
+- UsersAPI
+- RolesAPI
+- PresenceAPI
+- VoiceAPI
+- NotificationsAPI
+- WebhooksAPI
+- InvitesAPI
 
-// Logout
-await beacon.logout()
-
-// Get current user
-const user = beacon.getCurrentUser()
-
-// Alternative low-level auth API (returns ApiResponse)
-const res = await beacon.auth.login(email, password)
-if (!res.success) throw new Error(res.error)
-```
+## API Usage Examples
 
 ### Messages
 
-```typescript
-// Send a message
-await beacon.messages.send(channelId, {
-  content: 'Hello!',
-  attachments: [...],
-  embeds: [...]
-})
-
-// Edit a message
-await beacon.messages.edit(channelId, messageId, {
-  content: 'Updated content'
-})
-
-// Delete a message
-await beacon.messages.delete(channelId, messageId)
-
-// Get message history
-const messages = await beacon.messages.getHistory(channelId, {
-  limit: 50,
-  before: messageId
-})
-
-// Add reaction
-await beacon.messages.addReaction(channelId, messageId, emoji)
-
-// Pin message
-await beacon.messages.pin(channelId, messageId)
+```ts
+await client.messages.send(channelId, { content: 'hello' })
+await client.messages.edit(channelId, messageId, { content: 'edited' })
+await client.messages.delete(channelId, messageId)
 ```
 
-### Servers
+### Servers and channels
 
-```typescript
-// Create a server
-const server = await beacon.servers.create({
-  name: 'My Server',
-  icon: '...'
-})
+```ts
+const guild = await client.servers.get(guildId)
+const channel = await client.channels.get(channelId)
+```
 
-// Get server details
-const server = await beacon.servers.get(serverId)
+### Users and roles
 
-// Update server
-await beacon.servers.update(serverId, {
-  name: 'New Name',
-  description: 'New Description'
-})
+```ts
+const me = await client.users.getMe()
+await client.roles.create(guildId, { name: 'Moderator' })
+```
 
-// Delete server
-await beacon.servers.delete(serverId)
+### Presence and voice
 
-// Create channel
-const channel = await beacon.servers.createChannel(serverId, {
-  name: 'general',
-  type: 'text'
+```ts
+await client.presence.update({ status: 'online' })
+await client.voice.join(channelId)
+```
+
+## New in 1.2.0
+
+### NotificationsAPI
+
+```ts
+const list = await client.notifications.getAll({ limit: 25 })
+const unread = await client.notifications.getUnreadCount()
+await client.notifications.markAllRead()
+```
+
+### WebhooksAPI
+
+```ts
+const hook = await client.webhooks.create(channelId, { name: 'DeployBot' })
+await client.webhooks.execute(hook.id, hook.token, {
+  content: 'Build completed',
 })
 ```
 
-### Channels
+### InvitesAPI
 
-```typescript
-// Get channel
-const channel = await beacon.channels.get(channelId)
-
-// Update channel
-await beacon.channels.update(channelId, {
-  name: 'new-name',
-  topic: 'Channel topic'
-})
-
-// Delete channel
-await beacon.channels.delete(channelId)
-
-// Set permissions
-await beacon.channels.setPermissions(channelId, roleId, {
-  allow: ['SEND_MESSAGES', 'VIEW_CHANNEL'],
-  deny: ['MANAGE_MESSAGES']
-})
-```
-
-### Users
-
-```typescript
-// Get user profile
-const user = await beacon.users.get(userId)
-
-// Update own profile
-await beacon.users.updateProfile({
-  displayName: 'New Name',
-  bio: 'My bio',
-  avatar: '...'
-})
-
-// Send friend request
-await beacon.users.sendFriendRequest(userId)
-
-// Get friends list
-const friends = await beacon.users.getFriends()
-```
-
-### Roles
-
-```typescript
-// Create role
-const role = await beacon.roles.create(serverId, {
-  name: 'Moderator',
-  color: '#FF5733',
-  icon: 'shield',
-  permissions: ['MANAGE_MESSAGES', 'KICK_MEMBERS']
-})
-
-// Update role
-await beacon.roles.update(serverId, roleId, {
-  name: 'Admin',
-  permissions: ['ADMINISTRATOR']
-})
-
-// Delete role
-await beacon.roles.delete(serverId, roleId)
-
-// Assign role to user
-await beacon.roles.assignToUser(serverId, userId, roleId)
-```
-
-### Presence
-
-```typescript
-// Update status
-await beacon.presence.updateStatus({
-  status: 'online', // 'online' | 'idle' | 'dnd' | 'invisible'
-  customStatus: 'Working on something cool'
-})
-
-// Get user presence
-const presence = await beacon.presence.get(userId)
-```
-
-### Voice
-
-```typescript
-// Join voice channel
-await beacon.voice.join(channelId)
-
-// Leave voice channel
-await beacon.voice.leave()
-
-// Mute/unmute
-await beacon.voice.setMute(true)
-
-// Deafen/undeafen
-await beacon.voice.setDeafen(true)
-
-// Start screen share
-await beacon.voice.startScreenShare()
-```
-
-## Events
-
-The SDK emits various events that you can listen to:
-
-```typescript
-// Message events
-beacon.on('message', (message) => {})
-beacon.on('messageUpdate', (message) => {})
-beacon.on('messageDelete', (data) => {})
-
-// Server events
-beacon.on('serverCreate', (server) => {})
-beacon.on('serverUpdate', (server) => {})
-beacon.on('serverDelete', (serverId) => {})
-
-// Channel events
-beacon.on('channelCreate', (channel) => {})
-beacon.on('channelUpdate', (channel) => {})
-beacon.on('channelDelete', (channelId) => {})
-
-// User events
-beacon.on('userUpdate', (user) => {})
-beacon.on('presenceUpdate', (presence) => {})
-beacon.on('typingStart', (data) => {})
-
-// Voice events
-beacon.on('voiceStateUpdate', (state) => {})
-beacon.on('speakingStart', (userId) => {})
-beacon.on('speakingStop', (userId) => {})
-
-// Connection events
-beacon.on('ready', () => {})
-beacon.on('disconnect', () => {})
-beacon.on('reconnect', () => {})
-beacon.on('error', (error) => {})
-```
-
-## Advanced Usage
-
-### Custom Event Handlers
-
-```typescript
-import { BeaconClient, EventHandler } from '@beacon/sdk'
-
-class MyMessageHandler extends EventHandler<'message'> {
-  async handle(message) {
-    // Custom message processing
-    console.log('Received:', message)
-  }
-}
-
-const beacon = new BeaconClient(options)
-beacon.registerHandler('message', new MyMessageHandler())
-```
-
-### Middleware
-
-```typescript
-// Add request middleware
-beacon.middleware.use(async (req, next) => {
-  console.log('Request:', req)
-  const res = await next(req)
-  console.log('Response:', res)
-  return res
-})
-```
-
-### Connection Options
-
-```typescript
-const beacon = new BeaconClient({
-  apiUrl: 'https://api.beacon.example.com',
-  wsUrl: 'wss://ws.beacon.example.com',
-  reconnect: true,
-  reconnectAttempts: 5,
-  reconnectDelay: 3000,
-  heartbeatInterval: 30000,
-  requestTimeout: 10000,
-  debug: true
-})
-```
-
-## TypeScript Support
-
-The SDK is written in TypeScript and includes full type definitions:
-
-```typescript
-import type {
-  Message,
-  Server,
-  Channel,
-  User,
-  Role,
-  Presence,
-  Permission
-} from '@beacon/sdk'
-
-// All types are fully typed
-beacon.on('message', (message: Message) => {
-  // TypeScript knows all message properties
-  console.log(message.content)
-})
+```ts
+const invite = await client.invites.create(channelId, { maxUses: 5 })
+await client.invites.accept(invite.code)
 ```
 
 ## Error Handling
 
-```typescript
+```ts
 try {
-  await beacon.messages.send(channelId, { content: 'test' })
+  await client.messages.send(channelId, { content: 'test' })
 } catch (error) {
-  if (error instanceof BeaconError) {
-    console.error('API Error:', error.code, error.message)
-  } else {
-    console.error('Unknown error:', error)
-  }
+  console.error('request failed', error)
 }
 ```
 
-## Best Practices
+## Production Notes
 
-1. **Always handle errors** - Wrap API calls in try-catch blocks
-2. **Clean up listeners** - Remove event listeners when components unmount
-3. **Use TypeScript** - Take advantage of full type safety
-4. **Rate limiting** - Be aware of API rate limits
-5. **Connection management** - Handle disconnections gracefully
-6. **Token refresh** - Implement token refresh logic
-7. **Caching** - Cache frequently accessed data locally
+- Keep tokens in environment variables.
+- Restrict gateway intents to only what your app needs.
+- Use reconnect settings in unstable network environments.
+- Prefer typed SDK APIs over raw fetch calls for auth and retry consistency.
 
 ## License
 
 MIT
-
-## Support
-
-For issues and questions, please visit our [GitHub Issues](https://github.com/beacon/beacon/issues)

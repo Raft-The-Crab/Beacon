@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect } from 'react'
+﻿import React, { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -9,6 +9,7 @@ import { apiClient } from './services/apiClient'
 import { useMessageStore } from './stores/useMessageStore'
 import { usePinnedMessagesStore } from './stores/usePinnedMessagesStore'
 import { useServerStore } from './stores/useServerStore'
+import { useRolesStore } from './stores/useRolesStore'
 import { useUserListStore } from './stores/useUserListStore'
 import { useDMStore } from './stores/useDMStore'
 import { useAuthStore } from './stores/useAuthStore'
@@ -53,6 +54,7 @@ const GatewayDocs = lazy(() => import('./pages/docs/GatewayDocs').then(m => ({ d
 const Mission = lazy(() => import('./pages/docs/Mission').then(m => ({ default: m.Mission })))
 const BotCommands = lazy(() => import('./pages/docs/BotCommands').then(m => ({ default: m.BotCommands })))
 const BeaconPlusStore = lazy(() => import('./pages/BeaconPlusStore').then(m => ({ default: m.BeaconPlusStore })))
+const InvitePage = lazy(() => import('./pages/InvitePage').then(m => ({ default: m.InvitePage })))
 const SafetyHub = lazy(() => import('./pages/SafetyHub').then(m => ({ default: m.SafetyHub })))
 const PartnerPortal = lazy(() => import('./pages/PartnerPortal').then(m => ({ default: m.PartnerPortal })))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
@@ -89,6 +91,12 @@ export function App() {
   const handleMessageCreate = useMessageStore((s) => s.handleMessageCreate)
   const handleMessageUpdate = useMessageStore((s) => s.handleMessageUpdate)
   const handleMessageDelete = useMessageStore((s) => s.handleMessageDelete)
+    const handleGuildCreateWs = useServerStore((s) => s.handleGuildCreate)
+    const handleGuildUpdateWs = useServerStore((s) => s.handleGuildUpdate)
+    const handleChannelCreateWs = useServerStore((s) => s.handleChannelCreate)
+    const handleChannelUpdateWs = useServerStore((s) => s.handleChannelUpdate)
+    const handleChannelDeleteWs = useServerStore((s) => s.handleChannelDelete)
+    const handleMemberRemoveWs = useServerStore((s) => s.handleMemberRemove)
   const pinMessage = usePinnedMessagesStore((s) => s.pinMessage)
   const unpinMessage = usePinnedMessagesStore((s) => s.unpinMessage)
   const setPresence = usePresenceStore((s) => s.setPresence)
@@ -230,6 +238,41 @@ export function App() {
             channelId: data.channelId,
           } as any)
           break
+          case 'GUILD_CREATE':
+            if (data) handleGuildCreateWs(data)
+            break
+          case 'GUILD_UPDATE':
+            if (data?.guildId || data?.id) handleGuildUpdateWs(data.guildId || data.id, data.guild || data)
+            break
+          case 'GUILD_ROLE_CREATE':
+            if (data?.guildId) useRolesStore.getState().fetchRoles(data.guildId)
+            break
+          case 'GUILD_ROLE_UPDATE':
+            if (data?.guildId) useRolesStore.getState().fetchRoles(data.guildId)
+            break
+          case 'GUILD_ROLE_DELETE':
+            if (data?.guildId) useRolesStore.getState().fetchRoles(data.guildId)
+            break
+          case 'GUILD_ROLES_REORDER':
+            if (data?.guildId) useRolesStore.getState().fetchRoles(data.guildId)
+            break
+          case 'GUILD_MEMBER_UPDATE':
+            // Member data updated (e.g. nick change) â€” re-fetch guild for member list accuracy
+            if (data?.guildId) useServerStore.getState().fetchGuild(data.guildId)
+            break
+          case 'GUILD_MEMBER_REMOVE':
+          case 'GUILD_MEMBER_BAN':
+            if (data?.guildId && data?.userId) handleMemberRemoveWs(data.guildId, data.userId)
+            break
+          case 'CHANNEL_CREATE':
+            if (data?.guildId) handleChannelCreateWs(data)
+            break
+          case 'CHANNEL_UPDATE':
+            if (data?.guildId && data?.id) handleChannelUpdateWs(data.guildId, data.id, data)
+            break
+          case 'CHANNEL_DELETE':
+            if (data?.guildId && data?.id) handleChannelDeleteWs(data.guildId, data.id)
+            break
         default:
           break
       }
@@ -239,7 +282,7 @@ export function App() {
     return () => {
       wsClient.off('*', handler)
     }
-  }, [handleMessageCreate, handleMessageUpdate, handleMessageDelete, pinMessage, unpinMessage, setPresence, addNotification])
+  }, [handleMessageCreate, handleMessageUpdate, handleMessageDelete, pinMessage, unpinMessage, setPresence, addNotification, handleGuildCreateWs, handleGuildUpdateWs, handleChannelCreateWs, handleChannelUpdateWs, handleChannelDeleteWs, handleMemberRemoveWs])
 
   const location = useLocation()
   const appRouteRequiresAuth = location.pathname.startsWith('/channels') || location.pathname.startsWith('/server/') || location.pathname === '/voice'
@@ -311,6 +354,7 @@ export function App() {
                   <Route path="/voice" element={isAuthenticated ? <VoiceChannel /> : <Navigate to="/login" replace />} />
                   <Route path="/plus" element={<ShopRoute />} />
                   <Route path="/shop" element={<ShopRoute />} />
+                                    <Route path="/invite/:code" element={<InvitePage />} />
                   <Route path="/safety-hub" element={<SafetyHub />} />
                   <Route path="/partner" element={<PartnerPortal />} />
 

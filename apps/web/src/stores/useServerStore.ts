@@ -52,6 +52,10 @@ interface ServerState {
 
   handleGuildCreate: (guild: Server) => void;
   handleChannelCreate: (channel: Channel) => void;
+    handleGuildUpdate: (guildId: string, updates: Partial<Server>) => void;
+    handleChannelUpdate: (guildId: string, channelId: string, updates: Partial<Channel>) => void;
+    handleChannelDelete: (guildId: string, channelId: string) => void;
+    handleMemberRemove: (guildId: string, userId: string) => void;
 }
 
 export const useServerStore = create<ServerState>((set, get) => ({
@@ -358,5 +362,41 @@ export const useServerStore = create<ServerState>((set, get) => ({
         ? { ...state.currentServer, channels: [...(state.currentServer?.channels || []).filter(c => (c as Channel).id !== channel.id), channel] } as Server
         : state.currentServer
     }))
-  }
+  },
+
+    handleGuildUpdate: (guildId, updates) =>
+      set(state => ({
+        servers: state.servers.map(s => s.id === guildId ? { ...s, ...updates } : s),
+        currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...updates } as Server) : state.currentServer
+      })),
+
+    handleChannelUpdate: (guildId, channelId, updates) =>
+      set(state => ({
+        servers: state.servers.map(s => s.id === guildId
+          ? { ...s, channels: s.channels?.map(c => (c as Channel).id === channelId ? { ...c, ...updates } : c) || [] }
+          : s),
+        currentServer: state.currentServerId === guildId
+          ? { ...state.currentServer!, channels: state.currentServer?.channels?.map(c => (c as Channel).id === channelId ? { ...c, ...updates } : c) || [] } as Server
+          : state.currentServer
+      })),
+
+    handleChannelDelete: (guildId, channelId) =>
+      set(state => ({
+        servers: state.servers.map(s => s.id === guildId
+          ? { ...s, channels: s.channels?.filter(c => (c as Channel).id !== channelId) || [] }
+          : s),
+        currentServer: state.currentServerId === guildId
+          ? { ...state.currentServer!, channels: state.currentServer?.channels?.filter(c => (c as Channel).id !== channelId) || [] } as Server
+          : state.currentServer
+      })),
+
+    handleMemberRemove: (guildId, userId) =>
+      set(state => ({
+        servers: state.servers.map(s => s.id === guildId
+          ? { ...s, members: (s as any).members?.filter((m: any) => m.userId !== userId) || [] }
+          : s),
+        currentServer: state.currentServerId === guildId
+          ? { ...state.currentServer!, members: (state.currentServer as any)?.members?.filter((m: any) => m.userId !== userId) || [] } as Server
+          : state.currentServer
+      })),
 }))

@@ -1,9 +1,11 @@
+import { publishGatewayEvent } from '../services/gatewayPublisher';
 import { Request, Response } from 'express';
 import { prisma } from '../db';
 import { AuditLogService, AuditLogAction } from '../services/auditLog';
 import { CacheService } from '../services/cache';
 import { Permissions, hasPermission, computePermissions } from '../utils/permissions';
 import { serializeBigInt } from '../utils/serializeBigInt';
+import { generateInviteCode, generateShortId } from '../utils/id';
 import { z } from 'zod';
 
 const CreateGuildSchema = z.object({
@@ -19,7 +21,12 @@ const CreateRoleSchema = z.object({
 });
 
 // Local stub — SocketService will be wired via gateway when available
-const SocketService = { emitToRoom: (_room: string, _event: string, _data: unknown) => { } };
+// Delegate real-time events through the Redis gateway publisher
+const SocketService = {
+    emitToRoom: (room: string, event: string, data: unknown) => {
+        void publishGatewayEvent(event, data as any, room);
+    }
+};
 
 export class GuildController {
     static async createGuild(req: Request, res: Response) {
@@ -35,14 +42,29 @@ export class GuildController {
                 return res.status(400).json({ error: 'Your session has expired. Please log out and register again.' });
             }
 
+            // Enforce unique server names (case-insensitive)
+            const existingGuild = await prisma.guild.findFirst({
+                where: { name: { equals: name, mode: 'insensitive' } },
+                select: { id: true }
+            });
+            if (existingGuild) {
+                return res.status(409).json({ error: `A server named "${name}" already exists. Please choose a different name.` });
+            }
+
             console.log(`[GUILD_CREATE] Starting guild creation for user: ${userId}`);
             const newGuild = await prisma.$transaction(async (tx: any) => {
+                const guildId = generateShortId('g', 12);
+                const generalTextChannelId = generateShortId('c', 12);
+                const generalVoiceChannelId = generateShortId('c', 12);
+
                 console.log(`[GUILD_CREATE] Step 1: Creating guild...`);
                 const guild = await tx.guild.create({
                     data: {
+                        id: guildId,
                         name,
                         icon,
                         tags: tags || [],
+                        inviteCode: generateInviteCode(8),
                         ownerId: userId
                     }
                 });
@@ -51,8 +73,8 @@ export class GuildController {
                 console.log(`[GUILD_CREATE] Step 2: Creating default channels...`);
                 await tx.channel.createMany({
                     data: [
-                        { name: 'general', type: 'TEXT', guildId: guild.id, position: 0 },
-                        { name: 'General', type: 'VOICE', guildId: guild.id, position: 1 }
+                        { id: generalTextChannelId, name: 'general', type: 'TEXT', guildId: guild.id, position: 0 },
+                        { id: generalVoiceChannelId, name: 'General', type: 'VOICE', guildId: guild.id, position: 1 }
                     ]
                 });
                 console.log(`[GUILD_CREATE] Step 2: OK`);
@@ -170,6 +192,60 @@ export class GuildController {
             res.json(guild);
         } catch (error) {
             res.status(500).json({ error: 'Failed to update guild' });
+        }
+    }
+
+    static async setVerificationStatus(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const userId = req.user?.id;
+            const { verified } = req.body as { verified?: unknown };
+
+            if (typeof verified !== 'boolean') {
+                return res.status(400).json({ error: 'Field "verified" must be boolean' });
+            }
+
+            const guild = await prisma.guild.findUnique({
+                where: { id },
+                select: { id: true, ownerId: true, verified: true },
+            });
+
+            if (!guild) {
+                return res.status(404).json({ error: 'Guild not found' });
+            }
+
+            if (!userId || guild.ownerId !== userId) {
+                return res.status(403).json({ error: 'Only server owners can update verification status' });
+            }
+
+            const updated = await prisma.guild.update({
+                where: { id },
+                data: { verified },
+                select: {
+                    id: true,
+                    name: true,
+                    verified: true,
+                    boostCount: true,
+                    boostLevel: true,
+                    vanityUrl: true,
+                },
+            });
+
+            await CacheService.del(`guild:${id}`);
+            await AuditLogService.log(id as string, userId, AuditLogAction.GUILD_UPDATE, {
+                verifiedBefore: guild.verified,
+                verifiedAfter: updated.verified,
+            });
+
+            SocketService.emitToRoom(id as string, 'GUILD_VERIFIED_UPDATE', {
+                guildId: id,
+                verified: updated.verified,
+            });
+
+            return res.json(updated);
+        } catch (error) {
+            console.error('Update verification status error:', error);
+            return res.status(500).json({ error: 'Failed to update verification status' });
         }
     }
 
@@ -424,13 +500,7 @@ export class GuildController {
                 return res.status(403).json({ error: 'You must be a member of this guild to create invites' });
             }
 
-            // Check permissions
-            const member = guild.members[0];
-            const hasPermission = member.roles?.some((role) => role.name === 'ADMIN' || role.name === 'MANAGE_SERVER') || guild.ownerId === userId;
-            
-            if (!hasPermission) {
-                return res.status(403).json({ error: 'You lack permission to create invites' });
-            }
+            // Permit invite generation for members; role-gated moderation can still revoke/manage invites elsewhere.
 
             // Create invite with unique code
             const code = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
@@ -442,8 +512,8 @@ export class GuildController {
                     code,
                     guildId,
                     expiresAt,
-                    createdBy: userId
-                } as any
+                    inviterId: userId
+                }
             });
 
             // Clear cache
@@ -1048,6 +1118,40 @@ export class GuildController {
         } catch (error) {
             console.error('[GET_INVITES]', error);
             res.status(500).json({ error: 'Failed to fetch invites' });
+        }
+    }
+
+    static async previewInvite(req: Request, res: Response) {
+        try {
+            const { inviteCode } = req.params as { inviteCode: string };
+            const invite = await prisma.invite.findUnique({
+                where: { code: inviteCode },
+                include: {
+                    guild: {
+                        select: {
+                            id: true,
+                            name: true,
+                            icon: true,
+                            verified: true,
+                            boostLevel: true,
+                            _count: { select: { members: true } },
+                        }
+                    }
+                }
+            });
+            if (!invite) {
+                return res.status(404).json({ error: 'Invite not found or has expired.' });
+            }
+            if (invite.expiresAt && invite.expiresAt.getTime() <= Date.now()) {
+                return res.status(410).json({ error: 'This invite has expired.' });
+            }
+            if (invite.maxUses > 0 && invite.uses >= invite.maxUses) {
+                return res.status(410).json({ error: 'This invite has reached its maximum uses.' });
+            }
+            return res.json({ success: true, data: invite.guild });
+        } catch (error) {
+            console.error('Preview invite error:', error);
+            return res.status(500).json({ error: 'Failed to fetch invite information.' });
         }
     }
 

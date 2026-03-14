@@ -2,9 +2,13 @@
 import { Plus, RefreshCw, Trash2, Copy, Check, Shield, Zap, Terminal, ExternalLink, AlertTriangle, Info, Bot as BotIcon } from 'lucide-react'
 import { botsApi, Bot as BotModel } from '../../api/bots'
 import { Button } from '../ui/Button'
+import { useToast } from '../ui/Toast'
+import { apiClient } from '../../services/apiClient'
+import { WEB_SDK_ENDPOINTS } from '../../lib/beaconSdk'
 import styles from '../../styles/modules/dev/BotConsole.module.css'
 
 export function BotConsole({ applicationId }: { applicationId: string }) {
+    const { show: showToast } = useToast()
     const [bots, setBots] = useState<BotModel[]>([])
     const [loading, setLoading] = useState(true)
     const [creating, setCreating] = useState(false)
@@ -13,24 +17,92 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
     const [showToken, setShowToken] = useState(false)
     const [copied, setCopied] = useState(false)
     const [logs, setLogs] = useState<{ time: string; level: string; message: string }[]>([])
+    const [apiHealthy, setApiHealthy] = useState<boolean | null>(null)
+    const [aiHealthy, setAiHealthy] = useState<boolean | null>(null)
+    const [botErrorCount, setBotErrorCount] = useState<number | null>(null)
+    const [botUptimeSec, setBotUptimeSec] = useState<number | null>(null)
+
+    const addLog = (level: 'info' | 'warn' | 'error', message: string) => {
+        setLogs(prev => {
+            const next = [...prev, { time: new Date().toLocaleTimeString(), level, message }]
+            return next.slice(-80)
+        })
+    }
+
+    const checkApiHealth = async () => {
+        const root = WEB_SDK_ENDPOINTS.apiUrl.replace(/\/?api\/?$/i, '')
+        try {
+            const res = await fetch(`${root}/health`, { method: 'GET', credentials: 'include' })
+            const json = await res.json().catch(() => ({}))
+            const healthy = Boolean(res.ok && json?.status === 'healthy')
+            setApiHealthy(healthy)
+            addLog(healthy ? 'info' : 'warn', healthy ? 'API health check passed' : 'API health check degraded')
+        } catch {
+            setApiHealthy(false)
+            addLog('error', 'API health check failed')
+        }
+    }
+
+    const checkAiHealth = async () => {
+        try {
+            const res = await apiClient.request('GET', '/ai/status')
+            const healthy = Boolean(res.success && res.data?.modelStatus === 'reachable')
+            setAiHealthy(healthy)
+            addLog(healthy ? 'info' : 'warn', healthy ? 'AI moderation pipeline online' : 'AI moderation pipeline unavailable')
+        } catch {
+            setAiHealthy(false)
+            addLog('error', 'AI sanity check request failed')
+        }
+    }
+
+    const loadBotMetrics = async (botId?: string) => {
+        if (!botId) {
+            setBotErrorCount(null)
+            setBotUptimeSec(null)
+            return
+        }
+        try {
+            const res = await apiClient.request('GET', `/analytics/bot/${botId}`)
+            if (!res.success || !res.data?.metrics) {
+                setBotErrorCount(null)
+                setBotUptimeSec(null)
+                return
+            }
+            setBotErrorCount(Number(res.data.metrics.errorCount ?? 0))
+            setBotUptimeSec(Number(res.data.metrics.uptimeSeconds ?? 0))
+        } catch {
+            setBotErrorCount(null)
+            setBotUptimeSec(null)
+        }
+    }
 
     useEffect(() => {
-        loadBots()
-        // Initialize with default logs
-        setLogs([
-            { time: new Date().toLocaleTimeString(), level: 'info', message: 'Gateway initialized (Target: gateway.beacon.qzz.io)' },
-            { time: new Date().toLocaleTimeString(), level: 'info', message: 'Ready to receive payload' },
-            { time: new Date().toLocaleTimeString(), level: 'info', message: 'Listening for real-time events...' }
-        ])
+        void loadBots()
+        void checkApiHealth()
+        void checkAiHealth()
+        setLogs([{ time: new Date().toLocaleTimeString(), level: 'info', message: 'Infrastructure monitor ready.' }])
+
+        const interval = setInterval(() => {
+            void checkApiHealth()
+            void checkAiHealth()
+        }, 45000)
+
+        return () => clearInterval(interval)
     }, [applicationId])
 
     const loadBots = async () => {
         try {
             const data = await botsApi.list(applicationId)
             setBots(data || [])
+            if (data?.length) {
+                void loadBotMetrics(data[0].id)
+            } else {
+                void loadBotMetrics(undefined)
+            }
         } catch (err) {
             console.error('Failed to load bots', err)
             setBots([])
+            addLog('error', 'Failed to load bots')
         } finally {
             setLoading(false)
         }
@@ -44,8 +116,13 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
             setLastToken(bot.token || null)
             setCreating(false)
             setNewBotName('')
+            showToast('Bot created successfully', 'success')
+            addLog('info', `Bot created: ${bot.name}`)
+            void loadBotMetrics(bot.id)
         } catch (err) {
             console.error('Failed to create bot', err)
+            showToast((err as Error)?.message || 'Failed to create bot', 'error')
+            addLog('error', 'Bot creation failed')
         }
     }
 
@@ -55,9 +132,12 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
             const { token } = await botsApi.regenerateToken(applicationId)
             setLastToken(token)
             setShowToken(true)
+            showToast('Token regenerated', 'success')
+            addLog('warn', 'Bot token regenerated')
         } catch (err: any) {
             console.error('Failed to regenerate token', err)
-            alert(err.message || 'Failed to regenerate token')
+            showToast(err.message || 'Failed to regenerate token', 'error')
+            addLog('error', 'Token regeneration failed')
         }
     }
 
@@ -66,8 +146,14 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
         try {
             await botsApi.delete(applicationId)
             setBots([])
+            setBotErrorCount(null)
+            setBotUptimeSec(null)
+            showToast('Bot deleted', 'success')
+            addLog('warn', 'Bot deleted')
         } catch (err) {
             console.error('Failed to delete bot', err)
+            showToast((err as Error)?.message || 'Failed to delete bot', 'error')
+            addLog('error', 'Bot deletion failed')
         }
     }
 
@@ -75,6 +161,7 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
         if (lastToken) {
             navigator.clipboard.writeText(lastToken)
             setCopied(true)
+            showToast('Token copied to clipboard', 'success')
             setTimeout(() => setCopied(false), 2000)
         }
     }
@@ -87,6 +174,14 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                 <div className={styles.headerTitle}>
                     <Shield size={20} style={{ color: 'var(--beacon-brand)' }} />
                     <h3>Infrastructure Console</h3>
+                </div>
+                <div className={styles.headerBadges}>
+                    <span style={{ fontSize: 11, padding: '4px 8px', borderRadius: 999, background: apiHealthy === false ? 'rgba(242,63,67,0.15)' : 'rgba(46,160,67,0.15)', color: apiHealthy === false ? '#f23f43' : '#2ea043' }}>
+                        API {apiHealthy === false ? 'Offline' : 'Online'}
+                    </span>
+                    <span style={{ fontSize: 11, padding: '4px 8px', borderRadius: 999, background: aiHealthy === false ? 'rgba(242,63,67,0.15)' : 'rgba(46,160,67,0.15)', color: aiHealthy === false ? '#f23f43' : '#2ea043' }}>
+                        AI {aiHealthy === false ? 'Degraded' : 'Connected'}
+                    </span>
                 </div>
                 {!creating && bots.length === 0 && (
                     <Button variant="primary" size="sm" onClick={() => setCreating(true)}>
@@ -102,7 +197,7 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                     </div>
                     <div className={styles.tokenValue}>
                         <code>{showToken ? lastToken : '••••••••••••••••••••••••••••••••'}</code>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div className={styles.tokenActions}>
                             <button onClick={() => setShowToken(!showToken)} className={styles.copyBtn}>
                                 {showToken ? <RefreshCw size={14} /> : <Zap size={14} />}
                             </button>
@@ -185,12 +280,20 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                         <div className={styles.terminalTitle}>
                             <Terminal size={14} /> Live Logs
                         </div>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <div className={styles.terminalActions}>
+                            <button onClick={() => { void checkApiHealth(); void checkAiHealth(); }} style={{ fontSize: 10, opacity: 0.75, border: 'none', background: 'transparent', color: 'white', cursor: 'pointer' }}>REFRESH</button>
                             <button onClick={clearLogs} style={{ fontSize: 10, opacity: 0.5, border: 'none', background: 'transparent', color: 'white', cursor: 'pointer' }}>CLEAR</button>
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2ea043' }} title="WebSocket Connected" />
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: apiHealthy === false ? '#f23f43' : '#2ea043' }} title="Backend Health" />
                         </div>
                     </div>
                     <div className={styles.terminalBody}>
+                        {(botErrorCount !== null || botUptimeSec !== null) && (
+                            <div className={styles.logEntry}>
+                                <span className={styles.logTime}>[metrics]</span>
+                                <span className={`${styles.logLevel} ${styles.info}`}>info</span>
+                                <span>botErrors={botErrorCount ?? 0}, botUptime={botUptimeSec ?? 0}s</span>
+                            </div>
+                        )}
                         {logs.map((log, i) => (
                             <div key={i} className={styles.logEntry}>
                                 <span className={styles.logTime}>[{log.time}]</span>

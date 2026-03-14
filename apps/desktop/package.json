@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@beacon/types": "file:../../packages/types",
-    "@beacon/api-client": "file:../../packages/api-client",
+    "beacon-sdk": "file:../../packages/sdk",
     "@tauri-apps/api": "^2.0.0"
   },
   "devDependencies": {

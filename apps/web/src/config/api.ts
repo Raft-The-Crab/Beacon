@@ -1,40 +1,12 @@
-function normalizeApiBaseUrl(rawUrl: string): string {
-  const trimmed = rawUrl.trim().replace(/\/+$/, '')
-  if (!trimmed) return '/api'
-  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`
-}
-
-function resolveWebSocketUrl(rawUrl?: string): string {
-  const configured = (rawUrl || '').trim()
-
-  if (!configured) {
-    if (typeof window !== 'undefined' && import.meta.env.DEV) {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      return `${protocol}//${window.location.host}/gateway`
-    }
-    return 'wss://gateway.beacon.qzz.io'
-  }
-
-  if (configured.startsWith('/')) {
-    if (typeof window !== 'undefined') {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      return `${protocol}//${window.location.host}${configured}`
-    }
-    return configured
-  }
-
-  return configured
-}
+import { API_BASE_URL, WS_BASE_URL } from './endpoints'
 
 // Backend API Configuration
 export const API_CONFIG = {
   // Production API URL (Railway deployment)
-  BASE_URL: import.meta.env.DEV
-    ? '/api'
-    : normalizeApiBaseUrl(import.meta.env.VITE_API_URL || 'https://api.beacon.qzz.io'),
+  BASE_URL: API_BASE_URL,
 
   // WebSocket Gateway URL
-  WS_URL: resolveWebSocketUrl(import.meta.env.VITE_WS_URL),
+  WS_URL: WS_BASE_URL,
 
   // Supabase PostgreSQL (via API proxy for security)
   SUPABASE_URL: 'https://db.cikitgsftvtpnjdiigxf.supabase.co',

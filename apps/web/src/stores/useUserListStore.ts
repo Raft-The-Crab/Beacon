@@ -2,13 +2,21 @@ import { create } from 'zustand'
 import type { User, PresenceStatus } from '@beacon/types'
 import { api } from '../lib/api'
 
+function extractFriendsPayload(payload: any): any[] {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.friends)) return payload.friends
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.data?.friends)) return payload.data.friends
+  return []
+}
+
 async function fetchFriendsList() {
   try {
     const { data } = await api.get('/users/me/friends')
-    return data
+    return extractFriendsPayload(data)
   } catch {
     const { data } = await api.get('/friends')
-    return data
+    return extractFriendsPayload(data)
   }
 }
 
@@ -49,7 +57,7 @@ export const useUserListStore = create<UserListState>((set, get) => ({
     try {
       const data = await fetchFriendsList()
       const deduped = new Map<string, any>()
-      for (const friend of Array.isArray(data) ? data : []) {
+      for (const friend of extractFriendsPayload(data)) {
         const key = String(friend?.id || `${friend?.username || ''}#${friend?.discriminator || '0000'}`)
         if (!key) continue
         deduped.set(key, friend)
@@ -59,7 +67,15 @@ export const useUserListStore = create<UserListState>((set, get) => ({
         discriminator: friend?.discriminator || '0000',
         status: friend?.status || 'offline'
       }))
-      set({ friends: friendsList })
+      set((state) => {
+        const users = new Map(state.users)
+        for (const friend of friendsList) {
+          if (friend?.id) {
+            users.set(friend.id, friend)
+          }
+        }
+        return { friends: friendsList, users }
+      })
     } catch (e) {
       console.error('Failed to fetch friends', e)
     }
@@ -69,7 +85,7 @@ export const useUserListStore = create<UserListState>((set, get) => ({
     try {
       const data = await fetchFriendsList()
       const deduped = new Map<string, any>()
-      for (const friend of Array.isArray(data) ? data : []) {
+      for (const friend of extractFriendsPayload(data)) {
         const key = String(friend?.id || `${friend?.username || ''}#${friend?.discriminator || '0000'}`)
         if (!key) continue
         deduped.set(key, friend)
@@ -79,7 +95,15 @@ export const useUserListStore = create<UserListState>((set, get) => ({
         discriminator: friend?.discriminator || '0000',
         status: friend?.status || 'offline'
       }))
-      set({ friends: friendsList })
+      set((state) => {
+        const users = new Map(state.users)
+        for (const friend of friendsList) {
+          if (friend?.id) {
+            users.set(friend.id, friend)
+          }
+        }
+        return { friends: friendsList, users }
+      })
     } catch (e) {
       console.error('UserList eager load failed', e)
     }

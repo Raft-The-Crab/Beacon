@@ -35,11 +35,10 @@ export function ServerBoosting({ onClose }: ServerBoostingProps) {
         try {
             await boostGuild(currentServer.id)
             await fetchWallet()
-            show("Server Boosted! 🚀", "success")
+            show("Boost applied successfully!", "success")
         } catch (err: any) {
             show(err?.response?.data?.error || "Failed to boost", "error")
         } finally {
-            setLoading(true)
             // Small delay for animation feel
             setTimeout(() => setLoading(false), 800)
         }
@@ -118,7 +117,7 @@ export function ServerBoosting({ onClose }: ServerBoostingProps) {
                     onClick={handleBoost}
                     disabled={loading || balance < 1000}
                 >
-                    {loading ? "Boosting..." : `Boost Server (🪙 1,000)`}
+                    {loading ? "Applying Boost..." : `Boost Server (🪙 1,000)`}
                 </button>
             </div>
         </div>

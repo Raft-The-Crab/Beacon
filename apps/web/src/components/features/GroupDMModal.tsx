@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import styles from '../../styles/modules/features/GroupDMModal.module.css';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../config/endpoints';
 
 interface Friend {
   id: string;
@@ -15,27 +16,16 @@ interface GroupDMModalProps {
   onClose: () => void;
 }
 
-function normalizeApiBaseUrl(rawUrl: string): string {
-  const trimmed = rawUrl.trim().replace(/\/+$/, '');
-  if (!trimmed) return '/api';
-  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
-}
-
-const API_BASE = normalizeApiBaseUrl(
-  import.meta.env.DEV
-    ? '/api'
-    : (import.meta.env.VITE_API_URL ||
-      import.meta.env.VITE_BACKEND_URL ||
-      '/api')
-);
+const API_BASE = API_BASE_URL;
 
 function getToken() {
-  return localStorage.getItem('beacon_token') || localStorage.getItem('accessToken') || '';
+  return localStorage.getItem('beacon_token') || localStorage.getItem('token') || localStorage.getItem('accessToken') || '';
 }
 
 async function apiFetch(path: string, options?: RequestInit) {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getToken()}`,

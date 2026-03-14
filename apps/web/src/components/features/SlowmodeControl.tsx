@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import styles from '../../styles/modules/features/SlowmodeControl.module.css';
+import { API_BASE_URL } from '../../config/endpoints';
 
 interface SlowmodeControlProps {
   channelId: string;
@@ -24,19 +25,7 @@ const SLOWMODE_PRESETS = [
   { label: '6h', value: 21600 },
 ];
 
-function normalizeApiBaseUrl(rawUrl: string): string {
-  const trimmed = rawUrl.trim().replace(/\/+$/, '');
-  if (!trimmed) return '/api';
-  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
-}
-
-const API_BASE = normalizeApiBaseUrl(
-  import.meta.env.DEV
-    ? '/api'
-    : (import.meta.env.VITE_API_URL ||
-      import.meta.env.VITE_BACKEND_URL ||
-      '/api')
-);
+const API_BASE = API_BASE_URL;
 
 function getToken() {
   return localStorage.getItem('beacon_token') || localStorage.getItem('accessToken') || '';

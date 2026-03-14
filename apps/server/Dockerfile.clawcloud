@@ -1,29 +1,69 @@
 # --- Stage 1: Build ---
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
+
+LABEL maintainer="Beacon Team"
+LABEL org.opencontainers.image.description="Beacon main server (ClawCloud Run)"
+
 WORKDIR /app
-RUN apk add --no-cache openssl
+
+# Build deps: SWI-Prolog for moderation, native addons for nsfwjs (@tensorflow/tfjs-node)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl \
+    g++ \
+    make \
+    python3 \
+    swi-prolog \
+    ca-certificates \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
+COPY packages/types/package.json ./packages/types/
+COPY packages/sdk/package.json ./packages/sdk/
+COPY apps/server/package.json ./apps/server/
+
+COPY packages/types ./packages/types
+COPY packages/sdk ./packages/sdk
+COPY apps/server ./apps/server
+
 RUN npm install
-COPY . .
-RUN npx prisma generate
+
+WORKDIR /app/packages/types
 RUN npm run build
 
-# --- Stage 2: Production ---
-FROM node:20-alpine
+WORKDIR /app/packages/sdk
+RUN npm run build
+
+WORKDIR /app/apps/server
+RUN npm run build
+
+# --- Stage 2: Runtime ---
+FROM node:20-bookworm-slim
+
 WORKDIR /app
-RUN apk add --no-cache openssl
 
-# Copy only necessary files
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/server-clawcloud.js ./
+# Runtime deps: SWI-Prolog for moderation pipeline, tini for proper signal handling
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl \
+    swi-prolog \
+    tini \
+    ca-certificates \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install ONLY production dependencies
-RUN npm install --omit=dev
-RUN npx prisma generate
+ENV NODE_ENV=production
+ENV ENABLE_WS_SERVER=true
 
-EXPOSE 8080
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/types ./packages/types
+COPY --from=builder /app/packages/sdk ./packages/sdk
+COPY --from=builder /app/apps/server ./apps/server
 
-# Use optimized production wrapper for ClawCloud (API Server)
+WORKDIR /app/apps/server
+EXPOSE 8080 4001
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD wget -qO- http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "server-clawcloud.js"]

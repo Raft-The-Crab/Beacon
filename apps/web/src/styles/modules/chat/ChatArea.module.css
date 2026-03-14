@@ -2,11 +2,15 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: transparent;
+  background: var(--bg-surface-elevated, var(--bg-primary));
   min-width: 0;
   position: relative;
   overflow: visible;
   transition: all 0.2s var(--ease-out);
+}
+
+:global([data-theme="glass"]) .chatArea {
+  background: #181a1f;
 }
 
 .header {
@@ -306,6 +310,36 @@
 
 .messages::-webkit-scrollbar-thumb:hover {
   background: var(--border-color);
+}
+
+.membersModalList {
+  display: flex;
+  flex-direction: column;
+}
+
+.memberModalRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.memberModalMeta {
+  min-width: 0;
+}
+
+.memberModalName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.memberModalSub {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.2;
 }
 
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Tablet ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */

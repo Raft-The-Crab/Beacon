@@ -1,10 +1,11 @@
 ﻿import { useState, useEffect, useRef } from 'react'
-import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book, AlignLeft, Layers, Zap, Palette, ChevronDown, Gift, ImageIcon, Trash2 } from 'lucide-react'
+import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book, AlignLeft, Layers, Zap, Palette, Gift, ImageIcon, Trash2 } from 'lucide-react'
 import { useUIStore } from '../../stores/useUIStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useServerStore } from '../../stores/useServerStore'
 import { useNavigate } from 'react-router-dom'
-import { Button, Input, AvatarUpload, Switch, Avatar, Dropdown } from '../ui'
+import { Button, Input, AvatarUpload, Switch, Avatar } from '../ui'
+import { SelectDropdown } from '../ui/SelectDropdown'
 import { useToast } from '../ui'
 import { apiClient } from '../../services/apiClient'
 import { fileUploadService, type UploadedFile } from '../../services/fileUpload'
@@ -61,6 +62,20 @@ interface SettingsModalProps {
 import { ProfileArtPicker } from '../features/ProfileArtPicker'
 
 type TabId = 'profile' | 'profileArt' | 'security' | 'notifications' | 'advanced' | 'server' | 'appearance' | 'tasks' | 'redeem' | 'about'
+const SETTINGS_INITIAL_TAB_KEY = 'beacon:settings_initial_tab'
+
+function isTabId(value: string): value is TabId {
+    return value === 'profile'
+        || value === 'profileArt'
+        || value === 'security'
+        || value === 'notifications'
+        || value === 'advanced'
+        || value === 'server'
+        || value === 'appearance'
+        || value === 'tasks'
+        || value === 'redeem'
+        || value === 'about'
+}
 
 const TAB_META: Record<TabId, { title: string; eyebrow: string; description: string }> = {
     profile: {
@@ -203,7 +218,6 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
     const [claimingQuestId, setClaimingQuestId] = useState<string | null>(null)
     const { quests, isLoading: questsLoading, fetchQuests, claimReward } = useQuestStore()
     const { fetchWallet } = useBeacoinStore()
-    const selectedLanguage = LANGUAGES.find((lang) => lang.code === language) || LANGUAGES[0]
     const hasBeaconPlus = Boolean((user as any)?.isBeaconPlus)
     const activeTabMeta = TAB_META[activeTab]
 
@@ -231,6 +245,19 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [isOpen, onClose])
+
+    useEffect(() => {
+        if (!isOpen) return
+        try {
+            const requested = localStorage.getItem(SETTINGS_INITIAL_TAB_KEY)
+            if (requested && isTabId(requested)) {
+                setActiveTab(requested)
+            }
+            localStorage.removeItem(SETTINGS_INITIAL_TAB_KEY)
+        } catch {
+            // ignore storage errors
+        }
+    }, [isOpen])
 
     if (!isOpen) return null
 
@@ -718,29 +745,20 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                             <h3>Language</h3>
                             <p className={styles.muted} style={{ marginBottom: 16 }}>Select your preferred language for the interface</p>
                             <div className={styles.languageSelect}>
-                                <Dropdown
-                                    matchTriggerWidth
-                                    trigger={
-                                        <div className={styles.languageTrigger}>
-                                            <div className={styles.languageTriggerMain}>
-                                                <span className={styles.languageTriggerFlag}>{selectedLanguage.flag}</span>
-                                                <span className={styles.languageTriggerName}>{selectedLanguage.name}</span>
-                                            </div>
-                                            <ChevronDown size={16} className={styles.languageTriggerChevron} />
-                                        </div>
-                                    }
-                                    items={LANGUAGES.map(lang => ({
-                                        id: lang.code,
-                                        label: (
-                                            <div className={styles.languageMenuRow}>
-                                                <span className={styles.languageMenuFlag}>{lang.flag}</span>
-                                                <span className={styles.languageMenuName}>{lang.name}</span>
-                                                {language === lang.code && <span className={styles.languageMenuCheck}>✓</span>}
-                                            </div>
-                                        ),
-                                        onClick: () => setLanguage(lang.code as any)
+                                <SelectDropdown
+                                    options={LANGUAGES.map(lang => ({
+                                        value: lang.code,
+                                        label: `${lang.flag} ${lang.name}`,
                                     }))}
-                                    align="left"
+                                    value={language}
+                                    onChange={(value) => {
+                                        if (typeof value === 'string') {
+                                            setLanguage(value)
+                                        }
+                                    }}
+                                    searchable
+                                    size="md"
+                                    placeholder="Select language"
                                 />
                             </div>
                         </div>

@@ -1,9 +1,8 @@
 ﻿import { useState, useRef, useCallback, useEffect } from 'react'
 import { Send, Plus, Smile, Volume2, Image as ImageIcon, X, File, Sparkles, Reply } from 'lucide-react'
-import { Button, Tooltip, EmojiPicker, GifPicker } from '../ui'
+import { Button, Tooltip, EmojiPicker, GifPicker, useToast } from '../ui'
 import { StickerPicker } from './StickerPicker'
 import { fileUploadService, type UploadedFile } from '../../services/fileUpload'
-import { SlashCommandPicker, type SlashCommand } from './SlashCommandPicker'
 import { MentionPicker } from './MentionPicker'
 import { useServerStore } from '../../stores/useServerStore'
 import { useMessageStore } from '../../stores/useMessageStore'
@@ -24,7 +23,6 @@ interface MessageInputProps {
   onStopTyping?: () => void
   channels?: { id: string; name: string }[]
   onVoiceClick?: () => void
-  extraSlashCommands?: SlashCommand[]
   replyingTo?: ReplyTarget | null
   onCancelReply?: () => void
 }
@@ -35,10 +33,10 @@ export function MessageInput({
   onStartTyping,
   onStopTyping,
   onVoiceClick,
-  extraSlashCommands = [],
   replyingTo,
   onCancelReply,
 }: MessageInputProps) {
+  const { show } = useToast()
   const MAX_MESSAGE_LENGTH = 2000
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -51,10 +49,6 @@ export function MessageInput({
   const [attachments, setAttachments] = useState<UploadedFile[]>([])
   const [uploading, setUploading] = useState(false)
   const [keyboardOffset, setKeyboardOffset] = useState(0)
-
-  // Slash command state
-  const [showSlashPicker, setShowSlashPicker] = useState(false)
-  const [slashQuery, setSlashQuery] = useState('')
 
   // Mention state
   const [showMentionPicker, setShowMentionPicker] = useState(false)
@@ -105,27 +99,12 @@ export function MessageInput({
     e.currentTarget.style.height = 'auto'
     e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 200)}px`
 
-    // Slash command detection: show picker when text starts with "/" and no space yet
-    if (text.startsWith('/') && !text.includes(' ')) {
-      const query = text.slice(1)
-      setSlashQuery(query)
-      setShowSlashPicker(true)
-      setShowMentionPicker(false)
-    } else if (text.startsWith('/') && text.includes(' ')) {
-      // Command is finalized, maybe show arg hints?
-      setShowSlashPicker(false)
-    } else {
-      setShowSlashPicker(false)
-      setSlashQuery('')
-    }
-
     // Mention detection: show picker when text ends with "@" + query
     const lastAtPos = text.lastIndexOf('@')
     if (lastAtPos !== -1 && !text.slice(lastAtPos).includes(' ')) {
       const query = text.slice(lastAtPos + 1)
       setMentionQuery(query)
       setShowMentionPicker(true)
-      setShowSlashPicker(false)
 
       // Fetch members if not already fetching
       if (members.length === 0 && currentServerId) {
@@ -154,52 +133,6 @@ export function MessageInput({
     }, 3000)
   }
 
-  const handleSlashSelect = useCallback((command: SlashCommand) => {
-    // Handle built-in commands inline
-    switch (command.name) {
-      case 'shrug':
-        setMessage(prev => prev.replace(/^\/\S*/, '¯\\_(ツ)_/¯'))
-        break
-      case 'tableflip':
-        setMessage(prev => prev.replace(/^\/\S*/, '(╯°□°）╯︵ ┻━┻'))
-        break
-      case 'unflip':
-        setMessage(prev => prev.replace(/^\/\S*/, '┬─┬ ノ( ゜-゜ノ)'))
-        break
-      case 'roll': {
-        const match = message.match(/^\/roll\s*(\d+)?/)
-        const sides = match?.[1] ? Math.min(parseInt(match[1]), 1000) : 6
-        const result = Math.floor(Math.random() * sides) + 1
-        setMessage(`🎲 Rolled a d${sides}: **${result}**`)
-        break
-      }
-      case 'flip':
-        setMessage(Math.random() < 0.5 ? '🪙 Heads!' : '🪙 Tails!')
-        break
-      case 'rps': {
-        const rpChoices = ['🪨 Rock!', '📄 Paper!', '✂️ Scissors!']
-        setMessage(rpChoices[Math.floor(Math.random() * rpChoices.length)])
-        break
-      }
-      case 'gif':
-        setShowGifPicker(true)
-        setMessage('')
-        break
-      default:
-        setMessage('/' + command.name + ' ')
-    }
-    setShowSlashPicker(false)
-    setSlashQuery('')
-    setTimeout(() => {
-      textareaRef.current?.focus()
-      // Move cursor to end
-      const ta = textareaRef.current
-      if (ta) {
-        ta.selectionStart = ta.selectionEnd = ta.value.length
-      }
-    }, 0)
-  }, [])
-
   const handleSend = () => {
     if (message.trim() || attachments.length > 0) {
       const scheduleIso = (scheduledAt && scheduledTime)
@@ -219,7 +152,6 @@ export function MessageInput({
       setShowEmojiPicker(false)
       setShowStickerPicker(false)
       setShowGifPicker(false)
-      setShowSlashPicker(false)
       setShowMentionPicker(false)
     }
   }
@@ -251,21 +183,19 @@ export function MessageInput({
       setShowEmojiPicker(false)
       setShowStickerPicker(false)
       setShowGifPicker(false)
-      setShowSlashPicker(false)
       setShowMentionPicker(false)
       return
     }
 
     // If either picker is open, let it consume navigation keys
-    if ((showSlashPicker || showMentionPicker) && ['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) {
+    if (showMentionPicker && ['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) {
       if (e.key !== 'Escape') e.preventDefault()
       if (e.key === 'Escape') {
-        setShowSlashPicker(false)
         setShowMentionPicker(false)
       }
       return
     }
-    if (e.key === 'ArrowUp' && message === '' && !showSlashPicker && !showMentionPicker) {
+    if (e.key === 'ArrowUp' && message === '' && !showMentionPicker) {
       e.preventDefault()
       // Find the last message sent by the current user in this channel
       const channelMessages = useMessageStore.getState().messages.get(useUIStore.getState().currentChannelId || '') || []
@@ -319,7 +249,7 @@ export function MessageInput({
       setAttachments([...attachments, ...uploaded])
     } catch (error) {
       console.error('Upload failed:', error)
-      alert(error instanceof Error ? error.message : 'Upload failed')
+      show(error instanceof Error ? error.message : 'Upload failed', 'error')
     } finally {
       setUploading(false)
     }
@@ -346,7 +276,7 @@ export function MessageInput({
         setAttachments([...attachments, ...uploaded])
       } catch (error) {
         console.error('Upload failed:', error)
-        alert(error instanceof Error ? error.message : 'Upload failed')
+        show(error instanceof Error ? error.message : 'Upload failed', 'error')
       } finally {
         setUploading(false)
       }
@@ -382,7 +312,7 @@ export function MessageInput({
         <div className={styles.attachmentPreview}>
           {attachments.map((attachment, index) => (
             <div key={index} className={styles.attachmentItem}>
-              {attachment.type.startsWith('image/') ? (
+              {(attachment.type || '').startsWith('image/') ? (
                 <img src={attachment.url} alt={attachment.filename} className={styles.attachmentImage} />
               ) : (
                 <div className={styles.attachmentFile}>
@@ -413,17 +343,6 @@ export function MessageInput({
           }))}
           onSelect={handleMentionSelect}
           onClose={() => setShowMentionPicker(false)}
-        />
-      )}
-
-      {/* Slash Command Picker — floats above the input */}
-      {showSlashPicker && (
-        <SlashCommandPicker
-          query={slashQuery}
-          onSelect={handleSlashSelect}
-          onClose={() => setShowSlashPicker(false)}
-          anchorRef={containerRef as React.RefObject<HTMLElement>}
-          extraCommands={extraSlashCommands}
         />
       )}
 

@@ -91,6 +91,7 @@ export type UserBadge = 'owner' | 'admin' | 'moderator' | 'beacon_plus' | 'bot' 
 export interface User {
   id: string
   username: string
+  displayName?: string | null
   discriminator: string
   avatar: string | null
   email: string
@@ -110,6 +111,7 @@ export interface User {
   twoFactorEnabled?: boolean
   avatarDecorationId?: string | null
   profileEffectId?: string | null
+  createdAt?: string
 }
 
 export type ServerTag = 'gaming' | 'music' | 'entertainment' | 'education' | 'science' | 'technology' | 'art' | 'community' | 'anime' | 'memes' | 'programming' | 'sports' | 'fashion' | 'food' | 'travel' | 'business' | 'finance' | 'politics' | 'news' | 'other'

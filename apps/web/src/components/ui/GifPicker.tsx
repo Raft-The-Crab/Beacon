@@ -2,10 +2,10 @@
 import { createPortal } from 'react-dom'
 import { Search, Loader } from 'lucide-react'
 import { giphyService, type GiphyGif } from '../../services/giphy'
-import { klipyService, type KlipyGif } from '../../services/klipy'
 import { Input } from './Input'
 import { useAuthStore } from '../../stores/useAuthStore'
 import styles from '../../styles/modules/ui/GifPicker.module.css'
+import giphyPoweredByMark from '../../../../../assets/giphy-attribution-marks/Giphy Attribution Marks/Static Logos/Small/Light Backgrounds/PoweredBy_200px-White_HorizLogo.png'
 
 type UnifiedGif = {
   id: string
@@ -39,14 +39,6 @@ export function GifPicker({ onSelect, onClose, anchorElement }: GifPickerProps) 
     title: gif.title,
     previewUrl: gif.images.fixed_height_small.url,
     originalUrl: gif.images.original.url,
-  })
-
-  // Normalise KLIPY → UnifiedGif
-  const fromKlipy = (gif: KlipyGif): UnifiedGif => ({
-    id: gif.id,
-    title: gif.title,
-    previewUrl: gif.images.fixed_height_small.url || gif.images.fixed_height.url,
-    originalUrl: gif.images.original.url || gif.images.fixed_height.url,
   })
 
   useEffect(() => {
@@ -115,13 +107,8 @@ export function GifPicker({ onSelect, onClose, anchorElement }: GifPickerProps) 
     setLoading(true)
     setErrorMessage('')
     try {
-      if (isBeaconPlus) {
-        const response = await klipyService.getTrending(30, 0)
-        setGifs(response.data.map(fromKlipy))
-      } else {
-        const response = await giphyService.getTrending(30, 0, { tier: giphyTier })
-        setGifs(response.data.map(fromGiphy))
-      }
+      const response = await giphyService.getTrending(30, 0, { tier: giphyTier })
+      setGifs(response.data.map(fromGiphy))
     } catch (error: any) {
       console.error('Failed to load trending GIFs:', error)
       setErrorMessage(error?.message || 'Failed to load GIFs right now.')
@@ -134,13 +121,8 @@ export function GifPicker({ onSelect, onClose, anchorElement }: GifPickerProps) 
     setLoading(true)
     setErrorMessage('')
     try {
-      if (isBeaconPlus) {
-        const response = await klipyService.searchGifs(query, 30, 0)
-        setGifs(response.data.map(fromKlipy))
-      } else {
-        const response = await giphyService.searchGifs(query, 30, 0, { tier: giphyTier })
-        setGifs(response.data.map(fromGiphy))
-      }
+      const response = await giphyService.searchGifs(query, 30, 0, { tier: giphyTier })
+      setGifs(response.data.map(fromGiphy))
     } catch (error: any) {
       console.error('Failed to search GIFs:', error)
       setErrorMessage(error?.message || 'Failed to search GIFs right now.')
@@ -176,7 +158,7 @@ export function GifPicker({ onSelect, onClose, anchorElement }: GifPickerProps) 
           <Search size={18} className={styles.searchIcon} />
           <Input
             type="text"
-            placeholder={isBeaconPlus ? 'Search KLIPY (Beacon+)...' : 'Search GIPHY...'}
+            placeholder={isBeaconPlus ? 'Search GIPHY with Beacon+...' : 'Search GIPHY...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             autoFocus
@@ -195,8 +177,8 @@ export function GifPicker({ onSelect, onClose, anchorElement }: GifPickerProps) 
             <p>{errorMessage}</p>
             <p className={styles.emptyHint}>
               {isBeaconPlus
-                ? 'Beacon+ KLIPY limit is 100 calls/min.'
-                : 'Free-tier GIPHY limit is 100 calls/hour. Upgrade to Beacon+ for KLIPY (100 calls/min).'}
+                ? 'Beacon+ expands your GIPHY allowance to 240 requests per hour.'
+                : 'Free tier includes 100 GIPHY requests per hour. Upgrade to Beacon+ for more room.'}
             </p>
           </div>
         ) : (
@@ -227,26 +209,14 @@ export function GifPicker({ onSelect, onClose, anchorElement }: GifPickerProps) 
       </div>
 
       <div className={styles.footer}>
-        {isBeaconPlus ? (
-          <>
-            <span className={styles.poweredBy}>Beacon+ GIFs by KLIPY</span>
-            <img
-              src="https://klipy.co/favicon.ico"
-              alt="Powered by KLIPY"
-              className={styles.giphyLogo}
-              style={{ borderRadius: 4 }}
-            />
-          </>
-        ) : (
-          <>
-            <span className={styles.poweredBy}>Free GIFs by GIPHY</span>
-            <img
-              src="https://giphy.com/static/img/powered_by_giphy_light.png"
-              alt="Powered by GIPHY"
-              className={styles.giphyLogo}
-            />
-          </>
-        )}
+        <span className={styles.poweredBy}>
+          {isBeaconPlus ? 'Beacon+ GIF search powered by GIPHY' : 'Powered by GIPHY'}
+        </span>
+        <img
+          src={giphyPoweredByMark}
+          alt="Powered by GIPHY"
+          className={styles.giphyLogo}
+        />
       </div>
     </div>
   )

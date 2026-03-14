@@ -132,7 +132,7 @@ export function ServerSettings() {
       if (res.success && res.data?.code) {
         const created = res.data
         setInvites(prev => [created, ...prev.filter((inv: any) => inv.code !== created.code)])
-        const link = `https://beacon.qzz.io/invite/${created.code}`
+        const link = `${window.location.origin}/invite/${created.code}`
         navigator.clipboard.writeText(link)
         toast.success('Invite created and copied')
       } else {
@@ -615,7 +615,7 @@ export function ServerSettings() {
                               <button
                                 className={styles.memberBtn}
                                 onClick={() => {
-                                  navigator.clipboard.writeText(`https://beacon.qzz.io/invite/${inv.code}`)
+                                  navigator.clipboard.writeText(`${window.location.origin}/invite/${inv.code}`)
                                   toast.success('Invite link copied!')
                                 }}
                               >

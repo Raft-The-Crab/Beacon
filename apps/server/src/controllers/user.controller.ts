@@ -290,6 +290,21 @@ export async function getMyFriends(req: Request, res: Response) {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
   if (!ensurePrisma(res)) return;
 
+  const friendUserSelect = {
+    id: true,
+    username: true,
+    displayName: true,
+    avatar: true,
+    discriminator: true,
+    banner: true,
+    bio: true,
+    badges: true,
+    isBeaconPlus: true,
+    avatarDecorationId: true,
+    profileEffectId: true,
+    createdAt: true,
+  } as const
+
   try {
     const friends = await prisma.friendship.findMany({
       where: {
@@ -299,8 +314,8 @@ export async function getMyFriends(req: Request, res: Response) {
         ],
       },
       include: {
-        user: { select: { id: true, username: true, avatar: true, discriminator: true } },
-        friend: { select: { id: true, username: true, avatar: true, discriminator: true } },
+        user: { select: friendUserSelect },
+        friend: { select: friendUserSelect },
       },
     });
 
@@ -309,11 +324,18 @@ export async function getMyFriends(req: Request, res: Response) {
     const enriched = friends.map((f: any) => {
       const other = f.userId === userId ? f.friend : f.user;
       const presenceKey = other?.id ? other.id : 'unknown';
-      const presence = presenceData && presenceData[presenceKey] ? JSON.parse(presenceData[presenceKey]!) : null;
+      let presence = null
+      if (presenceData && presenceData[presenceKey]) {
+        try {
+          presence = JSON.parse(presenceData[presenceKey]!)
+        } catch {
+          presence = null
+        }
+      }
       return {
         ...other,
         status: presence?.status || 'offline',
-        customStatus: presence?.customStatus || null,
+        customStatus: presence?.customStatus || other?.customStatus || null,
       };
     });
 

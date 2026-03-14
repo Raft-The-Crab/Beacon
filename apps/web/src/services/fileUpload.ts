@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../config/endpoints'
+
 // File upload service with image compression and validation
 
 export interface UploadedFile {
@@ -20,7 +22,19 @@ export interface UploadOptions {
 class FileUploadService {
   private apiUrl: string
 
-  constructor(apiUrl: string = (import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || '/api'))) {
+  private inferMimeType(resourceType?: string, format?: string): string {
+    const ext = (format || '').toLowerCase()
+    if (resourceType === 'image') return ext ? `image/${ext === 'jpg' ? 'jpeg' : ext}` : 'image/*'
+    if (resourceType === 'video') return ext ? `video/${ext}` : 'video/*'
+    if (resourceType === 'raw') {
+      if (ext === 'pdf') return 'application/pdf'
+      if (ext === 'txt') return 'text/plain'
+      return 'application/octet-stream'
+    }
+    return ext ? `application/${ext}` : 'application/octet-stream'
+  }
+
+  constructor(apiUrl: string = API_BASE_URL) {
     this.apiUrl = apiUrl
   }
 
@@ -62,21 +76,41 @@ class FileUploadService {
     const formData = new FormData()
     formData.append('file', fileToUpload)
 
-    const token = localStorage.getItem('accessToken')
+    const token =
+      localStorage.getItem('beacon_token') ||
+      localStorage.getItem('token') ||
+      localStorage.getItem('accessToken')
     const response = await fetch(`${this.apiUrl}/upload`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: formData,
     })
 
+    const data = await response.json().catch(() => ({} as any))
+
     if (!response.ok) {
-      throw new Error('Upload failed')
+      const errorMessage = data?.error || data?.message || 'Upload failed'
+      throw new Error(errorMessage)
     }
 
-    const data = await response.json()
-    return data.success ? data.data : data
+    const payload = data?.success ? data?.data : data
+    const normalized: UploadedFile = {
+      id: payload?.id || payload?.public_id || payload?.asset_id || crypto.randomUUID(),
+      filename: payload?.filename || payload?.original_filename || fileToUpload.name,
+      size: Number(payload?.size ?? payload?.bytes ?? fileToUpload.size ?? file.size ?? 0),
+      type: payload?.type || payload?.contentType || payload?.mimeType || this.inferMimeType(payload?.resource_type, payload?.format),
+      url: payload?.url || payload?.secure_url || '',
+      thumbnail: payload?.thumbnail,
+    }
+
+    if (!normalized.url) {
+      throw new Error('Upload failed: missing file URL')
+    }
+
+    return normalized
   }
 
   async uploadMultiple(files: File[], options?: UploadOptions): Promise<UploadedFile[]> {

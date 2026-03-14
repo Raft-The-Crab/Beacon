@@ -1,4 +1,4 @@
-import { API_CONFIG } from '../config/api'
+import { apiClient } from '../services/apiClient'
 
 export interface Bot {
     id: string
@@ -9,11 +9,6 @@ export interface Bot {
     ownerId: string
     createdAt: string
 }
-
-const getHeaders = () => ({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('beacon_token') || localStorage.getItem('token') || ''}`
-})
 
 const normalizeBot = (payload: any, applicationId: string, fallbackName: string = 'Beacon Bot'): Bot => ({
     id: payload?.id || '',
@@ -27,71 +22,49 @@ const normalizeBot = (payload: any, applicationId: string, fallbackName: string 
 
 export const botsApi = {
     create: async (data: { name: string; applicationId: string }) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${data.applicationId}/bot`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(data)
-        })
-        if (!res.ok) {
-            const error = await res.json()
-            throw new Error(error.error || 'Failed to create bot')
+        const res = await apiClient.request('POST', `/applications/${data.applicationId}/bot`, data)
+        if (!res.success || !res.data) {
+            throw new Error(res.error || 'Failed to create bot')
         }
-        const bot = await res.json()
+        const bot = res.data
         return normalizeBot(bot, data.applicationId, data.name)
     },
 
     get: async (applicationId: string) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${applicationId}/bot`, {
-            headers: getHeaders()
-        })
-        if (!res.ok) throw new Error('Failed to fetch bot details')
-        const bot = await res.json()
+        const res = await apiClient.request('GET', `/applications/${applicationId}/bot`)
+        if (!res.success || !res.data) throw new Error(res.error || 'Failed to fetch bot details')
+        const bot = res.data
         return normalizeBot(bot, applicationId)
     },
 
     list: async (applicationId: string) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${applicationId}`, {
-            headers: getHeaders()
-        })
-        if (!res.ok) throw new Error('Failed to fetch application bots')
-        const app = await res.json()
+        const res = await apiClient.request('GET', `/applications/${applicationId}`)
+        if (!res.success || !res.data) throw new Error(res.error || 'Failed to fetch application bots')
+        const app = res.data
         return app.bot ? [normalizeBot(app.bot, applicationId, app.name || 'Beacon Bot')] : []
     },
 
     update: async (applicationId: string, data: Partial<{ name: string; avatar: string }>) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${applicationId}/bot`, {
-            method: 'PATCH',
-            headers: getHeaders(),
-            body: JSON.stringify(data)
-        })
-        if (!res.ok) {
-            const error = await res.json()
-            throw new Error(error.error || 'Failed to update bot')
+        const res = await apiClient.request('PATCH', `/applications/${applicationId}/bot`, data)
+        if (!res.success || !res.data) {
+            throw new Error(res.error || 'Failed to update bot')
         }
-        const updated = await res.json()
+        const updated = res.data
         return normalizeBot(updated, applicationId, updated?.displayName || updated?.username || 'Beacon Bot')
     },
 
     regenerateToken: async (applicationId: string) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${applicationId}/bot/token`, {
-            method: 'POST',
-            headers: getHeaders()
-        })
-        if (!res.ok) {
-            const error = await res.json()
-            throw new Error(error.error || 'Failed to regenerate token')
+        const res = await apiClient.request('POST', `/applications/${applicationId}/bot/token`)
+        if (!res.success || !res.data) {
+            throw new Error(res.error || 'Failed to regenerate token')
         }
-        return res.json() as Promise<{ token: string }>
+        return res.data as { token: string }
     },
 
     delete: async (applicationId: string) => {
-        const res = await fetch(`${API_CONFIG.BASE_URL}/applications/${applicationId}/bot`, {
-            method: 'DELETE',
-            headers: getHeaders()
-        })
-        if (!res.ok) {
-            const error = await res.json()
-            throw new Error(error.error || 'Failed to delete bot')
+        const res = await apiClient.request('DELETE', `/applications/${applicationId}/bot`)
+        if (!res.success) {
+            throw new Error(res.error || 'Failed to delete bot')
         }
     }
 }

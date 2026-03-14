@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { InteractionType, InteractionResponseType, Interaction } from '@beacon/types';
 import { botFramework } from '../bots';
 import crypto from 'crypto';
+import { prisma } from '../db';
+import { publishGatewayEvent } from '../services/gatewayPublisher';
 
 const BUTTON_STYLE_MAP: Record<string, number> = {
     primary: 1,
@@ -195,6 +197,7 @@ export class InteractionController {
 
         // 2. Lookup bot (Beacon Bot is default for system-level interactions)
         const bot = botFramework.getBotByAppId(interaction.applicationId) ||
+            botFramework.getBotByName('Official Beacon Bot') ||
             botFramework.getBotByName('Beacon Bot');
 
         if (!bot) {
@@ -203,13 +206,13 @@ export class InteractionController {
 
         try {
             // 3. Delegate to BotFramework
-            const response = await botFramework.handleInteraction(interaction);
+            const response = await botFramework.handleInteraction(interaction, bot);
 
             if (response) {
                 const embeds = [...normalizeEmbeds(response.embeds), ...normalizeCards(response.cards)];
                 const components = normalizeComponents(response);
 
-                return res.json({
+                const responseData = {
                     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                     data: {
                         content: response.content,
@@ -217,7 +220,47 @@ export class InteractionController {
                         flags: response.ephemeral ? 64 : 0,
                         components: components.length > 0 ? components : undefined,
                     }
-                });
+                };
+
+                // Broadcast bot reply to channel participants via WS (skip ephemeral messages — those are private)
+                const channelId = interaction.channelId;
+                if (channelId && !response.ephemeral) {
+                    try {
+                        const channel = await prisma?.channel.findUnique({
+                            where: { id: channelId },
+                            select: {
+                                type: true,
+                                guildId: true,
+                                recipients: { select: { id: true } },
+                            },
+                        });
+
+                        const botMessage = {
+                            id: `bot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                            channelId,
+                            content: response.content || '',
+                            embeds: embeds.length > 0 ? embeds : undefined,
+                            components: components.length > 0 ? components : undefined,
+                            authorId: 'beacon-bot',
+                            author: { id: 'beacon-bot', username: bot?.name || 'Beacon Bot', avatar: null, bot: true },
+                            attachments: [],
+                            createdAt: new Date().toISOString(),
+                            guild_id: channel?.guildId ?? null,
+                        };
+
+                        const isDM = channel?.type === 'DM' || channel?.type === 'GROUP_DM';
+                        if (isDM && channel?.recipients?.length) {
+                            const recipientIds = channel.recipients.map((r: { id: string }) => r.id);
+                            await publishGatewayEvent('MESSAGE_CREATE', botMessage, null, recipientIds);
+                        } else {
+                            await publishGatewayEvent('MESSAGE_CREATE', botMessage, channel?.guildId ?? null);
+                        }
+                    } catch (broadcastErr) {
+                        console.warn('[Interaction] WS broadcast failed:', broadcastErr);
+                    }
+                }
+
+                return res.json(responseData);
             }
 
             // 4. Fallback if no response but handled

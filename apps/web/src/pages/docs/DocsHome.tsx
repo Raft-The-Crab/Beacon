@@ -17,7 +17,7 @@ export function DocsHome() {
             <header className={`${styles.header} premium-hero-section`}>
                 <div className="premium-badge">
                     <Rocket size={14} />
-                    <span>v2.0 Developer Preview</span>
+                    <span>v1.2.0 Production Docs</span>
                 </div>
                 <h1 className="premium-hero-heading accent-text">{t('docs.title')}</h1>
                 <p className="premium-hero-subtitle">
@@ -36,7 +36,7 @@ export function DocsHome() {
                 <DocLink
                     icon={<Code size={20} />}
                     title={t('docs.categories.api_reference')}
-                    description="Full technical reference for REST endpoints — users, guilds, channels, and more."
+                    description="Full technical reference for REST endpoints, auth, rate limits, and production response formats."
                     to="/docs/api-reference"
                     color="purple"
                 />
@@ -50,7 +50,7 @@ export function DocsHome() {
                 <DocLink
                     icon={<Book size={20} />}
                     title={t('docs.categories.sdk')}
-                    description="Master the official @beacon/sdk package — slash commands, buttons, and managers."
+                    description="Master the official beacon-sdk package with complete usage guides and SDK API surfaces."
                     to="/docs/sdk-tutorial"
                     color="green"
                 />

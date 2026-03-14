@@ -194,6 +194,88 @@
   transition: all 0.2s ease;
 }
 
+.joinModal {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+    var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.joinModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.joinModalDescription {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.joinInput {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-primary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 15px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.joinInput:focus {
+  border-color: color-mix(in srgb, var(--beacon-brand) 72%, white);
+  background: color-mix(in srgb, var(--bg-primary) 88%, black);
+  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.16);
+}
+
+.joinActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.joinSecondaryButton,
+.joinPrimaryButton {
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.joinSecondaryButton {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+}
+
+.joinSecondaryButton:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.joinPrimaryButton {
+  background: var(--beacon-brand);
+  border: none;
+  color: #fff;
+}
+
+.joinPrimaryButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.joinPrimaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Tablet ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 @media (max-width: 1024px) {
   .serverList {
@@ -283,5 +365,29 @@
 
   .activePill {
     display: none;
+  }
+
+  .joinActions {
+    width: 100%;
+  }
+
+  .joinSecondaryButton,
+  .joinPrimaryButton {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .joinModalBody {
+    gap: 14px;
+  }
+
+  .joinActions {
+    flex-direction: column-reverse;
+  }
+
+  .joinSecondaryButton,
+  .joinPrimaryButton {
+    width: 100%;
   }
 }

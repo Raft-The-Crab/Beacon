@@ -1,18 +1,18 @@
 /**
- * Beacon Moderation Service v4
- * Hosted AI > Prolog > Decision > Final Fallback
+ * Beacon Moderation Service v5
+ * Pipeline: SWI-Prolog rules → TypeScript fallback → Decision
+ *
+ * Text: deterministic Prolog knowledge base (moderation.pl); TS fallback when swipl unavailable.
+ * Images: nsfwjs (@tensorflow/tfjs-node) for NSFW classification; never hard-blocks.
  */
 
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process'
 import path from 'path'
 import { getProfile } from '../utils/autoTune'
+import { checkImageBuffer } from './imageModeration'
 
-const __dirname = path.resolve();
-const PROLOG_SCRIPT = path.join(__dirname, 'ai', 'moderation.pl')
+const PROLOG_SCRIPT = path.join(process.cwd(), 'src', 'services', 'ai', 'moderation.pl')
 const SWIPL = process.env.SWIPL_PATH || 'swipl'
-const AI_ENDPOINT = process.env.AI_MODERATION_ENDPOINT || 'http://localhost:11434/v1/chat/completions'
-const AI_MODEL = process.env.AI_MODERATION_MODEL || 'llama3'
-const AI_API_KEY = process.env.AI_API_KEY || 'sk-none'
 
 export interface ModerationResult {
   severity: 'safe' | 'low' | 'medium' | 'high' | 'critical'
@@ -31,69 +31,6 @@ export interface ModerationAction {
   duration?: number // ms, for temp actions
   reason: string
   automated: boolean
-}
-
-// ── AI Engine ─────────────────────────────────────────────────────
-class AIEngine {
-  async check(content: string, userId: string, priorOffenses: number): Promise<ModerationResult | null> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5s timeout for fast AI
-    try {
-      const response = await fetch(AI_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${AI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: AI_MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: `You are a moderation AI. Reply exactly in JSON format with no extra text. Format: {"flagged": boolean, "severity": "safe"|"low"|"medium"|"high"|"critical", "reason": "short phrase"}`
-            },
-            {
-              role: 'user',
-              content: `Analyze this chat message: "${content}"`
-            }
-          ],
-          response_format: { type: 'json_object' }
-        }),
-        signal: controller.signal
-      });
-
-      if (!response.ok) return null;
-
-      const data = await response.json() as any;
-      const result = JSON.parse(data.choices[0].message.content);
-
-      if (!result.flagged || result.severity === 'safe') {
-        return { severity: 'safe', reason: 'none', action: 'none', description: 'AI verified safe.', approved: true, priorOffenses };
-      }
-
-      // If AI flags it, we normalize it to a ModerationResult to be evaluated
-      let action: ModerationResult['action'] = 'warning';
-      if (result.severity === 'critical') action = 'immediate_ban_and_ip_ban';
-      else if (result.severity === 'high') action = 'escalate';
-      else if (result.severity === 'medium') action = 'account_risk_flag';
-
-      return {
-        severity: result.severity,
-        reason: result.reason || 'ai_flagged',
-        action,
-        description: `AI flagged message as ${result.severity}`,
-        approved: false,
-        priorOffenses
-      };
-
-    } catch (e) {
-      // Return null to cascade down to Prolog
-      console.warn(`[AI Engine] Offline or timeout, cascading to Prolog...`);
-      return null;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
 }
 
 // ── Prolog Bridge ─────────────────────────────────────────────────
@@ -244,7 +181,6 @@ export function determineModerationAction(result: ModerationResult, priorOffense
 
 // ── Main service ──────────────────────────────────────────────────
 class ModerationService {
-  private aiEngine = new AIEngine()
   private bridge = new PrologBridge()
   private offenseCache = new Map<string, { count: number; lastUpdated: number }>()
   private messageHistory = new Map<string, string[]>()
@@ -255,7 +191,7 @@ class ModerationService {
     this.bridge.init()
     // Periodic cleanup: evict stale offense entries every 30 min
     setInterval(() => this.cleanupCaches(), 30 * 60 * 1000)
-    console.log('[Moderation] Service started (Pipeline: AI -> Prolog -> TS)')
+    console.log('[Moderation] Service started (Pipeline: Prolog → TS fallback)')
   }
 
   private cleanupCaches() {
@@ -314,30 +250,24 @@ class ModerationService {
     }
 
     const priorOffenses = this.getOffenses(userId)
-    let result: ModerationResult | null = null
+    let result: ModerationResult
 
-    // 1. Hosted AI Phase
-    result = await this.aiEngine.check(content, userId, priorOffenses)
-
-    // 2. Prolog Deterministic Rules Phase (skip if memory pressure)
-    if (!result) {
-      const rssMB = process.memoryUsage().rss / 1024 / 1024
-      const profile = getProfile()
-      if (profile.prologBypassMB === 0 || rssMB > profile.prologBypassMB) {
-        // Under memory pressure or minimal mode, skip Prolog and go to TS fallback
-        console.warn(`[Moderation] RSS ${Math.round(rssMB)} MB, skipping Prolog → TS fallback`)
+    // 1. Prolog Deterministic Rules Phase (skip under memory pressure)
+    const rssMB = process.memoryUsage().rss / 1024 / 1024
+    const profile = getProfile()
+    if (profile.prologBypassMB === 0 || rssMB > profile.prologBypassMB) {
+      console.warn(`[Moderation] RSS ${Math.round(rssMB)} MB — skipping Prolog, using TS fallback`)
+      result = tsFallback(content, priorOffenses)
+    } else {
+      try {
+        result = await this.bridge.check(content, userId, priorOffenses)
+      } catch {
+        // 2. TS Fallback Phase
         result = tsFallback(content, priorOffenses)
-      } else {
-        try {
-          result = await this.bridge.check(content, userId, priorOffenses)
-        } catch {
-          // 3. TS Fallback Phase
-          result = tsFallback(content, priorOffenses)
-        }
       }
     }
 
-    // 4. Final Decision Phase
+    // 3. Final Decision Phase
     const action = determineModerationAction(result, priorOffenses)
     if (result.severity !== 'safe' && result.severity !== 'low') {
       this.incrementOffenses(userId)
@@ -347,7 +277,23 @@ class ModerationService {
 
   async checkImage(imageBuffer: Buffer, userId: string): Promise<{ result: ModerationResult; action: ModerationAction }> {
     const priorOffenses = this.getOffenses(userId)
-    // TODO: When fine-tuned image model is ready, run actual analysis here
+    try {
+      const img = await checkImageBuffer(imageBuffer, userId)
+      if (!img.safe) {
+        // Image is explicit — flag for NSFW-channel gating, not an outright ban
+        const result: ModerationResult = {
+          severity: 'medium',
+          reason: 'explicit_image',
+          action: 'account_risk_flag',
+          description: `Explicit image detected (${img.classifiedAs}, score ${img.explicitScore.toFixed(2)}). Blocked in non-NSFW channels.`,
+          approved: false,
+          priorOffenses,
+          score: img.explicitScore,
+          flags: [img.classifiedAs],
+        }
+        return { result, action: { type: 'account_risk', reason: 'explicit_image', automated: true } }
+      }
+    } catch { /* non-fatal */ }
     return {
       result: { severity: 'safe', reason: 'none', action: 'none', description: 'Image safe.', approved: true, priorOffenses },
       action: { type: 'none', reason: 'safe', automated: false }

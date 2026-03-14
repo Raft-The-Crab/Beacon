@@ -3,7 +3,7 @@ import express from 'express'
 import { createServer } from 'http'
 import { WebSocketServer } from 'ws'
 import helmet from 'helmet'
-import { redis } from './db'
+import { connectMongo, redis } from './db'
 import { GatewayService } from './services/gateway'
 import { getProfile } from './utils/autoTune'
 
@@ -19,7 +19,43 @@ app.use(helmet())
 const server = createServer(app)
 const wss = new WebSocketServer({ server, path: '/gateway' })
 
-const PORT = process.env.WS_PORT || 4001
+const BASE_WS_PORT = Number(process.env.WS_PORT || 4001)
+
+async function listenWithPortFallback(basePort: number): Promise<number> {
+    const maxLocalAttempts = 8
+    const isProd = process.env.NODE_ENV === 'production'
+    const firstPort = Number.isFinite(basePort) && basePort > 0 ? basePort : 4001
+
+    const tryListen = (port: number) => new Promise<number>((resolve, reject) => {
+        const onError = (err: any) => {
+            server.off('listening', onListening)
+            reject(err)
+        }
+        const onListening = () => {
+            server.off('error', onError)
+            resolve(port)
+        }
+
+        server.once('error', onError)
+        server.once('listening', onListening)
+        server.listen(port)
+    })
+
+    for (let i = 0; i < maxLocalAttempts; i++) {
+        const port = firstPort + i
+        try {
+            return await tryListen(port)
+        } catch (err: any) {
+            if (err?.code === 'EADDRINUSE' && !isProd) {
+                console.warn(`⚠️  Gateway port ${port} already in use, trying ${port + 1}...`)
+                continue
+            }
+            throw err
+        }
+    }
+
+    throw new Error(`No open gateway port found starting at ${firstPort}`)
+}
 
 app.get('/health', async (_req, res) => {
     const redisStatus = redis.status === 'ready'
@@ -109,20 +145,36 @@ function startMemoryPruner() {
 const start = async () => {
     try {
         console.log('🚀 Starting Beacon WebSocket Gateway (Railway)...')
-        // Non-blocking Redis ping
-        redis.ping().then(() => {
-            console.log('✅ ClawCloud Redis: Connected');
-        }).catch(err => {
-            console.warn('⚠️  Redis connection failed (Gateway continuing):', err.message);
-        });
+        try {
+            await connectMongo()
+        } catch (error: any) {
+            console.warn('⚠️  MongoDB unavailable for gateway startup (continuing degraded):', error?.message || error)
+        }
+        // Non-blocking Redis ping when configured.
+        if (redis.isEnabled) {
+            redis.connect()
+                .then(() => redis.ping())
+                .then((pong) => {
+                    if (pong === 'PONG') {
+                        console.log('✅ ClawCloud Redis: Connected')
+                    } else {
+                        console.warn('⚠️  Redis ping unavailable (Gateway continuing in degraded mode)')
+                    }
+                })
+                .catch(err => {
+                    console.warn('⚠️  Redis connection failed (Gateway continuing):', err.message)
+                })
+        } else {
+            const reason = redis.disabledConfigReason ? `: ${redis.disabledConfigReason}` : ''
+            console.log(`⚪ Redis disabled for gateway${reason}`)
+        }
 
-        server.listen(PORT, () => {
-            console.log(`\n✨ Gateway running on ws://localhost:${PORT}/gateway`)
-            if (process.env.NODE_ENV === 'production') {
-                startKeepAlive(PORT)
+        const activePort = await listenWithPortFallback(BASE_WS_PORT)
+        console.log(`\n✨ Gateway running on ws://localhost:${activePort}/gateway`)
+        if (process.env.NODE_ENV === 'production') {
+                startKeepAlive(activePort)
                 startMemoryPruner()
-            }
-        })
+        }
     } catch (err) {
         console.error('❌ Failed to start Gateway:', err)
         process.exit(1)

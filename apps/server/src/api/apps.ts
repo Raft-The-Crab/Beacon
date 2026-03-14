@@ -44,8 +44,8 @@ router.post('/', localAuthenticate, async (req: AuthRequest, res: Response) => {
 
         const app = await AppsService.createApp(userId, name, description)
         return res.json(app)
-    } catch (error) {
-        return res.status(500).json({ error: 'Failed to create application' })
+    } catch (error: any) {
+        return res.status(500).json({ error: error?.message || 'Failed to create application' })
     }
 })
 

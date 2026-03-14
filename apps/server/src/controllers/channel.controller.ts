@@ -4,7 +4,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
 import { publishGatewayEvent } from '../services/gatewayPublisher';
-import { randomBytes } from 'crypto';
+import { generateInviteCode, generateShortId } from '../utils/id';
 
 export async function createChannel(req: Request, res: Response) {
   const userId = req.user?.id;
@@ -28,6 +28,7 @@ export async function createChannel(req: Request, res: Response) {
 
     const channel = await prisma.channel.create({
       data: {
+        id: generateShortId('c', 12),
         name,
         type: type || 'TEXT',
         guildId,
@@ -126,7 +127,7 @@ export async function createChannelInvite(req: Request, res: Response) {
     const channel = await prisma.channel.findUnique({ where: { id: channelId } });
     if (!channel) return res.status(404).json({ error: 'Channel not found' });
 
-    const code = randomBytes(5).toString('base64url');
+    const code = generateInviteCode(8);
     const invite = await prisma.invite.create({
       data: {
         code,

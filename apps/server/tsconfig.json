@@ -29,6 +29,9 @@
     "paths": {
       "@beacon/types": [
         "src/types/index.ts"
+      ],
+      "beacon-sdk/browser": [
+        "../../packages/sdk/dist/browser"
       ]
     }
   },

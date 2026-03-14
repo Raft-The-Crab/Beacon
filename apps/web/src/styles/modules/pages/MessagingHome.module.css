@@ -4,6 +4,9 @@
   width: 100%;
   overflow: hidden;
   position: relative;
+  background:
+    radial-gradient(circle at top, rgba(35, 165, 89, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 24%);
 }
 
 .chatWrapper {
@@ -293,6 +296,7 @@
   align-items: center;
   gap: 6px;
   height: 100%;
+  min-width: 0;
 }
 
 .tab {
@@ -364,6 +368,7 @@
 .friendsSearchWrap {
   position: relative;
   max-width: 400px;
+  width: 100%;
 }
 
 .friendsSearchIcon {
@@ -410,6 +415,7 @@
   overflow-y: auto;
   padding: 0 16px 24px;
   min-height: 0;
+  overscroll-behavior: contain;
 }
 
 .friendsScroll::-webkit-scrollbar {
@@ -420,6 +426,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  min-height: 68px;
   padding: 12px 16px;
   border-radius: 18px;
   cursor: pointer;
@@ -436,6 +443,11 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
+.friendRow:active {
+  transform: scale(0.992);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .friendInfo {
   flex: 1;
   min-width: 0;
@@ -446,6 +458,25 @@
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.01em;
+}
+
+.pendingActionBtn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pendingActionBtn:hover {
+  border-color: rgba(35, 165, 89, 0.5);
+  background: rgba(35, 165, 89, 0.18);
 }
 
 .friendsEmpty {
@@ -518,6 +549,46 @@
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
+}
+
+.discoveryModalShell {
+  height: min(82vh, calc(100dvh - 48px));
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.discoveryCloseButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.discoveryCloseButton:hover {
+  background: rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: scale(1.04);
+}
+
+.beaconPlusModalShell {
+  height: min(86vh, calc(100dvh - 36px));
+  max-height: min(86vh, calc(100dvh - 36px));
+  overflow: auto;
+  background: var(--bg-primary);
 }
 
 .activeNowEmpty p {
@@ -655,6 +726,16 @@
   color: var(--text-primary);
 }
 
+.navButton,
+.dmItem,
+.tab,
+.addFriendBtn,
+.friendRow,
+.iconCtrlBtn,
+.menuButton {
+  touch-action: manipulation;
+}
+
 .iconCtrlBtnActive {
   background: rgba(35, 165, 89, 0.12) !important;
   color: #23a559 !important;
@@ -688,9 +769,11 @@
   }
 
   .topBar {
-    height: 52px;
-    padding: 0 10px;
+    height: auto;
+    min-height: 52px;
+    padding: 10px 10px 8px;
     gap: 8px;
+    align-items: flex-start;
   }
 
   .topBarTitle {
@@ -700,7 +783,9 @@
   .topBarLeft {
     gap: 8px;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   .topBarRight {
@@ -716,7 +801,10 @@
     gap: 4px;
     scrollbar-width: none;
     min-width: 0;
-    flex: 1;
+    flex: 1 1 100%;
+    width: 100%;
+    padding: 2px 0 4px;
+    scroll-snap-type: x proximity;
   }
 
   .tabs::-webkit-scrollbar {
@@ -728,18 +816,24 @@
     padding: 0 10px;
     font-size: 12px;
     flex-shrink: 0;
+    scroll-snap-align: start;
   }
 
   .addFriendBtn {
     height: 30px;
     padding: 0 10px;
     font-size: 12px;
-    margin-left: 4px;
+    margin-left: auto;
     flex-shrink: 0;
+    scroll-snap-align: end;
   }
 
   .friendsSearchRow {
     padding: 10px 12px 6px;
+  }
+
+  .friendsSearchWrap {
+    max-width: none;
   }
 
   .friendsLabel {
@@ -748,7 +842,7 @@
   }
 
   .friendsScroll {
-    padding: 0 10px calc(14px + env(safe-area-inset-bottom));
+    padding: 4px 10px calc(18px + env(safe-area-inset-bottom));
   }
 
   .friendRow {
@@ -756,6 +850,7 @@
     padding: 10px 12px;
     border-radius: 14px;
     margin-bottom: 4px;
+    min-height: 62px;
   }
 
   .friendRow:hover {
@@ -765,19 +860,44 @@
   .friendName {
     font-size: 14px;
   }
+
+  .friendsEmpty {
+    margin: 20px 12px;
+    padding: 48px 18px;
+    gap: 18px;
+  }
+
+  .discoveryModalShell,
+  .beaconPlusModalShell {
+    height: calc(100dvh - 12px);
+    max-height: calc(100dvh - 12px);
+  }
+
+  .discoveryCloseButton {
+    top: 12px;
+    right: 12px;
+  }
 }
 
 @media (max-width: 480px) {
   .topBar {
-    padding: 0 8px;
+    padding: calc(10px + env(safe-area-inset-top)) 8px 6px;
   }
 
   .topBarTitle {
     font-size: 14px;
   }
 
+  .topBarLeft {
+    gap: 6px;
+  }
+
   .topBarRight {
     display: none;
+  }
+
+  .tabs {
+    gap: 6px;
   }
 
   .tab {
@@ -788,7 +908,44 @@
 
   .addFriendBtn {
     height: 28px;
-    padding: 0 8px;
+    padding: 0 10px;
     font-size: 11px;
+  }
+
+  .friendsSearchRow {
+    padding: 8px 10px 6px;
+  }
+
+  .friendsSearchInput {
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .friendsScroll {
+    padding: 4px 8px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .friendRow {
+    padding: 10px;
+    gap: 8px;
+    min-height: 58px;
+  }
+
+  .friendsEmpty {
+    margin: 16px 8px;
+    padding: 36px 14px;
+  }
+
+  .discoveryModalShell,
+  .beaconPlusModalShell {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .discoveryCloseButton {
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
   }
 }

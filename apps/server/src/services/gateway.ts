@@ -186,13 +186,20 @@ export class GatewayService {
           return
         }
       } else if (message.t === 'WEBRTC_SIGNAL') {
-        // Direct to user
         const targetUserId = message.d.targetUserId
         if (targetUserId) {
           this.broadcast([targetUserId], payload)
           return
         }
+      } else if (message.guild_id) {
+        // Guild-scoped events (GUILD_UPDATE, GUILD_ROLE_*, GUILD_MEMBER_*, etc.)
+        this.getGuildMembers(message.guild_id).then(members => {
+          if (members && members.length > 0) this.broadcast(members, payload)
+          else this.broadcastAll(payload)
+        })
+        return
       }
+
       this.broadcastAll(payload)
     } catch (err) {
       console.error('Failed to handle pubsub event', err)
@@ -263,7 +270,7 @@ export class GatewayService {
 
     let userId: string | null = null
 
-    if (token.startsWith('bot_')) {
+    if (token.startsWith('beacon/bot_') || token.startsWith('bot_')) {
       const bot = await prisma.bot.findUnique({ where: { token } })
       if (!bot) return ws.close(4004, 'Invalid Bot Token')
       userId = (bot as any).userId || `bot:${bot.id}`

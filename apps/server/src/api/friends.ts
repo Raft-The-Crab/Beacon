@@ -9,6 +9,22 @@ import { publishGatewayEvent } from '../services/gatewayPublisher';
 
 const router = Router();
 
+const friendUserSelect = {
+  id: true,
+  username: true,
+  displayName: true,
+  discriminator: true,
+  avatar: true,
+  banner: true,
+  bio: true,
+  customStatus: true,
+  badges: true,
+  isBeaconPlus: true,
+  avatarDecorationId: true,
+  profileEffectId: true,
+  createdAt: true,
+} as const
+
 // Get user's friends
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   try {
@@ -24,8 +40,8 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
         ]
       },
       include: {
-        user: { select: { id: true, username: true, discriminator: true, avatar: true } },
-        friend: { select: { id: true, username: true, discriminator: true, avatar: true } }
+        user: { select: friendUserSelect },
+        friend: { select: friendUserSelect }
       }
     });
 
@@ -53,12 +69,55 @@ router.get('/pending', authenticate, async (req: AuthRequest, res: Response) => 
     const pending = await prisma.friendship.findMany({
       where: { friendId: userId, status: 0 },
       include: {
-        user: { select: { id: true, username: true, discriminator: true, avatar: true } }
+        user: { select: friendUserSelect }
       }
     });
 
     return res.json(pending.map(p => p.user));
   } catch (error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Search current user's friends by username/tag
+router.get('/search', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const query = String(req.query?.query || '').trim().toLowerCase();
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!prisma) return res.status(500).json({ error: 'Database not connected' });
+
+    const friendships = await prisma.friendship.findMany({
+      where: {
+        OR: [
+          { userId, status: 1 },
+          { friendId: userId, status: 1 }
+        ]
+      },
+      include: {
+        user: { select: friendUserSelect },
+        friend: { select: friendUserSelect }
+      }
+    });
+
+    const deduped = new Map<string, any>();
+    for (const relation of friendships) {
+      const candidate = relation.userId === userId ? relation.friend : relation.user;
+      if (candidate?.id) deduped.set(candidate.id, candidate);
+    }
+
+    const rows = Array.from(deduped.values());
+    if (!query) return res.json(rows);
+
+    const filtered = rows.filter((friend) => {
+      const username = String(friend?.username || '').toLowerCase();
+      const discriminator = String(friend?.discriminator || '0000').toLowerCase();
+      return username.includes(query) || `${username}#${discriminator}`.includes(query);
+    });
+
+    return res.json(filtered);
+  } catch (error) {
+    console.error('Search friends error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

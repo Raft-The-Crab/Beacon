@@ -1,11 +1,33 @@
 /**
  * BEACON SERVER - CLAWCLOUD ENTRYPOINT
- * Optimized for ClawCloud with image-only upload restrictions and memory limits.
+ * Main API deployment. Runs API by default and can also boot WS in the same container.
  */
 'use strict';
 
-console.log('🚀 Beacon ClawCloud Server is starting up...');
-console.log('⚠️  Note: ClawCloud instance configured for Image Uploads only.');
+const fs = require('fs');
+const path = require('path');
 
-require('./dist/src/api-server.js');
-require('./dist/src/ws-server.js');
+console.log('[ClawCloud] Beacon main service starting...');
+
+const apiPath = path.join(__dirname, 'dist', 'src', 'api-server.js');
+const wsPath = path.join(__dirname, 'dist', 'src', 'ws-server.js');
+
+if (!fs.existsSync(apiPath)) {
+	console.error('[ClawCloud] Missing build output: dist/src/api-server.js');
+	process.exit(1);
+}
+
+require(apiPath);
+
+const enableWsServer = process.env.ENABLE_WS_SERVER !== 'false';
+if (enableWsServer) {
+	if (!fs.existsSync(wsPath)) {
+		console.error('[ClawCloud] WS build output is missing: dist/src/ws-server.js');
+		process.exit(1);
+	}
+
+	require(wsPath);
+	console.log('[ClawCloud] WS server enabled in main service');
+} else {
+	console.log('[ClawCloud] WS server disabled');
+}

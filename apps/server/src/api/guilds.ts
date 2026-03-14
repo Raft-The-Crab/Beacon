@@ -12,6 +12,7 @@ router.post('/', authenticate, GuildController.createGuild)
 router.get('/me', authenticate, GuildController.getMemberGuilds)
 router.get('/discovery', authenticate, cacheResponse(60), GuildController.discoverGuilds)
 router.post('/invites/:inviteCode/join', authenticate, GuildController.joinByInvite)
+router.get('/invites/:inviteCode', GuildController.previewInvite)
 router.get('/:id', authenticate, cacheResponse(60), GuildController.getGuild)
 router.patch('/:id', authenticate, requirePermission(Permissions.MANAGE_SERVER), GuildController.updateGuild)
 
@@ -29,6 +30,7 @@ router.delete('/:guildId/invites/:inviteCode', authenticate, requirePermission(P
 
 // Boosting & Vanity
 router.post('/:id/boost', authenticate, GuildController.boostGuild)
+router.patch('/:id/verification', authenticate, GuildController.setVerificationStatus)
 router.post('/:id/vanity', authenticate, GuildController.updateVanityUrl)
 router.post('/:id/join', authenticate, GuildController.joinGuild)
 router.delete('/:id/leave', authenticate, GuildController.leaveGuild)

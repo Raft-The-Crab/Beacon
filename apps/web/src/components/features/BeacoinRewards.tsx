@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Coins, Gift, Flame, MessageCircle, UserPlus, Check, Lock } from 'lucide-react'
+import { useEffect } from 'react'
+import { Coins, Gift, Flame, MessageCircle, UserPlus, Check } from 'lucide-react'
 import { useBeacoinStore } from '../../stores/useBeacoinStore'
 import styles from '../../styles/modules/features/BeacoinRewards.module.css'
 
@@ -8,7 +8,6 @@ export function BeacoinRewards() {
         balance, streak, dailyRewards, messageCount, lastDailyClaim,
         claimDaily, fetchWallet
     } = useBeacoinStore()
-    const [claimed, setClaimed] = useState(false)
 
     useEffect(() => { fetchWallet() }, [])
 
@@ -16,9 +15,8 @@ export function BeacoinRewards() {
         new Date(lastDailyClaim).toDateString() !== new Date().toDateString()
 
     const handleClaim = async () => {
-        if (!canClaimToday || claimed) return
+        if (!canClaimToday) return
         await claimDaily()
-        setClaimed(true)
     }
 
     return (
@@ -61,16 +59,14 @@ export function BeacoinRewards() {
                     ))}
                 </div>
                 <button
-                    className={`${styles.claimBtn} ${!canClaimToday || claimed ? styles.claimBtnDisabled : ''}`}
+                    className={`${styles.claimBtn} ${!canClaimToday ? styles.claimBtnDisabled : ''}`}
                     onClick={handleClaim}
-                    disabled={!canClaimToday || claimed}
+                    disabled={!canClaimToday}
                 >
-                    {claimed ? (
-                        <><Check size={16} /> Claimed Today!</>
-                    ) : canClaimToday ? (
+                    {canClaimToday ? (
                         <><Gift size={16} /> Claim Daily Reward</>
                     ) : (
-                        <><Lock size={16} /> Come Back Tomorrow</>
+                        <><Check size={16} /> Claimed Today!</>
                     )}
                 </button>
             </div>

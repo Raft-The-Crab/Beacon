@@ -45,7 +45,7 @@ export function ServerInviteModal({ serverName, isOpen, onClose }: ServerInviteM
 
     if (!isOpen) return null
 
-    const inviteLink = `https://beacon.qzz.io/invite/${inviteCode}`
+    const inviteLink = `${window.location.origin}/invite/${inviteCode}`
 
     const handleCopy = () => {
         navigator.clipboard.writeText(inviteLink)

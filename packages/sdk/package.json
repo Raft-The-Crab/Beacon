@@ -1,14 +1,21 @@
 {
-  "name": "@beacon/sdk",
-  "version": "1.0.0",
-  "description": "Official JavaScript SDK for Beacon - A comprehensive client library for real-time communication",
+  "name": "beacon-sdk",
+  "version": "1.2.0",
+  "description": "Official full Beacon SDK for bots, apps, gateway clients, and rich interactions",
   "main": "./dist/index.js",
+  "browser": "./dist/browser.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "require": "./dist/index.js",
       "default": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./browser": {
+      "browser": "./dist/browser.js",
+      "require": "./dist/browser.js",
+      "default": "./dist/browser.js",
+      "types": "./dist/browser.d.ts"
     }
   },
   "files": [
@@ -19,17 +26,21 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "clean": "node -e \"const fs=require('fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.rmSync('tsconfig.tsbuildinfo',{force:true});\"",
+    "publish:check": "npm pack --dry-run",
     "prepublishOnly": "npm run clean && npm run build"
   },
   "keywords": [
     "beacon",
     "sdk",
+    "bot",
+    "gateway",
     "websocket",
     "real-time",
     "chat",
     "communication",
-    "api-client"
+    "builders",
+    "slash-commands"
   ],
   "author": "Beacon Team",
   "license": "MIT",
@@ -44,8 +55,16 @@
     "url": "https://github.com/Raft-The-Crab/Beacon/issues"
   },
   "homepage": "https://github.com/Raft-The-Crab/Beacon#readme",
-  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "events": "^3.3.0",
+    "ws": "^8.19.0"
+  },
   "devDependencies": {
+    "@types/ws": "^8.5.10",
     "typescript": "^5.3.3"
   }
 }
