@@ -38,7 +38,7 @@ PORT=8080
 WS_PORT=4001
 GATEWAY_PORT=4001
 
-DATABASE_URL=postgresql://postgres:Alixisjacob12345*@db.cikitgsftvtpnjdiigxf.supabase.co:5432/postgres?schema=public
+DATABASE_URL=postgresql://postgres.cikitgsftvtpnjdiigxf:Alixisjacob12345*@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
 MONGO_URI=mongodb+srv://Beacon:Alixisjacob12345*@cluster0.t2pcffo.mongodb.net/?retryWrites=true&w=majority
 MONGO_URI_SECONDARY=mongodb+srv://Beacon-1:Alixisjacob12345*@bytebot.thcrueg.mongodb.net/?retryWrites=true&w=majority
 
@@ -65,7 +65,7 @@ JWT_SECRET=FHlfKguI131LBYB7nEBc4nXdF2rOQeBz+cIOF9zpGxcmb6LIM7bCDqJljRESpe9kr9Acs
 BEACON_PUBLIC_KEY=f3328ce756626f63456b3e70cf24cfc9a9bf48d68926048d087b37d45543c8d1
 BCRYPT_ROUNDS=8
 
-CORS_ORIGIN=https://beacon.qzz.io,https://www.beacon.qzz.io,https://api.beacon.qzz.io
+CORS_ORIGIN=https://beacon.qzz.io,https://www.beacon.qzz.io,https://api.beacon.qzz.io,http://localhost:5173,http://127.0.0.1:5173
 
 SWIPL_PATH=swipl
 SOVEREIGNTY_LEVEL=3
@@ -124,7 +124,8 @@ PORT=8080
 WS_PORT=4001
 GATEWAY_PORT=4001
 
-DATABASE_URL=postgresql://postgres:Alixisjacob12345*@db.cikitgsftvtpnjdiigxf.supabase.co:5432/postgres?schema=public
+CORS_ORIGIN=https://beacon.qzz.io,https://www.beacon.qzz.io,https://api.beacon.qzz.io,http://localhost:5173,http://127.0.0.1:5173
+DATABASE_URL=postgresql://postgres.cikitgsftvtpnjdiigxf:Alixisjacob12345*@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
 MONGO_URI=mongodb+srv://Beacon:Alixisjacob12345*@cluster0.t2pcffo.mongodb.net/?retryWrites=true&w=majority
 MONGO_URI_SECONDARY=mongodb+srv://Beacon-1:Alixisjacob12345*@bytebot.thcrueg.mongodb.net/?retryWrites=true&w=majority
 
