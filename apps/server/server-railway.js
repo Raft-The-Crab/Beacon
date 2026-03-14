@@ -12,6 +12,18 @@ const https = require('https');
 const http = require('http');
 
 console.log('[Railway] Beacon API service starting...');
+if (process.env.RAILWAY_GIT_COMMIT_SHA) {
+  console.log(`[Railway] Deploy commit: ${process.env.RAILWAY_GIT_COMMIT_SHA}`);
+}
+
+const envPresence = {
+  DATABASE_URL: !!process.env.DATABASE_URL,
+  MONGO_URI: !!process.env.MONGO_URI,
+  REDIS_URL_PRIVATE: !!process.env.REDIS_URL_PRIVATE,
+  REDIS_URL_PUBLIC: !!process.env.REDIS_URL_PUBLIC,
+  AUTO_TUNE_PROFILE: process.env.AUTO_TUNE_PROFILE || '(unset)',
+};
+console.log('[Railway] Env presence:', envPresence);
 
 // Railway should stay lightweight by default.
 if (process.env.ENABLE_BOT_SYSTEM == null) process.env.ENABLE_BOT_SYSTEM = 'false';

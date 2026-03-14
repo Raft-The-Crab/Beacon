@@ -56,6 +56,14 @@ const app = express()
 app.use(compression({ level: 6, threshold: 10 * 1024 })) // Gzip compression > 10kb
 app.use(requestTimer)
 
+function parseEnvBool(value: string | undefined, defaultValue: boolean): boolean {
+    if (value == null) return defaultValue
+    const normalized = String(value).trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '').toLowerCase()
+    if (['1', 'true', 'yes', 'on'].includes(normalized)) return true
+    if (['0', 'false', 'no', 'off'].includes(normalized)) return false
+    return defaultValue
+}
+
 const configuredCorsOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
     : ['http://localhost:5173', 'https://beacon.qzz.io', 'http://127.0.0.1:5173']
@@ -342,8 +350,8 @@ const start = async () => {
             console.log(`🌐 Public API URL: ${publicUrl}`)
         }
 
-            const moderationEnabled = process.env.ENABLE_MODERATION !== 'false'
-            const botSystemEnabled = process.env.ENABLE_BOT_SYSTEM !== 'false'
+            const moderationEnabled = parseEnvBool(process.env.ENABLE_MODERATION, true)
+            const botSystemEnabled = parseEnvBool(process.env.ENABLE_BOT_SYSTEM, true)
 
             if (moderationEnabled) {
                 moderationService.init()

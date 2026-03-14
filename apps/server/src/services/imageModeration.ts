@@ -22,9 +22,17 @@ let nsfwModel: any = null
 let tfNode: any = null
 let disabledLogPrinted = false
 
+function parseEnvBool(value: string | undefined, defaultValue: boolean): boolean {
+  if (value == null) return defaultValue
+  const normalized = String(value).trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '').toLowerCase()
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false
+  return defaultValue
+}
+
 function isImageModerationEnabled(): boolean {
-  if (process.env.ENABLE_IMAGE_MODERATION === 'true') return true
-  if (process.env.ENABLE_IMAGE_MODERATION === 'false') return false
+  if (parseEnvBool(process.env.ENABLE_IMAGE_MODERATION, !process.env.RAILWAY_ENVIRONMENT_NAME)) return true
+  if (!parseEnvBool(process.env.ENABLE_IMAGE_MODERATION, !process.env.RAILWAY_ENVIRONMENT_NAME)) return false
   // Safe default: keep Railway lightweight unless explicitly enabled.
   return !process.env.RAILWAY_ENVIRONMENT_NAME
 }

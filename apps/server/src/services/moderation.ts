@@ -37,6 +37,14 @@ interface AiPrecheckResult {
   categories: string[]
 }
 
+function parseEnvBool(value: string | undefined, defaultValue: boolean): boolean {
+  if (value == null) return defaultValue
+  const normalized = String(value).trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '').toLowerCase()
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false
+  return defaultValue
+}
+
 function parseCloudinaryPublicId(fileUrl: string): { publicId: string; resourceType: string } | null {
   try {
     const decoded = decodeURIComponent(fileUrl)
@@ -243,7 +251,7 @@ function tsFallback(content: string, priorOffenses: number): ModerationResult {
 async function aiPrecheck(content: string): Promise<AiPrecheckResult> {
   const aiUrl = (process.env.CLAWCLOUD_AI_URL || '').trim()
   const apiKey = (process.env.CLAWCLOUD_API_KEY || process.env.AI_API_KEY || '').trim()
-  const enabled = process.env.ENABLE_TEXT_AI_MODERATION !== 'false'
+  const enabled = parseEnvBool(process.env.ENABLE_TEXT_AI_MODERATION, true)
 
   if (!enabled || !aiUrl || !apiKey || !content.trim()) {
     return { blocked: false, score: 0, categories: [] }
