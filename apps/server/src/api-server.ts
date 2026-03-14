@@ -77,7 +77,13 @@ app.use(cors({
             return
         }
 
-        if (configuredCorsOrigins.includes(origin) || devTunnelRegex.test(origin)) {
+        // Always allow localhost and 127.0.0.1 for dev
+        if (
+            origin === 'http://localhost:5173' ||
+            origin === 'http://127.0.0.1:5173' ||
+            configuredCorsOrigins.includes(origin) ||
+            devTunnelRegex.test(origin)
+        ) {
             callback(null, true)
             return
         }
