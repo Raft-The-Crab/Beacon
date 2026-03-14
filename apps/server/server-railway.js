@@ -59,7 +59,20 @@ function selfPing() {
   const lib = url.startsWith('https') ? https : http;
 
   const req = lib.get(url, (res) => {
-    console.log(`[Railway] keep-alive ping ${url} (${res.statusCode})`);
+    if (res.statusCode === 404 && url.endsWith('/health')) {
+      // Some reverse-proxy setups route /api only; try API version endpoint.
+      const fallbackUrl = url.replace(/\/health$/, '/api/version');
+      const fallbackReq = lib.get(fallbackUrl, (fallbackRes) => {
+        console.log(`[Railway] keep-alive ping ${fallbackUrl} (${fallbackRes.statusCode})`);
+        fallbackRes.resume();
+      });
+      fallbackReq.on('error', (err) => {
+        console.warn(`[Railway] keep-alive ping failed: ${err.message}`);
+      });
+      fallbackReq.setTimeout(10000, () => fallbackReq.destroy());
+    } else {
+      console.log(`[Railway] keep-alive ping ${url} (${res.statusCode})`);
+    }
     res.resume();
   });
 

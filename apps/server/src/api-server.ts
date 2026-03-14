@@ -332,7 +332,15 @@ const start = async () => {
         }
 
         const activePort = await listenWithPortFallback(BASE_PORT)
-        console.log(`\n✨ API running on http://localhost:${activePort}`)
+        const publicDomain = process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL || process.env.CLAWCLOUD_PUBLIC_URL || process.env.CLAWCLOUD_URL
+        const publicUrl = publicDomain
+            ? (String(publicDomain).startsWith('http') ? String(publicDomain) : `https://${publicDomain}`)
+            : null
+
+        console.log(`\n✨ API bound to internal container URL: http://localhost:${activePort}`)
+        if (publicUrl) {
+            console.log(`🌐 Public API URL: ${publicUrl}`)
+        }
 
             const moderationEnabled = process.env.ENABLE_MODERATION !== 'false'
             const botSystemEnabled = process.env.ENABLE_BOT_SYSTEM !== 'false'
