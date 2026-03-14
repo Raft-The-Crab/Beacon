@@ -1,18 +1,21 @@
 # Beacon Hosting Tutorial (Railway + ClawCloud, Singapore)
 
-This guide is prefilled from the current repository environment files so you can deploy directly.
+This is the copy-paste deployment file with full env blocks.
+
+Important:
+- Do not wrap values in quotes in Railway/ClawCloud UI.
+- Paste exactly as `KEY=value`.
+- Redeploy after saving variables.
 
 ## 1) Target Architecture
 
-- Railway: lightweight API + gateway basics
-- ClawCloud Server: heavier API/gateway workloads and Prolog moderation
-- ClawCloud AI: ONNX moderation + media extraction (memory target ~834 MB)
+- Railway: lightweight API mode
+- ClawCloud Main: full server mode
+- ClawCloud AI: ONNX + media extraction mode (target 834 MB)
 
-All services should be set to Singapore (`asia-southeast1`).
+Use Singapore region (`asia-southeast1`) for all services.
 
-## 2) Railway Service Setup
-
-Create one Railway service for `apps/server`.
+## 2) Railway Service
 
 Build command:
 
@@ -26,27 +29,27 @@ Start command:
 cd apps/server && npm run start:railway
 ```
 
-Region:
-
-- `asia-southeast1` (Singapore)
-
-### Railway Environment Variables (paste exactly)
+Railway env (full block, paste all):
 
 ```env
 NODE_ENV=production
 PORT=8080
+WS_PORT=4001
 GATEWAY_PORT=4001
 
 DATABASE_URL=postgresql://postgres:Alixisjacob12345*@db.cikitgsftvtpnjdiigxf.supabase.co:5432/postgres?schema=public
 MONGO_URI=mongodb+srv://Beacon:Alixisjacob12345*@cluster0.t2pcffo.mongodb.net/?retryWrites=true&w=majority
+MONGO_URI_SECONDARY=mongodb+srv://Beacon-1:Alixisjacob12345*@bytebot.thcrueg.mongodb.net/?retryWrites=true&w=majority
 
 REDIS_URL_PRIVATE=redis://default:dlkngb7h@beacon-redis-redis.ns-hh1bxkxc.svc:6379
 REDIS_URL_PUBLIC=redis://default:dlkngb7h@dbprovider.ap-southeast-1.clawcloudrun.com:34053
 REDIS_URL=redis://localhost:6379
+REDIS_FORCE_ENABLE=false
 
 CLOUDINARY_CLOUD_NAME=dvbag0oy5
 CLOUDINARY_API_KEY=182285414774756
 CLOUDINARY_API_SECRET=UKrMYaaeWJPaQwNs7YQn_3yeLt0
+CLOUDINARY_URL_SECONDARY=cloudinary://759797579854911:UuNfNRUZJBqrfmcRF3xQzve7pa4@dxtk9nhjl
 
 R2_ENDPOINT_URL=https://ce5094f80c8353520bdc4ec96628e6c5.r2.cloudflarestorage.com/beaconstorage
 R2_ENDPOINT=https://ce5094f80c8353520bdc4ec96628e6c5.r2.cloudflarestorage.com
@@ -55,63 +58,84 @@ R2_BUCKET_NAME=beaconstorage
 R2_PUBLIC_URL=https://ce5094f80c8353520bdc4ec96628e6c5.r2.cloudflarestorage.com/beaconstorage
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
+R2_BACKUP_ENABLED=true
 
 JWT_SECRET=FHlfKguI131LBYB7nEBc4nXdF2rOQeBz+cIOF9zpGxcmb6LIM7bCDqJljRESpe9kr9AcslAVunDjFgUlsLl2hA==
+BEACON_PUBLIC_KEY=f3328ce756626f63456b3e70cf24cfc9a9bf48d68926048d087b37d45543c8d1
+BCRYPT_ROUNDS=8
+
 CORS_ORIGIN=https://beacon.qzz.io,https://www.beacon.qzz.io,https://api.beacon.qzz.io
 
 SWIPL_PATH=swipl
+SOVEREIGNTY_LEVEL=3
+SMS_BRIDGE_ENABLED=true
+
 API_HOST=https://api.beacon.qzz.io
 GATEWAY_HOST=wss://gateway.beacon.qzz.io
 MODERATION_API=https://mod.beacon.qzz.io
 MEDIA_API=https://media.beacon.qzz.io
-
-SOVEREIGNTY_LEVEL=3
-SMS_BRIDGE_ENABLED=true
+BEACON_API_URL=https://api.beacon.qzz.io/api
+BEACON_GATEWAY_URL=wss://gateway.beacon.qzz.io
+API_URL=https://api.beacon.qzz.io/api
+GATEWAY_URL=wss://gateway.beacon.qzz.io
 
 CLAWCLOUD_AI_URL=
 CLAWCLOUD_API_KEY=
+AI_API_KEY=
+AI_ASSISTANT_ENDPOINT=
+AI_ASSISTANT_MODEL=qwen2.5:3b
+AI_CHAT_ENDPOINT=
+AI_CHAT_MODEL=qwen2.5:3b
+BEACON_INTELLIGENCE_BOT_APP_ID=
+
+GIPHY_API_KEY=
+
+REQUEST_LOG_NOISY_PATHS=/info,/options,/friends
+REQUEST_LOG_THROTTLE_MS=15000
+REQUEST_LOG_SAMPLE_RATE=1
+REQUEST_LOG_SUCCESS=true
 
 ENABLE_MODERATION=true
+ENABLE_TEXT_AI_MODERATION=true
 ENABLE_BOT_SYSTEM=false
 ENABLE_IMAGE_MODERATION=false
-ENABLE_TEXT_AI_MODERATION=true
-AUTO_TUNE_PROFILE=railway-api
 ENABLE_WS_SERVER=false
+AUTO_TUNE_PROFILE=railway-api
 ```
 
-## 3) ClawCloud Main Server Deployment
+## 3) ClawCloud Main Server
 
-Use image:
+Image:
 
 - `ghcr.io/raft-the-crab/beacon-server:latest`
 
-For private GHCR image in ClawCloud:
+If private image:
 
-- Image Registry: `ghcr.io`
+- Registry: `ghcr.io`
 - Username: your GitHub username
 - Password: GitHub PAT with `read:packages`
 
-For public GHCR image:
-
-- Choose Public Image and only fill image name.
-
-### ClawCloud Main Server Env
+ClawCloud Main env (full block, paste all):
 
 ```env
 NODE_ENV=production
 PORT=8080
+WS_PORT=4001
 GATEWAY_PORT=4001
 
 DATABASE_URL=postgresql://postgres:Alixisjacob12345*@db.cikitgsftvtpnjdiigxf.supabase.co:5432/postgres?schema=public
 MONGO_URI=mongodb+srv://Beacon:Alixisjacob12345*@cluster0.t2pcffo.mongodb.net/?retryWrites=true&w=majority
+MONGO_URI_SECONDARY=mongodb+srv://Beacon-1:Alixisjacob12345*@bytebot.thcrueg.mongodb.net/?retryWrites=true&w=majority
 
 REDIS_URL_PRIVATE=redis://default:dlkngb7h@beacon-redis-redis.ns-hh1bxkxc.svc:6379
 REDIS_URL_PUBLIC=redis://default:dlkngb7h@dbprovider.ap-southeast-1.clawcloudrun.com:34053
 REDIS_URL=redis://localhost:6379
+REDIS_FORCE_ENABLE=true
 
 CLOUDINARY_CLOUD_NAME=dvbag0oy5
 CLOUDINARY_API_KEY=182285414774756
 CLOUDINARY_API_SECRET=UKrMYaaeWJPaQwNs7YQn_3yeLt0
+CLOUDINARY_URL_SECONDARY=cloudinary://759797579854911:UuNfNRUZJBqrfmcRF3xQzve7pa4@dxtk9nhjl
 
 R2_ENDPOINT_URL=https://ce5094f80c8353520bdc4ec96628e6c5.r2.cloudflarestorage.com/beaconstorage
 R2_ENDPOINT=https://ce5094f80c8353520bdc4ec96628e6c5.r2.cloudflarestorage.com
@@ -120,36 +144,65 @@ R2_BUCKET_NAME=beaconstorage
 R2_PUBLIC_URL=https://ce5094f80c8353520bdc4ec96628e6c5.r2.cloudflarestorage.com/beaconstorage
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
+R2_BACKUP_ENABLED=true
 
 JWT_SECRET=FHlfKguI131LBYB7nEBc4nXdF2rOQeBz+cIOF9zpGxcmb6LIM7bCDqJljRESpe9kr9AcslAVunDjFgUlsLl2hA==
+BEACON_PUBLIC_KEY=f3328ce756626f63456b3e70cf24cfc9a9bf48d68926048d087b37d45543c8d1
+BCRYPT_ROUNDS=8
+
 CORS_ORIGIN=https://beacon.qzz.io,https://www.beacon.qzz.io,https://api.beacon.qzz.io
 
 SWIPL_PATH=swipl
 SOVEREIGNTY_LEVEL=3
 SMS_BRIDGE_ENABLED=true
 
+API_HOST=https://api.beacon.qzz.io
+GATEWAY_HOST=wss://gateway.beacon.qzz.io
+MODERATION_API=https://mod.beacon.qzz.io
+MEDIA_API=https://media.beacon.qzz.io
+BEACON_API_URL=https://api.beacon.qzz.io/api
+BEACON_GATEWAY_URL=wss://gateway.beacon.qzz.io
+API_URL=https://api.beacon.qzz.io/api
+GATEWAY_URL=wss://gateway.beacon.qzz.io
+
+CLAWCLOUD_AI_URL=
+CLAWCLOUD_API_KEY=
+AI_API_KEY=
+AI_ASSISTANT_ENDPOINT=
+AI_ASSISTANT_MODEL=qwen2.5:3b
+AI_CHAT_ENDPOINT=
+AI_CHAT_MODEL=qwen2.5:3b
+BEACON_INTELLIGENCE_BOT_APP_ID=
+
+GIPHY_API_KEY=
+
+REQUEST_LOG_NOISY_PATHS=/info,/options,/friends
+REQUEST_LOG_THROTTLE_MS=15000
+REQUEST_LOG_SAMPLE_RATE=1
+REQUEST_LOG_SUCCESS=true
+
 ENABLE_MODERATION=true
+ENABLE_TEXT_AI_MODERATION=true
 ENABLE_BOT_SYSTEM=true
 ENABLE_IMAGE_MODERATION=true
-ENABLE_TEXT_AI_MODERATION=true
-AUTO_TUNE_PROFILE=clawcloud-api
 ENABLE_WS_SERVER=true
+AUTO_TUNE_PROFILE=clawcloud-api
 ```
 
-## 4) ClawCloud AI Deployment
+## 4) ClawCloud AI Service
 
-Use image:
+Image:
 
 - `ghcr.io/raft-the-crab/beacon-ai:latest`
 
-Resource target:
+Resources:
 
 - CPU: `0.6`
 - RAM: `1112 MB`
 - Storage: `4 GB`
-- Runtime memory goal: `~834 MB`
+- Runtime target: `~834 MB`
 
-### ClawCloud AI Env
+ClawCloud AI env:
 
 ```env
 PORT=8080
@@ -163,50 +216,25 @@ CLAWCLOUD_API_KEY=
 MODEL_PATH=./models/moderation.onnx
 ```
 
-## 5) AI Model Recommendation (small + efficient)
+## 5) Frontend Env
 
-Use a compact ONNX model (quantized) for legal-risk detection only:
-
-- DistilBERT or MiniLM class model
-- Quantized ONNX target size: ~120–260 MB
-- Sequence length: 192
-- Concurrency: 1
-
-This keeps AI below the 834 MB budget and leaves room for media extraction + Redis.
-
-## 6) Domain Notes
-
-Railway usually shows its generated domain (for example `*.up.railway.app`) even when custom domain is attached.
-
-Both are valid and point to the same deployment:
-
-- generated domain: operational default
-- custom domain: your branded public endpoint
-
-## 7) Frontend / API Domain Wiring
-
-Use these in web deploy settings:
+Web deploy env:
 
 ```env
 VITE_API_URL=https://api.beacon.qzz.io/api
 VITE_GATEWAY_URL=wss://gateway.beacon.qzz.io
 ```
 
-## 8) Health Checks
+## 6) Railway Issues Checklist (Quick)
 
-- Railway API: `GET /health`
-- ClawCloud Main: `GET /health`
-- ClawCloud AI: `GET /health`
+If logs show `DATABASE_URL not set` or `localhost:27017`:
 
-Expected AI health response includes:
+1. Ensure no quotes in Railway Variables values.
+2. Confirm variables are in the same service + same environment (`production`).
+3. Redeploy latest commit after saving variables.
+4. Check startup log line `[Railway] Env presence:` to verify keys are true.
 
-- `status: ok`
-- `ai_model: true/false`
-- `redis: true/false`
+If logs show `keep-alive ... /health (404)`:
 
-## 9) Quick Troubleshooting
-
-- OOM on Railway: keep `ENABLE_IMAGE_MODERATION=false`, `ENABLE_BOT_SYSTEM=false`, `AUTO_TUNE_PROFILE=railway-api`
-- AI high memory: keep `OMP_NUM_THREADS=1`, `ORT_NUM_THREADS=1`, model sequence length 192
-- Private image pull fail on ClawCloud: check PAT has `read:packages`
-- Build fails on `beacon-sdk`: ensure server build runs `npm --prefix ../../packages/sdk run build`
+1. Latest code now tries `/api/version` fallback.
+2. Redeploy latest `main` so this fix is active.
