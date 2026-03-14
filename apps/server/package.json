@@ -7,7 +7,7 @@
     "dev:server": "npm run dev",
     "dev:api": "tsx watch src/api-server.ts",
     "dev:ws": "tsx watch src/ws-server.ts",
-    "build": "npm --prefix ../../packages/types run build && npm run prisma:generate && tsc --skipLibCheck",
+    "build": "npm --prefix ../../packages/sdk run build && npm --prefix ../../packages/types run build && npm run prisma:generate && tsc --skipLibCheck",
     "start": "node server-railway.js",
     "start:api": "node dist/src/api-server.js",
     "start:ws": "node dist/src/ws-server.js",
