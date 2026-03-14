@@ -10,6 +10,48 @@ import { serializeBigInt } from '../utils/serializeBigInt';
 import { generateShortId } from '../utils/id';
 import { priorityQueue } from '../services/priorityQueue';
 import { ModerationReportModel } from '../db';
+import { fileUploadService } from '../services/upload';
+import { StorageService } from '../services/storage';
+
+function parseCloudinaryPublicId(fileUrl: string): { publicId: string; resourceType: string } | null {
+  try {
+    const decoded = decodeURIComponent(fileUrl)
+    const marker = '/upload/'
+    const markerIdx = decoded.indexOf(marker)
+    if (markerIdx === -1) return null
+
+    const prefix = decoded.slice(0, markerIdx)
+    let resourceType = 'image'
+    if (prefix.includes('/video/')) resourceType = 'video'
+    if (prefix.includes('/raw/')) resourceType = 'raw'
+
+    let pathPart = decoded.slice(markerIdx + marker.length)
+    pathPart = pathPart.replace(/^[^/]+\//, '')
+    const withoutExt = pathPart.replace(/\.[a-zA-Z0-9]+(?:\?.*)?$/, '')
+    if (!withoutExt) return null
+
+    return { publicId: withoutExt, resourceType }
+  } catch {
+    return null
+  }
+}
+
+async function purgeAttachmentFiles(attachments: Array<{ url: string }>) {
+  for (const attachment of attachments) {
+    const url = String(attachment?.url || '')
+    if (!url) continue
+
+    const cloudinaryParsed = parseCloudinaryPublicId(url)
+    if (cloudinaryParsed) {
+      await fileUploadService.deleteFile(cloudinaryParsed.publicId, cloudinaryParsed.resourceType)
+      continue
+    }
+
+    if (url.includes('.r2.cloudflarestorage.com')) {
+      await StorageService.deleteFile(url)
+    }
+  }
+}
 
 // ─────────────────────────────────────────────────────────────
 // GET /channels/:channelId/messages
@@ -79,7 +121,7 @@ export async function createMessage(req: Request, res: Response) {
           guild_id: null,
           reporter_id: 'system',
           target_user_id: userId,
-          content: String(content || ''),
+          content: null,
           reason: moderation.result.reason || 'moderation_reject',
           flags: moderation.result.flags || [],
           score: moderation.result.score || 0,
@@ -264,7 +306,10 @@ export async function deleteMessage(req: Request, res: Response) {
   try {
     const existing = await prisma.message.findUnique({
       where: { id: messageId },
-      include: { channel: { include: { guild: true } } },
+      include: {
+        channel: { include: { guild: true } },
+        attachments: true,
+      },
     });
     if (!existing) return res.status(404).json({ error: 'Message not found' });
 
@@ -272,6 +317,7 @@ export async function deleteMessage(req: Request, res: Response) {
     const isAdmin = existing.channel?.guild?.ownerId === userId;
     if (!isOwner && !isAdmin) return res.status(403).json({ error: 'Insufficient permissions' });
 
+    await purgeAttachmentFiles(existing.attachments || [])
     await prisma.message.delete({ where: { id: messageId } });
 
     await publishGatewayEvent('MESSAGE_DELETE', { id: messageId, channelId });

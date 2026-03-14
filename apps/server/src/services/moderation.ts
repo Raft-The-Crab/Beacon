@@ -11,6 +11,10 @@ import path from 'path'
 import axios from 'axios'
 import { getProfile } from '../utils/autoTune'
 import { checkImageBuffer } from './imageModeration'
+import { prisma, ModerationReportModel } from '../db'
+import { fileUploadService } from './upload'
+import { StorageService } from './storage'
+import { publishGatewayEvent } from './gatewayPublisher'
 
 const PROLOG_SCRIPT = path.join(process.cwd(), 'src', 'services', 'ai', 'moderation.pl')
 const SWIPL = process.env.SWIPL_PATH || 'swipl'
@@ -31,6 +35,79 @@ interface AiPrecheckResult {
   blocked: boolean
   score: number
   categories: string[]
+}
+
+function parseCloudinaryPublicId(fileUrl: string): { publicId: string; resourceType: string } | null {
+  try {
+    const decoded = decodeURIComponent(fileUrl)
+    const marker = '/upload/'
+    const markerIdx = decoded.indexOf(marker)
+    if (markerIdx === -1) return null
+
+    const prefix = decoded.slice(0, markerIdx)
+    let resourceType = 'image'
+    if (prefix.includes('/video/')) resourceType = 'video'
+    if (prefix.includes('/raw/')) resourceType = 'raw'
+
+    let pathPart = decoded.slice(markerIdx + marker.length)
+    pathPart = pathPart.replace(/^[^/]+\//, '')
+    const withoutExt = pathPart.replace(/\.[a-zA-Z0-9]+(?:\?.*)?$/, '')
+    if (!withoutExt) return null
+
+    return { publicId: withoutExt, resourceType }
+  } catch {
+    return null
+  }
+}
+
+async function purgeMessageFromStorageAndDb(messageId: string, reason: string, flags: string[] = [], score = 0) {
+  if (!prisma) return
+
+  const message = await prisma.message.findUnique({
+    where: { id: messageId },
+    include: { attachments: true },
+  })
+  if (!message) return
+
+  for (const attachment of message.attachments || []) {
+    const url = String(attachment?.url || '')
+    if (!url) continue
+
+    const parsed = parseCloudinaryPublicId(url)
+    if (parsed) {
+      await fileUploadService.deleteFile(parsed.publicId, parsed.resourceType)
+      continue
+    }
+
+    if (url.includes('.r2.cloudflarestorage.com')) {
+      await StorageService.deleteFile(url)
+    }
+  }
+
+  await prisma.message.delete({ where: { id: messageId } })
+
+  await publishGatewayEvent('MESSAGE_DELETE', {
+    id: messageId,
+    channelId: message.channelId,
+    moderationDeleted: true,
+    reason,
+  })
+
+  await ModerationReportModel.create({
+    id: `rep_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    message_id: messageId,
+    channel_id: message.channelId,
+    guild_id: null,
+    reporter_id: 'system',
+    target_user_id: message.authorId || null,
+    // Keep report metadata only; do not store harmful message body.
+    content: null,
+    reason,
+    flags,
+    score,
+    status: 'resolved',
+    action_taken: 'content_purged',
+  })
 }
 
 export interface ModerationAction {
@@ -405,17 +482,39 @@ class ModerationService {
 
     // SLOW: image moderation runs in background
     priorityQueue.register('image_moderation', async (job: any) => {
-      const { imageBuffer, imageUrl, userId } = job.data
-      if (imageUrl) return this.checkImageFromUrl(imageUrl, userId)
-      const buffer = Buffer.from(imageBuffer, 'base64')
-      return this.checkImage(buffer, userId)
+      const { imageBuffer, imageUrl, userId, messageId } = job.data
+      const result = imageUrl
+        ? await this.checkImageFromUrl(imageUrl, userId)
+        : await this.checkImage(Buffer.from(imageBuffer, 'base64'), userId)
+
+      if (messageId && result?.result && result.result.approved === false) {
+        await purgeMessageFromStorageAndDb(
+          String(messageId),
+          result.result.reason || 'explicit_media',
+          result.result.flags || [],
+          result.result.score || 0,
+        )
+      }
+
+      return result
     })
 
     // SLOW: video moderation runs in background
     priorityQueue.register('video_moderation', async (job: any) => {
-      const { videoUrl, userId } = job.data
+      const { videoUrl, userId, messageId } = job.data
       const { videoModerationService } = require('./videoModeration')
-      return videoModerationService.moderateVideoUrl(videoUrl, userId)
+      const result = await videoModerationService.moderateVideoUrl(videoUrl, userId)
+
+      if (messageId && result?.result && result.result.approved === false) {
+        await purgeMessageFromStorageAndDb(
+          String(messageId),
+          result.result.reason || 'harmful_video',
+          result.result.flags || [],
+          result.result.score || 0,
+        )
+      }
+
+      return result
     })
 
     console.log('[Moderation] Priority queue handlers registered (fast: text | slow: image, video)')
