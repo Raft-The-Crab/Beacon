@@ -6,6 +6,7 @@ Important:
 - Do not wrap values in quotes in Railway/ClawCloud UI.
 - Paste exactly as `KEY=value`.
 - Redeploy after saving variables.
+- Moderation uses the small ONNX model (`MODEL_PATH=./models/moderation.onnx`). LLM bot fields are optional and can stay blank.
 
 ## 1) Target Architecture
 
@@ -83,9 +84,9 @@ CLAWCLOUD_AI_URL=
 CLAWCLOUD_API_KEY=
 AI_API_KEY=
 AI_ASSISTANT_ENDPOINT=
-AI_ASSISTANT_MODEL=qwen2.5:3b
+AI_ASSISTANT_MODEL=
 AI_CHAT_ENDPOINT=
-AI_CHAT_MODEL=qwen2.5:3b
+AI_CHAT_MODEL=
 BEACON_INTELLIGENCE_BOT_APP_ID=
 
 GIPHY_API_KEY=
@@ -169,9 +170,9 @@ CLAWCLOUD_AI_URL=
 CLAWCLOUD_API_KEY=
 AI_API_KEY=
 AI_ASSISTANT_ENDPOINT=
-AI_ASSISTANT_MODEL=qwen2.5:3b
+AI_ASSISTANT_MODEL=
 AI_CHAT_ENDPOINT=
-AI_CHAT_MODEL=qwen2.5:3b
+AI_CHAT_MODEL=
 BEACON_INTELLIGENCE_BOT_APP_ID=
 
 GIPHY_API_KEY=
