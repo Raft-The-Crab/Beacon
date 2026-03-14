@@ -9,6 +9,12 @@ const path = require('path');
 
 console.log('[ClawCloud] Beacon main service starting...');
 
+// ClawCloud runs the full feature set by default.
+if (process.env.ENABLE_BOT_SYSTEM == null) process.env.ENABLE_BOT_SYSTEM = 'true';
+if (process.env.ENABLE_IMAGE_MODERATION == null) process.env.ENABLE_IMAGE_MODERATION = 'true';
+if (process.env.ENABLE_MODERATION == null) process.env.ENABLE_MODERATION = 'true';
+if (process.env.AUTO_TUNE_PROFILE == null) process.env.AUTO_TUNE_PROFILE = 'clawcloud-api';
+
 const apiPath = path.join(__dirname, 'dist', 'src', 'api-server.js');
 const wsPath = path.join(__dirname, 'dist', 'src', 'ws-server.js');
 

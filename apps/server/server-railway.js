@@ -13,6 +13,12 @@ const http = require('http');
 
 console.log('[Railway] Beacon API service starting...');
 
+// Railway should stay lightweight by default.
+if (process.env.ENABLE_BOT_SYSTEM == null) process.env.ENABLE_BOT_SYSTEM = 'false';
+if (process.env.ENABLE_IMAGE_MODERATION == null) process.env.ENABLE_IMAGE_MODERATION = 'false';
+if (process.env.ENABLE_MODERATION == null) process.env.ENABLE_MODERATION = 'true';
+if (process.env.AUTO_TUNE_PROFILE == null) process.env.AUTO_TUNE_PROFILE = 'railway-api';
+
 const apiPath = path.join(__dirname, 'dist', 'src', 'api-server.js');
 const wsPath = path.join(__dirname, 'dist', 'src', 'ws-server.js');
 

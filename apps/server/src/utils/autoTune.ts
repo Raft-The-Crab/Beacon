@@ -53,6 +53,19 @@ function generateProfile(availableMB: number, serviceName: string): TuningProfil
     // Reserve ~20% for OS/Node overhead, use 80% for app
     const usableMB = Math.floor(availableMB * 0.80)
 
+    if (serviceName === 'railway-api') {
+        return {
+            name: `railway-api (${availableMB} MB detected)`,
+            heapLimitMB: Math.min(Math.max(usableMB - 120, 160), 220),
+            rssBackpressureMB: Math.round(availableMB * 0.78),
+            prologBypassMB: Math.round(availableMB * 0.65),
+            gcTriggerMB: Math.round(availableMB * 0.72),
+            aiConcurrency: 1,
+            jsonLimitMB: '8mb',
+            keepAliveIntervalMs: 5 * 60 * 1000,
+        }
+    }
+
     if (serviceName === 'clawcloud-api') {
         return {
             name: `clawcloud-api (${availableMB} MB detected)`,

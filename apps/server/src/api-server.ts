@@ -42,7 +42,10 @@ import apiRouter from './api/index'
 import activityRouter from './routes/activity.routes'
 import uploadRouter from './routes/upload.routes'
 
-const profile = getProfile('clawcloud-api')
+const serviceProfile =
+    process.env.AUTO_TUNE_PROFILE
+    || (process.env.RAILWAY_ENVIRONMENT_NAME ? 'railway-api' : 'clawcloud-api')
+const profile = getProfile(serviceProfile)
 const sdkConfig = resolveServerSdkConfig()
 
 if (process.env.NODE_ENV === 'production') {

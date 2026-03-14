@@ -20,12 +20,21 @@
 
 let nsfwModel: any = null
 let tfNode: any = null
+let disabledLogPrinted = false
+
+function isImageModerationEnabled(): boolean {
+  if (process.env.ENABLE_IMAGE_MODERATION === 'true') return true
+  if (process.env.ENABLE_IMAGE_MODERATION === 'false') return false
+  // Safe default: keep Railway lightweight unless explicitly enabled.
+  return !process.env.RAILWAY_ENVIRONMENT_NAME
+}
 
 async function loadModel() {
   if (nsfwModel) return nsfwModel
   try {
-    tfNode = await import('@tensorflow/tfjs-node')
-    const nsfwjs = await import('nsfwjs')
+    const dynamicImport = new Function('m', 'return import(m)') as (m: string) => Promise<any>
+    tfNode = await dynamicImport('@tensorflow/tfjs-node')
+    const nsfwjs = await dynamicImport('nsfwjs')
     nsfwModel = await nsfwjs.load()
     console.log('[ImageMod] nsfwjs model loaded')
   } catch (err) {
@@ -46,6 +55,14 @@ export async function checkImageBuffer(
   buffer: Buffer,
   _userId?: string
 ): Promise<ImageModerationResult> {
+  if (!isImageModerationEnabled()) {
+    if (!disabledLogPrinted) {
+      console.log('[ImageMod] disabled by profile (ENABLE_IMAGE_MODERATION=false/default on Railway)')
+      disabledLogPrinted = true
+    }
+    return { safe: true, explicitScore: 0, classifiedAs: 'unknown' }
+  }
+
   const model = await loadModel()
   if (!model || !tfNode) {
     return { safe: true, explicitScore: 0, classifiedAs: 'unknown' }
@@ -88,6 +105,3 @@ export async function checkImageBuffer(
     return { safe: true, explicitScore: 0, classifiedAs: 'unknown' }
   }
 }
-
-// Initialize on first import
-loadModel().catch(() => { /* deferred, non-fatal */ })
