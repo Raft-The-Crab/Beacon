@@ -4,6 +4,56 @@ import { prisma } from '../db'
 
 export class ModerationController {
     /**
+     * Submit a user/message report
+     */
+    static async createReport(req: Request, res: Response) {
+        try {
+            const reporterId = req.user?.id
+            if (!reporterId) return res.status(401).json({ error: 'Unauthorized' })
+
+            const {
+                messageId,
+                channelId,
+                guildId,
+                targetUserId,
+                content,
+                reason,
+            } = req.body || {}
+
+            if (!reason || String(reason).trim().length < 3) {
+                return res.status(400).json({ error: 'reason must be at least 3 characters' })
+            }
+
+            if (!messageId && !targetUserId) {
+                return res.status(400).json({ error: 'Either messageId or targetUserId is required' })
+            }
+
+            const id = `rep_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+            const report = await ModerationReportModel.create({
+                id,
+                message_id: messageId || null,
+                channel_id: channelId || null,
+                guild_id: guildId || null,
+                reporter_id: reporterId,
+                target_user_id: targetUserId || null,
+                content: content || null,
+                reason: String(reason).slice(0, 300),
+                flags: ['user_report'],
+                score: 0,
+                status: 'pending',
+                action_taken: 'pending_review',
+            })
+
+            res.status(201).json({
+                success: true,
+                report,
+            })
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to submit report' })
+        }
+    }
+
+    /**
      * List all moderation reports (Admin only)
      */
     static async listReports(req: Request, res: Response) {

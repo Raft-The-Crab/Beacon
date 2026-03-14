@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { Smile, Edit, Trash2, File, Pin, Shield, Languages } from 'lucide-react'
+import { Smile, Edit, Trash2, File, Pin, Shield, Languages, Flag } from 'lucide-react'
 import type { UserBadge } from '@beacon/types'
 import { Avatar, Tooltip, EmojiPicker } from '../ui'
 import { BotTag } from '../ui/UserBadges'
@@ -46,6 +46,8 @@ interface MessageItemProps {
   onDelete?: () => void
   onEdit?: () => void
   onPin?: () => void
+  onReportMessage?: () => void
+  onReportUser?: () => void
   onComponentInteraction?: (component: any, values?: string[]) => void | Promise<void>
   showActions?: boolean
   isContinuing?: boolean
@@ -98,6 +100,8 @@ export const MessageItem = React.memo(function MessageItem({
   onDelete,
   onEdit,
   onPin,
+  onReportMessage,
+  onReportUser,
   onComponentInteraction,
   showActions,
   isContinuing,
@@ -478,7 +482,7 @@ export const MessageItem = React.memo(function MessageItem({
         )}
       </div>
 
-      {showActions && (onDelete || onEdit || onPin) && (
+      {showActions && (onDelete || onEdit || onPin || onReportMessage || onReportUser) && (
         <div className={styles.actions}>
           {/* Quick Reactions */}
           {onReaction && (
@@ -539,6 +543,22 @@ export const MessageItem = React.memo(function MessageItem({
             <Tooltip content="Delete" position="top">
               <button className={`${styles.actionBtn} ${styles.danger}`} onClick={onDelete}>
                 <Trash2 size={16} />
+              </button>
+            </Tooltip>
+          )}
+
+          {onReportMessage && (
+            <Tooltip content="Report message" position="top">
+              <button className={styles.actionBtn} onClick={onReportMessage}>
+                <Flag size={16} />
+              </button>
+            </Tooltip>
+          )}
+
+          {onReportUser && (
+            <Tooltip content="Report user" position="top">
+              <button className={styles.actionBtn} onClick={onReportUser}>
+                <Shield size={16} />
               </button>
             </Tooltip>
           )}

@@ -107,6 +107,10 @@ export function ChatArea({ channelId }: ChatAreaProps) {
   const [membersForModal, setMembersForModal] = useState<any[]>([])
   const [membersLoading, setMembersLoading] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportReason, setReportReason] = useState('Spam or scam')
+  const [reportNotes, setReportNotes] = useState('')
+  const [reportTarget, setReportTarget] = useState<{ type: 'message' | 'user'; messageId?: string; userId?: string; content?: string } | null>(null)
   const editingMessageId = useUIStore(state => state.editingMessageId)
   const editingMessageContent = useUIStore(state => state.editingMessageContent)
   const setEditingMessage = useUIStore(state => state.setEditingMessage)
@@ -357,6 +361,49 @@ export function ChatArea({ channelId }: ChatAreaProps) {
     }
   }
 
+  const openReportModal = (target: { type: 'message' | 'user'; messageId?: string; userId?: string; content?: string }) => {
+    setReportTarget(target)
+    setReportReason('Spam or scam')
+    setReportNotes('')
+    setShowReportModal(true)
+  }
+
+  const submitReport = async () => {
+    if (!reportTarget) return
+
+    const reason = reportNotes.trim() ? `${reportReason} — ${reportNotes.trim()}` : reportReason
+
+    try {
+      let res
+      if (reportTarget.type === 'message' && reportTarget.messageId) {
+        res = await apiClient.submitMessageReport({
+          messageId: reportTarget.messageId,
+          channelId,
+          targetUserId: reportTarget.userId,
+          reason,
+          content: reportTarget.content,
+        })
+      } else if (reportTarget.type === 'user' && reportTarget.userId) {
+        res = await apiClient.submitUserReport({
+          targetUserId: reportTarget.userId,
+          channelId,
+          reason,
+          content: reportTarget.content,
+        })
+      }
+
+      if (res?.success) {
+        show('Report submitted. Our moderation team will review it.', 'success')
+        setShowReportModal(false)
+        setReportTarget(null)
+      } else {
+        show(res?.error || 'Failed to submit report', 'error')
+      }
+    } catch {
+      show('Failed to submit report', 'error')
+    }
+  }
+
   const handleStartTyping = () => {
     addTypingUser('current-user')
   }
@@ -568,6 +615,17 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                         onDelete={() => handleDeleteMessage(msg.id)}
                         onEdit={() => handleStartEditingMessage(msg.id, msg.content)}
                         onPin={() => handleTogglePin(msg)}
+                        onReportMessage={() => openReportModal({
+                          type: 'message',
+                          messageId: msg.id,
+                          userId: author.id,
+                          content: msg.content,
+                        })}
+                        onReportUser={() => openReportModal({
+                          type: 'user',
+                          userId: author.id,
+                          content: msg.content,
+                        })}
                         onComponentInteraction={(component, values) => handleComponentInteraction(msg, component, values)}
                         onReaction={msg.localOnly ? undefined : async (emoji) => {
                       const target = messages.find((m: any) => m.id === msg.id)
@@ -641,6 +699,42 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         onStartTyping={handleStartTyping}
         onStopTyping={handleStopTyping}
       />
+
+      <Modal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        title={reportTarget?.type === 'user' ? 'Report user' : 'Report message'}
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <label style={{ display: 'grid', gap: 6 }}>
+            <span style={{ fontSize: 13, opacity: 0.85 }}>Reason</span>
+            <select value={reportReason} onChange={(e) => setReportReason(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8 }}>
+              <option>Spam or scam</option>
+              <option>Harassment or bullying</option>
+              <option>Hate or abuse</option>
+              <option>Violence or illegal content</option>
+              <option>NSFW in safe channel</option>
+              <option>Impersonation</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <label style={{ display: 'grid', gap: 6 }}>
+            <span style={{ fontSize: 13, opacity: 0.85 }}>Details (optional)</span>
+            <textarea
+              value={reportNotes}
+              onChange={(e) => setReportNotes(e.target.value)}
+              rows={4}
+              maxLength={400}
+              placeholder="Add context for moderators"
+              style={{ padding: '10px 12px', borderRadius: 8, resize: 'vertical' }}
+            />
+          </label>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <Button variant="secondary" onClick={() => setShowReportModal(false)}>Cancel</Button>
+            <Button variant="primary" onClick={submitReport}>Submit report</Button>
+          </div>
+        </div>
+      </Modal>
       <Modal
         isOpen={showPinnedModal}
         onClose={() => setShowPinnedModal(false)}

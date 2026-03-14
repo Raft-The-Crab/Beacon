@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
 Beacon AI Model Runner - Lightweight ONNX inference for content moderation
-Optimized for <500MB models with real-time performance
+Optimized for <834MB total container memory with low concurrency.
 """
 
 import json
 import sys
+import os
 import numpy as np
 import onnxruntime as ort
 from transformers import AutoTokenizer
@@ -22,20 +23,20 @@ class BeaconAI:
             sess_options=self._get_session_options()
         )
         self.tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
-        self.max_length = 256  # Reduced for faster chat processing
+        self.max_length = 192  # Lower sequence length keeps memory stable
         print("READY", flush=True)
     
     def _get_session_options(self):
         opts = ort.SessionOptions()
-        opts.intra_op_num_threads = 4
-        opts.inter_op_num_threads = 2
+        opts.intra_op_num_threads = int(os.getenv('ORT_NUM_THREADS', '1'))
+        opts.inter_op_num_threads = 1
         opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
         return opts
     
     def analyze(self, content):
         # Fast tokenization for chat messages
         inputs = self.tokenizer(
-            content[:1000],  # Limit input for speed
+            content[:700],  # Smaller payload keeps tokenization memory lower
             max_length=self.max_length, 
             truncation=True, 
             padding='max_length', 

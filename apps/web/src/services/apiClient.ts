@@ -236,6 +236,36 @@ class ApiClient {
         return this.request('DELETE', `/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}/@me`);
     }
 
+    async submitMessageReport(data: {
+        messageId: string;
+        channelId: string;
+        targetUserId?: string;
+        reason: string;
+        content?: string;
+    }) {
+        return this.request('POST', '/moderation/reports', {
+            messageId: data.messageId,
+            channelId: data.channelId,
+            targetUserId: data.targetUserId,
+            reason: data.reason,
+            content: data.content,
+        });
+    }
+
+    async submitUserReport(data: {
+        targetUserId: string;
+        channelId?: string;
+        reason: string;
+        content?: string;
+    }) {
+        return this.request('POST', '/moderation/reports', {
+            targetUserId: data.targetUserId,
+            channelId: data.channelId,
+            reason: data.reason,
+            content: data.content,
+        });
+    }
+
     // -- GUILD MANAGEMENT --
     async getGuildMembers(guildId: string) {
         return this.request('GET', `/guilds/${guildId}/members`);

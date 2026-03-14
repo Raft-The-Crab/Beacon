@@ -8,6 +8,8 @@ import { publishGatewayEvent } from '../services/gatewayPublisher';
 import { redis } from '../services/redis';
 import { serializeBigInt } from '../utils/serializeBigInt';
 import { generateShortId } from '../utils/id';
+import { priorityQueue } from '../services/priorityQueue';
+import { ModerationReportModel } from '../db';
 
 // ─────────────────────────────────────────────────────────────
 // GET /channels/:channelId/messages
@@ -55,6 +57,47 @@ export async function createMessage(req: Request, res: Response) {
   }
 
   try {
+    // FAST lane text moderation before persisting message.
+    if (process.env.ENABLE_MODERATION !== 'false' && String(content || '').trim()) {
+      let moderation: any = null
+      try {
+        moderation = await priorityQueue.runFast('text_moderation', {
+          content: String(content),
+          userId,
+          channelId,
+        }) as any
+      } catch (moderationErr) {
+        console.warn('[Moderation] fast-lane unavailable, continuing:', moderationErr)
+      }
+
+      if (moderation?.result && moderation.result.approved === false) {
+        const reportId = `rep_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+        await ModerationReportModel.create({
+          id: reportId,
+          message_id: null,
+          channel_id: channelId,
+          guild_id: null,
+          reporter_id: 'system',
+          target_user_id: userId,
+          content: String(content || ''),
+          reason: moderation.result.reason || 'moderation_reject',
+          flags: moderation.result.flags || [],
+          score: moderation.result.score || 0,
+          status: 'pending',
+          action_taken: moderation.action?.type || moderation.result.action || 'rejected',
+        })
+
+        return res.status(403).json({
+          error: 'Message rejected by moderation policy',
+          moderation: {
+            reason: moderation.result.reason,
+            action: moderation.result.action,
+            reportId,
+          },
+        })
+      }
+    }
+
     // Slowmode enforcement
     const channel = await prisma.channel.findUnique({ where: { id: channelId } });
     if (channel?.slowmode > 0) {
@@ -102,6 +145,30 @@ export async function createMessage(req: Request, res: Response) {
 
     // Broadcast via Redis Gateway
     await publishGatewayEvent('MESSAGE_CREATE', message);
+
+    // SLOW lane media moderation (queued, non-blocking)
+    if (process.env.ENABLE_MODERATION !== 'false' && Array.isArray(attachments) && attachments.length > 0) {
+      for (const attachment of attachments) {
+        const contentType = String(attachment?.contentType || '').toLowerCase()
+        const attachmentUrl = String(attachment?.url || '')
+
+        if (contentType.startsWith('image/') && attachmentUrl) {
+          priorityQueue.enqueue('image_moderation', {
+            imageUrl: attachmentUrl,
+            userId,
+            channelId,
+            messageId: message.id,
+          })
+        } else if (contentType.startsWith('video/') && attachmentUrl) {
+          priorityQueue.enqueue('video_moderation', {
+            videoUrl: attachmentUrl,
+            userId,
+            channelId,
+            messageId: message.id,
+          })
+        }
+      }
+    }
 
     return res.status(201).json(serializeBigInt(message));
   } catch (err) {

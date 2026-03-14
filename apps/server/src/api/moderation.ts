@@ -5,6 +5,10 @@ import { ModerationController } from '../controllers/moderation.controller'
 
 const router = Router()
 
+// @route   POST /api/moderation/reports
+// @desc    Submit a user/message report
+router.post('/reports', authenticate, ModerationController.createReport)
+
 // @route   GET /api/moderation/reports
 // @desc    List all moderation reports (Admin only)
 router.get('/reports', authenticate, ModerationController.listReports)

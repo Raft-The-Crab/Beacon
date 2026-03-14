@@ -1,13 +1,14 @@
 /**
  * Beacon Moderation Service v5
- * Pipeline: SWI-Prolog rules → TypeScript fallback → Decision
+ * Pipeline: AI pre-check → SWI-Prolog rules → TypeScript fallback → Decision
  *
- * Text: deterministic Prolog knowledge base (moderation.pl); TS fallback when swipl unavailable.
+ * Text: AI pre-check for high-risk content, then deterministic Prolog KB, then TS fallback.
  * Images: nsfwjs (@tensorflow/tfjs-node) for NSFW classification; never hard-blocks.
  */
 
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process'
 import path from 'path'
+import axios from 'axios'
 import { getProfile } from '../utils/autoTune'
 import { checkImageBuffer } from './imageModeration'
 
@@ -24,6 +25,12 @@ export interface ModerationResult {
   flags?: string[]
   score?: number
   status?: 'Safe' | 'Warning' | 'Rejected'
+}
+
+interface AiPrecheckResult {
+  blocked: boolean
+  score: number
+  categories: string[]
 }
 
 export interface ModerationAction {
@@ -156,6 +163,39 @@ function tsFallback(content: string, priorOffenses: number): ModerationResult {
   return { severity: 'safe', reason: 'none', action: 'none', description: 'Content is safe.', approved: true, priorOffenses }
 }
 
+async function aiPrecheck(content: string): Promise<AiPrecheckResult> {
+  const aiUrl = (process.env.CLAWCLOUD_AI_URL || '').trim()
+  const apiKey = (process.env.CLAWCLOUD_API_KEY || process.env.AI_API_KEY || '').trim()
+  const enabled = process.env.ENABLE_TEXT_AI_MODERATION !== 'false'
+
+  if (!enabled || !aiUrl || !apiKey || !content.trim()) {
+    return { blocked: false, score: 0, categories: [] }
+  }
+
+  try {
+    const response = await axios.post(
+      `${aiUrl.replace(/\/$/, '')}/analyze`,
+      { content: content.slice(0, 1800) },
+      {
+        timeout: 1200,
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    const illegalScore = Number(response.data?.illegal_score ?? 0)
+    const categories = Array.isArray(response.data?.categories) ? response.data.categories.map((c: any) => String(c).toLowerCase()) : []
+    const blocked = illegalScore >= 0.86 || categories.includes('csam') || categories.includes('illegal')
+
+    return { blocked, score: illegalScore, categories }
+  } catch {
+    // AI pre-check is fail-open to avoid blocking chat on transient AI outages.
+    return { blocked: false, score: 0, categories: [] }
+  }
+}
+
 // ── Decision Engine ───────────────────────────────────────────────
 export function determineModerationAction(result: ModerationResult, priorOffenses: number): ModerationAction {
   switch (result.action) {
@@ -191,7 +231,7 @@ class ModerationService {
     this.bridge.init()
     // Periodic cleanup: evict stale offense entries every 30 min
     setInterval(() => this.cleanupCaches(), 30 * 60 * 1000)
-    console.log('[Moderation] Service started (Pipeline: Prolog → TS fallback)')
+    console.log('[Moderation] Service started (Pipeline: AI → Prolog → TS fallback → Decision)')
   }
 
   private cleanupCaches() {
@@ -252,6 +292,25 @@ class ModerationService {
     const priorOffenses = this.getOffenses(userId)
     let result: ModerationResult
 
+    // 0. AI pre-check (fast, bounded timeout)
+    const ai = await aiPrecheck(content)
+    if (ai.blocked) {
+      result = {
+        severity: 'critical',
+        reason: ai.categories[0] || 'ai_high_risk',
+        action: 'immediate_ban_and_ip_ban',
+        description: `AI pre-check rejected content (score ${ai.score.toFixed(2)}).`,
+        approved: false,
+        priorOffenses,
+        flags: ai.categories,
+        score: ai.score,
+      }
+
+      const action = determineModerationAction(result, priorOffenses)
+      this.incrementOffenses(userId)
+      return { result, action }
+    }
+
     // 1. Prolog Deterministic Rules Phase (skip under memory pressure)
     const rssMB = process.memoryUsage().rss / 1024 / 1024
     const profile = getProfile()
@@ -273,6 +332,26 @@ class ModerationService {
       this.incrementOffenses(userId)
     }
     return { result, action }
+  }
+
+  async checkImageFromUrl(imageUrl: string, userId: string): Promise<{ result: ModerationResult; action: ModerationAction }> {
+    const priorOffenses = this.getOffenses(userId)
+    try {
+      const response = await fetch(imageUrl, { method: 'GET' })
+      if (!response.ok) {
+        return {
+          result: { severity: 'safe', reason: 'none', action: 'none', description: 'Image fetch failed; skipped.', approved: true, priorOffenses },
+          action: { type: 'none', reason: 'safe', automated: false }
+        }
+      }
+      const bytes = await response.arrayBuffer()
+      return this.checkImage(Buffer.from(bytes), userId)
+    } catch {
+      return {
+        result: { severity: 'safe', reason: 'none', action: 'none', description: 'Image check failed; skipped.', approved: true, priorOffenses },
+        action: { type: 'none', reason: 'safe', automated: false }
+      }
+    }
   }
 
   async checkImage(imageBuffer: Buffer, userId: string): Promise<{ result: ModerationResult; action: ModerationAction }> {
@@ -326,7 +405,8 @@ class ModerationService {
 
     // SLOW: image moderation runs in background
     priorityQueue.register('image_moderation', async (job: any) => {
-      const { imageBuffer, userId } = job.data
+      const { imageBuffer, imageUrl, userId } = job.data
+      if (imageUrl) return this.checkImageFromUrl(imageUrl, userId)
       const buffer = Buffer.from(imageBuffer, 'base64')
       return this.checkImage(buffer, userId)
     })
