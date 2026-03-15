@@ -27,12 +27,7 @@ export function resolveApiBaseUrl(rawUrl?: string): string {
   const configured = trimTrailingSlashes(rawUrl || '')
 
   if (!configured) {
-    if (typeof window !== 'undefined' && isLocalDevHost(window.location.hostname)) {
-      return 'http://localhost:8080/api'
-    }
-
-    const origin = getBrowserOrigin()
-    return origin ? `${origin}/api` : 'http://localhost:8080/api'
+    return 'https://beacon-production-72fe.up.railway.app/api'
   }
 
   const absolute = toAbsoluteUrl(configured)
@@ -76,7 +71,7 @@ export function resolveWebSocketUrl(rawUrl?: string, apiUrl?: string): string {
   return 'ws://localhost:4001/gateway'
 }
 
-const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || ''
+const configuredApiUrl = 'https://beacon-production-72fe.up.railway.app/api'
 
 export const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl)
 export const WS_BASE_URL = resolveWebSocketUrl(import.meta.env.VITE_WS_URL, configuredApiUrl)

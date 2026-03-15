@@ -13,7 +13,7 @@ export function APIReference() {
         <section className={styles.docsSection}>
           <h2>Base URLs</h2>
           <div className={styles.infoBox}>
-            <p><strong>Primary:</strong> <code>https://api.beacon.qzz.io/api</code></p>
+            <p><strong>Primary:</strong> <code>https://beacon-production-72fe.up.railway.app/api</code></p>
             <p><strong>Railway small API:</strong> <code>https://beacon-v1-api.up.railway.app/api</code></p>
           </div>
           <p>Use HTTPS only. All responses are JSON. Use standard HTTP status handling in clients.</p>
@@ -93,13 +93,13 @@ Authorization: Bearer YOUR_USER_TOKEN`}</pre>
         <section className={styles.docsSection}>
           <h2>cURL Examples</h2>
           <div className={styles.codeBlock}>
-            <pre>{`curl -X POST "https://beacon-v1-api.up.railway.app/api/channels/123/messages" \\
+            <pre>{`curl -X POST "https://beacon-production-72fe.up.railway.app/api/channels/123/messages" \\
   -H "Authorization: Bot YOUR_BOT_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"content":"Hello from Beacon API"}'`}</pre>
           </div>
           <div className={styles.codeBlock}>
-            <pre>{`curl -X GET "https://beacon-v1-api.up.railway.app/api/notifications" \\
+            <pre>{`curl -X GET "https://beacon-production-72fe.up.railway.app/api/notifications" \\
   -H "Authorization: Bot YOUR_BOT_TOKEN"`}</pre>
           </div>
         </section>
