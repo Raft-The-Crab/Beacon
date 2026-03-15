@@ -85,7 +85,7 @@ export default defineConfig(({ mode }) => {
   build: {
     target: 'esnext',
     outDir: 'dist',
-    assetsDir: 'assets-v4',
+    assetsDir: 'assets',
     minify: 'esbuild',
     sourcemap: false,
     chunkSizeWarningLimit: 600,
@@ -121,9 +121,9 @@ export default defineConfig(({ mode }) => {
             return 'settings-components';
           }
         },
-        chunkFileNames: 'assets-v4/js/[name]-[hash].js',
-        entryFileNames: 'assets-v4/js/[name]-[hash].js',
-        assetFileNames: 'assets-v4/[ext]/[name]-[hash].[ext]',
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
     },
     

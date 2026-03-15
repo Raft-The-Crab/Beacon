@@ -1,8 +1,8 @@
 # Deep Infrastructure Overhaul - SPA Redirect Rules
-# 1. Prevent assets from being masked as HTML (Solves MIME errors)
-/assets/*    /assets/:splat    200
-/js/*        /js/:splat        200
-/css/*       /css/:splat       200
+# 1. Prevent missing assets from triggering SPA fallback (Solves MIME errors)
+/assets/*    /404.html         404
+/js/*        /404.html         404
+/css/*       /404.html         404
 
 # 2. Redirect all other routes to index.html for React Router
-/*           /index.html        200
+/*           /index.html       200

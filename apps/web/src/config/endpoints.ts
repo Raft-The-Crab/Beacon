@@ -26,7 +26,7 @@ function toAbsoluteUrl(value: string): string {
 export function resolveApiBaseUrl(rawUrl?: string): string {
   const configured = trimTrailingSlashes(rawUrl || '')
 
-  // ⚠️ DEEP MAKE: In production, force the direct Railway bridge to bypass DNS/Cloudflare issues
+  // In production, use the direct Railway bridge to bypass DNS issues
   const isProduction = typeof window !== 'undefined' && !isLocalDevHost(window.location.hostname)
   
   if (isProduction || !configured) {

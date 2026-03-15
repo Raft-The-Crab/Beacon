@@ -12,33 +12,6 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap"
     rel="stylesheet">
-
-  <script>
-    // ☢️ NUCLEAR CACHE RESET + BURN v5.1
-    (function() {
-      const VERSION = 'v5.1.0-NUCLEAR_FIX';
-      const RESET_KEY = 'BEACON_RESET_v5';
-      
-      // 1. One-time redirect to bust the document cache
-      if (!sessionStorage.getItem(RESET_KEY)) {
-        sessionStorage.setItem(RESET_KEY, 'done');
-        window.location.replace(window.location.origin + window.location.pathname + '?v=' + Date.now() + window.location.hash);
-        return;
-      }
-      
-      // 2. Storage wipe on version change
-      if (localStorage.getItem('BEACON_V') !== VERSION) {
-        localStorage.setItem('BEACON_V', VERSION);
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(regs => {
-            for (let reg of regs) reg.unregister();
-          });
-        }
-        localStorage.clear();
-      }
-    })();
-  </script>
-
   <title>Beacon - Connect. Communicate. Collaborate.</title>
 </head>
 

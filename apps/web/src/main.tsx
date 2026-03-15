@@ -8,15 +8,6 @@ if (typeof (globalThis as any).global === 'undefined') {
   ;(globalThis as any).global = globalThis
 }
 
-// ⚠️ DEEP MAKE LEVEL 5.1: NUCLEAR FIX VERIFICATION
-console.log('%c☢️ BEACON DEEP MAKE LEVEL 5.1 ACTIVATED', 'color: #00ff00; font-weight: bold; font-size: 24px; text-shadow: 2px 2px #000;');
-console.log(`[Version] 5.1.0-NUCLEAR_FIX`);
-console.log(`[Build Info] Bridge: https://beacon-production-72fe.up.railway.app`);
-
-if (typeof window !== 'undefined') {
-  alert('☢️ BEACON NUCLEAR LEVEL 5.1 ACTIVATED! Build fixed and cache purged.');
-}
-
 // Suppress the React DevTools warning for a completely pristine console output as requested
 if (import.meta.env.DEV) {
   const originalInfo = console.info;
