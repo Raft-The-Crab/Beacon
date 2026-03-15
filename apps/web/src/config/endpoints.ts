@@ -71,7 +71,7 @@ export function resolveWebSocketUrl(rawUrl?: string, apiUrl?: string): string {
   return 'ws://localhost:4001/gateway'
 }
 
-const configuredApiUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_URL : 'https://api.beacon.qzz.io/api'
+const configuredApiUrl = 'https://beacon-v1-api.up.railway.app/api'
 
 export const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl)
-export const WS_BASE_URL = resolveWebSocketUrl(typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_WS_URL : '', configuredApiUrl)
+export const WS_BASE_URL = resolveWebSocketUrl('wss://beacon-v1-api.up.railway.app/gateway', configuredApiUrl)
