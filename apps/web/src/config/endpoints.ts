@@ -27,7 +27,7 @@ export function resolveApiBaseUrl(rawUrl?: string): string {
   const configured = trimTrailingSlashes(rawUrl || '')
 
   if (!configured) {
-    return import.meta.env.VITE_API_URL || 'https://api.beacon.qzz.io/api'
+    return import.meta.env.VITE_API_URL || 'https://beacon-production-72fe.up.railway.app/api'
   }
 
   const absolute = toAbsoluteUrl(configured)
@@ -71,7 +71,7 @@ export function resolveWebSocketUrl(rawUrl?: string, apiUrl?: string): string {
   return 'ws://localhost:4001/gateway'
 }
 
-const configuredApiUrl = import.meta.env.VITE_API_URL || 'https://api.beacon.qzz.io/api'
+const configuredApiUrl = import.meta.env.VITE_API_URL || 'https://beacon-production-72fe.up.railway.app/api'
 
 export const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl)
 export const WS_BASE_URL = resolveWebSocketUrl(import.meta.env.VITE_WS_URL, configuredApiUrl)
