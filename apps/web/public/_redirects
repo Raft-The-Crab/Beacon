@@ -1,5 +1,8 @@
-# Deep Infrastructure Overhaul - SPA Redirect Rules
-# Cloudflare Pages Redirects (Standard Syntax)
+# Cloudflare Pages SPA Redirects
+# Explicitly serve assets to prevent loops
+/assets/* /assets/:splat 200
+/js/* /js/:splat 200
+/css/* /css/:splat 200
 
-# Catch-all for React Router SPA
-/*  /index.html  200
+# Standarized SPA fallback
+/* /index.html 200
