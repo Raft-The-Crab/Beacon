@@ -1,3 +1,8 @@
-# SPA Redirect: Only redirect non-asset paths to index.html
-/assets/*    /assets/:splat    200!
+# Deep Infrastructure Overhaul - SPA Redirect Rules
+# 1. Prevent assets from being masked as HTML (Solves MIME errors)
+/assets/*    /assets/:splat    200
+/js/*        /js/:splat        200
+/css/*       /css/:splat       200
+
+# 2. Redirect all other routes to index.html for React Router
 /*           /index.html        200
