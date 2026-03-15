@@ -79,7 +79,7 @@ const configuredCorsOrigins = process.env.CORS_ORIGIN
 
 const devTunnelRegex = /^https:\/\/[a-z0-9-]+\.[a-z0-9-]*devtunnels\.ms$/i
 const cfPagesRegex = /^https:\/\/[a-z0-9-]+\.beacon-[a-z0-9-]+\.pages\.dev$/i
-const qzzIoRegex = /^https:\/\/(?:[a-z0-9-]+\.)*qzz\.io$/i
+const beaconDomainRegex = /^https:\/\/(?:[a-z0-9-]+\.)*beacon\.qzz\.io$/i
 
 app.use(cors({
     origin: (origin, callback) => {
@@ -95,7 +95,7 @@ app.use(cors({
             configuredCorsOrigins.includes(origin) ||
             devTunnelRegex.test(origin) ||
             cfPagesRegex.test(origin) ||
-            qzzIoRegex.test(origin)
+            beaconDomainRegex.test(origin)
         ) {
             callback(null, true)
             return
