@@ -88,27 +88,31 @@ app.use(cors({
             return
         }
 
-        // Always allow localhost and 127.0.0.1 for dev
-        if (
+        const isAllowed = 
             origin === 'http://localhost:5173' ||
             origin === 'http://127.0.0.1:5173' ||
             configuredCorsOrigins.includes(origin) ||
             devTunnelRegex.test(origin) ||
             cfPagesRegex.test(origin) ||
-            beaconDomainRegex.test(origin)
-        ) {
-            callback(null, true)
-            return
+            beaconDomainRegex.test(origin);
+
+        if (process.env.DEBUG === 'true' || process.env.NODE_ENV !== 'production') {
+            console.log(`[CORS] Origin: ${origin} | Allowed: ${isAllowed}`);
+            if (!isAllowed) {
+                console.log(`[CORS] Regex test - devTunnel: ${devTunnelRegex.test(origin)}, cfPages: ${cfPagesRegex.test(origin)}, beaconDomain: ${beaconDomainRegex.test(origin)}`);
+            }
         }
 
-        // Only log blocked origins in production to avoid console noise, 
-        // but it's essential for troubleshooting Railway issues.
-        console.warn(`[CORS] Blocked origin: ${origin} | Allowed origins: ${configuredCorsOrigins.join(', ')}`)
-        callback(null, false)
+        if (isAllowed) {
+            callback(null, true)
+        } else {
+            console.warn(`[CORS] Forbidden origin: ${origin}. Allowed list:`, configuredCorsOrigins)
+            callback(null, false)
+        }
     },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token', 'x-request-id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token', 'x-request-id']
 }))
 
 app.use(helmet({
@@ -208,22 +212,6 @@ app.use((req: any, _res: express.Response, next: express.NextFunction) => {
 })
 
 app.get('/health', getHealth)
-
-app.get('/api/version', (req, res) => {
-    res.json({ version: '2.4.0', status: 'healthy', timestamp: new Date().toISOString() })
-})
-
-app.get('/api/csrf-token', (req, res) => {
-    const token = generateCSRFToken()
-    const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1'
-    res.cookie('csrf_token', token, {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production' && !isLocalhost,
-        sameSite: 'lax',
-        maxAge: 3600000
-    })
-    res.json({ token })
-})
 
 // Consolidated API Router
 app.use('/api', apiRouter)

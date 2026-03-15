@@ -25,8 +25,25 @@ import notesRouter from './notes'
 import uploadRouter from '../routes/upload.routes'
 import { authenticate } from '../middleware/auth'
 import { isSovereign } from '../middleware/sovereign'
+import { generateCSRFToken } from '../middleware/security'
 
 const router = Router()
+
+router.get('/version', (req, res) => {
+  res.json({ version: '2.4.0', status: 'healthy', timestamp: new Date().toISOString() })
+})
+
+router.get('/csrf-token', (req, res) => {
+  const token = generateCSRFToken()
+  const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1'
+  res.cookie('csrf_token', token, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production' && !isLocalhost,
+    sameSite: 'lax',
+    maxAge: 3600000
+  })
+  res.json({ token })
+})
 
 router.use('/auth', authRouter)
 router.use('/users', usersRouter)
