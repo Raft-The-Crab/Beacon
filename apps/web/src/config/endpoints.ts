@@ -26,11 +26,8 @@ function toAbsoluteUrl(value: string): string {
 export function resolveApiBaseUrl(rawUrl?: string): string {
   const configured = trimTrailingSlashes(rawUrl || '')
 
-  // In production, use the direct Railway bridge to bypass DNS issues
-  const isProduction = typeof window !== 'undefined' && !isLocalDevHost(window.location.hostname)
-  
-  if (isProduction || !configured) {
-    return 'https://beacon-production-72fe.up.railway.app/api'
+  if (!configured) {
+    return 'https://api.beacon.qzz.io/api'
   }
 
   const absolute = toAbsoluteUrl(configured)
@@ -74,7 +71,7 @@ export function resolveWebSocketUrl(rawUrl?: string, apiUrl?: string): string {
   return 'ws://localhost:4001/gateway'
 }
 
-const configuredApiUrl = 'https://beacon-production-72fe.up.railway.app/api'
+const configuredApiUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_URL : 'https://api.beacon.qzz.io/api'
 
 export const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl)
-export const WS_BASE_URL = resolveWebSocketUrl(import.meta.env.VITE_WS_URL, configuredApiUrl)
+export const WS_BASE_URL = resolveWebSocketUrl(typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_WS_URL : '', configuredApiUrl)
