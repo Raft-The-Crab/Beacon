@@ -162,7 +162,8 @@ async function listenWithPortFallback(basePort: number): Promise<number> {
 
         server.once('error', onError)
         server.once('listening', onListening)
-        server.listen(port)
+        // Explicitly bind to 0.0.0.0 for container networking reliability
+        server.listen(port, '0.0.0.0')
     })
 
     for (let i = 0; i < maxLocalAttempts; i++) {
@@ -278,24 +279,30 @@ const start = async () => {
     try {
         console.log('🚀 Starting Beacon API Server (Railway/ClawCloud — Combined)...')
         console.log(`   Memory limit: ${process.env.NODE_OPTIONS || 'default'}`)
-        try { await connectMongo() } catch (e) { console.warn('⚠️  MongoDB connection failed', e) }
-        if (prisma) {
-            const postgresConnected = await connectPostgresWithRetry(6)
-            if (!postgresConnected) {
-                console.warn('⚠️  PostgreSQL unavailable at startup. Server continues in degraded mode and will retry on next queries.')
+        // Initialize databases in background - DON'T BLOCK SERVER STARTUP
+        // This prevents 502/Gateway Timeout during slow cold starts.
+        console.log('[Startup] Initiating background connections...')
+        
+        const dbInit = async () => {
+            try { await connectMongo() } catch (e) { console.warn('⚠️  MongoDB connection failed', e) }
+            if (prisma) {
+                await connectPostgresWithRetry(6).catch(e => {
+                    console.warn('⚠️  PostgreSQL unavailable at startup', e)
+                })
+            }
+            if (redis.isEnabled) {
+                redis.connect().catch(err => {
+                    console.warn('⚠️  Redis connection failed:', err.message)
+                })
             }
         }
-        // Initialize Redis in background when configured — don't block server startup.
-        if (redis.isEnabled) {
-            redis.connect().catch(err => {
-                console.warn('⚠️  Redis connection failed (Continuing in degraded mode):', err.message)
-            })
-        } else {
-            const reason = redis.disabledConfigReason ? `: ${redis.disabledConfigReason}` : ''
-            console.log(`⚪ Redis disabled${reason}`)
-        }
-
+        
+        // Start listening FIRST
         const activePort = await listenWithPortFallback(BASE_PORT)
+        
+        // Then fire off DB connections
+        dbInit();
+
         const publicDomain = process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RAILWAY_STATIC_URL || process.env.CLAWCLOUD_PUBLIC_URL || process.env.CLAWCLOUD_URL
         const publicUrl = publicDomain
             ? (String(publicDomain).startsWith('http') ? String(publicDomain) : `https://${publicDomain}`)
