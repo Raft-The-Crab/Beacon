@@ -8,10 +8,14 @@ if (typeof (globalThis as any).global === 'undefined') {
   ;(globalThis as any).global = globalThis
 }
 
-// ⚠️ DEEP MAKE LEVEL 3: Verification Log
-console.log('%c🚀 BEACON DEEP MAKE LEVEL 3 ACTIVATED', 'color: #ff00ff; font-weight: bold; font-size: 16px;');
-console.log(`[Build Info] Time: ${new Date().toISOString()}`);
+// ⚠️ DEEP MAKE LEVEL 4: Verification
+console.log('%c🚀 BEACON DEEP MAKE LEVEL 4 ACTIVATED', 'color: #ff00ff; font-weight: bold; font-size: 20px;');
+console.log(`[Version] 4.0.0-NUCLEAR`);
 console.log(`[Build Info] Bridge: https://beacon-production-72fe.up.railway.app`);
+
+if (typeof window !== 'undefined') {
+  alert('🚀 BEACON UPDATED TO LEVEL 4! Cache Purged successfully.');
+}
 
 // Suppress the React DevTools warning for a completely pristine console output as requested
 if (import.meta.env.DEV) {
