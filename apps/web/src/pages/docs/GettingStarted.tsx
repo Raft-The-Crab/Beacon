@@ -1,4 +1,4 @@
-﻿import { Helmet } from 'react-helmet-async'
+import { Helmet } from 'react-helmet-async'
 import { DocsLayout } from '../../components/layout/DocsLayout'
 import styles from '../../styles/modules/pages/DocsPage.module.css'
 
@@ -82,15 +82,15 @@ client.login();`}</code>
                     </pre>
                 </section>
 
-                <section>
-                    <h2>Step 4 — Add environment variables</h2>
-                    <p>Create a <code>.env</code> file in your bot project:</p>
-                    <pre className={`${styles.code} glass`}>
-                        <code>{`BOT_TOKEN=your_bot_token_here
-BEACON_API_URL=https://beacon-v1-api.up.railway.app/api
-BEACON_GATEWAY_URL=wss://gateway.beacon.qzz.io`}</code>
-                    </pre>
-                </section>
+        <section>
+          <h2>Step 4 — Add environment variables</h2>
+          <p>Create a <code>.env</code> file in your bot project:</p>
+          <pre className={`${styles.code} glass`}>
+            <code>{`BOT_TOKEN=your_bot_token_here
+BEACON_API_URL=https://api.beacon.qzz.io/api
+BEACON_GATEWAY_URL=wss://gateway.beacon.qzz.io/gateway`}</code>
+          </pre>
+        </section>
 
                 <section>
                     <h2>Step 5 — Invite your bot to a server</h2>

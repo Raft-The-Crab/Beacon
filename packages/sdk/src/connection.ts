@@ -29,7 +29,8 @@ function fallbackApiBaseUrl(): string {
     return `${origin}/api`
   }
 
-  return isProductionLike() ? 'https://api.beacon.qzz.io/api' : 'http://localhost:8080/api'
+  // Use a relative path or local fallback by default to avoid hardcoding dead domains
+  return isProductionLike() ? '/api' : 'http://localhost:8080/api'
 }
 
 function fallbackGatewayUrl(): string {
@@ -39,7 +40,7 @@ function fallbackGatewayUrl(): string {
     return `${wsOrigin}/gateway`
   }
 
-  return isProductionLike() ? 'wss://gateway.beacon.qzz.io/gateway' : 'ws://localhost:8080/gateway'
+  return isProductionLike() ? '/gateway' : 'ws://localhost:8080/gateway'
 }
 
 export function resolveApiClientBaseUrl(rawUrl?: string): string {

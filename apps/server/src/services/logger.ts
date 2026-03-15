@@ -13,20 +13,31 @@ const colors = {
     red: "\x1b[31m",
 }
 
+function formatMsg(level: string, color: string, msg: string, reqId?: string) {
+    const timestamp = new Date().toISOString();
+    const idTag = reqId ? `${colors.dim}[${reqId}]${colors.reset} ` : '';
+    return `${colors.dim}[${timestamp}]${colors.reset} ${color}[${level}]${colors.reset} ${idTag}${msg}`;
+}
+
 export const logger = {
-    info: (msg: string, ...args: any[]) => {
-        console.log(`${colors.dim}[${new Date().toLocaleTimeString()}]${colors.reset} ${colors.cyan}[INFO]${colors.reset} ${msg}`, ...args)
+    info: (msg: string, reqId?: string, ...args: any[]) => {
+        console.log(formatMsg('INFO', colors.cyan, msg, reqId), ...args);
     },
-    success: (msg: string, ...args: any[]) => {
-        console.log(`${colors.dim}[${new Date().toLocaleTimeString()}]${colors.reset} ${colors.green}[SUCCESS]${colors.reset} ${msg}`, ...args)
+    success: (msg: string, reqId?: string, ...args: any[]) => {
+        console.log(formatMsg('SUCCESS', colors.green, msg, reqId), ...args);
     },
-    warn: (msg: string, ...args: any[]) => {
-        console.warn(`${colors.dim}[${new Date().toLocaleTimeString()}]${colors.reset} ${colors.yellow}[WARN]${colors.reset} ${msg}`, ...args)
+    warn: (msg: string, reqId?: string, ...args: any[]) => {
+        console.warn(formatMsg('WARN', colors.yellow, msg, reqId), ...args);
     },
-    error: (msg: string, ...args: any[]) => {
-        console.error(`${colors.dim}[${new Date().toLocaleTimeString()}]${colors.reset} ${colors.red}[ERROR]${colors.reset} ${msg}`, ...args)
+    error: (msg: string, reqId?: string, ...args: any[]) => {
+        console.error(formatMsg('ERROR', colors.red, msg, reqId), ...args);
     },
-    gateway: (msg: string, ...args: any[]) => {
-        console.log(`${colors.dim}[${new Date().toLocaleTimeString()}]${colors.reset} ${colors.blue}[GATEWAY]${colors.reset} ${msg}`, ...args)
+    debug: (msg: string, reqId?: string, ...args: any[]) => {
+        if (process.env.DEBUG === 'true' || process.env.NODE_ENV !== 'production') {
+            console.log(formatMsg('DEBUG', colors.dim, msg, reqId), ...args);
+        }
+    },
+    gateway: (msg: string, reqId?: string, ...args: any[]) => {
+        console.log(formatMsg('GATEWAY', colors.blue, msg, reqId), ...args);
     }
 }

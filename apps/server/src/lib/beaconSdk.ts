@@ -9,7 +9,7 @@ export interface BeaconSdkServerConfig {
 export function resolveServerSdkConfig(): BeaconSdkServerConfig {
   const rawApi = process.env.BEACON_API_URL
     || process.env.API_URL
-    || (process.env.RAILWAY_ENVIRONMENT_NAME ? 'https://beacon-v1-api.up.railway.app/api' : 'https://api.beacon.qzz.io/api')
+    || (process.env.RAILWAY_ENVIRONMENT_NAME ? 'https://beacon-v1-api.up.railway.app/api' : 'http://localhost:8080/api')
   const rawGateway = process.env.BEACON_GATEWAY_URL || process.env.GATEWAY_URL
 
   const apiUrl = resolveApiClientBaseUrl(rawApi)

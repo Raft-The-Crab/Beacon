@@ -37,7 +37,7 @@ export class WebhookClient {
     if (options.url) {
       this.url = options.url.replace(/\/$/, '');
     } else if (options.id && options.token) {
-      const base = (options.baseURL ?? 'https://api.beacon.qzz.io/v1').replace(/\/$/, '');
+      const base = (options.baseURL ?? '/v1').replace(/\/$/, '');
       this.url = `${base}/webhooks/${options.id}/${options.token}`;
     } else {
       throw new Error('WebhookClient requires either a url or both id + token');

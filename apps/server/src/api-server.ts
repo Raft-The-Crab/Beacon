@@ -41,6 +41,10 @@ import { requestTimer } from './middleware/performance'
 import apiRouter from './api/index'
 import activityRouter from './routes/activity.routes'
 import uploadRouter from './routes/upload.routes'
+import { requestId } from './middleware/requestId'
+import { getHealth } from './api/health'
+import { gracefulShutdown } from './services/gracefulShutdown'
+import { logger } from './services/logger'
 
 const serviceProfile =
     process.env.AUTO_TUNE_PROFILE
@@ -88,9 +92,14 @@ app.use(cors({
             return
         }
 
-        callback(new Error(`CORS blocked origin: ${origin}`))
+        // Only log blocked origins in production to avoid console noise, 
+        // but it's essential for troubleshooting Railway issues.
+        console.warn(`[CORS] Blocked origin: ${origin} | Allowed origins: ${configuredCorsOrigins.join(', ')}`)
+        callback(null, false)
     },
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token', 'x-request-id'],
 }))
 
 app.use(helmet({
@@ -111,6 +120,7 @@ app.use(helmet({
 }))
 
 app.use(sanitizeHeaders)
+app.use(requestId)
 app.use(sanitizeBody)
 app.use(ipBlockMiddleware)
 app.use('/api/', generalLimiter)
@@ -183,63 +193,12 @@ app.use(cookieParser())
 app.use(csrfProtection)
 app.set('trust proxy', 1)
 
-app.use((req: express.Request, _res: express.Response, next: express.NextFunction) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`)
+app.use((req: any, _res: express.Response, next: express.NextFunction) => {
+    logger.info(`${req.method} ${req.path}`, req.id)
     next()
 })
 
-app.get('/health', async (_req: express.Request, res: express.Response) => {
-    try {
-        const mem = process.memoryUsage()
-        const postgresStart = Date.now()
-        const postgresConnected = !!prisma
-        let postgresLatency = -1
-        let postgresHealthy = postgresConnected
-        try {
-            if (prisma) {
-                await prisma.$queryRaw`SELECT 1`
-                postgresLatency = Date.now() - postgresStart
-            }
-        } catch (e) {
-            postgresHealthy = false
-            const now = Date.now()
-            if (now - lastPostgresHealthErrorLogAt > 60_000) {
-                console.warn('Postgres health check failed:', e)
-                lastPostgresHealthErrorLogAt = now
-            }
-        }
-
-        const redisStatus = redis.status === 'ready'
-
-        res.json({
-            status: 'healthy',
-            service: 'beacon-api',
-            timestamp: new Date().toISOString(),
-            sdk: {
-                apiUrl: sdkConfig.apiUrl,
-                wsUrl: sdkConfig.wsUrl,
-            },
-            memory: {
-                rss: `${Math.round(mem.rss / 1024 / 1024)} MB`,
-                heapUsed: `${Math.round(mem.heapUsed / 1024 / 1024)} MB`,
-            },
-            services: {
-                postgres: postgresHealthy ? 'connected' : 'degraded',
-                postgresLatency: postgresLatency > -1 ? `${postgresLatency}ms` : 'N/A',
-                mongodb: 'connected',
-                redis: redisStatus ? 'connected' : 'unavailable',
-            },
-            version: '2.4.0',
-            autoTune: profile.name,
-            queue: priorityQueue.getStats(),
-        })
-    } catch (error) {
-        res.status(503).json({
-            status: 'unhealthy',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        })
-    }
-})
+app.get('/health', getHealth)
 
 // Consolidated API Router
 app.use('/api', apiRouter)
@@ -307,22 +266,14 @@ function startMemoryWatchdog() {
     }, 10 * 60 * 1000)
 }
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-    server.close(async () => {
-        if (prisma) await prisma.$disconnect()
-        await redis.quit()
-        process.exit(0)
-    })
-})
-
-process.on('SIGINT', async () => {
-    server.close(async () => {
-        if (prisma) await prisma.$disconnect()
-        await redis.quit()
-        process.exit(0)
-    })
-})
+// Graceful shutdown initialization
+gracefulShutdown.init();
+gracefulShutdown.registerServer(server);
+if (prisma) {
+    gracefulShutdown.register('Prisma', async () => {
+        await prisma.$disconnect();
+    }, 80);
+}
 
 const start = async () => {
     try {
