@@ -14,6 +14,11 @@ const BLOCKLIST_KEY = 'beacon:blocklist:ips'
 
 export async function ipBlockMiddleware(req: Request, res: Response, next: NextFunction) {
   const ip = req.ip || req.socket.remoteAddress || 'unknown'
+  // Fail-fast if Redis is not ready yet to prevent hanging the request during startup
+  if (redis.status !== 'ready') {
+    return next()
+  }
+
   try {
     const blocked = await (redis as any).sismember(BLOCKLIST_KEY, ip)
     if (blocked) {
@@ -26,8 +31,9 @@ export async function ipBlockMiddleware(req: Request, res: Response, next: NextF
       res.status(403).json({ error: 'Your IP has been blocked. Contact support@beacon.qzz.io to appeal.' })
       return
     }
-  } catch {
+  } catch (err) {
     // Redis failure — fail open (don't block legit users if Redis is down)
+    console.warn('[Security] IP block check failed (falling back to open):', err instanceof Error ? err.message : err)
   }
   next()
 }

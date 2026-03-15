@@ -19,11 +19,11 @@ app.use(helmet())
 const server = createServer(app)
 const wss = new WebSocketServer({ server, path: '/gateway' })
 
-const BASE_WS_PORT = Number(process.env.PORT || 4001)
-if (process.env.PORT) {
-    console.log(`[WS-PortCheck] Railway/System provided PORT: ${process.env.PORT}`);
+const BASE_WS_PORT = Number(process.env.WS_PORT || 4001)
+if (process.env.WS_PORT) {
+    console.log(`[WS-PortCheck] Custom WS_PORT provided: ${process.env.WS_PORT}`);
 } else {
-    console.log(`[WS-PortCheck] No PORT env found, defaulting to: 4001`);
+    console.log(`[WS-PortCheck] No WS_PORT env found, defaulting to: 4001`);
 }
 
 async function listenWithPortFallback(basePort: number): Promise<number> {
