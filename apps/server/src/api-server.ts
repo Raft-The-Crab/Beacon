@@ -20,7 +20,7 @@ if (fs.existsSync(baseEnvPath)) {
 
 const envModePath = path.join(inferredServerRoot, `.env.${nodeEnv}`)
 if (fs.existsSync(envModePath)) {
-    dotenv.config({ path: envModePath, override: true })
+    dotenv.config({ path: envModePath, override: false })
 }
 
 // Configure global connection pooling
