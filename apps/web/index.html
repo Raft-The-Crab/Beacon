@@ -13,32 +13,41 @@
     href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap"
     rel="stylesheet">
 
+  <script>
+    // ☢️ NUCLEAR CACHE RESET v5.0
+    (function() {
+      const RESET_KEY = 'BEACON_RESET_v5';
+      if (!sessionStorage.getItem(RESET_KEY)) {
+        sessionStorage.setItem(RESET_KEY, 'done');
+        const buster = 'v=' + Date.now();
+        const freshUrl = window.location.origin + window.location.pathname + '?' + buster + window.location.hash;
+        console.warn('☢️ FORCING CACHED PURGE via REDIRECT...');
+        window.location.replace(freshUrl);
+      }
+    })();
+  </script>
+
   <title>Beacon - Connect. Communicate. Collaborate.</title>
   
   <script>
-    // 🔥 CACHE BURN PROTOCOL v3.1
+    // 🔥 CACHE BURN PROTOCOL v5.0
     (function() {
-      const CURRENT_VERSION = 'deepmake-v3.1';
-      const storedVersion = localStorage.getItem('BEACON_V');
+      const CURRENT_VERSION = 'v5.0.0-NUCLEAR';
+      const latestVer = localStorage.getItem('BEACON_V');
       
-      if (storedVersion !== CURRENT_VERSION) {
-        console.log('🧹 Outdated cache detected. Burning...');
+      if (latestVer !== CURRENT_VERSION) {
         localStorage.setItem('BEACON_V', CURRENT_VERSION);
-        
-        // Clear everything
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then(regs => {
             for (let reg of regs) reg.unregister();
           });
         }
-        
-        // Hard reload with cache buster
-        window.location.href = window.location.origin + window.location.pathname + '?v=' + Date.now();
+        localStorage.clear(); // Complete wipe
       }
     })();
   </script>
 
-  <script type="module" src="/src/main.tsx?v=deepmake-v3"></script>
+  <script type="module" src="/src/main.tsx?v=5.0.0"></script>
 </head>
 
 <body>

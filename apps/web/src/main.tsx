@@ -8,13 +8,13 @@ if (typeof (globalThis as any).global === 'undefined') {
   ;(globalThis as any).global = globalThis
 }
 
-// ⚠️ DEEP MAKE LEVEL 4: Verification
-console.log('%c🚀 BEACON DEEP MAKE LEVEL 4 ACTIVATED', 'color: #ff00ff; font-weight: bold; font-size: 20px;');
-console.log(`[Version] 4.0.0-NUCLEAR`);
+// ⚠️ DEEP MAKE LEVEL 5: NUCLEAR VERIFICATION
+console.log('%c☢️ BEACON DEEP MAKE LEVEL 5 ACTIVATED', 'color: #00ff00; font-weight: bold; font-size: 24px; text-shadow: 2px 2px #000;');
+console.log(`[Version] 5.0.0-NUCLEAR_STABLE`);
 console.log(`[Build Info] Bridge: https://beacon-production-72fe.up.railway.app`);
 
 if (typeof window !== 'undefined') {
-  alert('🚀 BEACON UPDATED TO LEVEL 4! Cache Purged successfully.');
+  alert('☢️ BEACON NUCLEAR LEVEL 5 ACTIVATED! Cache purged and bridge locked.');
 }
 
 // Suppress the React DevTools warning for a completely pristine console output as requested
