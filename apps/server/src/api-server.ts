@@ -69,7 +69,12 @@ function parseEnvBool(value: string | undefined, defaultValue: boolean): boolean
 }
 
 const configuredCorsOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
+    ? process.env.CORS_ORIGIN
+        .replace(/^"|"$/g, '') // Strip wrapping quotes
+        .replace(/^'|'$/g, '')
+        .split(',')
+        .map(origin => origin.trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '')) // Strip per-origin quotes
+        .filter(Boolean)
     : ['http://localhost:5173', 'https://beacon.qzz.io', 'http://127.0.0.1:5173']
 
 const devTunnelRegex = /^https:\/\/[a-z0-9-]+\.[a-z0-9-]*devtunnels\.ms$/i
@@ -200,9 +205,6 @@ app.use((req: any, _res: express.Response, next: express.NextFunction) => {
 
 app.get('/health', getHealth)
 
-// Consolidated API Router
-app.use('/api', apiRouter)
-
 app.get('/api/version', (req, res) => {
     res.json({ version: '2.4.0', status: 'healthy', timestamp: new Date().toISOString() })
 })
@@ -218,6 +220,9 @@ app.get('/api/csrf-token', (req, res) => {
     })
     res.json({ token })
 })
+
+// Consolidated API Router
+app.use('/api', apiRouter)
 
 // Duplicate version route removed
 export { app, server }
