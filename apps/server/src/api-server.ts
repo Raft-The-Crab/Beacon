@@ -78,6 +78,8 @@ const configuredCorsOrigins = process.env.CORS_ORIGIN
     : ['http://localhost:5173', 'https://beacon.qzz.io', 'http://127.0.0.1:5173']
 
 const devTunnelRegex = /^https:\/\/[a-z0-9-]+\.[a-z0-9-]*devtunnels\.ms$/i
+const cfPagesRegex = /^https:\/\/[a-z0-9-]+\.beacon-[a-z0-9-]+\.pages\.dev$/i
+const qzzIoRegex = /^https:\/\/(?:[a-z0-9-]+\.)*qzz\.io$/i
 
 app.use(cors({
     origin: (origin, callback) => {
@@ -91,7 +93,9 @@ app.use(cors({
             origin === 'http://localhost:5173' ||
             origin === 'http://127.0.0.1:5173' ||
             configuredCorsOrigins.includes(origin) ||
-            devTunnelRegex.test(origin)
+            devTunnelRegex.test(origin) ||
+            cfPagesRegex.test(origin) ||
+            qzzIoRegex.test(origin)
         ) {
             callback(null, true)
             return
