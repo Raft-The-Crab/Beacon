@@ -13,7 +13,8 @@ export function GatewayDocs() {
         <section className={styles.docsSection}>
           <h2>Gateway URL</h2>
           <div className={styles.infoBox}>
-            <code>wss://gateway.beacon.qzz.io/gateway</code>
+            <p><strong>Primary:</strong> <code>wss://gateway.beacon.qzz.io/gateway</code></p>
+            <p><strong>Railway Direct:</strong> <code>wss://beacon-production-72fe.up.railway.app/gateway</code></p>
           </div>
           <p>Connect with standard WebSocket clients. After connect, wait for Hello (op 10), then send Identify (op 2).</p>
         </section>

@@ -14,6 +14,7 @@ export function APIReference() {
           <h2>Base URLs</h2>
           <div className={styles.infoBox}>
             <p><strong>Primary:</strong> <code>https://api.beacon.qzz.io/api</code></p>
+            <p><strong>Railway Direct:</strong> <code>https://beacon-production-72fe.up.railway.app/api</code></p>
           </div>
           <p>Use HTTPS only. All responses are JSON. Use standard HTTP status handling in clients.</p>
         </section>
@@ -92,7 +93,7 @@ Authorization: Bearer YOUR_USER_TOKEN`}</pre>
         <section className={styles.docsSection}>
           <h2>cURL Examples</h2>
           <div className={styles.codeBlock}>
-            <pre>{`curl -X POST "https://api.beacon.qzz.io/api/channels/123/messages" \\
+            <pre>{`curl -X POST "https://beacon-production-72fe.up.railway.app/api/channels/123/messages" \\
   -H "Authorization: Bot YOUR_BOT_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"content":"Hello from Beacon API"}'`}</pre>

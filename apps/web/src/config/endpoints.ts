@@ -71,7 +71,7 @@ export function resolveWebSocketUrl(rawUrl?: string, apiUrl?: string): string {
   return 'ws://localhost:4001/gateway'
 }
 
-const configuredApiUrl = 'https://beacon-v1-api.up.railway.app/api'
+const configuredApiUrl = 'https://beacon-production-72fe.up.railway.app/api'
 
 export const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl)
-export const WS_BASE_URL = resolveWebSocketUrl('wss://beacon-v1-api.up.railway.app/gateway', configuredApiUrl)
+export const WS_BASE_URL = resolveWebSocketUrl('wss://beacon-production-72fe.up.railway.app/gateway', configuredApiUrl)

@@ -87,8 +87,13 @@ client.login();`}</code>
           <p>Create a <code>.env</code> file in your bot project:</p>
           <pre className={`${styles.code} glass`}>
             <code>{`BOT_TOKEN=your_bot_token_here
+# Primary URL
 BEACON_API_URL=https://api.beacon.qzz.io/api
-BEACON_GATEWAY_URL=wss://gateway.beacon.qzz.io/gateway`}</code>
+BEACON_GATEWAY_URL=wss://gateway.beacon.qzz.io/gateway
+
+# Railway Fallback (Use if primary is blocked)
+# BEACON_API_URL=https://beacon-production-72fe.up.railway.app/api
+# BEACON_GATEWAY_URL=wss://beacon-production-72fe.up.railway.app/gateway`}</code>
           </pre>
         </section>
 
