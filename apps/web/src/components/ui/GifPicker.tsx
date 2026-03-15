@@ -5,7 +5,7 @@ import { giphyService, type GiphyGif } from '../../services/giphy'
 import { Input } from './Input'
 import { useAuthStore } from '../../stores/useAuthStore'
 import styles from '../../styles/modules/ui/GifPicker.module.css'
-import giphyPoweredByMark from '../../../../../assets/giphy-attribution-marks/Giphy Attribution Marks/Static Logos/Small/Light Backgrounds/PoweredBy_200px-White_HorizLogo.png'
+import giphyPoweredByMark from '/PoweredBy_200px-White_HorizLogo.png'
 
 type UnifiedGif = {
   id: string
