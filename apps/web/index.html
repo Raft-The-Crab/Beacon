@@ -14,6 +14,31 @@
     rel="stylesheet">
 
   <title>Beacon - Connect. Communicate. Collaborate.</title>
+  
+  <script>
+    // 🔥 CACHE BURN PROTOCOL v3.1
+    (function() {
+      const CURRENT_VERSION = 'deepmake-v3.1';
+      const storedVersion = localStorage.getItem('BEACON_V');
+      
+      if (storedVersion !== CURRENT_VERSION) {
+        console.log('🧹 Outdated cache detected. Burning...');
+        localStorage.setItem('BEACON_V', CURRENT_VERSION);
+        
+        // Clear everything
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            for (let reg of regs) reg.unregister();
+          });
+        }
+        
+        // Hard reload with cache buster
+        window.location.href = window.location.origin + window.location.pathname + '?v=' + Date.now();
+      }
+    })();
+  </script>
+
+  <script type="module" src="/src/main.tsx?v=deepmake-v3"></script>
 </head>
 
 <body>
