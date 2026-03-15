@@ -1,8 +1,4 @@
 # Cloudflare Pages SPA Redirects
-# Explicitly serve assets to prevent loops
-/assets/* /assets/:splat 200
-/js/* /js/:splat 200
-/css/* /css/:splat 200
-
-# Standarized SPA fallback
+# Cloudflare serves existing files automatically.
+# This rule only catches non-existent paths (like /login) for React Router.
 /* /index.html 200

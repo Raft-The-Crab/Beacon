@@ -1,75 +1,70 @@
 const https = require('https');
 
-// Test 1: Basic health check (no CORS, just see if backend is alive)
-function testHealth() {
+async function testUrl(name, url, isOptions = false) {
   return new Promise((resolve) => {
-    const req = https.get('https://beacon-v1-api.up.railway.app/api/version', (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        console.log(`[HEALTH] Status: ${res.statusCode}`);
-        console.log(`[HEALTH] Body: ${data.substring(0, 200)}`);
-        resolve(res.statusCode);
-      });
-    });
-    req.on('error', e => { console.error(`[HEALTH] Error: ${e.message}`); resolve(0); });
-    req.setTimeout(10000, () => { req.destroy(); console.error('[HEALTH] Timeout'); resolve(0); });
-  });
-}
-
-// Test 2: CORS preflight (OPTIONS request with Origin header)
-function testCORS() {
-  return new Promise((resolve) => {
+    console.log(`[Testing ${name}] -> ${url}`);
+    const parsed = new URL(url);
     const options = {
-      hostname: 'beacon-v1-api.up.railway.app',
+      hostname: parsed.hostname,
       port: 443,
-      path: '/api/csrf-token',
-      method: 'OPTIONS',
+      path: parsed.pathname + parsed.search,
+      method: isOptions ? 'OPTIONS' : 'GET',
       headers: {
         'Origin': 'https://beacon.qzz.io',
-        'Access-Control-Request-Method': 'GET',
-        'Access-Control-Request-Headers': 'content-type'
+        'User-Agent': 'Mozilla/5.0 (Diagnostic Script)',
       }
     };
+    
+    if (isOptions) {
+      options.headers['Access-Control-Request-Method'] = 'GET';
+      options.headers['Access-Control-Request-Headers'] = 'content-type';
+    }
+
     const req = https.request(options, (res) => {
-      console.log(`\n[CORS] Status: ${res.statusCode}`);
-      console.log(`[CORS] Access-Control-Allow-Origin: ${res.headers['access-control-allow-origin'] || 'MISSING'}`);
-      console.log(`[CORS] Access-Control-Allow-Methods: ${res.headers['access-control-allow-methods'] || 'MISSING'}`);
-      console.log(`[CORS] Access-Control-Allow-Credentials: ${res.headers['access-control-allow-credentials'] || 'MISSING'}`);
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
-        if (data) console.log(`[CORS] Body: ${data.substring(0, 200)}`);
+        console.log(`[${name}] Status: ${res.statusCode}`);
+        console.log(`[${name}] Headers:`, JSON.stringify(res.headers, null, 2));
+        if (data.includes('html')) {
+           console.log(`[${name}] Body type: HTML (Possibly a proxy error page)`);
+        } else {
+           console.log(`[${name}] Body: ${data.substring(0, 500)}`);
+        }
         resolve(res.statusCode);
       });
     });
-    req.on('error', e => { console.error(`[CORS] Error: ${e.message}`); resolve(0); });
-    req.setTimeout(10000, () => { req.destroy(); console.error('[CORS] Timeout'); resolve(0); });
-    req.end();
+
+    req.on('error', (e) => {
+      console.error(`[${name}] Network Error: ${e.message}`);
+      resolve(599);
+    });
+
+    req.setTimeout(15000, () => {
+      console.error(`[${name}] Timeout`);
+      req.destroy();
+      resolve(598);
+    });
+    
+    if (!isOptions) req.end();
+    else req.end();
   });
 }
 
-async function main() {
-  console.log('=== Railway Backend Diagnostic ===');
-  console.log(`Time: ${new Date().toISOString()}\n`);
+async function run() {
+  console.log('=== STARTING DEEP DIAGNOSTIC ===');
+  console.log(`Target: https://beacon-v1-api.up.railway.app`);
   
-  const health = await testHealth();
-  const cors = await testCORS();
+  // 1. Check version (simplest path)
+  await testUrl('API_VERSION', 'https://beacon-v1-api.up.railway.app/api/version');
   
-  console.log('\n=== Summary ===');
-  if (health === 200) {
-    console.log('✅ Backend is ALIVE and responding');
-  } else if (health === 502) {
-    console.log('❌ 502 Bad Gateway - Backend app is NOT running (port mismatch or crash)');
-  } else {
-    console.log(`⚠️  Unexpected status: ${health}`);
-  }
+  // 2. Check CSRF token (requires CORS)
+  await testUrl('API_CORS_GET', 'https://beacon-v1-api.up.railway.app/api/csrf-token');
   
-  if (cors === 204 || cors === 200) {
-    console.log('✅ CORS preflight PASSED');
-  } else {
-    console.log(`❌ CORS preflight FAILED (status ${cors})`);
-  }
+  // 3. Check OPTIONS preflight
+  await testUrl('API_CORS_OPTIONS', 'https://beacon-v1-api.up.railway.app/api/csrf-token', true);
+
+  console.log('\n=== DIAGNOSTIC COMPLETE ===');
 }
 
-main();
+run();

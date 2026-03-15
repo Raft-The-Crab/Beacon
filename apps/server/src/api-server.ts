@@ -143,7 +143,12 @@ app.use(responseWrapper)
 
 const server = http.createServer(app)
 const BASE_PORT = Number(process.env.PORT || 4000)
-let lastPostgresHealthErrorLogAt = 0
+if (process.env.PORT) {
+    console.log(`[PortCheck] Railway/System provided PORT: ${process.env.PORT}`);
+} else {
+    console.log(`[PortCheck] No PORT env found, defaulting to: 4000`);
+}
+const lastPostgresHealthErrorLogAt = 0
 
 async function listenWithPortFallback(basePort: number): Promise<number> {
     const maxLocalAttempts = 8
@@ -162,7 +167,7 @@ async function listenWithPortFallback(basePort: number): Promise<number> {
 
         server.once('error', onError)
         server.once('listening', onListening)
-        // Explicitly bind to 0.0.0.0 for container networking reliability
+        // Explicitly bind to 0.0.0.0 for container networking
         server.listen(port, '0.0.0.0')
     })
 

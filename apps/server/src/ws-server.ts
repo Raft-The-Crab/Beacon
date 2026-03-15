@@ -19,7 +19,12 @@ app.use(helmet())
 const server = createServer(app)
 const wss = new WebSocketServer({ server, path: '/gateway' })
 
-const BASE_WS_PORT = Number(process.env.WS_PORT || 4001)
+const BASE_WS_PORT = Number(process.env.PORT || 4001)
+if (process.env.PORT) {
+    console.log(`[WS-PortCheck] Railway/System provided PORT: ${process.env.PORT}`);
+} else {
+    console.log(`[WS-PortCheck] No PORT env found, defaulting to: 4001`);
+}
 
 async function listenWithPortFallback(basePort: number): Promise<number> {
     const maxLocalAttempts = 8
