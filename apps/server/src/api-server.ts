@@ -57,7 +57,41 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 const app = express()
-app.use(compression({ level: 6, threshold: 10 * 1024 })) // Gzip compression > 10kb
+
+// ─── Critical Priority Middleware ─────────────────────────────────────────────
+app.use(requestId)
+app.use(cors({
+    origin: (origin, callback) => {
+        // ALWAYS log the origin for now - we need to see what Railway receives
+        console.log(`[CORS] Checking origin: "${origin}"`);
+
+        if (!origin) {
+            callback(null, true)
+            return
+        }
+
+        const isAllowed = 
+            origin === 'http://localhost:5173' ||
+            origin === 'http://127.0.0.1:5173' ||
+            configuredCorsOrigins.includes(origin) ||
+            devTunnelRegex.test(origin) ||
+            cfPagesRegex.test(origin) ||
+            beaconDomainRegex.test(origin);
+
+        if (isAllowed) {
+            console.log(`[CORS] ✅ Allowed: ${origin}`);
+            callback(null, true)
+        } else {
+            console.warn(`[CORS] ❌ Blocked: ${origin}. Not in:`, configuredCorsOrigins);
+            callback(null, false)
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token', 'x-request-id']
+}))
+
+app.use(compression({ level: 6, threshold: 10 * 1024 }))
 app.use(requestTimer)
 
 function parseEnvBool(value: string | undefined, defaultValue: boolean): boolean {
@@ -78,42 +112,10 @@ const configuredCorsOrigins = process.env.CORS_ORIGIN
     : ['http://localhost:5173', 'https://beacon.qzz.io', 'http://127.0.0.1:5173']
 
 const devTunnelRegex = /^https:\/\/[a-z0-9-]+\.[a-z0-9-]*devtunnels\.ms$/i
-const cfPagesRegex = /^https:\/\/[a-z0-9-]+\.beacon-[a-z0-9-]+\.pages\.dev$/i
+const cfPagesRegex = /^https:\/\/[a-z0-9-.]+\.pages\.dev$/i
 const beaconDomainRegex = /^https:\/\/(?:[a-z0-9-]+\.)*beacon\.qzz\.io$/i
 
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin) {
-            callback(null, true)
-            return
-        }
-
-        const isAllowed = 
-            origin === 'http://localhost:5173' ||
-            origin === 'http://127.0.0.1:5173' ||
-            configuredCorsOrigins.includes(origin) ||
-            devTunnelRegex.test(origin) ||
-            cfPagesRegex.test(origin) ||
-            beaconDomainRegex.test(origin);
-
-        if (process.env.DEBUG === 'true' || process.env.NODE_ENV !== 'production') {
-            console.log(`[CORS] Origin: ${origin} | Allowed: ${isAllowed}`);
-            if (!isAllowed) {
-                console.log(`[CORS] Regex test - devTunnel: ${devTunnelRegex.test(origin)}, cfPages: ${cfPagesRegex.test(origin)}, beaconDomain: ${beaconDomainRegex.test(origin)}`);
-            }
-        }
-
-        if (isAllowed) {
-            callback(null, true)
-        } else {
-            console.warn(`[CORS] Forbidden origin: ${origin}. Allowed list:`, configuredCorsOrigins)
-            callback(null, false)
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token', 'x-request-id']
-}))
+// CORS moved to top
 
 app.use(helmet({
     contentSecurityPolicy: {
@@ -133,7 +135,7 @@ app.use(helmet({
 }))
 
 app.use(sanitizeHeaders)
-app.use(requestId)
+// requestId moved to top
 app.use(sanitizeBody)
 app.use(ipBlockMiddleware)
 app.use('/api/', generalLimiter)
