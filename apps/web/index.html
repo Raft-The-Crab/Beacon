@@ -14,45 +14,37 @@
     rel="stylesheet">
 
   <script>
-    // ☢️ NUCLEAR CACHE RESET v5.0
+    // ☢️ NUCLEAR CACHE RESET + BURN v5.1
     (function() {
+      const VERSION = 'v5.1.0-NUCLEAR_FIX';
       const RESET_KEY = 'BEACON_RESET_v5';
+      
+      // 1. One-time redirect to bust the document cache
       if (!sessionStorage.getItem(RESET_KEY)) {
         sessionStorage.setItem(RESET_KEY, 'done');
-        const buster = 'v=' + Date.now();
-        const freshUrl = window.location.origin + window.location.pathname + '?' + buster + window.location.hash;
-        console.warn('☢️ FORCING CACHED PURGE via REDIRECT...');
-        window.location.replace(freshUrl);
+        window.location.replace(window.location.origin + window.location.pathname + '?v=' + Date.now() + window.location.hash);
+        return;
       }
-    })();
-  </script>
-
-  <title>Beacon - Connect. Communicate. Collaborate.</title>
-  
-  <script>
-    // 🔥 CACHE BURN PROTOCOL v5.0
-    (function() {
-      const CURRENT_VERSION = 'v5.0.0-NUCLEAR';
-      const latestVer = localStorage.getItem('BEACON_V');
       
-      if (latestVer !== CURRENT_VERSION) {
-        localStorage.setItem('BEACON_V', CURRENT_VERSION);
+      // 2. Storage wipe on version change
+      if (localStorage.getItem('BEACON_V') !== VERSION) {
+        localStorage.setItem('BEACON_V', VERSION);
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then(regs => {
             for (let reg of regs) reg.unregister();
           });
         }
-        localStorage.clear(); // Complete wipe
+        localStorage.clear();
       }
     })();
   </script>
 
-  <script type="module" src="/src/main.tsx?v=5.0.0"></script>
+  <title>Beacon - Connect. Communicate. Collaborate.</title>
 </head>
 
 <body>
   <div id="root"></div>
-  <script type="module" src="/src/main.tsx?v=deepmake-v3"></script>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 
 </html>
