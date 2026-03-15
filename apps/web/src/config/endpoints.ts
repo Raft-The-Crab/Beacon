@@ -27,6 +27,7 @@ export function resolveApiBaseUrl(rawUrl?: string): string {
   const configured = trimTrailingSlashes(rawUrl || '')
 
   if (!configured) {
+    // ⚠️ HARD FALLBACK to the direct Railway URL to bypass DNS/Cloudflare issues
     return import.meta.env.VITE_API_URL || 'https://beacon-production-72fe.up.railway.app/api'
   }
 

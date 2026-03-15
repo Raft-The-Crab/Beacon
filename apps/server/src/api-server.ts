@@ -113,7 +113,7 @@ const configuredCorsOrigins = process.env.CORS_ORIGIN
 
 const devTunnelRegex = /^https:\/\/[a-z0-9-]+\.[a-z0-9-]*devtunnels\.ms$/i
 const cfPagesRegex = /^https:\/\/[a-z0-9-.]+\.pages\.dev$/i
-const beaconDomainRegex = /^https:\/\/(?:[a-z0-9-]+\.)*beacon\.qzz\.io$/i
+const beaconDomainRegex = /^https:\/\/(?:[a-z0-9-]+\.)*qzz\.io$/i
 
 // CORS moved to top
 
