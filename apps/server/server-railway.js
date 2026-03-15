@@ -57,7 +57,7 @@ const PING_INTERVAL_MS = 3 * 60 * 1000;
 
 function buildPingUrl() {
   // Keepalive is process-local in Railway to avoid ingress path/proxy mismatches.
-  const port = process.env.PORT || 8080;
+  const port = process.env.PORT || 4000;
   return `http://localhost:${port}/api/version`;
 }
 

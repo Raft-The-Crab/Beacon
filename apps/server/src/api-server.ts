@@ -142,7 +142,7 @@ app.use('/api/', generalLimiter)
 app.use(responseWrapper)
 
 const server = http.createServer(app)
-const BASE_PORT = Number(process.env.PORT || 8080)
+const BASE_PORT = Number(process.env.PORT || 4000)
 let lastPostgresHealthErrorLogAt = 0
 
 async function listenWithPortFallback(basePort: number): Promise<number> {
