@@ -33,8 +33,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "node -e \"const fs=require('fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.rmSync('tsconfig.tsbuildinfo',{force:true});\"",
-    "publish:check": "npm pack --dry-run",
-    "prepublishOnly": "npm run clean && npm run build"
+    "publish:check": "npm pack --dry-run"
   },
   "keywords": [
     "beacon",
@@ -65,7 +64,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "beacon-types": "workspace:*",
+    "beacon-types": "file:../types",
     "axios": "^1.6.0",
     "eventemitter3": "^5.0.4",
     "isomorphic-ws": "^5.0.0",

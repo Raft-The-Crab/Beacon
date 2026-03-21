@@ -1,5 +1,5 @@
 import { Client, ClientOptions } from './client';
-import type { RawMessage, RawUser } from '@beacon/types';
+import type { RawMessage, RawUser } from 'beacon-types';
 
 export interface AIClientOptions extends ClientOptions {
   aiModelResolver: (prompt: string, context: string[]) => Promise<string>;

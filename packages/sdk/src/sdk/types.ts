@@ -1,6 +1,6 @@
 import type { User, Server, Channel, Message, Role, Presence, Permission } from './core-types'
 
-// Re-export types from @beacon/types
+// Re-export types from beacon-types
 export type { User, Server, Channel, Message, Role, Presence, Permission } from './core-types'
 
 /**

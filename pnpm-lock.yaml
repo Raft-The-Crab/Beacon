@@ -25,7 +25,7 @@ importers:
         version: 3.0.3
       beacon-sdk:
         specifier: file:packages/sdk
-        version: file:packages/sdk
+        version: link:packages/sdk
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -101,7 +101,7 @@ importers:
         version: 2.10.1
       beacon-sdk:
         specifier: file:../../packages/sdk
-        version: file:packages/sdk
+        version: link:../../packages/sdk
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2.0.0
@@ -123,7 +123,7 @@ importers:
         version: 7.5.0
       beacon-sdk:
         specifier: file:../../packages/sdk
-        version: file:packages/sdk
+        version: link:../../packages/sdk
     devDependencies:
       '@capacitor/cli':
         specifier: ^7.0.0
@@ -157,7 +157,7 @@ importers:
         version: 2.4.3
       beacon-sdk:
         specifier: file:../../packages/sdk
-        version: file:packages/sdk
+        version: link:../../packages/sdk
       bull:
         specifier: ^4.12.0
         version: 4.16.5
@@ -305,7 +305,7 @@ importers:
         version: 1.13.5
       beacon-sdk:
         specifier: file:../../packages/sdk
-        version: file:packages/sdk
+        version: link:../../packages/sdk
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -404,7 +404,7 @@ importers:
         specifier: ^1.6.0
         version: 1.13.5
       beacon-types:
-        specifier: workspace:*
+        specifier: file:../types
         version: link:../types
       eventemitter3:
         specifier: ^5.0.4
@@ -2651,10 +2651,6 @@ packages:
   bcryptjs@3.0.3:
     resolution: {integrity: sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g==}
     hasBin: true
-
-  beacon-sdk@file:packages/sdk:
-    resolution: {directory: packages/sdk, type: directory}
-    engines: {node: '>=18.0.0'}
 
   big-integer@1.6.52:
     resolution: {integrity: sha512-QxD8cf2eVqJOOz63z6JIN9BzvVs/dlySa5HGSBH5xtR8dPteIRQnBxxKqkNTiT6jbDTF6jAfrd4oMcND9RGbQg==}
@@ -7855,19 +7851,6 @@ snapshots:
   bcryptjs@2.4.3: {}
 
   bcryptjs@3.0.3: {}
-
-  beacon-sdk@file:packages/sdk:
-    dependencies:
-      axios: 1.13.5
-      beacon-types: link:packages/types
-      eventemitter3: 5.0.4
-      isomorphic-ws: 5.0.0(ws@8.19.0)
-      opusscript: 0.1.1
-      ws: 8.19.0
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - utf-8-validate
 
   big-integer@1.6.52: {}
 
