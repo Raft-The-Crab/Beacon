@@ -25,8 +25,13 @@ export async function getHealth(_req: Request, res: Response) {
 
         try {
             if (prisma) {
-                await prisma.$queryRaw`SELECT 1`;
+                // Use a Promise.race to ensure the health check doesn't hang the whole server
+                await Promise.race([
+                    prisma.$queryRaw`SELECT 1`,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Postgres timeout')), 2000))
+                ]);
                 postgresLatency = Date.now() - postgresStart;
+                postgresHealthy = true;
             }
         } catch (e) {
             postgresHealthy = false;

@@ -11,8 +11,10 @@ import compression from 'compression';
 http.globalAgent.maxSockets = 500;
 
 // Internal Imports
+import { WebSocketServer } from 'ws';
 import { connectMongo, prisma, redis } from './db';
 import { moderationService } from './services/moderation';
+import { GatewayService } from './services/gateway';
 import { getProfile } from './utils/autoTune';
 import { sanitizeBody } from './utils/sanitize';
 import { ipBlockMiddleware, generalLimiter, sanitizeHeaders, csrfProtection } from './middleware/security';
@@ -50,6 +52,8 @@ export class BeaconServer {
     public app: Express;
     public server: http.Server;
     private port: number;
+    private wss: WebSocketServer | null = null;
+    private gateway: GatewayService | null = null;
 
     constructor() {
         this.app = express();
@@ -246,7 +250,7 @@ export class BeaconServer {
         return new Promise((resolve) => {
             const onError = (err: any) => {
                 if (err.code === 'EADDRINUSE') {
-                    logger.warn(`⚠️ Port ${this.port} is mapped, trying ${this.port + 1}...`);
+                    logger.warn(`⚠️ Port ${this.port} already in use, trying ${this.port + 1}...`);
                     this.port++;
                     this.server.listen(this.port, '0.0.0.0');
                 } else {
@@ -259,9 +263,21 @@ export class BeaconServer {
             this.server.once('listening', () => {
                 this.server.removeListener('error', onError);
                 const bootMs = Date.now() - this._bootStart;
-                logger.info(`🚀 Beacon v3.0.0-beta.1 API Server Online. Listening on 0.0.0.0:${this.port} (boot: ${bootMs}ms)`);
                 
-                // Initialize db in background logic strictly POST-binding
+                logger.info(`================================================`);
+                logger.info(`🚀 Beacon Unified V3 Server Online`);
+                logger.info(`📡 Mode: ${process.env.NODE_ENV || 'development'}`);
+                logger.info(`🔗 API: http://0.0.0.0:${this.port}`);
+                logger.info(`🔌 WebSocket: ws://0.0.0.0:${this.port}/gateway`);
+                logger.info(`⏱️ Boot time: ${bootMs}ms`);
+                logger.info(`================================================`);
+
+                // Initialize WebSocket Gateway on the existing server
+                this.wss = new WebSocketServer({ server: this.server, path: '/gateway' });
+                this.gateway = new GatewayService(this.wss);
+                logger.success('✅ WebSocket Gateway: Ready');
+
+                // Initialize databases in background POST-binding
                 this.initializeDatabases();
                 this.startWatchdogs();
 
@@ -272,10 +288,14 @@ export class BeaconServer {
                 }
 
                 if (parseEnvBool(process.env.ENABLE_BOT_SYSTEM, true)) {
-                    import('./bots/index.js').then(async ({ initBotSystem }) => {
-                        await initBotSystem();
-                        logger.info('✅ Bot Subsystem V2: Ready');
-                    }).catch(err => logger.error(`❌ Failed to initialize Bot System: ${err}`));
+                    // Check if bots/index.ts exists before importing to avoid build crashes
+                    const botPath = path.join(__dirname, 'bots', 'index.js');
+                    if (fs.existsSync(botPath) || fs.existsSync(path.join(__dirname, 'bots', 'index.ts'))) {
+                        import('./bots/index.js').then(async ({ initBotSystem }) => {
+                            await initBotSystem();
+                            logger.info('✅ Bot Subsystem V2: Ready');
+                        }).catch(err => logger.error(`❌ Failed to initialize Bot System: ${err}`));
+                    }
                 }
 
                 resolve();

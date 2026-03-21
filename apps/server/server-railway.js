@@ -32,7 +32,6 @@ if (process.env.ENABLE_MODERATION == null) process.env.ENABLE_MODERATION = 'true
 if (process.env.AUTO_TUNE_PROFILE == null) process.env.AUTO_TUNE_PROFILE = 'railway-api';
 
 const apiPath = path.join(__dirname, 'dist', 'src', 'api-server.js');
-const wsPath = path.join(__dirname, 'dist', 'src', 'ws-server.js');
 
 if (!fs.existsSync(apiPath)) {
   console.error('[Railway] Missing build output: dist/src/api-server.js');
@@ -40,18 +39,9 @@ if (!fs.existsSync(apiPath)) {
   process.exit(1);
 }
 
+// Require the unified server (API + WebSocket)
 require(apiPath);
-
-if (process.env.ENABLE_WS_SERVER === 'true') {
-  if (!fs.existsSync(wsPath)) {
-    console.error('[Railway] ENABLE_WS_SERVER=true but dist/src/ws-server.js is missing.');
-    process.exit(1);
-  }
-  require(wsPath);
-  console.log('[Railway] WS server enabled in the same process');
-} else {
-  console.log('[Railway] WS server disabled; running API-only mode');
-}
+console.log('[Railway] Unified Beacon Server (API + Gateway) loaded');
 
 const PING_INTERVAL_MS = 3 * 60 * 1000;
 
