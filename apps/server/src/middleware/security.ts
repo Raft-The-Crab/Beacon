@@ -250,7 +250,10 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
     path.endsWith('/api/auth/register') ||
     path.endsWith('/api/auth/mfa/verify') ||
     path.endsWith('/api/auth/refresh') ||
-    path.endsWith('/api/csrf-token')
+    path.endsWith('/api/csrf-token') ||
+    path.endsWith('/csrf-token') ||
+    path.endsWith('/api/version') ||
+    path.endsWith('/version')
   ) {
     return next()
   }

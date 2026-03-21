@@ -100,6 +100,7 @@ export class BeaconServer {
                 const isAllowed = 
                     origin === 'http://localhost:5173' ||
                     origin === 'http://127.0.0.1:5173' ||
+                    origin === 'https://beacon.qzz.io' ||
                     origin === frontendUrl ||
                     customOrigins.includes(origin) ||
                     devTunnelRegex.test(origin) ||

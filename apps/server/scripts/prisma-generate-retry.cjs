@@ -7,7 +7,7 @@ const DELAYS_MS = [0, 800, 1600, 2500]
 const serverRoot = path.resolve(__dirname, '..')
 const workspaceRoot = path.resolve(serverRoot, '..', '..')
 const prismaClientDir = path.join(workspaceRoot, 'node_modules', '.prisma', 'client')
-const prismaCommand = process.platform === 'win32' ? 'npx.cmd' : 'npx'
+const prismaCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 
 function sleep(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
@@ -42,7 +42,7 @@ for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     sleep(DELAYS_MS[attempt - 1])
   }
 
-  const result = spawnSync(prismaCommand, ['prisma', 'generate'], {
+  const result = spawnSync(prismaCommand, ['run', 'prisma:generate:direct'], {
     cwd: serverRoot,
     stdio: 'inherit',
     env: process.env,
