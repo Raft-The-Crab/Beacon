@@ -65,7 +65,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "beacon-types": "^2.5.0",
+    "beacon-types": "workspace:*",
     "axios": "^1.6.0",
     "eventemitter3": "^5.0.4",
     "isomorphic-ws": "^5.0.0",
