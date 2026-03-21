@@ -154,7 +154,7 @@ export default defineConfig(({ mode }) => {
 
   define: {
     global: 'globalThis',
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '3.0.0'),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '3.0.1'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
 }
