@@ -41,6 +41,7 @@ export default defineConfig(({ mode }) => {
     alias: {
       'beacon-types': path.resolve(__dirname, '../../packages/types/src'),
       'beacon.js': path.resolve(__dirname, '../../packages/sdk/src'),
+      'stream': path.resolve(__dirname, '../../packages/sdk/src/stubs/stream.ts'),
       '@': path.resolve(__dirname, './src'),
     },
   },
@@ -93,7 +94,7 @@ export default defineConfig(({ mode }) => {
     reportCompressedSize: true,
     
     rollupOptions: {
-      external: ['stream', 'opusscript', 'wrtc', 'child_process', 'crypto', 'zlib'],
+      external: ['opusscript', 'wrtc'],
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) {

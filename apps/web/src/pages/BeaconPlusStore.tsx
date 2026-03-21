@@ -216,10 +216,10 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
         }
     }
 
-    const currentItems = activeTab === 'decorations' ? marketplace.decorations : activeTab === 'effects' ? marketplace.effects : activeTab === 'themes' ? marketplace.themes : []
+    const currentItems = (activeTab === 'decorations' ? marketplace?.decorations : activeTab === 'effects' ? marketplace?.effects : activeTab === 'themes' ? marketplace?.themes : []) || []
     const filteredItems = currentItems.filter((item: any) =>
-        String(item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        String(item?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        String(item?.description || '').toLowerCase().includes(searchQuery.toLowerCase())
     )
 
     if (success) {

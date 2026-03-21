@@ -1,4 +1,4 @@
-import { BeaconClient, RestClient, resolveApiClientBaseUrl, resolveApiClientGatewayUrl } from 'beacon-sdk/browser'
+import { BeaconClient, RestClient, resolveApiClientBaseUrl, resolveApiClientGatewayUrl } from 'beacon-sdk'
 import { API_BASE_URL, WS_BASE_URL } from '../config/endpoints'
 
 const resolvedApiUrl = resolveApiClientBaseUrl(API_BASE_URL)

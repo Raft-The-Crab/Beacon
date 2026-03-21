@@ -15,7 +15,7 @@ export const RolesManager: React.FC = () => {
 
   if (!currentServer) return null;
 
-  const roles = (currentServer as any).roles || [];
+  const roles: Role[] = (currentServer as any).roles || [];
   const selectedRole = roles.find((r: Role) => r.id === selectedRoleId);
 
   const handleUpdateRole = async (roleId: string, updates: Partial<Role>) => {
