@@ -131,7 +131,7 @@ export class BeaconServer {
         // v3: Add Vary: Origin and X-Beacon-Version for client version detection
         this.app.use((_req: any, res: express.Response, next: express.NextFunction) => {
             res.setHeader('Vary', 'Origin');
-            res.setHeader('X-Beacon-Version', '3.0.1');
+            res.setHeader('X-Beacon-Version', '3.0.2');
             next();
         });
 
