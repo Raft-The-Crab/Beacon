@@ -1,4 +1,4 @@
-﻿import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Shield, Plus, Edit2, Trash2, Users, ChevronDown, ChevronUp, Copy } from 'lucide-react'
 import { Button, Input, Modal, RoleColorPicker } from '../ui'
 import { IconPicker } from '../ui/IconPicker'
@@ -331,7 +331,7 @@ export function RoleManager({ serverId }: RoleManagerProps) {
                   {expandedGroups.includes(group.name) && (
                     <div className={styles.permissionsList}>
                       {group.permissions.map((perm) => (
-                        <label key={perm.key} className={styles.permissionItem}>
+                        <label key={perm.key as string} className={styles.permissionItem}>
                           <input
                             type="checkbox"
                             checked={selectedRole.permissions.includes(perm.key)}

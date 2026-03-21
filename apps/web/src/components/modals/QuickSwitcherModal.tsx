@@ -26,15 +26,15 @@ export function QuickSwitcherModal({ isOpen, onClose }: QuickSwitcherModalProps)
         const res: any[] = []
 
         // Match DMs
-        channels.forEach(ch => {
-            const name = ch.participants.find(p => p.id !== user?.id)?.username || ch.participants[0]?.username || 'Unknown'
+        channels.forEach((ch: any) => {
+            const name = ch.participants.find((p: any) => p.id !== user?.id)?.username || ch.participants[0]?.username || 'Unknown'
             if (String(name).toLowerCase().includes(q)) {
                 res.push({ type: 'dm', id: ch.id, name, icon: <MessageSquare size={16} /> })
             }
         })
 
         // Match Server Channels
-        currentServer?.channels?.forEach(ch => {
+        currentServer?.channels?.forEach((ch: any) => {
             if (String(ch.name || '').toLowerCase().includes(q)) {
                 res.push({ type: 'channel', id: ch.id, name: ch.name, icon: <Hash size={16} /> })
             }

@@ -132,7 +132,7 @@ export const RolesManager: React.FC = () => {
               <label>PERMISSIONS</label>
               <p className={styles.sectionDesc}>Control what members with this role can do.</p>
               <div className={styles.permissionList}>
-                {Object.entries(PermissionFlags).map(([name, flag]) => (
+                {(Object.entries(PermissionFlags) as [string, bigint][]).map(([name, flag]) => (
                   <div key={name} className={styles.permissionItem}>
                     <div className={styles.permText}>
                       <span className={styles.permName}>{name.replace(/_/g, ' ')}</span>

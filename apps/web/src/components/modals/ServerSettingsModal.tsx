@@ -279,7 +279,7 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
                   </Button>
                 </div>
                 <div className={styles.settingsList}>
-                  {channels.map(channel => (
+                  {channels.map((channel: any) => (
                     <div key={channel.id} className={styles.listItem}>
                       <div className={styles.listItemMain}>
                         <div className={styles.channelIcon}>

@@ -155,7 +155,7 @@ export function RoleEditor({ serverId }: RoleEditorProps) {
                                     <h5 className={styles.groupTitle}>{group.name}</h5>
                                     <div className={styles.permissionList}>
                                         {group.permissions.map(perm => (
-                                            <div key={perm.key} className={styles.permissionRow}>
+                                            <div key={perm.key as string} className={styles.permissionRow}>
                                                 <div className={styles.permText}>
                                                     <p className={styles.permLabel}>{perm.label}</p>
                                                     <p className={styles.permDesc}>{perm.description}</p>
