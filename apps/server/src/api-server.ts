@@ -68,6 +68,12 @@ export class BeaconServer {
     private _bootStart: number;
 
     private configureMiddleware() {
+        // v3: Move logger to the absolute top to trace ALL incoming traffic
+        this.app.use((req: any, _res: express.Response, next: express.NextFunction) => {
+            logger.info(`Incoming: ${req.method} ${req.path} | Origin: ${req.headers.origin || 'none'}`, req.id);
+            next();
+        });
+
         this.app.use(requestId);
         
         // CORS Configuration
@@ -80,37 +86,43 @@ export class BeaconServer {
             ? process.env.FRONTEND_URL.replace(/\/$/, '') 
             : null;
 
-        const devTunnelRegex = /^https:\/\/[a-z0-9-]+\.[a-z0-9-]*devtunnels\.ms\/?$/i;
-        const cfPagesRegex = /^https:\/\/[a-z0-9-.]+\.pages\.dev$/i;
+        const devTunnelRegex = /\.devtunnels\.ms$/i;
+        const cfPagesRegex = /\.pages\.dev$/i;
         const railwayRegex = /\.railway\.app$/i;
-        const beaconDomainRegex = /^https:\/\/(?:www\.)?(?:[a-z0-9-]+\.)*qzz\.io\/?$/i;
+        const beaconDomainRegex = /qzz\.io$/i;
 
          this.app.use(cors({
             origin: (origin, callback) => {
+                // Allow requests with no origin (like mobile apps or curl)
                 if (!origin) return callback(null, true);
                 
+                const normalized = origin.toLowerCase().trim();
                 const isAllowed = 
-                    origin === 'http://localhost:5173' ||
-                    origin === 'http://127.0.0.1:5173' ||
-                    origin === 'https://beacon.qzz.io' ||
-                    origin === frontendUrl ||
-                    customOrigins.includes(origin) ||
-                    devTunnelRegex.test(origin) ||
-                    origin.toLowerCase().endsWith('.pages.dev') ||
-                    railwayRegex.test(origin) ||
-                    beaconDomainRegex.test(origin);
+                    normalized === 'http://localhost:5173' ||
+                    normalized === 'http://127.0.0.1:5173' ||
+                    normalized === 'https://beacon.qzz.io' ||
+                    normalized === frontendUrl ||
+                    customOrigins.includes(normalized) ||
+                    devTunnelRegex.test(normalized) ||
+                    cfPagesRegex.test(normalized) ||
+                    railwayRegex.test(normalized) ||
+                    beaconDomainRegex.test(normalized);
 
                 if (isAllowed) {
+                    logger.success(`[CORS] ✅ Allowed: ${origin}`);
                     callback(null, true);
                 } else {
-                    logger.warn(`[CORS] ❌ Blocked: ${origin}`);
-                    // Log persistent CORS failures to audit log for monitoring
+                    logger.warn(`[CORS] ❌ Blocked: ${origin} (FrontendURL: ${frontendUrl})`);
+                    // Log persistent CORS failures to audit log
                     SystemAuditService.log({
                         action: AuditAction.CORS_BLOCKED,
                         reason: `CORS Blocked origin: ${origin}`,
                         severity: 'medium',
-                        metadata: { origin }
+                        metadata: { origin, frontendUrl, customOrigins }
                     } as any).catch(() => {});
+                    
+                    // In production, we might want to fail-safe or fail-hard.
+                    // For now, let's keep it strict but logged.
                     callback(null, false);
                 }
             },
