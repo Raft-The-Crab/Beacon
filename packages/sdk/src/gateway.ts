@@ -1,6 +1,7 @@
 /**
- * Gateway — WebSocket connection to Beacon with full Node.js support,
- * auto-reconnect with exponential backoff, session resume, and heartbeat.
+ * Gateway v3 — WebSocket connection to Beacon with full Node.js support,
+ * auto-reconnect with exponential backoff, session resume, heartbeat,
+ * and connection health scoring.
  */
 
 import EventEmitter from 'eventemitter3';
@@ -8,11 +9,22 @@ import WebSocket from 'isomorphic-ws';
 import { resolveApiClientGatewayUrl } from './connection';
 
 export type ConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
+export type HealthGrade = 'excellent' | 'good' | 'degraded' | 'critical';
 
 export interface GatewayOptions {
   token: string;
   url?: string;
   intents?: number;
+}
+
+export interface GatewaySessionInfo {
+  sessionId: string | null;
+  sequence: number | null;
+  reconnectAttempts: number;
+  connectionState: ConnectionState;
+  latency: number;
+  healthScore: number;
+  healthGrade: HealthGrade;
 }
 
 export const Intents = {
@@ -72,7 +84,14 @@ export class Gateway extends EventEmitter {
   private destroyed = false;
   private _connectionState: ConnectionState = 'idle';
   private _lastHeartbeatSent = 0;
+  private _lastHeartbeatAcked = 0;
   private _latency = -1;
+
+  // v3: Health scoring
+  private _heartbeatsSent = 0;
+  private _heartbeatsAcked = 0;
+  private _totalReconnects = 0;
+  private _connectedSince = 0;
 
   /** Current connection state */
   get connectionState(): ConnectionState { return this._connectionState; }
@@ -82,6 +101,41 @@ export class Gateway extends EventEmitter {
 
   /** Heartbeat round-trip time in ms (-1 if not yet measured) */
   get latency(): number { return this._latency; }
+
+  /** v3: Timestamp of last successful heartbeat ACK */
+  get lastHeartbeatAt(): number { return this._lastHeartbeatAcked; }
+
+  /** v3: Connection health score (0-100) based on heartbeat reliability, latency, and reconnect frequency */
+  get healthScore(): number {
+    if (this._connectionState !== 'connected') return 0;
+    const ackRatio = this._heartbeatsSent > 0 ? (this._heartbeatsAcked / this._heartbeatsSent) : 1;
+    const latencyPenalty = Math.min(this._latency / 1000, 1); // 0-1, 1s+ = max penalty
+    const reconnectPenalty = Math.min(this._totalReconnects * 0.1, 0.5); // Each reconnect costs 10%, max 50%
+    const raw = (ackRatio * 60) + ((1 - latencyPenalty) * 25) + ((1 - reconnectPenalty) * 15);
+    return Math.max(0, Math.min(100, Math.round(raw)));
+  }
+
+  /** v3: Human-readable health grade */
+  get healthGrade(): HealthGrade {
+    const s = this.healthScore;
+    if (s >= 90) return 'excellent';
+    if (s >= 70) return 'good';
+    if (s >= 40) return 'degraded';
+    return 'critical';
+  }
+
+  /** v3: Diagnostic session info snapshot */
+  get sessionInfo(): GatewaySessionInfo {
+    return {
+      sessionId: this.sessionId,
+      sequence: this.sequence,
+      reconnectAttempts: this.reconnectAttempts,
+      connectionState: this._connectionState,
+      latency: this._latency,
+      healthScore: this.healthScore,
+      healthGrade: this.healthGrade,
+    };
+  }
 
   constructor(options: GatewayOptions) {
     super();
@@ -101,6 +155,7 @@ export class Gateway extends EventEmitter {
     this.ws.on('open', () => {
       this.emit('debug', '[Gateway] WebSocket connected');
       this.reconnectAttempts = 0;
+      this._connectedSince = Date.now();
     });
 
     this.ws.on('message', (data: WebSocket.RawData) => {
@@ -147,11 +202,17 @@ export class Gateway extends EventEmitter {
         }
         break;
 
-      case OPCodes.HEARTBEAT_ACK:
+      case OPCodes.HEARTBEAT_ACK: {
         this.heartbeatAcked = true;
-        this._latency = Date.now() - this._lastHeartbeatSent;
-        this.emit('debug', `[Gateway] Heartbeat ACK received (latency: ${this._latency}ms)`);
+        this._heartbeatsAcked++;
+        this._lastHeartbeatAcked = Date.now();
+        this._latency = this._lastHeartbeatAcked - this._lastHeartbeatSent;
+        this.emit('debug', `[Gateway] Heartbeat ACK (latency: ${this._latency}ms, health: ${this.healthScore}%)`);
+        // v3: Emit health change events
+        const grade = this.healthGrade;
+        this.emit('healthChange', { score: this.healthScore, grade, latency: this._latency });
         break;
+      }
 
       case OPCodes.HEARTBEAT:
         this.sendHeartbeat();
@@ -236,6 +297,7 @@ export class Gateway extends EventEmitter {
 
   private sendHeartbeat() {
     this._lastHeartbeatSent = Date.now();
+    this._heartbeatsSent++;
     this.send({ op: OPCodes.HEARTBEAT, d: this.sequence });
   }
 
@@ -257,6 +319,7 @@ export class Gateway extends EventEmitter {
     const delay = Math.floor(baseDelay + jitter);
     
     this.reconnectAttempts++;
+    this._totalReconnects++;
     this.emit('debug', `[Gateway] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
 
     this.reconnectTimer = setTimeout(() => {

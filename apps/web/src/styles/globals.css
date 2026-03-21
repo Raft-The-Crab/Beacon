@@ -1,4 +1,4 @@
-/* Beacon Global Styles - Discord-Inspired Soft Design */
+/* Beacon v3.0.0 Global Styles — Discord-Inspired Soft Design */
 
 :root {
   /* Brand Colors - Discord-like Purple/Blue */
@@ -1615,4 +1615,111 @@ h4 {
   body {
     font-size: 12px;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   v3.0 Micro-Interaction & Surface Utility Suite
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* --- Reveal Animations --- */
+@keyframes v3-reveal-up {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes v3-reveal-scale {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes v3-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--beacon-brand-muted); }
+  50%      { box-shadow: 0 0 16px 4px var(--beacon-brand-muted); }
+}
+
+.v3-reveal-up {
+  animation: v3-reveal-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.v3-reveal-scale {
+  animation: v3-reveal-scale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.v3-glow-pulse {
+  animation: v3-glow-pulse 2s ease-in-out infinite;
+}
+
+/* --- Surface Interactions --- */
+.v3-surface {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  transition: background var(--transition-fast),
+              border-color var(--transition-fast),
+              box-shadow var(--transition-normal);
+}
+
+.v3-surface:hover {
+  background: var(--bg-surface-soft);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-elevation-low);
+}
+
+.v3-surface-active,
+.v3-surface:active {
+  background: var(--bg-active);
+  border-color: var(--beacon-brand-muted);
+}
+
+/* --- Focus Ring --- */
+.v3-focus-ring:focus-visible {
+  outline: 2px solid var(--beacon-brand);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--beacon-brand-muted);
+}
+
+/* --- Stagger Children (for lists/grids) --- */
+.v3-stagger > * {
+  animation: v3-reveal-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.v3-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.v3-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.v3-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.v3-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.v3-stagger > *:nth-child(5) { animation-delay: 160ms; }
+.v3-stagger > *:nth-child(6) { animation-delay: 200ms; }
+.v3-stagger > *:nth-child(n+7) { animation-delay: 240ms; }
+
+/* --- Interactive Card Lift --- */
+.v3-card-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.v3-card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.v3-card-lift:active {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* --- Skeleton Loading v3 --- */
+@keyframes v3-skeleton {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.v3-skeleton {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 100%);
+  background-size: 200% 100%;
+  animation: v3-skeleton 1.5s infinite ease-in-out;
+  border-radius: var(--radius-sm);
 }

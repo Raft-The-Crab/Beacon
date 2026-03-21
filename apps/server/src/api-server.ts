@@ -58,7 +58,7 @@ function parseEnvBool(value: string | undefined, defaultValue: boolean): boolean
     return defaultValue;
 }
 
-export class BeaconServerV2 {
+export class BeaconServer {
     public app: Express;
     public server: http.Server;
     private port: number;
@@ -67,10 +67,13 @@ export class BeaconServerV2 {
         this.app = express();
         this.server = http.createServer(this.app);
         this.port = Number(process.env.PORT || 8080);
+        this._bootStart = Date.now();
         this.configureMiddleware();
         this.mountRoutes();
         this.registerShutdownHooks();
     }
+
+    private _bootStart: number;
 
     private configureMiddleware() {
         this.app.use(requestId);
@@ -125,9 +128,10 @@ export class BeaconServerV2 {
             maxAge: 86400, // Cache preflight for 24 hours
         }));
 
-        // Add Vary: Origin for correct CDN/proxy caching of CORS responses
+        // v3: Add Vary: Origin and X-Beacon-Version for client version detection
         this.app.use((_req: any, res: express.Response, next: express.NextFunction) => {
             res.setHeader('Vary', 'Origin');
+            res.setHeader('X-Beacon-Version', '3.0.0-beta.1');
             next();
         });
 
@@ -155,7 +159,14 @@ export class BeaconServerV2 {
             } : false,
             xContentTypeOptions: true,
             xFrameOptions: { action: 'deny' },
+            permittedCrossDomainPolicies: { permittedPolicies: 'none' },
         }));
+
+        // v3: Permissions-Policy — restrict sensitive browser APIs
+        this.app.use((_req: any, res: express.Response, next: express.NextFunction) => {
+            res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()');
+            next();
+        });
 
         this.app.use(compression({ level: 6, threshold: 10 * 1024 }));
         this.app.use(requestTimer);
@@ -258,7 +269,8 @@ export class BeaconServerV2 {
             this.server.once('error', onError);
             this.server.once('listening', () => {
                 this.server.removeListener('error', onError);
-                logger.info(`🚀 Beacon V2.0.0 API Server Online. Listening on 0.0.0.0:${this.port}`);
+                const bootMs = Date.now() - this._bootStart;
+                logger.info(`🚀 Beacon v3.0.0-beta.1 API Server Online. Listening on 0.0.0.0:${this.port} (boot: ${bootMs}ms)`);
                 
                 // Initialize db in background logic strictly POST-binding
                 this.initializeDatabases();
@@ -286,7 +298,7 @@ export class BeaconServerV2 {
 }
 
 // Ensure compatibility with existing modules trying to import app/server
-const instance = new BeaconServerV2();
+const instance = new BeaconServer();
 export const app = instance.app;
 export const server = instance.server;
 

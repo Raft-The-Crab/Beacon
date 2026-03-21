@@ -3,6 +3,9 @@ import type { Role, AuditLogEntry, RawUser, RawGuild, RawChannel, RawMessage } f
 import { RequestSigner } from '../security/RequestSigner';
 import { TokenManager } from '../security/TokenManager';
 
+/** SDK version — injected into User-Agent and exported for diagnostics */
+export const SDK_VERSION = '3.0.0-beta.1';
+
 /**
  * RestClient — Rate-limit-aware HTTP client for Beacon API
  */
@@ -12,6 +15,16 @@ export interface RestClientOptions {
   secret?: string; // For request signing
   baseURL?: string;
   version?: string;
+  /** Request timeout in ms. Default: 30000 (30s). */
+  timeout?: number;
+}
+
+export interface RestMetrics {
+  totalRequests: number;
+  failedRequests: number;
+  totalLatencyMs: number;
+  /** Average latency in ms across all completed requests */
+  avgLatencyMs: number;
 }
 
 interface RateLimitBucket {
@@ -27,11 +40,27 @@ export class RestClient {
   private readonly signer?: RequestSigner;
   public baseURL: string;
   private version: string;
+  private readonly timeout: number;
   private buckets: Map<string, RateLimitBucket> = new Map();
   private globalReset: number = 0;
   private requestQueue: Array<() => Promise<any>> = [];
   private processing = false;
   public client!: any; // Back-reference to main Client (set during init)
+
+  // v3: Request metrics tracking
+  private _totalRequests = 0;
+  private _failedRequests = 0;
+  private _totalLatencyMs = 0;
+
+  /** v3: Live request metrics for diagnostics */
+  get stats(): RestMetrics {
+    return {
+      totalRequests: this._totalRequests,
+      failedRequests: this._failedRequests,
+      totalLatencyMs: this._totalLatencyMs,
+      avgLatencyMs: this._totalRequests > 0 ? Math.round(this._totalLatencyMs / this._totalRequests) : 0,
+    };
+  }
 
   constructor(options: RestClientOptions) {
     this.tokenManager = new TokenManager(options.token);
@@ -40,6 +69,7 @@ export class RestClient {
     }
     this.baseURL = resolveApiClientBaseUrl(options.baseURL);
     this.version = options.version ?? 'v1';
+    this.timeout = options.timeout ?? 30_000;
   }
 
   async request<T = any>(method: string, endpoint: string, body?: any): Promise<T> {
@@ -111,7 +141,7 @@ export class RestClient {
     const headers: Record<string, string> = {
       Authorization: `Bot ${token}`,
       'Content-Type': 'application/json',
-      'User-Agent': `beacon.js/2.5.0 (Beacon Project - ${this.baseURL})`,
+      'User-Agent': `beacon.js/${SDK_VERSION} (Beacon SDK)`,
       'X-Beacon-Timestamp': timestamp.toString(),
     };
 
@@ -120,11 +150,33 @@ export class RestClient {
       headers['X-Beacon-Signature'] = signature;
     }
 
-    const res = await fetch(url, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    // v3: AbortController timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      this._totalRequests++;
+      this._failedRequests++;
+      if (err.name === 'AbortError') {
+        throw new Error(`Request timeout after ${this.timeout}ms: ${method} ${endpoint}`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    // v3: Track metrics
+    this._totalRequests++;
+    this._totalLatencyMs += Date.now() - timestamp;
 
     // Update rate limit bucket from headers
     const remaining = Number(res.headers.get('X-RateLimit-Remaining') ?? 1);

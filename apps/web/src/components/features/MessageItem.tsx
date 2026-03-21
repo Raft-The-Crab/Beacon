@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Smile, Edit, Trash2, File, Pin, Shield, Languages, Flag } from 'lucide-react'
+import { Smile, Edit, Trash2, File, Pin, Shield, Languages, Flag, Download } from 'lucide-react'
 import type { UserBadge } from 'beacon-sdk'
 import { Avatar, Tooltip, EmojiPicker, ImageLightbox, Select } from '../ui'
 import { BotTag } from '../ui/UserBadges'
@@ -358,40 +358,61 @@ export const MessageItem = React.memo(function MessageItem({
                                  /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i.test(lowerUrl) ||
                                  /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i.test(attachment.filename?.toLowerCase() || '')
 
+                  const downloadBtn = (
+                    <a
+                      href={url}
+                      download={attachment.filename || 'download'}
+                      className={styles.downloadBtn}
+                      onClick={(e) => e.stopPropagation()}
+                      title={`Download ${attachment.filename || 'file'}`}
+                    >
+                      <Download size={16} />
+                    </a>
+                  )
+
                   if (isImage) {
                      return (
-                      <img
-                        src={url}
-                        alt={attachment.filename}
-                        className={styles.imageAttachment}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setLightboxSrc(url)
-                        }}
-                        style={{ cursor: 'pointer' }}
-                      />
+                      <div className={styles.mediaWrapper}>
+                        <img
+                          src={url}
+                          alt={attachment.filename}
+                          className={styles.imageAttachment}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setLightboxSrc(url)
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        {downloadBtn}
+                      </div>
                     )
                   }
 
                   if (isVideo) {
                      return (
-                      <video
-                        src={url}
-                        controls
-                        className={styles.videoAttachment}
-                        preload="metadata"
-                      />
+                      <div className={styles.mediaWrapper}>
+                        <video
+                          src={url}
+                          controls
+                          className={styles.videoAttachment}
+                          preload="metadata"
+                        />
+                        {downloadBtn}
+                      </div>
                     )
                   }
 
                   if (isAudio) {
                      return (
-                      <audio
-                        src={url}
-                        controls
-                        className={styles.audioAttachment}
-                        preload="metadata"
-                      />
+                      <div className={styles.mediaWrapper}>
+                        <audio
+                          src={url}
+                          controls
+                          className={styles.audioAttachment}
+                          preload="metadata"
+                        />
+                        {downloadBtn}
+                      </div>
                     )
                   }
 
@@ -400,6 +421,15 @@ export const MessageItem = React.memo(function MessageItem({
                       <File size={20} />
                        <a href={url} target="_blank" rel="noopener noreferrer">
                         {attachment.filename}
+                      </a>
+                      <a
+                        href={url}
+                        download={attachment.filename || 'download'}
+                        className={styles.fileDownloadBtn}
+                        onClick={(e) => e.stopPropagation()}
+                        title="Download"
+                      >
+                        <Download size={16} />
                       </a>
                     </div>
                   )

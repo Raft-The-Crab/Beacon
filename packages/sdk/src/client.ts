@@ -1,11 +1,11 @@
 /**
- * Client — Main bot client with full feature set
- * Caching, commands, interactions, rate limits, presence
+ * Client v3 — Main bot client with full feature set
+ * Caching, commands, interactions, rate limits, presence, health monitoring
  */
 
 import EventEmitter from 'eventemitter3';
 import { IntentCalculator } from './utils/IntentCalculator';
-import { Gateway, GatewayOptions, Intents, DEFAULT_INTENTS, type ConnectionState } from './gateway';
+import { Gateway, GatewayOptions, Intents, DEFAULT_INTENTS, type ConnectionState, type HealthGrade, type GatewaySessionInfo } from './gateway';
 import { RestClient } from './rest/RestClient';
 import { Collector, type CollectorOptions } from './structures/Collector';
 import { VoiceStateCollector, type VoiceStateCollectorOptions } from './structures/VoiceStateCollector';
@@ -79,6 +79,7 @@ export class Client extends EventEmitter {
   public readonly middleware = new MiddlewarePipeline();
   private _plugins: Map<string, Plugin> = new Map();
   private _ready = false;
+  private _readyAt = 0;
 
   /** Current gateway connection state */
   get connectionState(): ConnectionState { return this._gateway.connectionState; }
@@ -88,6 +89,31 @@ export class Client extends EventEmitter {
 
   /** Heartbeat round-trip latency in ms (-1 if not measured) */
   get latency(): number { return this._gateway.latency; }
+
+  /** v3: Bot uptime in ms since the 'ready' event (0 if not ready) */
+  get uptime(): number { return this._readyAt > 0 ? Date.now() - this._readyAt : 0; }
+
+  /** v3: Cache size statistics for diagnostics */
+  get cacheStats() {
+    return {
+      guilds: this.guilds.size,
+      channels: this.channels.size,
+      users: this.users.size,
+      messages: this.messages.size,
+    };
+  }
+
+  /** v3: Gateway connection health score (0-100) */
+  get healthScore(): number { return this._gateway.healthScore; }
+
+  /** v3: Gateway connection health grade */
+  get healthGrade(): HealthGrade { return this._gateway.healthGrade; }
+
+  /** v3: Full gateway session diagnostics */
+  get sessionInfo(): GatewaySessionInfo { return this._gateway.sessionInfo; }
+
+  /** v3: REST client request metrics */
+  get restStats() { return this.rest.stats; }
 
   constructor(options: ClientOptions) {
     super();
@@ -194,6 +220,7 @@ export class Client extends EventEmitter {
       if (data.user) this.user = new User(this, data.user);
       this.applicationId = data.application?.id ?? null;
       this._ready = true;
+      this._readyAt = Date.now();
       this.emit('ready');
     });
 
@@ -202,6 +229,8 @@ export class Client extends EventEmitter {
     this._gateway.on('reconnected', () => this.emit('reconnected'));
     this._gateway.on('disconnect', (data: any) => this.emit('disconnect', data));
     this._gateway.on('connectionStateChange', (data: any) => this.emit('connectionStateChange', data));
+    // v3: Forward health change events
+    this._gateway.on('healthChange', (data: any) => this.emit('healthChange', data));
 
     this._gateway.on('messageCreate', (rawMsg: RawMessage) => {
       const msg = new Message(this, rawMsg);
@@ -405,6 +434,23 @@ export class Client extends EventEmitter {
 
   get isReady(): boolean {
     return this._ready;
+  }
+
+  /** v3: Fetch the bot's own User from the API (or cache). */
+  async fetchSelf(force = false): Promise<User> {
+    if (!force && this.user) return this.user;
+    const raw = await this.rest.getCurrentUser();
+    this.user = new User(this, raw);
+    return this.user;
+  }
+
+  /** v3: Return the current gateway latency in a user-friendly format. */
+  ping(): { ws: number; health: number; grade: string } {
+    return {
+      ws: this.latency,
+      health: this.healthScore,
+      grade: this.healthGrade,
+    };
   }
 
   // ─────────────────────────────────────────────────────────────

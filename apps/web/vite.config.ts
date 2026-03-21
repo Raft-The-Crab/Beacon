@@ -42,6 +42,7 @@ export default defineConfig(({ mode }) => {
       'beacon-types': path.resolve(__dirname, '../../packages/types/src'),
       'beacon.js': path.resolve(__dirname, '../../packages/sdk/src'),
       'stream': path.resolve(__dirname, '../../packages/sdk/src/stubs/stream.ts'),
+      'opusscript': path.resolve(__dirname, '../../packages/sdk/src/stubs/opusscript.ts'),
       '@': path.resolve(__dirname, './src'),
     },
   },
@@ -154,7 +155,7 @@ export default defineConfig(({ mode }) => {
 
   define: {
     global: 'globalThis',
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '2.0.0'),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '3.0.0-beta.1'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
 }

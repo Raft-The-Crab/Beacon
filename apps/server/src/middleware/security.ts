@@ -126,6 +126,26 @@ export const mediaLimiter = rateLimit({
   message: { error: 'Media operation limit exceeded. Please wait a moment.' },
 })
 
+/** v3: Upload-specific rate limiter: 40 req / 1 min */
+export const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id || req.ip || 'unknown',
+  message: { error: 'Upload limit exceeded. Please wait before uploading more files.' },
+  handler: (req, res, _next, options) => {
+    SystemAuditService.log({
+      action: AuditAction.RATE_LIMIT_HIT,
+      reason: 'Upload rate limit exceeded',
+      userId: req.user?.id,
+      ip: req.ip,
+      metadata: { path: req.path }
+    });
+    res.status(options.statusCode).send(options.message);
+  }
+})
+
 /** WebSocket flood protection: tracked separately in ws/index.ts */
 export const wsFloodConfig = {
   maxMessagesPerSecond: 10,
@@ -161,10 +181,46 @@ export function checkWSFlood(userId: string): boolean {
 
 // ─── Request Sanitization ────────────────────────────────────────────────────
 
-/** Strip potentially dangerous headers */
+/** Strip potentially dangerous headers and enforce security defaults */
 export function sanitizeHeaders(_req: Request, res: Response, next: NextFunction) {
   res.removeHeader('X-Powered-By')
+  res.setHeader('X-Content-Type-Options', 'nosniff')
   next()
+}
+
+/**
+ * v3: Detect and log prototype pollution attempts in request payloads.
+ * Does NOT block (to avoid breaking legitimate edge cases) but logs for audit.
+ */
+export function detectProtoPollution(req: Request, _res: Response, next: NextFunction) {
+  if (req.body && typeof req.body === 'object') {
+    const suspicious = findSuspiciousKeys(req.body)
+    if (suspicious.length > 0) {
+      console.warn(`[Security] ⚠️ Proto pollution attempt detected from ${req.ip}: keys=[${suspicious.join(', ')}] path=${req.path}`)
+      SystemAuditService.log({
+        action: AuditAction.RATE_LIMIT_HIT,
+        reason: `Prototype pollution attempt: ${suspicious.join(', ')}`,
+        ip: req.ip,
+        metadata: { path: req.path, keys: suspicious }
+      }).catch(() => {})
+    }
+  }
+  next()
+}
+
+/** Recursively find __proto__, constructor, prototype keys in an object */
+function findSuspiciousKeys(obj: any, prefix = '', found: string[] = []): string[] {
+  if (!obj || typeof obj !== 'object') return found
+  for (const key of Object.keys(obj)) {
+    const fullKey = prefix ? `${prefix}.${key}` : key
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      found.push(fullKey)
+    }
+    if (typeof obj[key] === 'object' && obj[key] !== null) {
+      findSuspiciousKeys(obj[key], fullKey, found)
+    }
+  }
+  return found
 }
 
 // ─── CSRF Protection ─────────────────────────────────────────────────────────

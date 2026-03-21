@@ -1,5 +1,5 @@
 /**
- * beacon-sdk — Official Bot SDK for Beacon
+ * beacon-sdk v3 — Official Bot SDK for Beacon
  */
 
 // Core types (Consolidated — includes all beacon-types definitions)
@@ -13,10 +13,10 @@ export { Client, type Plugin, Client as BeaconClient } from './client';
 export { AIClient, type AIClientOptions } from './enhanced';
 
 // Gateway
-export { Intents, DEFAULT_INTENTS, type GatewayOptions, type ConnectionState } from './gateway';
+export { Intents, DEFAULT_INTENTS, type GatewayOptions, type ConnectionState, type HealthGrade, type GatewaySessionInfo } from './gateway';
 
 // REST
-export { RestClient, type RestClientOptions } from './rest/RestClient';
+export { RestClient, type RestClientOptions, type RestMetrics, SDK_VERSION } from './rest/RestClient';
 export { resolveApiClientBaseUrl, resolveApiClientGatewayUrl } from './connection';
 
 // Builders
