@@ -92,7 +92,7 @@ export class BeaconServer {
                     origin === frontendUrl ||
                     customOrigins.includes(origin) ||
                     devTunnelRegex.test(origin) ||
-                    cfPagesRegex.test(origin) ||
+                    origin.toLowerCase().endsWith('.pages.dev') ||
                     railwayRegex.test(origin) ||
                     beaconDomainRegex.test(origin);
 
