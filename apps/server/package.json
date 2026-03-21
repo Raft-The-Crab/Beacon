@@ -1,6 +1,6 @@
 {
   "name": "@beacon/server",
-  "version": "3.0.0-beta.1",
+  "version": "3.0.0",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:ws\"",

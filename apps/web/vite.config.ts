@@ -95,7 +95,7 @@ export default defineConfig(({ mode }) => {
     reportCompressedSize: true,
     
     rollupOptions: {
-      external: ['opusscript', 'wrtc'],
+      external: ['wrtc'],
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) {
@@ -155,7 +155,7 @@ export default defineConfig(({ mode }) => {
 
   define: {
     global: 'globalThis',
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '3.0.0-beta.1'),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '3.0.0'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
 }
