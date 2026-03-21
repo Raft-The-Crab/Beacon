@@ -1,4 +1,4 @@
-// import { SCREEN_SHARE_TIERS } from '@beacon/types'
+// ScreenShareService ensures high quality media tracks for Beacon clients
 
 export class ScreenShareService {
   private stream: MediaStream | null = null

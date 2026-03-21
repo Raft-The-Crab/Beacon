@@ -7,6 +7,9 @@
     "packages/*"
   ],
   "description": "Cross-platform real-time communication platform",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev:web": "cd apps/web && npm run dev",
     "dev:desktop": "cd apps/desktop && npm run dev",
