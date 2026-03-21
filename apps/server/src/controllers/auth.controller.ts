@@ -409,7 +409,7 @@ export class AuthController {
                 });
             }
 
-            const { email, name, picture, uid } = decodedToken;
+            const { email, name, picture, uid, given_name, family_name, locale } = decodedToken as any;
             logger.info(`[GOOGLE_LOGIN] Decoded token: email=${email}, name=${name}, uid=${uid}`);
 
             if (!email) {
@@ -433,12 +433,13 @@ export class AuthController {
                         data: {
                             email,
                             username,
-                            displayName: name || email.split('@')[0],
+                            displayName: name || `${given_name || ''} ${family_name || ''}`.trim() || email.split('@')[0],
                             avatar: picture || null,
                             discriminator,
                             password: '', // No password for social login users
                             status: 'online',
                             isVerified: true, // Social login bypasses email verification
+                            locale: locale || null
                         }
                     });
                     logger.success(`[GOOGLE_LOGIN] New user created: ${user.id}`);
@@ -462,6 +463,15 @@ export class AuthController {
                 });
             } else {
                 logger.info(`[GOOGLE_LOGIN] Existing user logged in: ${user.id}`);
+                // Sync metadata
+                user = await (prisma.user as any).update({
+                    where: { id: user.id },
+                    data: {
+                        displayName: name || user.displayName,
+                        avatar: picture || user.avatar,
+                        locale: locale || user.locale || null
+                    }
+                });
             }
 
             // 3. Generate Beacon Tokens

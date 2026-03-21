@@ -2,7 +2,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--bg-surface-elevated, var(--bg-primary));
+  background: transparent;
   min-width: 0;
   position: relative;
   overflow: hidden; /* Ensure nothing leaks out */
@@ -10,7 +10,7 @@
 }
 
 :global([data-theme="glass"]) .chatArea {
-  background: #181a1f;
+  background: transparent;
 }
 
 .header {
@@ -20,11 +20,11 @@
   align-items: center;
   justify-content: space-between;
   z-index: 10;
-  background: rgba(24, 24, 27, 0.85); /* Slightly transparent chat-bg */
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border-sep);
+  background: rgba(15, 15, 18, 0.4);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .headerLeft {

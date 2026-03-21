@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async'
+import { Cpu } from 'lucide-react'
 import { DocsLayout } from '../../components/layout/DocsLayout'
 import styles from '../../styles/modules/pages/DocsPage.module.css'
 
@@ -10,11 +11,16 @@ export function BotCommands() {
             </Helmet>
 
             <article className={`${styles.article} animate-fadeIn`}>
-                <h1 className="accent-text">Bot Commands &amp; Interactions</h1>
-                <p className={styles.lead}>
-                    Beacon ships with a built-in bot called <strong>Beacon Bot</strong> and a powerful command framework
-                    that supports slash commands, prefix commands, embeds, action buttons, and per-user cooldowns.
-                </p>
+                <header className={`${styles.header} premium-hero-section`} style={{ padding: '64px 0', textAlign: 'left', background: 'transparent' }}>
+                    <div className="premium-badge">
+                        <Cpu size={14} />
+                        <span>Interactive Apps</span>
+                    </div>
+                    <h1 className="premium-hero-heading accent-text" style={{ fontSize: 48 }}>Bot Commands & Interactions</h1>
+                    <p className="premium-hero-subtitle" style={{ margin: 0, fontSize: 18 }}>
+                        Build rich interactive experiences with slash commands, prefix support, and AI-driven NLU.
+                    </p>
+                </header>
 
                 <section>
                     <h2>Built-in Commands</h2>

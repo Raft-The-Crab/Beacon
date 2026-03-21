@@ -11,6 +11,7 @@ import { usePinnedMessagesStore } from './stores/usePinnedMessagesStore'
 import { useServerStore } from './stores/useServerStore'
 import { useRolesStore } from './stores/useRolesStore'
 import { useUserListStore } from './stores/useUserListStore'
+import { useTranslationStore } from './stores/useTranslationStore'
 import { useDMStore } from './stores/useDMStore'
 import { useAuthStore } from './stores/useAuthStore'
 import { useBeacoinStore } from './stores/useBeacoinStore'
@@ -128,6 +129,22 @@ export function App() {
   const navigate = useNavigate()
   const setVoiceUserId = useVoiceStore((s) => s.setUserId)
   const hasAdminAccess = Boolean(user && (user.developerMode || user.badges?.includes('admin') || user.badges?.includes('owner')))
+
+  const language = useTranslationStore(s => s.language)
+  const setLanguage = useTranslationStore(s => s.setLanguage)
+
+  // Smart Language Sync from User Profile
+  useEffect(() => {
+    if (user?.locale && language === 'en') {
+      const normalizedLocale = user.locale.split('-')[0].toLowerCase()
+      // Only sync if it's one of our supported languages
+      const supportedLanguages = ['en', 'fr', 'de', 'zh', 'hi', 'ru', 'pt', 'ar', 'ko', 'it', 'nl', 'tr', 'vi', 'th', 'id']
+      if (supportedLanguages.includes(normalizedLocale) && normalizedLocale !== 'en') {
+        console.info(`[LOCALE] Auto-switching language to ${normalizedLocale} based on user profile.`)
+        setLanguage(normalizedLocale)
+      }
+    }
+  }, [user?.locale, language, setLanguage])
 
   useEffect(() => {
     const handleOpenBoost = () => setGlobalBoostOpen(true)

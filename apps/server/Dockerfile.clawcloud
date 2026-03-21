@@ -18,18 +18,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
-COPY packages/types/package.json ./packages/types/
 COPY packages/sdk/package.json ./packages/sdk/
 COPY apps/server/package.json ./apps/server/
 
-COPY packages/types ./packages/types
 COPY packages/sdk ./packages/sdk
 COPY apps/server ./apps/server
 
 RUN npm install
-
-WORKDIR /app/packages/types
-RUN npm run build
 
 WORKDIR /app/packages/sdk
 RUN npm run build
@@ -55,7 +50,6 @@ ENV NODE_ENV=production
 ENV ENABLE_WS_SERVER=true
 
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/types ./packages/types
 COPY --from=builder /app/packages/sdk ./packages/sdk
 COPY --from=builder /app/apps/server ./apps/server
 

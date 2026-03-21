@@ -781,7 +781,8 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                 <SelectDropdown
                                     options={LANGUAGES.map(lang => ({
                                         value: lang.code,
-                                        label: `${lang.flag} ${lang.name}`,
+                                        label: lang.name,
+                                        icon: <span style={{ fontSize: '1.2rem' }}>{lang.flag}</span>
                                     }))}
                                     value={language}
                                     onChange={(value) => {

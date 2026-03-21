@@ -52,7 +52,7 @@ function decorateSystemUser(user: User | null): User | null {
 }
 
 interface AuthState {
-  user: (User & { activities?: UserActivity[]; theme?: string; isBeaconPlus?: boolean; globalName?: string | null; accountTier?: string }) | null
+  user: (User & { activities?: UserActivity[]; theme?: string; isBeaconPlus?: boolean; globalName?: string | null; accountTier?: string; locale?: string | null }) | null
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
@@ -71,7 +71,7 @@ interface AuthState {
   resendVerification: () => Promise<void>
   logout: () => void
   checkSession: () => Promise<void>
-  updateProfile: (data: Partial<User & { theme?: string; activities?: UserActivity[]; isBeaconPlus?: boolean; globalName?: string | null; accountTier?: string }>) => Promise<void>
+  updateProfile: (data: Partial<User & { theme?: string; activities?: UserActivity[]; isBeaconPlus?: boolean; globalName?: string | null; accountTier?: string; locale?: string | null }>) => Promise<void>
   updateStatus: (update: {
     statusText?: string,
     statusEmoji?: string,

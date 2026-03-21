@@ -10,10 +10,12 @@ export function Privacy() {
             </Helmet>
 
             <article className={`${styles.article} animate-fadeIn`}>
-                <h1 className="accent-text">Privacy Policy</h1>
-                <p className={styles.lead}>
-                    Last updated: February 17, 2026
+            <header className={`${styles.header} premium-hero-section`} style={{ padding: '64px 0', textAlign: 'left', background: 'transparent' }}>
+                <h1 className="premium-hero-heading accent-text" style={{ fontSize: 48, marginBottom: 16 }}>Privacy Policy</h1>
+                <p className="premium-hero-subtitle" style={{ margin: 0, fontSize: 16 }}>
+                    Last updated: March 21, 2026 — Version 3.0.2
                 </p>
+            </header>
 
                 <section>
                     <p>
@@ -52,9 +54,12 @@ export function Privacy() {
                     </p>
                 </section>
 
-                <div className={styles.infoBox}>
-                    For privacy concerns, reach out to
-                    <a href="mailto:privacy@beacon-app.com" style={{ marginLeft: 4 }}>privacy@beacon-app.com</a>.
+                <div className="premium-glass-card" style={{ padding: 24, marginTop: 48, border: '1px solid var(--beacon-brand-muted)' }}>
+                    <p style={{ fontWeight: 600, marginBottom: 8 }}>Privacy Questions?</p>
+                    <p style={{ color: 'var(--text-secondary)' }}>
+                        Contact our privacy team at 
+                        <a href="mailto:privacy@beacon-app.com" style={{ color: 'var(--beacon-brand)', marginLeft: 6 }}>privacy@beacon-app.com</a>
+                    </p>
                 </div>
             </article>
         </DocsLayout>

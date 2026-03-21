@@ -20,6 +20,11 @@ if (firebaseApiKey && firebaseApiKey !== 'your-api-key') {
     const app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     googleProvider = new GoogleAuthProvider();
+    googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
+    googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
+    googleProvider.setCustomParameters({
+      prompt: 'select_account'
+    });
   } catch (error) {
     console.error('Failed to initialize Firebase:', error);
   }

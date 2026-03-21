@@ -43,10 +43,15 @@ export function AppDirectory() {
 
     const filtered = useMemo(() => {
         const q = searchQuery.trim().toLowerCase()
-        if (!q) return apps
-        return apps.filter((app) =>
-            String(app.name || '').toLowerCase().includes(q) || (app.description || '').toLowerCase().includes(q)
-        )
+        if (!q) return apps || []
+        if (!Array.isArray(apps)) return []
+        
+        return apps.filter((app) => {
+            if (!app) return false
+            const nameMatch = String(app.name || '').toLowerCase().includes(q)
+            const descMatch = String(app.description || '').toLowerCase().includes(q)
+            return nameMatch || descMatch
+        })
     }, [apps, searchQuery])
 
     return (

@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async'
+import { BookOpen } from 'lucide-react'
 import { DocsLayout } from '../../components/layout/DocsLayout'
 import styles from '../../styles/modules/pages/DocsPage.module.css'
 
@@ -10,11 +11,16 @@ export function SDKTutorial() {
       </Helmet>
 
       <article className={`${styles.article} animate-fadeIn`}>
-        <h1 className="accent-text">Beacon SDK v1.2.0 Guide</h1>
-        <p className={styles.lead}>
-          Complete usage documentation for beacon-sdk, including bot runtime, REST surfaces, gateway events,
-          and new notifications, webhooks, and invites APIs.
-        </p>
+        <header className={`${styles.header} premium-hero-section`} style={{ padding: '64px 0', textAlign: 'left', background: 'transparent' }}>
+            <div className="premium-badge">
+                <BookOpen size={14} />
+                <span>Developer Guide</span>
+            </div>
+            <h1 className="premium-hero-heading accent-text" style={{ fontSize: 48 }}>Mastering the Beacon SDK</h1>
+            <p className="premium-hero-subtitle" style={{ margin: 0, fontSize: 18 }}>
+                Build next-generation bots, rich integrations, and high-performance services with the official SDK.
+            </p>
+        </header>
 
         <section>
           <h2>1. Install</h2>

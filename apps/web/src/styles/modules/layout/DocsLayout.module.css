@@ -116,7 +116,7 @@
     padding: 48px 56px;
     overflow-y: auto;
     height: 100%;
-    background: var(--bg-primary);
+    background: transparent;
     position: relative;
     overflow-x: hidden;
 }

@@ -137,6 +137,8 @@ export function LandingPage() {
           <div className={styles.footerLinks}>
             <Link to="/terms">{t('landing.footer.tos')}</Link>
             <Link to="/privacy">{t('landing.footer.privacy')}</Link>
+            <Link to="/license">License</Link>
+            <Link to="/safety">Safety Hub</Link>
             <Link to="/about">{t('landing.footer.about')}</Link>
             <Link to="/contact">{t('landing.footer.support')}</Link>
           </div>

@@ -1,4 +1,4 @@
-﻿import { Helmet } from 'react-helmet-async'
+import { Helmet } from 'react-helmet-async'
 import { Book, Code, Cpu, ChevronRight, Zap, Globe, Shield, Rocket } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { DocsLayout } from '../../components/layout/DocsLayout'
@@ -17,11 +17,11 @@ export function DocsHome() {
             <header className={`${styles.header} premium-hero-section`}>
                 <div className="premium-badge">
                     <Rocket size={14} />
-                    <span>v1.2.0 Production Docs</span>
+                    <span>v3.0.2 Stable Release</span>
                 </div>
-                <h1 className="premium-hero-heading accent-text">{t('docs.title')}</h1>
+                <h1 className="premium-hero-heading accent-text">Beacon Developer Documentation</h1>
                 <p className="premium-hero-subtitle">
-                    {t('docs.subtitle')}
+                    Build next-generation bots, rich interactive apps, and seamless real-time experiences with the Beacon SDK.
                 </p>
             </header>
 
@@ -63,27 +63,23 @@ export function DocsHome() {
                 />
             </div>
 
-            <section className={styles.section} style={{ marginTop: 80 }}>
-                <h2 className="premium-glow-text" style={{ fontSize: 32, marginBottom: 32 }}>{t('docs.popular_topics')}</h2>
+            <section className={styles.section} style={{ marginTop: 64 }}>
+                <h2 className="premium-glow-text" style={{ fontSize: 32, marginBottom: 24 }}>Popular Topics</h2>
                 <div className={styles.topicList}>
                     <Link to="/docs/getting-started" className={`${styles.topicItem} glass-interactive`}>
-                        <span>{t('docs.topics.create_app')}</span>
+                        <span>Create your first App</span>
                         <ChevronRight size={16} />
                     </Link>
                     <Link to="/docs/api-reference" className={`${styles.topicItem} glass-interactive`}>
-                        <span>{t('docs.topics.rest_api')}</span>
+                        <span>REST API Specification</span>
                         <ChevronRight size={16} />
                     </Link>
                     <Link to="/docs/gateway-events" className={`${styles.topicItem} glass-interactive`}>
-                        <span>{t('docs.topics.websocket')}</span>
+                        <span>WebSocket Gateway Architecture</span>
                         <ChevronRight size={16} />
                     </Link>
                     <Link to="/docs/sdk-tutorial" className={`${styles.topicItem} glass-interactive`}>
-                        <span>{t('docs.topics.sdk_guide')}</span>
-                        <ChevronRight size={16} />
-                    </Link>
-                    <Link to="/docs/bot-commands" className={`${styles.topicItem} glass-interactive`}>
-                        <span>{t('docs.topics.bot_features')}</span>
+                        <span>Official SDK Deep-Dive</span>
                         <ChevronRight size={16} />
                     </Link>
                 </div>
@@ -136,13 +132,13 @@ interface DocLinkProps {
 function DocLink({ icon, title, description, to, color }: DocLinkProps) {
     return (
         <Link to={to} className={`${styles.card} premium-glass-card ${styles[color]}`}>
-            <div className={styles.cardIcon} style={{ background: 'rgba(255, 255, 255, 0.05)', borderRadius: "var(--radius-lg)" }}>{icon}</div>
+            <div className={styles.cardIcon} style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: "var(--radius-xl)", border: "1px solid rgba(255,255,255,0.05)" }}>{icon}</div>
             <div className={styles.cardContent}>
-                <h3 style={{ fontSize: 22, fontWeight: 900, marginBottom: 8 }}>{title}</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.5 }}>{description}</p>
+                <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>{title}</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>{description}</p>
             </div>
-            <div style={{ position: 'absolute', bottom: 24, right: 24, opacity: 0.3 }}>
-                <ChevronRight size={20} />
+            <div style={{ position: 'absolute', bottom: 20, right: 20, opacity: 0.2 }}>
+                <ChevronRight size={18} />
             </div>
         </Link>
     )

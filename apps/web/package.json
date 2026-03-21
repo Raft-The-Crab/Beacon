@@ -1,12 +1,12 @@
 {
   "name": "@beacon/web",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "npm run build:deps && tsc && vite build",
-    "build:deps": "pnpm --filter beacon-sdk build",
+    "build:deps": "npm --prefix ../../packages/sdk run build",
     "preview": "vite preview",
     "build:mobile": "npm run build && cd ../mobile && npm run sync",
     "build:android": "npm run build && cd ../mobile && npm run sync && npm run open",

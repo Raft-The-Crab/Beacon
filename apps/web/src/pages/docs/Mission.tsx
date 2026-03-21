@@ -1,4 +1,5 @@
-﻿import { Helmet } from 'react-helmet-async'
+import { Helmet } from 'react-helmet-async'
+import { Compass } from 'lucide-react'
 import { DocsLayout } from '../../components/layout/DocsLayout'
 import styles from '../../styles/modules/pages/DocsPage.module.css'
 
@@ -10,11 +11,16 @@ export function Mission() {
             </Helmet>
 
             <article className={`${styles.article} animate-fadeIn`}>
-                <h1 className="accent-text">The Sovereign Identity</h1>
-                <p className={styles.lead}>
-                    Beacon is not just a messaging app. It is a rebellion against the centralized control of human
-                    consciousness. Here is the truth about everything.
-                </p>
+                <header className={`${styles.header} premium-hero-section`} style={{ padding: '64px 0', textAlign: 'left', background: 'transparent' }}>
+                    <div className="premium-badge">
+                        <Compass size={14} />
+                        <span>The Vision</span>
+                    </div>
+                    <h1 className="premium-hero-heading accent-text" style={{ fontSize: 48 }}>The Beacon Mission</h1>
+                    <p className="premium-hero-subtitle" style={{ margin: 0, fontSize: 18 }}>
+                        Our commitment to privacy, data sovereignty, and the future of open communication.
+                    </p>
+                </header>
 
                 <section>
                     <h2>The Centralized Illusion</h2>

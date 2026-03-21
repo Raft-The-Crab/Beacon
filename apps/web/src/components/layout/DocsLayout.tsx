@@ -1,4 +1,4 @@
-﻿import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
     Book,
     FileText,
@@ -8,7 +8,8 @@ import {
     Rocket,
     Search as SearchIcon,
     Github,
-    Terminal
+    Terminal,
+    Shield
 } from 'lucide-react'
 import { WorkspaceLayout } from './WorkspaceLayout'
 import { useTranslationStore } from '../../stores/useTranslationStore'
@@ -54,6 +55,24 @@ export function DocsLayout({ children }: DocsLayoutProps) {
                             <span>{item.label}</span>
                         </button>
                     ))}
+                </div>
+            </div>
+
+            <div className={styles.navSection}>
+                <div className={styles.navHeader}>LEGAL</div>
+                <div className={styles.navList}>
+                    <button className={styles.navItem} onClick={() => navigate('/terms')}>
+                        <span className={styles.navIcon}><FileText size={18} /></span>
+                        <span>Terms of Service</span>
+                    </button>
+                    <button className={styles.navItem} onClick={() => navigate('/privacy')}>
+                        <span className={styles.navIcon}><Shield size={18} /></span>
+                        <span>Privacy Policy</span>
+                    </button>
+                    <button className={styles.navItem} onClick={() => navigate('/license')}>
+                        <span className={styles.navIcon}><Book size={18} /></span>
+                        <span>Licensing</span>
+                    </button>
                 </div>
             </div>
 

@@ -26,6 +26,7 @@ model User {
   publicKey          String?
   deviceSalt         String?
   lastIp             String?
+  locale             String?
   theme              String          @default("auto")
   accentColor        String?
   developerMode      Boolean         @default(false)

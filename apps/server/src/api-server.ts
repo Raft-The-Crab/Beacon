@@ -1,24 +1,12 @@
+import './env';
 import fs from 'fs';
 import path from 'path';
-import dotenv from 'dotenv';
 import http from 'http';
 import express, { Express } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import compression from 'compression';
-
-// Environment Initialization
-const nodeEnv = process.env.NODE_ENV || 'development';
-const inferredServerRoot = process.cwd().endsWith(path.join('apps', 'server'))
-    ? process.cwd()
-    : path.resolve(process.cwd(), 'apps', 'server');
-
-const baseEnvPath = path.join(inferredServerRoot, '.env');
-if (fs.existsSync(baseEnvPath)) dotenv.config({ path: baseEnvPath });
-
-const envModePath = path.join(inferredServerRoot, `.env.${nodeEnv}`);
-if (fs.existsSync(envModePath)) dotenv.config({ path: envModePath, override: false });
 
 http.globalAgent.maxSockets = 500;
 
@@ -151,7 +139,7 @@ export class BeaconServer {
                     upgradeInsecureRequests: [],
                 },
             },
-            crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+            crossOriginOpenerPolicy: { policy: "unsafe-none" },
             crossOriginResourcePolicy: { policy: "cross-origin" },
             hsts: process.env.NODE_ENV === 'production' ? {
                 maxAge: 31536000,

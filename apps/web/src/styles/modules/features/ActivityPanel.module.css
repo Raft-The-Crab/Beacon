@@ -5,14 +5,12 @@
     padding: 16px 24px 32px 24px;
     overflow-y: auto;
     flex-shrink: 0;
-    border-left: 1px solid var(--border-sep);
-    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
     gap: 32px;
     scrollbar-width: thin;
     scrollbar-color: var(--glass-border) transparent;
-    background: var(--activity-bg);
+    background: transparent;
 }
 
 .title {

@@ -17,8 +17,10 @@ if (projectId && clientEmail && privateKey) {
           }),
         });
         logger.success('[FIREBASE] Admin SDK initialized successfully');
+        logger.info(`[FIREBASE] Project ID: ${projectId}`);
       } catch (error: any) {
         logger.error(`[FIREBASE] Admin SDK initialization failed: ${error.message}`);
+        if (error.stack) logger.debug(error.stack);
       }
     }
   } catch (error) {

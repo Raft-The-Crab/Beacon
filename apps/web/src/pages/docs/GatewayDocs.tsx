@@ -1,3 +1,4 @@
+import { Zap } from 'lucide-react'
 import { DocsLayout } from '../../components/layout/DocsLayout'
 import styles from '../../styles/modules/pages/Docs.module.css'
 
@@ -5,18 +6,24 @@ export function GatewayDocs() {
   return (
     <DocsLayout>
       <div className={`${styles.docsContent} animate-fadeIn`}>
-        <header className={styles.docsHeader}>
-          <h1 className="accent-text">Gateway and Real-Time Events</h1>
-          <p>Use the Beacon gateway for live events, low-latency bots, and resilient reconnect handling in production.</p>
+        <header className={`${styles.docsHeader} premium-hero-section`} style={{ padding: '64px 0', textAlign: 'left', background: 'transparent' }}>
+          <div className="premium-badge">
+            <Zap size={14} />
+            <span>Real-Time Engine</span>
+          </div>
+          <h1 className="premium-hero-heading accent-text" style={{ fontSize: 48 }}>Gateway & Socket Events</h1>
+          <p className="premium-hero-subtitle" style={{ margin: '0', fontSize: 18 }}>
+            Build low-latency bots and apps with our high-performance WebSocket architecture.
+          </p>
         </header>
 
         <section className={styles.docsSection}>
-          <h2>Gateway URL</h2>
-          <div className={styles.infoBox}>
-            <p><strong>Primary:</strong> <code>wss://gateway.beacon.qzz.io/gateway</code></p>
-            <p><strong>Railway Direct:</strong> <code>wss://beacon-production-72fe.up.railway.app/gateway</code></p>
+          <h2 className="premium-glow-text" style={{ fontSize: 28, marginBottom: 20 }}>Gateway URL</h2>
+          <div className="premium-glass-card" style={{ padding: 24, marginBottom: 20 }}>
+            <p style={{ marginBottom: 12 }}><strong>Primary:</strong> <code style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: 4 }}>wss://gateway.beacon.qzz.io/gateway</code></p>
+            <p><strong>Railway Direct:</strong> <code style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: 4 }}>wss://beacon-production-72fe.up.railway.app/gateway</code></p>
           </div>
-          <p>Connect with standard WebSocket clients. After connect, wait for Hello (op 10), then send Identify (op 2).</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Connect with standard WebSocket clients. After connect, wait for Hello (op 10), then send Identify (op 2).</p>
         </section>
 
         <section className={styles.docsSection}>

@@ -42,6 +42,8 @@ export type WSEventType =
   | 'MEMBER_UPDATE'
   | 'ERROR'
   | 'WEBRTC_SIGNAL'
+  | 'VOICE_USER_JOINED'
+  | 'VOICE_USER_LEFT'
 
 export interface WSPayload<T = any> {
   op: WSOpCode

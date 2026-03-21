@@ -222,13 +222,14 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background: var(--bg-primary);
+  background: transparent;
   position: relative;
 }
 
 /* Top Bar */
 .topBar {
-  height: 52px; /* Slightly reduced height */
+  height: 52px;
+  /* Slightly reduced height */
   padding: 0 20px;
   display: flex;
   align-items: center;
@@ -236,7 +237,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
   gap: 12px;
-  background: linear-gradient(180deg, rgba(15, 15, 18, 0.6) 0%, rgba(15, 15, 18, 0.4) 100%);
+  background: rgba(15, 15, 18, 0.4);
   backdrop-filter: blur(20px);
   z-index: 5;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -251,7 +252,7 @@
 .topBarLeft {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   height: 100%;
   flex: 1;
   min-width: 0;
@@ -300,7 +301,8 @@
 .divider {
   width: 1px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0 24px;
   flex-shrink: 0;
 }
 
@@ -308,17 +310,17 @@
 .tabs {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   height: 100%;
   min-width: 0;
 }
 
 .tab {
   height: 32px;
-  padding: 0 14px;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 700;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.03);
   color: var(--text-muted);
@@ -327,6 +329,8 @@
   align-items: center;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  margin-right: 4px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .tab:hover {
@@ -335,9 +339,11 @@
 }
 
 .tabActive {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: none;
 }
 
 .addFriendBtn {
@@ -376,7 +382,8 @@
 }
 
 .friendsSearchRow {
-  padding: 12px 24px 8px; /* Reduced top padding */
+  padding: 12px 24px 8px;
+  /* Reduced top padding */
   flex-shrink: 0;
 }
 
@@ -785,7 +792,7 @@
   transform: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .pageWrapper {
     height: 100%;
     min-height: 0;
@@ -804,7 +811,7 @@
   }
 
   .topBarLeft {
-    gap: 8px;
+    gap: 16px;
     min-width: 0;
     overflow: visible;
     flex-wrap: wrap;
@@ -821,7 +828,7 @@
 
   .tabs {
     overflow-x: auto;
-    gap: 4px;
+    gap: 14px;
     scrollbar-width: none;
     min-width: 0;
     flex: 1 1 100%;
@@ -920,7 +927,7 @@
   }
 
   .tabs {
-    gap: 6px;
+    gap: 10px;
   }
 
   .tab {
@@ -936,7 +943,7 @@
   }
 
   .friendsSearchRow {
-    padding: 8px 10px 6px;
+    padding: 8pHHHHHHHx 10px 6px;
   }
 
   .friendsSearchInput {

@@ -493,6 +493,7 @@
     max-width: 900px;
     scrollbar-width: none;
     min-height: 0;
+    padding-bottom: 20vh; /* Ensure space for dropdowns */
 }
 
 .tabContent::-webkit-scrollbar {
