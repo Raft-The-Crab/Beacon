@@ -282,7 +282,7 @@ export function Login() {
             </div>
           )}
 
-          {auth && (
+        {auth && googleProvider && (
             <Button
               type="button"
               variant="secondary"
