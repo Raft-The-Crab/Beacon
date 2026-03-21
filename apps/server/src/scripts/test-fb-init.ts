@@ -1,6 +1,6 @@
 import './env';
-import { admin } from './config/firebase';
-import { logger } from './services/logger';
+import { admin } from '../config/firebase';
+import { logger } from '../services/logger';
 
 async function test() {
     console.log('Testing Firebase initialization...');

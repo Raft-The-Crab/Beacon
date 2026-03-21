@@ -36,24 +36,24 @@
   width: 100%;
   padding: var(--dropdown-padding);
   height: var(--dropdown-height);
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-sep);
   border-radius: var(--radius-md);
   font-size: var(--dropdown-font-size);
-  color: var(--color-text-primary);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all var(--transition-normal);
 }
 
 .trigger:hover:not(:disabled) {
-  border-color: var(--color-accent);
-  background: var(--color-bg-tertiary);
+  border-color: var(--beacon-brand);
+  background: var(--bg-hover);
 }
 
 .trigger:focus:not(:disabled) {
   outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px var(--color-accent-opacity);
+  border-color: var(--beacon-brand);
+  box-shadow: 0 0 0 3px var(--beacon-brand-muted);
 }
 
 .trigger:disabled {
@@ -125,8 +125,9 @@
   top: calc(100% + 0.5rem);
   left: 0;
   right: 0;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: var(--bg-secondary);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-sep);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   z-index: 1000;
@@ -192,17 +193,17 @@
 }
 
 .option:hover:not(:disabled) {
-  background: var(--color-bg-tertiary);
-  color: var(--color-accent);
+  background: var(--bg-hover);
+  color: var(--text-interactive-hover);
 }
 
 .option.highlighted:not(:disabled) {
-  background: var(--color-bg-tertiary);
+  background: var(--bg-hover);
 }
 
 .option.selected {
-  background: var(--color-accent-opacity);
-  color: var(--color-accent);
+  background: var(--beacon-brand-muted);
+  color: var(--beacon-brand);
   font-weight: 500;
 }
 

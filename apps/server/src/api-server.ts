@@ -77,7 +77,7 @@ export class BeaconServer {
             : null;
 
         const devTunnelRegex = /^https:\/\/[a-z0-9-]+\.[a-z0-9-]*devtunnels\.ms\/?$/i;
-        const cfPagesRegex = /^https:\/\/[a-z0-9-.]+\.pages\.dev\/?$/i;
+        const cfPagesRegex = /^https:\/\/[a-z0-9-.]+\.pages\.dev$/i;
         const railwayRegex = /\.railway\.app$/i;
         const beaconDomainRegex = /^https:\/\/(?:www\.)?(?:[a-z0-9-]+\.)*qzz\.io\/?$/i;
 
@@ -120,7 +120,7 @@ export class BeaconServer {
         // v3: Add Vary: Origin and X-Beacon-Version for client version detection
         this.app.use((_req: any, res: express.Response, next: express.NextFunction) => {
             res.setHeader('Vary', 'Origin');
-            res.setHeader('X-Beacon-Version', '3.0.2');
+            res.setHeader('X-Beacon-Version', '3.0.3');
             next();
         });
 
