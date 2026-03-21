@@ -1,4 +1,5 @@
 import { BaseBot, BotPlugin, BotContext } from './bots.js';
+import { musicService } from '../services/music.service';
 
 export class MusicPlugin implements BotPlugin {
     id = 'music';
@@ -7,20 +8,38 @@ export class MusicPlugin implements BotPlugin {
     async onCommand(ctx: BotContext) {
         if (ctx.commandName === 'play') {
             const query = ctx.options?.[0]?.value as string;
+            
             await ctx.respond({
-                content: `🎵 Searching for **${query}**... This would typically interface with a voice engine.`,
+                content: `🔍 **Searching Beacon Music...** \n*Query: ${query}*`,
             });
+
+            const metadata = await musicService.fetchMetadata(query);
+            
+            if (metadata) {
+                await ctx.respond({
+                    content: `🎵 **Now Playing:** [${metadata.title}](${metadata.url})\n**Artist:** ${metadata.artist}\n**Duration:** ${Math.floor(metadata.duration / 60)}:${(metadata.duration % 60).toString().padStart(2, '0')}\n${metadata.thumbnail ? `![thumbnail](${metadata.thumbnail})` : ''}`,
+                });
+            } else {
+                await ctx.respond({
+                    content: `❌ Could not find any results for **${query}**.`,
+                });
+            }
             return true;
         }
         return false;
     }
 
     async onMessage(ctx: BotContext) {
-        // Optional: detect song links and show previews
-        if (ctx.content?.includes('spotify.com') || ctx.content?.includes('youtube.com')) {
-            await ctx.respond({
-                content: '🎶 *I see you posted a music link! Need help playing it in a voice channel?*',
-            });
+        const content = ctx.content || '';
+        const isMusicLink = content.includes('spotify.com') || content.includes('youtube.com') || content.includes('youtu.be');
+        
+        if (isMusicLink) {
+            const metadata = await musicService.fetchMetadata(content);
+            if (metadata) {
+                await ctx.respond({
+                    content: `🎶 **Music Detected:** [${metadata.title}](${metadata.url}) by *${metadata.artist}*\n*Type \`/play\` to listen in a voice channel!*`,
+                });
+            }
         }
     }
 }

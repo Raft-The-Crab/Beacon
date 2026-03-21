@@ -1,9 +1,15 @@
 {
   "name": "beacon-sdk",
-  "version": "1.2.0",
-  "description": "Official full Beacon SDK for bots, apps, gateway clients, and rich interactions",
+  "version": "2.5.0",
+  "type": "module",
+  "description": "Official TypeScript SDK for the Beacon platform, bots, apps, gateway clients, and rich interactions",
   "main": "./dist/index.js",
-  "browser": "./dist/browser.js",
+  "browser": {
+    "./dist/index.js": "./dist/browser.js",
+    "wrtc": false,
+    "opusscript": "./dist/stubs/opusscript.js",
+    "stream": "./dist/stubs/stream.js"
+  },
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -59,8 +65,11 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "beacon-types": "^2.5.0",
     "axios": "^1.6.0",
-    "events": "^3.3.0",
+    "eventemitter3": "^5.0.4",
+    "isomorphic-ws": "^5.0.0",
+    "opusscript": "^0.1.1",
     "ws": "^8.19.0"
   },
   "devDependencies": {

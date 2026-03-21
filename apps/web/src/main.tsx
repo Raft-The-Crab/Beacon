@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
 import App from './App'
-
 import './styles/index.css'
 
 // simple-peer/randombytes expects a Node-style global in browser contexts.
@@ -8,24 +8,13 @@ if (typeof (globalThis as any).global === 'undefined') {
   ;(globalThis as any).global = globalThis
 }
 
-// Suppress the React DevTools warning for a completely pristine console output as requested
-if (import.meta.env.DEV) {
-  const originalInfo = console.info;
-  const originalLog = console.log;
-  console.info = (...args) => {
-    if (typeof args[0] === 'string' && args[0].includes('Download the React DevTools')) return;
-    originalInfo(...args);
-  };
-  console.log = (...args) => {
-    if (typeof args[0] === 'string' && args[0].includes('Download the React DevTools')) return;
-    originalLog(...args);
-  };
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error('Failed to find the root element');
 }
 
-import('react-dom/client').then(({ createRoot }) => {
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>
-  )
-})
+createRoot(rootElement).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);

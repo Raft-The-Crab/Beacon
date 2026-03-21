@@ -8,7 +8,7 @@ import { useDMStore, DMChannel, DMParticipant, DirectMessage } from '../../store
 import { useAuthStore } from '../../stores/useAuthStore'
 import styles from '../../styles/modules/features/DirectMessageView.module.css'
 import { apiClient } from '../../services/apiClient'
-import { InteractionType } from '@beacon/types'
+import { InteractionType } from 'beacon-sdk'
 
 interface DirectMessageViewProps {
   channelId: string

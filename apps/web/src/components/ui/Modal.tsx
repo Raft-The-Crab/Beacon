@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import styles from '../../styles/modules/ui/Modal.module.css'
 
@@ -16,6 +16,7 @@ interface ModalProps {
   noPadding?: boolean
   transparent?: boolean
   hideHeader?: boolean
+  scrollable?: boolean
 }
 
 export function Modal({
@@ -31,7 +32,8 @@ export function Modal({
   className = '',
   noPadding = false,
   transparent = false,
-  hideHeader = false
+  hideHeader = false,
+  scrollable = true
 }: ModalProps) {
   const [mounted, setMounted] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
@@ -42,12 +44,19 @@ export function Modal({
     if (isOpen) {
       setMounted(true)
       setIsClosing(false)
+      
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden'
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`
+      }
+      
       document.addEventListener('keydown', handleKeyDown)
     } else if (mounted) {
       // Modal is closing — trigger fade-out animation then unmount
       setIsClosing(true)
       document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
       document.removeEventListener('keydown', handleKeyDown)
       const timer = setTimeout(() => {
         setMounted(false)
@@ -58,6 +67,7 @@ export function Modal({
 
     return () => {
       document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen])
@@ -124,7 +134,7 @@ export function Modal({
             </button>
           </div>
         )}
-        <div className={`${styles.content} ${noPadding ? styles.noPadding : ''}`}>
+        <div className={`${styles.content} ${noPadding ? styles.noPadding : ''} ${!scrollable ? styles.noScroll : ''}`}>
           {children}
         </div>
       </div>

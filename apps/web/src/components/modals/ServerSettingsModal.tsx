@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Settings, Users, Shield, Hash, Volume2, X, Trash2, Edit2, History, Zap, Smile } from 'lucide-react'
 import { useServerStore } from '../../stores/useServerStore'
 import { Button, Input, Modal, AvatarUpload } from '../ui'
@@ -11,6 +11,7 @@ import { AuditLogModal } from './AuditLogModal'
 import { SoundManager } from '../features/SoundManager'
 import { useRolesStore } from '../../stores/useRolesStore'
 import { useUIStore } from '../../stores/useUIStore'
+import { type UploadedFile } from '../../services/fileUpload'
 import styles from '../../styles/modules/modals/ServerSettingsModal.module.css'
 
 interface ServerSettingsModalProps {
@@ -235,7 +236,14 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
                   <div className={styles.avatarSection}>
                     <AvatarUpload
                       currentAvatar={currentServer.icon || undefined}
-                      onUpload={() => { }}
+                      onUpload={async (file: UploadedFile) => {
+                        try {
+                          await updateGuild(currentServer.id, { icon: file.url })
+                          toast.success('Server icon updated')
+                        } catch {
+                          toast.error('Failed to update server icon')
+                        }
+                      }}
                       size={128}
                     />
                     <p className={styles.uploadHint}>We recommend an image of at least 512x512 for the server.</p>

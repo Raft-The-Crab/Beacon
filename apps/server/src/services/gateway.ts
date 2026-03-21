@@ -9,9 +9,10 @@ import { getGuildMembers, addGuildMember } from './membership'
 import { PermissionService } from './permissions'
 import { sanitizeMessage } from '../utils/sanitize'
 import { wsRateLimit } from '../middleware/security'
-import { WSOpCode, WSEventType, WSPayload, PermissionBit } from '@beacon/types'
+import { WSOpCode, WSEventType, WSPayload, PermissionBit } from 'beacon-types'
 import { publishGatewayEvent } from './gatewayPublisher'
 import { questService } from './quest'
+import { logger } from './logger'
 
 export type WebSocketClient = WSWebSocket & {
   id: string
@@ -29,7 +30,7 @@ export async function hasPermission(userId: string, guildId: string, permission:
   const permBit = permission === Permissions.ADMINISTRATOR
     ? PermissionBit.ADMINISTRATOR
     : PermissionBit.MANAGE_MESSAGES
-  return PermissionService.hasPermission(userId, guildId, permBit)
+  return PermissionService.hasPermission(userId, guildId, BigInt(permBit))
 }
 
 export async function membershipGetGuildMembers(guildId: string): Promise<string[]> {
@@ -64,7 +65,7 @@ export class GatewayService {
         if (message) this.handlePubSubEvent(message)
       })
     } catch (err) {
-      console.warn('Failed to setup Redis pubsub', err)
+      logger.warn('Failed to setup Redis pubsub: ' + err)
     }
 
     this.wss.on('connection', async (ws: WebSocketClient, _req: IncomingMessage) => {
@@ -72,7 +73,7 @@ export class GatewayService {
       ws.isAlive = true
       this.clients.set(ws.id, ws)
 
-      console.log(`New connection: ${ws.id}`)
+      logger.gateway(`New connection: ${ws.id}`)
 
       ws.on('pong', () => {
         ws.isAlive = true
@@ -83,7 +84,7 @@ export class GatewayService {
           const message = JSON.parse(data.toString())
           await this.handleMessage(ws, message)
         } catch (err) {
-          console.error('Invalid message format', err)
+          logger.error('Invalid message format: ' + err)
         }
       })
 
@@ -98,11 +99,14 @@ export class GatewayService {
       })
     })
 
-    // Heartbeat interval
+    // Standard Heartbeat interval (30s Ping/Pong check for bot persistence)
     setInterval(() => {
       this.wss.clients.forEach((ws: any) => {
         const client = ws as WebSocketClient
-        if (!client.isAlive) return client.terminate()
+        if (!client.isAlive) {
+          logger.gateway(`Dropping dead connection: ${client.id}`);
+          return client.terminate();
+        }
 
         client.isAlive = false
         client.ping()
@@ -191,6 +195,14 @@ export class GatewayService {
           this.broadcast([targetUserId], payload)
           return
         }
+      } else if (message.t === 'TYPING_START' || message.t === 'TYPING_STOP') {
+        const guildId = message.d.guild_id || message.d.guildId
+        if (guildId) {
+          this.getGuildMembers(guildId).then(members => {
+            if (members) this.broadcast(members, payload)
+          })
+          return
+        }
       } else if (message.guild_id) {
         // Guild-scoped events (GUILD_UPDATE, GUILD_ROLE_*, GUILD_MEMBER_*, etc.)
         this.getGuildMembers(message.guild_id).then(members => {
@@ -202,7 +214,7 @@ export class GatewayService {
 
       this.broadcastAll(payload)
     } catch (err) {
-      console.error('Failed to handle pubsub event', err)
+      logger.error('Failed to handle pubsub event: ' + err)
     }
   }
 
@@ -252,10 +264,10 @@ export class GatewayService {
             case 'VOICE_LEAVE': return await this.handleVoiceLeave(ws, message.d)
             case 'WEBRTC_SIGNAL': return await this.handleWebRTCSignal(ws, message.d)
 
-            default: console.warn('Unhandled client event:', message.t)
+            default: logger.debug('Unhandled client event: ' + message.t)
           }
         } catch (err) {
-          console.error('Error handling client event', err)
+          logger.error('Error handling client event: ' + err)
           this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 5000, message: 'Internal error' } })
         }
         break
@@ -307,6 +319,17 @@ export class GatewayService {
     const sanitizedContent = sanitizeMessage(content)
     if (!sanitizedContent) return this.send(ws, { op: WSOpCode.DISPATCH, t: 'ERROR' as WSEventType, d: { code: 4002, message: 'Invalid content' } })
 
+    // Anti-Spam Heuristic Filter
+    const { AntiSpamEngine } = await import('../middleware/antiSpam');
+    const isSafe = await AntiSpamEngine.checkMessage(authorId, sanitizedContent);
+    if (!isSafe) {
+        return this.send(ws, { 
+            op: WSOpCode.DISPATCH, 
+            t: 'ERROR' as WSEventType, 
+            d: { code: 4007, message: 'Message blocked by anti-spam filter.' } 
+        });
+    }
+
     const { result: moderationResult } = await moderationService.checkMessage(sanitizedContent, authorId, channelId)
 
     if (!moderationResult.approved) {
@@ -328,7 +351,7 @@ export class GatewayService {
     await publishGatewayEvent('MESSAGE_CREATE', msg, msg.guild_id)
 
     // Quest Hook: Message Creation
-    questService.trackProgress(authorId, 'send_messages', 1).catch(e => console.warn('Quest update failed:', e))
+    questService.trackProgress(authorId, 'send_messages', 1).catch(e => logger.debug('Quest update failed: ' + e))
   }
 
   private async handleUpdateMessage(_ws: WebSocketClient, data: any) {
@@ -431,7 +454,7 @@ export class GatewayService {
 
     // Quest Hook: Reaction
     if (!data.remove) {
-      questService.trackProgress(ws.userId, 'react', 1).catch(e => console.warn('Quest update failed:', e))
+      questService.trackProgress(ws.userId, 'react', 1).catch(e => logger.debug('Quest update failed: ' + e))
     }
   }
 }

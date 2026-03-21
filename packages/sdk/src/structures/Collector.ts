@@ -1,7 +1,7 @@
 /**
  * Collector — Await messages or reactions matching a filter
  */
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 
 export interface CollectorOptions<T> {
   filter?: (item: T) => boolean;

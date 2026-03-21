@@ -45,7 +45,7 @@ export function AppDirectory() {
         const q = searchQuery.trim().toLowerCase()
         if (!q) return apps
         return apps.filter((app) =>
-            app.name.toLowerCase().includes(q) || (app.description || '').toLowerCase().includes(q)
+            String(app.name || '').toLowerCase().includes(q) || (app.description || '').toLowerCase().includes(q)
         )
     }, [apps, searchQuery])
 

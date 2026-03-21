@@ -56,7 +56,7 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .filterBtn:hover {
@@ -244,7 +244,7 @@
     font-weight: 700;
     cursor: pointer;
     font-size: var(--font-size-xs);
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .couponApplyBtn:hover {
@@ -260,7 +260,7 @@
     font-weight: 700;
     cursor: pointer;
     font-size: var(--font-size-xs);
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .purchaseBtn {

@@ -1,23 +1,23 @@
-/**
- * MemberManager — List, kick, ban, and manage roles for guild members.
- */
 import { RestClient } from '../rest/RestClient';
-import { Collection } from '../structures/Collection';
+
+import { TTLCache } from '../cache/TTLCache';
+import type { RawUser } from '../types/index';
 
 export interface GuildMember {
-    id: string;
+    id: string; // Internal mapping ID
     userId: string;
     guildId: string;
     nickname?: string;
     avatar?: string;
     roles: string[];
     joinedAt: string;
-    user?: {
-        id: string;
-        username: string;
-        avatar?: string;
-        bot?: boolean;
-    };
+    premiumSince?: string | null;
+    deaf: boolean;
+    mute: boolean;
+    pending?: boolean;
+    permissions?: string;
+    communicationDisabledUntil?: string | null;
+    user?: RawUser;
 }
 
 export interface ListMembersOptions {
@@ -26,10 +26,10 @@ export interface ListMembersOptions {
 }
 
 export class MemberManager {
-    public readonly cache: Collection<string, GuildMember>;
+    public readonly cache: TTLCache<string, GuildMember>;
 
     constructor(private rest: RestClient) {
-        this.cache = new Collection<string, GuildMember>().setMaxSize(1000);
+        this.cache = new TTLCache<string, GuildMember>(3600000, 1000); // 1 hour TTL
     }
 
     private _cacheKey(guildId: string, userId: string): string {

@@ -25,6 +25,10 @@ export interface PollData {
 export class PollBuilder {
   private data: PollData = { question: '', options: [] }
 
+  static create(): PollBuilder {
+    return new PollBuilder()
+  }
+
   setQuestion(question: string): this {
     if (question.length > 300) throw new Error('PollBuilder: Question cannot exceed 300 characters.')
     this.data.question = question
@@ -60,8 +64,18 @@ export class PollBuilder {
   }
 
   build(): PollData {
+    return this.toJSON()
+  }
+
+  toJSON(): PollData {
     if (!this.data.question) throw new Error('PollBuilder: question is required.')
     if (this.data.options.length < 2) throw new Error('PollBuilder: At least 2 options required.')
     return { duration: 24, ...this.data, options: [...this.data.options] }
+  }
+
+  clone(): PollBuilder {
+    const cloned = new PollBuilder()
+    cloned.data = JSON.parse(JSON.stringify(this.data))
+    return cloned
   }
 }

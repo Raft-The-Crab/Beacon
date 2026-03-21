@@ -3,8 +3,8 @@
     width: 100%;
     max-width: 100%;
     display: flex;
-    padding: 11px;
-    gap: 11px;
+    padding: 0;
+    gap: 0;
     overflow: hidden;
     font-family: var(--font-family);
     background:
@@ -52,8 +52,8 @@
 }
 
 .leftNav {
-    width: clamp(240px, 20vw, 320px);
-    min-width: 240px;
+    width: clamp(232px, 18vw, 280px);
+    min-width: 232px;
     background: var(--bg-secondary);
     backdrop-filter: blur(8px);
     display: flex;
@@ -69,6 +69,7 @@
 
 .mainContent {
     flex: 1;
+    min-width: 400px; /* Ensure chat doesn't get squashed too much */
     background: transparent;
     display: flex;
     flex-direction: column;
@@ -79,8 +80,8 @@
 }
 
 .rightPanel {
-    width: 340px;
-    min-width: 340px;
+    width: clamp(260px, 22vw, 320px);
+    min-width: 260px;
     background: var(--bg-secondary);
     backdrop-filter: blur(8px);
     display: flex;

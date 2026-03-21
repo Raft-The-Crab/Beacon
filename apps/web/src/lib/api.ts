@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
-import type { APIResponse } from '@beacon/types'
+import type { APIResponse } from 'beacon-sdk'
 import { API_BASE_URL } from '../config/endpoints'
 
 const API_URL = API_BASE_URL

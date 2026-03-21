@@ -50,6 +50,10 @@ export class DropdownBuilder {
     options: [],
   }
 
+  static create(): DropdownBuilder {
+    return new DropdownBuilder()
+  }
+
   setCustomId(id: string): this {
     this.data.customId = id
     return this
@@ -97,10 +101,20 @@ export class DropdownBuilder {
   }
 
   build(): DropdownData {
+    return this.toJSON()
+  }
+
+  toJSON(): DropdownData {
     if (!this.data.customId) throw new Error('DropdownBuilder: customId is required.')
     if (this.data.type === 'string' && this.data.options.length === 0) {
       throw new Error('DropdownBuilder: String-type dropdowns require at least one option.')
     }
     return { ...this.data, options: [...this.data.options] }
+  }
+
+  clone(): DropdownBuilder {
+    const cloned = new DropdownBuilder()
+    cloned.data = JSON.parse(JSON.stringify(this.data))
+    return cloned
   }
 }

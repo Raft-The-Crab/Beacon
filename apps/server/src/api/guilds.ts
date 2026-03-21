@@ -43,6 +43,8 @@ router.delete('/:guildId/sounds/:soundId', authenticate, GuildController.deleteS
 // Members & Moderation
 router.get('/:guildId/members', authenticate, GuildController.getMembers)
 router.patch('/:guildId/members/:userId', authenticate, GuildController.updateMember)
+router.put('/:guildId/members/:userId/roles/:roleId', authenticate, requirePermission(Permissions.MANAGE_ROLES), GuildController.addMemberRole)
+router.delete('/:guildId/members/:userId/roles/:roleId', authenticate, requirePermission(Permissions.MANAGE_ROLES), GuildController.removeMemberRole)
 router.delete('/:guildId/members/:userId/kick', authenticate, requirePermission(Permissions.KICK_MEMBERS), GuildController.kickMember)
 router.post('/:guildId/members/:userId/ban', authenticate, requirePermission(Permissions.BAN_MEMBERS), GuildController.banMember)
 router.get('/:id/bans', authenticate, requirePermission(Permissions.BAN_MEMBERS), GuildController.getBans)

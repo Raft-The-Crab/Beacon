@@ -1,9 +1,8 @@
-/**
- * GuildManager — Fetch, create, edit, and delete guilds.
- */
 import { RestClient } from '../rest/RestClient';
 import { Guild } from '../structures/Guild';
 import { Collection } from '../structures/Collection';
+import { TTLCache } from '../cache/TTLCache';
+import type { Invite, Role, RawChannel, AuditLogEntry } from '../types/index';
 
 export interface CreateGuildOptions {
     name: string;
@@ -19,10 +18,10 @@ export interface EditGuildOptions {
 }
 
 export class GuildManager {
-    public readonly cache: Collection<string, Guild>;
+    public readonly cache: TTLCache<string, Guild>;
 
     constructor(private rest: RestClient) {
-        this.cache = new Collection<string, Guild>().setMaxSize(100);
+        this.cache = new TTLCache<string, Guild>(3600000, 100); // 1 hour TTL
     }
 
     /** Fetch a guild by ID (hits cache first) */
@@ -31,7 +30,7 @@ export class GuildManager {
             const cached = this.cache.get(guildId);
             if (cached) return cached;
         }
-        const data = await this.rest.get(`/guilds/${guildId}`);
+        const data = await this.rest.getGuild(guildId);
         const guild = new Guild(this.rest.client, data);
         this.cache.set(guildId, guild);
         return guild;
@@ -39,7 +38,7 @@ export class GuildManager {
 
     /** Fetch all guilds the bot/user is a member of */
     async fetchAll(): Promise<Collection<string, Guild>> {
-        const data = await this.rest.get('/users/@me/guilds');
+        const data = await this.rest.get<any[]>('/users/@me/guilds');
         const guilds = new Collection<string, Guild>();
         for (const raw of data) {
             const g = new Guild(this.rest.client, raw);
@@ -77,9 +76,50 @@ export class GuildManager {
         this.cache.delete(guildId);
     }
 
+    /** Bulk fetch guild members for rapid local cache hydration */
+    async bulkFetchMembers(guildId: string, userIds: string[], chunkSize = 50): Promise<any[]> {
+        const results: any[] = [];
+        for (let i = 0; i < userIds.length; i += chunkSize) {
+            const chunk = userIds.slice(i, i + chunkSize);
+            const promises = chunk.map(id => this.rest.getGuildMember(guildId, id).catch(() => null));
+            const chunkRes = await Promise.all(promises);
+            results.push(...chunkRes.filter(Boolean));
+        }
+        return results;
+    }
+
+    /** Fetch guild audit logs */
+    async fetchAuditLogs(guildId: string, options: { limit?: number; action?: number } = {}): Promise<AuditLogEntry[]> {
+        return this.rest.getAuditLogs(guildId, options);
+    }
+
+    // ─── Channel Management ─────────────────────────────────────
+    
+    async fetchChannels(guildId: string): Promise<RawChannel[]> {
+        return this.rest.getGuildChannels(guildId);
+    }
+
+    async createChannel(guildId: string, data: { name: string; type?: number; parent_id?: string }): Promise<RawChannel> {
+        return this.rest.createGuildChannel(guildId, data);
+    }
+
+    // ─── Role Management ────────────────────────────────────────
+
+    async fetchRoles(guildId: string): Promise<Role[]> {
+        return this.rest.getGuildRoles(guildId);
+    }
+
+    async createRole(guildId: string, data: { name: string; color?: number; permissions?: string }): Promise<Role> {
+        return this.rest.createGuildRole(guildId, data);
+    }
+
+    async deleteRole(guildId: string, roleId: string): Promise<void> {
+        await this.rest.deleteGuildRole(guildId, roleId);
+    }
+
     /** Fetch guild invite code */
-    async fetchInvites(guildId: string): Promise<any[]> {
-        return this.rest.get(`/guilds/${guildId}/invites`);
+    async fetchInvites(guildId: string): Promise<Invite[]> {
+        return this.rest.request<Invite[]>('GET', `/guilds/${guildId}/invites`);
     }
 
     /** Get guild emoji list */
@@ -89,6 +129,6 @@ export class GuildManager {
 
     /** Get scheduled events */
     async fetchEvents(guildId: string): Promise<any[]> {
-        return this.rest.get(`/guilds/${guildId}/scheduled-events`);
+        return this.rest.listGuildScheduledEvents(guildId);
     }
 }

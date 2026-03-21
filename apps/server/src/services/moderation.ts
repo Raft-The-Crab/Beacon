@@ -15,6 +15,7 @@ import { prisma, ModerationReportModel } from '../db'
 import { fileUploadService } from './upload'
 import { StorageService } from './storage'
 import { publishGatewayEvent } from './gatewayPublisher'
+import { logger } from './logger'
 
 const PROLOG_SCRIPT = path.join(process.cwd(), 'src', 'services', 'ai', 'moderation.pl')
 const SWIPL = process.env.SWIPL_PATH || 'swipl'
@@ -316,7 +317,7 @@ class ModerationService {
     this.bridge.init()
     // Periodic cleanup: evict stale offense entries every 30 min
     setInterval(() => this.cleanupCaches(), 30 * 60 * 1000)
-    console.log('[Moderation] Service started (Pipeline: AI → Prolog → TS fallback → Decision)')
+    logger.info('Moderation Service started (Pipeline: AI → Prolog → TS fallback → Decision)')
   }
 
   private cleanupCaches() {
@@ -335,7 +336,7 @@ class ModerationService {
         this.messageHistory.delete(keys[i])
       }
     }
-    if (evicted > 0) console.log(`[Moderation] Evicted ${evicted} stale offense entries`)
+    if (evicted > 0) logger.debug(`Moderation evicted ${evicted} stale offense entries`)
   }
 
   getOffenses(userId: string): number {
@@ -400,7 +401,7 @@ class ModerationService {
     const rssMB = process.memoryUsage().rss / 1024 / 1024
     const profile = getProfile()
     if (profile.prologBypassMB === 0 || rssMB > profile.prologBypassMB) {
-      console.warn(`[Moderation] RSS ${Math.round(rssMB)} MB — skipping Prolog, using TS fallback`)
+      logger.warn(`Moderation RSS ${Math.round(rssMB)} MB — skipping Prolog, using TS fallback`)
       result = tsFallback(content, priorOffenses)
     } else {
       try {
@@ -525,7 +526,7 @@ class ModerationService {
       return result
     })
 
-    console.log('[Moderation] Priority queue handlers registered (fast: text | slow: image, video)')
+    logger.info('Moderation Priority queue handlers registered (fast: text | slow: image, video)')
   }
 }
 

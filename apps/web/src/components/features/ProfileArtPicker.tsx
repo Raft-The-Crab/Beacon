@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Crown, Lock, Palette, MessageSquare } from 'lucide-react'
+import { Check, Crown, Lock, Palette } from 'lucide-react'
 import { useProfileArtStore, ProfileArt } from '../../stores/useProfileArtStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useUIStore, type ChatBubbleStyle, type ChatBubbleIntensity } from '../../stores/useUIStore'
@@ -128,7 +128,7 @@ export function ProfileArtPicker() {
                                                 <Lock size={18} />
                                             </div>
                                         )}
-                                        <MessageSquare size={26} style={{ color: 'rgba(255,255,255,0.86)' }} />
+                                        {/* Art asset not ready yet, relying purely on CSS bubble preview for now */}
                                     </div>
                                     <div className={styles.artInfo}>
                                         <span className={styles.artName}>{bubble.label}</span>

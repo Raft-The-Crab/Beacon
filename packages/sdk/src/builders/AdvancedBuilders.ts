@@ -34,7 +34,11 @@ export class DataTableBuilder {
   }
 
   build() {
-    return { type: 'data_table', ...this.data }
+    return this.toJSON()
+  }
+
+  toJSON() {
+    return { ...this.data, type: 'data_table' }
   }
 }
 
@@ -62,7 +66,11 @@ export class ChartBuilder {
   }
 
   build() {
-    return { ...this.data }
+    return this.toJSON()
+  }
+
+  toJSON() {
+    return { ...this.data, component_type: 'chart' }
   }
 }
 
@@ -80,6 +88,10 @@ export class KanbanBuilder {
   }
 
   build() {
+    return this.toJSON()
+  }
+
+  toJSON() {
     return { type: 'kanban', ...this.data }
   }
 }
@@ -116,6 +128,10 @@ export class CalendarBuilder {
   }
 
   build() {
+    return this.toJSON()
+  }
+
+  toJSON() {
     return { type: 'calendar', ...this.data }
   }
 }
@@ -146,6 +162,10 @@ export class ProgressTrackerBuilder {
   }
 
   build() {
+    return this.toJSON()
+  }
+
+  toJSON() {
     return { type: 'progress_tracker', ...this.data }
   }
 }
@@ -180,6 +200,10 @@ export class FileBrowserBuilder {
   }
 
   build() {
+    return this.toJSON()
+  }
+
+  toJSON() {
     return { type: 'file_browser', ...this.data }
   }
 }
@@ -220,6 +244,10 @@ export class CodeEditorBuilder {
   }
 
   build() {
+    return this.toJSON()
+  }
+
+  toJSON() {
     return { type: 'code_editor', ...this.data }
   }
 }
@@ -244,6 +272,10 @@ export class CarouselBuilder {
   }
 
   build() {
+    return this.toJSON()
+  }
+
+  toJSON() {
     return { type: 'carousel', ...this.data }
   }
 }
@@ -273,6 +305,10 @@ export class AccordionBuilder {
   }
 
   build() {
+    return this.toJSON()
+  }
+
+  toJSON() {
     return { type: 'accordion', ...this.data }
   }
 }
@@ -312,6 +348,10 @@ export class RatingBuilder {
   }
 
   build() {
+    return this.toJSON()
+  }
+
+  toJSON() {
     return { type: 'rating', ...this.data }
   }
 }

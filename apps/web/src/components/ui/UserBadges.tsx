@@ -1,5 +1,5 @@
 import React from 'react'
-import type { UserBadge } from '@beacon/types'
+import type { UserBadge } from 'beacon-sdk'
 import { Tooltip } from './Tooltip'
 import styles from '../../styles/modules/ui/UserBadges.module.css'
 

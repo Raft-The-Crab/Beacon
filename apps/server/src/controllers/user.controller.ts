@@ -7,6 +7,9 @@ import { redis } from '../services/redis';
 import { CacheService } from '../services/cache';
 import { AuthService } from '../services/auth';
 import { validateUsername } from '../middleware/validation';
+import { serializeBigInt } from '../utils/serializeBigInt';
+import * as node2fa from 'node-2fa';
+import QRCode from 'qrcode';
 
 function ensurePrisma(res: Response) {
   if (!prisma) {
@@ -23,62 +26,70 @@ export async function getMe(req: Request, res: Response) {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
   if (!ensurePrisma(res)) return;
 
+  const cacheKey = CacheService.genKey('user', userId, 'me');
+
   try {
-    let user: any = null
-    try {
-      user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          username: true,
-          displayName: true,
-          discriminator: true,
-          email: true,
-          avatar: true,
-          banner: true,
-          bio: true,
-          status: true,
-          customStatus: true,
-          theme: true,
-          developerMode: true,
-          badges: true,
-          isBeaconPlus: true,
-          avatarDecorationId: true,
-          profileEffectId: true,
-          createdAt: true,
-        },
-      })
-    } catch (selectErr) {
-      console.warn('getMe full select failed, falling back to minimal profile:', selectErr)
-      const minimal = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          username: true,
-          displayName: true,
-          discriminator: true,
-          email: true,
-          avatar: true,
-          banner: true,
-          bio: true,
-          status: true,
-          customStatus: true,
-          createdAt: true,
-        },
-      })
-      user = minimal ? {
-        ...minimal,
-        theme: 'auto',
-        developerMode: false,
-        badges: [],
-        isBeaconPlus: false,
-        avatarDecorationId: null,
-        profileEffectId: null,
-      } : null
-    }
+    const user = await CacheService.wrap(cacheKey, async () => {
+      try {
+        const u = await (prisma.user as any).findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            globalName: true,
+            accountTier: true,
+            discriminator: true,
+            email: true,
+            avatar: true,
+            banner: true,
+            bio: true,
+            status: true,
+            customStatus: true,
+            theme: true,
+            developerMode: true,
+            badges: true,
+            isBeaconPlus: true,
+            avatarDecorationId: true,
+            profileEffectId: true,
+            createdAt: true,
+          },
+        })
+        return u
+      } catch (selectErr) {
+        console.warn('getMe full select failed, falling back to minimal profile:', selectErr)
+        const minimal = await prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            discriminator: true,
+            email: true,
+            avatar: true,
+            banner: true,
+            bio: true,
+            status: true,
+            customStatus: true,
+            createdAt: true,
+          },
+        })
+        return minimal ? {
+          ...minimal,
+          theme: 'auto',
+          developerMode: false,
+          badges: [],
+          isBeaconPlus: false,
+          avatarDecorationId: null,
+          profileEffectId: null,
+        } : null
+      }
+    }, 300); // 5 min cache for profile
+
     if (!user) return res.status(404).json({ error: 'User not found' });
-    return res.json(AuthService.sanitizeUser(user));
+    return res.json(serializeBigInt(AuthService.sanitizeUser(user)));
   } catch (err) {
+    console.error('getMe error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -88,6 +99,7 @@ import { z } from 'zod';
 const UpdateProfileSchema = z.object({
   username: z.string().min(2).max(32).optional(),
   displayName: z.string().min(1).max(32).optional().nullable(),
+  globalName: z.string().min(1).max(32).optional().nullable(),
   bio: z.string().max(190).optional().nullable(),
   avatar: z.string().url().optional().nullable(),
   banner: z.string().trim().min(1).max(512).optional().nullable(),
@@ -129,11 +141,12 @@ export async function updateMe(req: Request, res: Response) {
       }
     }
 
-    const updated = await prisma.user.update({
+    const updated = await (prisma.user as any).update({
       where: { id: userId },
       data: {
         ...(trimmedUsername !== undefined && { username: trimmedUsername }),
         ...(trimmedDisplayName !== undefined && { displayName: trimmedDisplayName || null }),
+        ...(data.globalName !== undefined && { globalName: data.globalName }),
         ...(data.bio !== undefined && { bio: data.bio }),
         ...(data.avatar !== undefined && { avatar: data.avatar }),
         ...(data.banner !== undefined && { banner: data.banner }),
@@ -148,6 +161,8 @@ export async function updateMe(req: Request, res: Response) {
         id: true,
         username: true,
         displayName: true,
+        globalName: true,
+        accountTier: true,
         discriminator: true,
         email: true,
         avatar: true,
@@ -175,7 +190,8 @@ export async function updateMe(req: Request, res: Response) {
     }
 
     // Invalidate profile cache
-    await CacheService.del(`user:${userId}`);
+    await CacheService.del(CacheService.genKey('user', userId, 'me'));
+    await CacheService.del(CacheService.genKey('user', userId));
 
     return res.json(AuthService.sanitizeUser(updated));
   } catch (err: any) {
@@ -198,12 +214,14 @@ export async function getUser(req: Request, res: Response) {
 
     let user: any = null
     try {
-      user = await prisma.user.findUnique({
+      user = await (prisma.user as any).findUnique({
         where: { id: userId as string },
         select: {
           id: true,
           username: true,
           displayName: true,
+          globalName: true,
+          accountTier: true,
           discriminator: true,
           avatar: true,
           banner: true,
@@ -245,7 +263,7 @@ export async function getUser(req: Request, res: Response) {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const sanitizedUser = AuthService.sanitizeUser(user)
-    await CacheService.set(`user:${userId}`, sanitizedUser, 600); // 10 min cache
+    await CacheService.set(CacheService.genKey('user', userId), sanitizedUser, 600); // 10 min cache
     return res.json(sanitizedUser);
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
@@ -258,28 +276,33 @@ export async function getMyGuilds(req: Request, res: Response) {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
   if (!ensurePrisma(res)) return;
 
+  const cacheKey = CacheService.genKey('user', userId, 'guilds');
+
   try {
-    const memberships = await prisma.guildMember.findMany({
-      where: { userId },
-      include: {
-        guild: {
-          include: {
-            channels: {
-              orderBy: { position: 'asc' },
+    const guilds = await CacheService.wrap(cacheKey, async () => {
+      const memberships = await prisma.guildMember.findMany({
+        where: { userId },
+        include: {
+          guild: {
+            include: {
+              channels: {
+                orderBy: { position: 'asc' },
+              },
+              _count: { select: { members: true } },
             },
-            _count: { select: { members: true } },
           },
         },
-      },
-    });
+      });
 
-    const guilds = memberships.map((m: any) => ({
-      ...m.guild,
-      memberCount: m.guild._count.members,
-    }));
+      return memberships.map((m: any) => ({
+        ...m.guild,
+        memberCount: m.guild._count.members,
+      }));
+    }, 300); // 5 min cache
 
     return res.json(guilds);
   } catch (err) {
+    console.error('getMyGuilds error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -319,17 +342,19 @@ export async function getMyFriends(req: Request, res: Response) {
       },
     });
 
-    // Enrich with Redis presence
-    const presenceData = await redis.hgetall('presence');
-    const enriched = friends.map((f: any) => {
-      const other = f.userId === userId ? f.friend : f.user;
-      const presenceKey = other?.id ? other.id : 'unknown';
-      let presence = null
-      if (presenceData && presenceData[presenceKey]) {
+    // Enrich with Redis presence (Optimized: fetch only friend IDs)
+    const friendEntities = friends.map((f: any) => f.userId === userId ? f.friend : f.user);
+    const friendIds = friendEntities.map((f: any) => f?.id).filter(Boolean);
+    const presenceValues = friendIds.length > 0 ? await (redis as any).hmget('presence', ...friendIds) : [];
+    
+    const enrichedWithPresence = friendEntities.map((other: any, index: number) => {
+      let presence = null;
+      const rawPresence = presenceValues[index];
+      if (rawPresence) {
         try {
-          presence = JSON.parse(presenceData[presenceKey]!)
+          presence = JSON.parse(rawPresence);
         } catch {
-          presence = null
+          presence = null;
         }
       }
       return {
@@ -339,7 +364,7 @@ export async function getMyFriends(req: Request, res: Response) {
       };
     });
 
-    const deduped = Array.from(new Map(enriched.map((entry: any) => [entry.id, entry])).values())
+    const deduped = Array.from(new Map(enrichedWithPresence.map((entry: any) => [entry.id, entry])).values())
     return res.json(deduped);
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
@@ -359,16 +384,17 @@ export async function deleteMe(req: Request, res: Response) {
   }
 }
 
+const UpdateE2EESchema = z.object({
+  publicKey: z.string().min(1),
+  deviceSalt: z.string().min(1)
+});
+
 // PATCH /users/me/e2ee
 export async function updateE2EEKeys(req: Request, res: Response) {
   const userId = req.user?.id;
-  const { publicKey, deviceSalt } = req.body;
-
-  if (!publicKey || !deviceSalt) {
-    return res.status(400).json({ error: 'publicKey and deviceSalt are required' });
-  }
-
+  
   try {
+    const { publicKey, deviceSalt } = UpdateE2EESchema.parse(req.body);
     await prisma.user.update({
       where: { id: userId },
       data: { publicKey, deviceSalt },
@@ -397,18 +423,19 @@ export async function getE2EEKeys(req: Request, res: Response) {
 
 // -- SECURITY --
 import bcrypt from 'bcryptjs';
-import node2fa from 'node-2fa';
-import QRCode from 'qrcode';
 
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '8', 10);
 
+const UpdateEmailSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required')
+});
+
 export async function updateEmail(req: Request, res: Response) {
   const userId = req.user?.id;
-  const { email, password } = req.body;
-
-  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
   try {
+    const { email, password } = UpdateEmailSchema.parse(req.body);
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -430,14 +457,16 @@ export async function updateEmail(req: Request, res: Response) {
   }
 }
 
+const UpdatePasswordSchema = z.object({
+  oldPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(8, 'New password must be at least 8 characters')
+});
+
 export async function updatePassword(req: Request, res: Response) {
   const userId = req.user?.id;
-  const { oldPassword, newPassword } = req.body;
-
-  if (!oldPassword || !newPassword) return res.status(400).json({ error: 'Both old and new passwords are required' });
-  if (newPassword.length < 8) return res.status(400).json({ error: 'New password must be at least 8 characters' });
 
   try {
+    const { oldPassword, newPassword } = UpdatePasswordSchema.parse(req.body);
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.password === undefined) return res.status(404).json({ error: 'User not found' });
 
@@ -518,6 +547,75 @@ export async function verify2FA(req: Request, res: Response) {
     return res.json({ success: true, message: '2FA has been enabled successfully.' });
   } catch (err) {
     console.error('verify2FA error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function getMutuals(req: Request, res: Response) {
+  const userId = req.user?.id;
+  const { id: targetUserId } = req.params;
+
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (userId === targetUserId) {
+    return res.json({ friends: [], guilds: [] });
+  }
+
+  try {
+    // 1. Mutual Guilds
+    const [userGuilds, targetGuilds] = await Promise.all([
+      prisma.guildMember.findMany({ where: { userId }, select: { guildId: true } }),
+      prisma.guildMember.findMany({ where: { userId: targetUserId }, select: { guildId: true } })
+    ]);
+
+    const userGuildIds = new Set(userGuilds.map(mg => mg.guildId));
+    const mutualGuildIds = targetGuilds
+      .map(mg => mg.guildId)
+      .filter(id => userGuildIds.has(id));
+
+    const mutualGuilds = await prisma.guild.findMany({
+      where: { id: { in: mutualGuildIds } },
+      select: { id: true, name: true, icon: true }
+    });
+
+    // 2. Mutual Friends
+    const [userFriends, targetFriends] = await Promise.all([
+      prisma.friendship.findMany({ 
+        where: { 
+          OR: [
+            { userId, status: 1 },
+            { friendId: userId, status: 1 }
+          ]
+        },
+        select: { userId: true, friendId: true }
+      }),
+      prisma.friendship.findMany({ 
+        where: { 
+          OR: [
+            { userId: targetUserId, status: 1 },
+            { friendId: targetUserId, status: 1 }
+          ]
+        },
+        select: { userId: true, friendId: true }
+      })
+    ]);
+
+    const getUserFriendId = (f: any, current: string) => f.userId === current ? f.friendId : f.userId;
+    const userFriendIds = new Set(userFriends.map(f => getUserFriendId(f, userId)));
+    const mutualFriendIds = targetFriends
+      .map(f => getUserFriendId(f, targetUserId))
+      .filter(id => userFriendIds.has(id));
+
+    const mutualFriends = await (prisma.user as any).findMany({
+      where: { id: { in: mutualFriendIds } },
+      select: { id: true, username: true, globalName: true, avatar: true, discriminator: true }
+    });
+
+    return res.json(serializeBigInt({
+      friends: mutualFriends,
+      guilds: mutualGuilds
+    }));
+  } catch (err) {
+    console.error('getMutuals error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

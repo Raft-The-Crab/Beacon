@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { apiRequest } from '../lib/api'
-import type { MessageWithExtras as Message, PaginatedResponse } from '@beacon/types'
+import type { MessageWithExtras as Message, PaginatedResponse } from 'beacon-sdk'
 
 interface MessageState {
   messages: Map<string, Message[]>
@@ -142,7 +142,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     set(state => {
       const newMessages = new Map(state.messages)
       const current = newMessages.get(channelId) || []
-      const updated = current.map(m => m.id === messageId ? { ...m, ...updates } : m)
+      const updated = current.map(m => m.id === messageId ? { ...m, ...updates } as Message : m)
       newMessages.set(channelId, updated)
       return { messages: newMessages }
     })

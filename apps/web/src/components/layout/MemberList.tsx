@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from 'react'
-import { Crown, EllipsisVertical, Shield, User, Users } from 'lucide-react'
-import { PermissionBit } from '@beacon/types'
+import { Crown, EllipsisVertical, Shield, User, Users, Sparkles } from 'lucide-react'
+import { PermissionBit } from 'beacon-sdk'
 import { useServerStore } from '../../stores/useServerStore'
 import { useUIStore } from '../../stores/useUIStore'
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -15,6 +15,7 @@ interface NormalizedMember {
   avatar?: string | null
   status: string
   customStatus?: string | null
+  isBeaconPlus: boolean
   roles: { name: string; color?: string | null; permissions?: string | number | bigint | null }[]
 }
 
@@ -67,6 +68,7 @@ function normalizeMember(member: any): NormalizedMember | null {
     avatar: user?.avatar || member?.avatar || null,
     status: member?.status || user?.status || 'offline',
     customStatus: member?.customStatus || user?.statusText || user?.customStatus || null,
+    isBeaconPlus: Boolean(user?.isBeaconPlus || member?.isBeaconPlus || (Array.isArray(user?.badges) && user.badges.some((b: any) => String(b || '').toLowerCase() === 'beacon_plus'))),
     roles,
   }
 }
@@ -176,6 +178,7 @@ function MemberRow({
           )}
         </div>
         <div className={styles.badges}>
+          {member.isBeaconPlus && <div title="Beacon+"><Sparkles size={13} className={styles.premiumBadge} style={{ color: '#ffcc00' }} /></div>}
           {isOwner && <div title="Server Owner"><Crown size={13} className={styles.ownerBadge} /></div>}
           {!isOwner && isStaff && <span title="Staff"><Shield size={13} className={styles.roleBadge} /></span>}
         </div>

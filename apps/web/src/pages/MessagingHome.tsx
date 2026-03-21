@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { Virtuoso } from "react-virtuoso"
+import { motion } from "framer-motion"
 import {
   Users,
   PlusCircle,
@@ -124,7 +125,7 @@ export function MessagingHome() {
           : allFriends
     if (!friendSearch.trim()) return base
     return base.filter((f) =>
-      `${f.displayName || ''} ${f.username}`.toLowerCase().includes(friendSearch.toLowerCase())
+      `${f.displayName || ''} ${f.username || ''}`.toLowerCase().includes(friendSearch.toLowerCase())
     )
   }
 
@@ -267,11 +268,11 @@ export function MessagingHome() {
   )
 
   // ─── Right Panel ─────────────────────────────────────────────────
-  const rightPanel = (
+  const rightPanel = !activeChannel ? (
     <div className={styles.activeNowContainer}>
       <ActivityPanel />
     </div>
-  )
+  ) : undefined
 
   return (
     <div className={styles.pageWrapper}>
@@ -323,7 +324,12 @@ export function MessagingHome() {
             </header>
 
             {/* Friends Content */}
-            <div className={styles.friendsBody}>
+            <motion.div 
+              className={styles.friendsBody}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            >
               {/* Search */}
               <div className={styles.friendsSearchRow}>
                 <div className={styles.friendsSearchWrap}>
@@ -383,31 +389,31 @@ export function MessagingHome() {
                           <div style={{ color: getStatusColor(friend.status), fontSize: 12 }}>
                             {friend.customStatus || getStatusLabel(friend.status)}
                           </div>
-                          {currentTab === 'pending' && (
-                            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                              <button
-                                className={styles.pendingActionBtn}
-                                type="button"
-                                onClick={() => void handleAcceptPending(friend.id, friend.username)}
-                              >
-                                Accept
-                              </button>
-                              <button
-                                className={styles.pendingActionBtn}
-                                type="button"
-                                onClick={() => void handleDeclinePending(friend.id, friend.username)}
-                              >
-                                Ignore
-                              </button>
-                            </div>
-                          )}
                         </div>
+                        {currentTab === 'pending' && (
+                        <div className={styles.friendActions}>
+                            <button
+                              className={styles.pendingActionBtn}
+                              type="button"
+                              onClick={() => void handleAcceptPending(friend.id, friend.username)}
+                            >
+                              Accept
+                            </button>
+                            <button
+                              className={styles.pendingActionBtn}
+                              type="button"
+                              onClick={() => void handleDeclinePending(friend.id, friend.username)}
+                            >
+                              Ignore
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   />
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
         ) : (
           <div className={styles.chatWrapper}>
@@ -435,7 +441,7 @@ export function MessagingHome() {
           <CreateDMModal onClose={() => setShowCreateDM(false)} />
         </Modal>
 
-        <Modal isOpen={showDiscover} onClose={() => setShowDiscover(false)} size="lg" noPadding={true} hideHeader={true}>
+        <Modal isOpen={showDiscover} onClose={() => setShowDiscover(false)} size="lg" noPadding={true} hideHeader={true} scrollable={false}>
           <div className={styles.discoveryModalShell}>
             <button
               onClick={() => setShowDiscover(false)}
@@ -447,7 +453,7 @@ export function MessagingHome() {
           </div>
         </Modal>
 
-        <Modal isOpen={showBeaconPlus} onClose={() => setShowBeaconPlus(false)} size="xl" noPadding={true} hideHeader={true}>
+        <Modal isOpen={showBeaconPlus} onClose={() => setShowBeaconPlus(false)} size="xl" noPadding={true} hideHeader={true} scrollable={false}>
           <div className={styles.beaconPlusModalShell}>
             <BeaconPlusStore onClose={() => setShowBeaconPlus(false)} />
           </div>

@@ -109,7 +109,7 @@
     height: 20px;
     border: 2px solid var(--glass-border);
     border-radius: var(--radius-2xs);
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .friendRow:hover .checkbox {

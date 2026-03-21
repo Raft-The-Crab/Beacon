@@ -180,7 +180,7 @@
   padding: 12px 16px;
   border-radius: var(--radius-xl);
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.03);
   transition: all var(--transition-fast);
 }
 

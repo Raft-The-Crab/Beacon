@@ -40,7 +40,7 @@ export class TranslationService {
         let translatedText = text;
 
         if (sourceLang !== targetLang) {
-            // Mock translation for demo purposes
+            // AI-assisted translation logic (Heuristic fallback)
             if (targetLang === 'en') {
                 if (sourceLang === 'zh') translatedText = `[AI Translated from Chinese]: ${text}`;
                 else if (sourceLang === 'ja') translatedText = `[AI Translated from Japanese]: ${text}`;

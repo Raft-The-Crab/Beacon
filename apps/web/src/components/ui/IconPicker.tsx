@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import {
   Shield,
   Crown,
@@ -144,7 +144,7 @@ export function IconPicker({ value, onChange, color = 'var(--text-primary)' }: I
 
   const filteredIcons = ROLE_ICONS.filter((icon) => {
     const matchesCategory = selectedCategory === 'all' || icon.category === selectedCategory
-    const matchesSearch = icon.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = String(icon.name || '').toLowerCase().includes(searchQuery.toLowerCase())
     return matchesCategory && matchesSearch
   })
 

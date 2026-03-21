@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Mic, MicOff, Video, VideoOff, Monitor, MonitorOff,
@@ -7,7 +7,9 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useVoiceStore } from '../stores/useVoiceStore'
+import { useMessageStore } from '../stores/useMessageStore'
 import { voiceManager } from '../services/voiceManager'
+import { apiClient } from '../services/apiClient'
 import { Avatar } from '../components/ui'
 import { useToast } from '../components/ui/Toast'
 import { ServerSoundboard } from '../components/features/ServerSoundboard'
@@ -24,6 +26,7 @@ interface VoiceParticipant {
   isHandRaised: boolean
   isScreenSharing: boolean
   role?: 'owner' | 'mod' | 'member'
+  isBeaconPlus?: boolean
   stream?: MediaStream
 }
 
@@ -46,7 +49,6 @@ export function VoiceChannel() {
   const [isHandRaised, setIsHandRaised] = useState(false)
   const [layout, setLayout] = useState<'grid' | 'focus'>('grid')
   const [sidePanel, setSidePanel] = useState<'members' | 'chat' | 'soundboard' | null>('members')
-  const [participants, setParticipants] = useState<VoiceParticipant[]>([])
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting')
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({})
   const [mediaNotice, setMediaNotice] = useState<string | null>(null)
@@ -103,8 +105,8 @@ export function VoiceChannel() {
   }, [currentVoiceState?.selfMute, currentVoiceState?.selfDeaf, currentVoiceState?.selfVideo])
 
   // Map local stream and remote peers into participants array for UI rendering
-  useEffect(() => {
-    if (!user) return
+  const participants = useMemo(() => {
+    if (!user) return []
 
     const localStream = voiceManager.getLocalStream()
     const channelVoiceStates = Array.from(voiceUsers.values()).filter((state) => state.channelId === channelId)
@@ -118,7 +120,8 @@ export function VoiceChannel() {
       isVideoOn: !!currentVoiceState?.selfVideo,
       isSpeaking: (currentVoiceState?.audioLevel || 0) > 0.08,
       isHandRaised,
-      isScreenSharing,
+      isScreenSharing: !!currentVoiceState?.selfScreen,
+      isBeaconPlus: !!currentVoiceState?.isBeaconPlus,
       role: 'member',
       stream: localStream || undefined
     }
@@ -126,19 +129,20 @@ export function VoiceChannel() {
     const peerParticipants: VoiceParticipant[] = channelVoiceStates
       .filter((state) => state.userId !== user.id)
       .map((state) => ({
-      id: state.userId,
-      username: `User ${state.userId.substring(0, 4)}`,
-      isMuted: state.selfMute,
-      isDeafened: state.selfDeaf,
-      isVideoOn: state.selfVideo,
-      isSpeaking: (state.audioLevel || 0) > 0.08,
-      isHandRaised: false,
-      isScreenSharing: false,
-      role: 'member',
-      stream: remoteStreams[state.userId]
-    }))
+        id: state.userId,
+        username: `User ${state.userId.substring(0, 4)}`,
+        isMuted: state.selfMute,
+        isDeafened: state.selfDeaf,
+        isVideoOn: state.selfVideo,
+        isSpeaking: (state.audioLevel || 0) > 0.08,
+        isHandRaised: false,
+        isScreenSharing: !!state.selfScreen,
+        isBeaconPlus: !!state.isBeaconPlus,
+        role: 'member',
+        stream: remoteStreams[state.userId]
+      }))
 
-    setParticipants([me, ...peerParticipants])
+    return [me, ...peerParticipants]
   }, [user, voiceUsers, channelId, currentVoiceState, isHandRaised, isScreenSharing, remoteStreams])
 
   const handleLeave = () => {
@@ -146,7 +150,7 @@ export function VoiceChannel() {
     navigate(-1)
   }
 
-  const handleToggleMute = async () => {
+  const handleToggleMute = useCallback(async () => {
     const next = currentVoiceState ? !currentVoiceState.selfMute : !isMuted
     try {
       await voiceManager.setMute(guildId, next)
@@ -156,9 +160,9 @@ export function VoiceChannel() {
       show(message, 'error')
       setIsMuted(true)
     }
-  }
+  }, [currentVoiceState, isMuted, guildId, show])
 
-  const toggleDeafen = () => {
+  const toggleDeafen = useCallback(() => {
     if (!currentVoiceState) return
     const next = !currentVoiceState.selfDeaf
     voiceManager.setDeaf(guildId, next)
@@ -167,9 +171,9 @@ export function VoiceChannel() {
       void voiceManager.setMute(guildId, true)
       setIsMuted(true)
     }
-  }
+  }, [currentVoiceState, guildId])
 
-  const handleToggleVideo = async () => {
+  const handleToggleVideo = useCallback(async () => {
     const next = currentVoiceState ? !currentVoiceState.selfVideo : !isVideoOn
     try {
       await voiceManager.setVideo(guildId, next)
@@ -179,24 +183,21 @@ export function VoiceChannel() {
       show(message, 'error')
       setIsVideoOn(false)
     }
-  }
+  }, [currentVoiceState, isVideoOn, guildId, show])
 
-  const toggleScreenShare = async () => {
+  const toggleScreenShare = useCallback(async () => {
     try {
       await voiceManager.startScreenShare(guildId)
-      setIsScreenSharing((prev) => !prev)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to start screen sharing.'
       show(message, 'error')
       setIsScreenSharing(false)
     }
-  }
-  const toggleHand = () => {
+  }, [guildId, show])
+
+  const toggleHand = useCallback(() => {
     setIsHandRaised((h) => !h)
-    setParticipants((ps) =>
-      ps.map((p) => (p.id === user?.id ? { ...p, isHandRaised: !isHandRaised } : p))
-    )
-  }
+  }, [])
 
   const handleRetryMedia = async () => {
     const stream = voiceManager.getLocalStream()
@@ -362,7 +363,7 @@ export function VoiceChannel() {
               <MembersPanel participants={participants} />
             )}
             {sidePanel === 'chat' && (
-              <ChatPanel channelName={channelName} />
+              <ChatPanel channelId={channelId} channelName={channelName} />
             )}
             {sidePanel === 'soundboard' && (
               <ServerSoundboard guildId={guildId} />
@@ -402,9 +403,9 @@ export function VoiceChannel() {
             onClick={handleToggleVideo}
           />
           <ControlButton
-            icon={isScreenSharing ? <MonitorOff size={20} /> : <Monitor size={20} />}
-            label={isScreenSharing ? 'Stop Share' : 'Share Screen'}
-            active={isScreenSharing}
+            icon={currentVoiceState?.selfScreen ? <MonitorOff size={20} /> : <Monitor size={20} />}
+            label={currentVoiceState?.selfScreen ? 'Stop Share' : 'Share Screen'}
+            active={!!currentVoiceState?.selfScreen}
             onClick={toggleScreenShare}
           />
           <ControlButton
@@ -445,20 +446,51 @@ function ParticipantTile({
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
-    if (videoRef.current && p.stream) {
-      videoRef.current.srcObject = p.stream
+    const handleTrackEvent = () => {
+      if (videoRef.current && p.stream) {
+        console.log(`[ParticipantTile] Track event for ${p.id}, re-binding stream`);
+        videoRef.current.srcObject = p.stream;
+      }
+    };
+
+    if (p.stream) {
+      p.stream.addEventListener('addtrack', handleTrackEvent);
+      p.stream.addEventListener('removetrack', handleTrackEvent);
     }
-  }, [p.stream])
+
+    // Comprehensive binding effect
+    if (videoRef.current) {
+      if (p.isVideoOn || p.isScreenSharing) {
+        if (p.stream) {
+          // Force a full re-bind to clear potential black feeds from previous tracks
+          videoRef.current.srcObject = null;
+          videoRef.current.srcObject = p.stream;
+          videoRef.current.play().catch(e => console.warn('[ParticipantTile] Play failed:', e));
+        }
+      } else {
+        videoRef.current.srcObject = null
+      }
+    }
+  }, [p.stream, p.isVideoOn, p.isScreenSharing])
 
   return (
     <div className={`${styles.tile} ${p.isSpeaking && !p.isMuted ? styles.tileSpeaking : ''}`}>
-      {p.isVideoOn ? (
+      {(p.isVideoOn || p.isScreenSharing) ? (
         <video
           ref={videoRef}
-          className={styles.tileVideo}
+          className={`${styles.tileVideo} ${isSelf && !p.isScreenSharing ? styles.localVideo : ''}`}
           autoPlay
           muted={isSelf}
           playsInline
+          onCanPlay={(e) => {
+            e.currentTarget.play().catch(err => {
+              console.warn('[ParticipantTile] Autoplay prevented, retrying muted...', err);
+              if (videoRef.current) {
+                videoRef.current.muted = true;
+                videoRef.current.play().catch(e => console.error('[ParticipantTile] Play retry failed:', e));
+              }
+            });
+          }}
         />
       ) : (
         <div className={styles.tileAvatar}>
@@ -467,6 +499,13 @@ function ParticipantTile({
           ) : (
             <Avatar username={p.username} size="lg" />
           )}
+        </div>
+      )}
+
+      {/* Beacon+ indicator */}
+      {p.isBeaconPlus && (
+        <div className={styles.premiumBadge} title="Beacon+ Member">
+          <Crown size={12} style={{ color: '#ffcc00' }} />
         </div>
       )}
 
@@ -543,22 +582,32 @@ function MembersPanel({ participants }: { participants: VoiceParticipant[] }) {
 }
 
 // ── Chat panel ────────────────────────────────────────────────────
-function ChatPanel({ channelName }: { channelName: string }) {
-  const [msgs, setMsgs] = useState<{ id: number; author: string; text: string }[]>([])
+function ChatPanel({ channelId: propChannelId, channelName }: { channelId?: string; channelName: string }) {
+  const channelId = propChannelId || 'voice-chat' // Fallback
+  const messages = useMessageStore((s: any) => s.messages.get(channelId) || [])
+  const fetchMessages = useMessageStore((s: any) => s.fetchMessages)
   const [input, setInput] = useState('')
-  const user = useAuthStore((s) => s.user)
   const endRef = useRef<HTMLDivElement>(null)
 
-  const send = () => {
+  useEffect(() => {
+    if (channelId) void fetchMessages(channelId)
+  }, [channelId, fetchMessages])
+
+  const send = async () => {
     const text = input.trim()
-    if (!text) return
-    setMsgs((m) => [...m, { id: Date.now(), author: user?.username || 'You', text }])
-    setInput('')
+    if (!text || !channelId) return
+    
+    try {
+      await apiClient.sendMessage(channelId, { content: text })
+      setInput('')
+    } catch (err) {
+      console.warn('Voice chat send failed:', err)
+    }
   }
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [msgs])
+  }, [messages.length])
 
   return (
     <div className={styles.chatPanel}>
@@ -567,16 +616,19 @@ function ChatPanel({ channelName }: { channelName: string }) {
         <span>Chat — {channelName}</span>
       </div>
       <div className={styles.chatMessages}>
-        {msgs.length === 0 && (
+        {messages.length === 0 && (
           <div className={styles.chatEmpty}>
             <MessageSquare size={28} style={{ opacity: 0.3 }} />
             <p>No messages yet. Say hi!</p>
           </div>
         )}
-        {msgs.map((m) => (
+        {messages.map((m: any) => (
           <div key={m.id} className={styles.chatMsg}>
-            <span className={styles.chatAuthor}>{m.author}</span>
-            <span className={styles.chatText}>{m.text}</span>
+            <div className={styles.chatMsgHeader}>
+               <span className={styles.chatAuthor}>{m.author?.username || 'Unknown'}</span>
+               <span className={styles.chatTime}>{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+            <span className={styles.chatText}>{m.content}</span>
           </div>
         ))}
         <div ref={endRef} />

@@ -1,4 +1,7 @@
 import { resolveApiClientBaseUrl } from '../connection';
+import type { Role, AuditLogEntry, RawUser, RawGuild, RawChannel, RawMessage } from '../types/index';
+import { RequestSigner } from '../security/RequestSigner';
+import { TokenManager } from '../security/TokenManager';
 
 /**
  * RestClient — Rate-limit-aware HTTP client for Beacon API
@@ -6,6 +9,7 @@ import { resolveApiClientBaseUrl } from '../connection';
 
 export interface RestClientOptions {
   token: string;
+  secret?: string; // For request signing
   baseURL?: string;
   version?: string;
 }
@@ -15,9 +19,13 @@ interface RateLimitBucket {
   resetAt: number;
 }
 
+const MAX_RETRIES = 3;
+const BASE_BACKOFF_MS = 500;
+
 export class RestClient {
-  private token: string;
-  private baseURL: string;
+  public readonly tokenManager: TokenManager;
+  private readonly signer?: RequestSigner;
+  public baseURL: string;
   private version: string;
   private buckets: Map<string, RateLimitBucket> = new Map();
   private globalReset: number = 0;
@@ -26,7 +34,10 @@ export class RestClient {
   public client!: any; // Back-reference to main Client (set during init)
 
   constructor(options: RestClientOptions) {
-    this.token = options.token;
+    this.tokenManager = new TokenManager(options.token);
+    if (options.secret) {
+      this.signer = new RequestSigner(options.secret);
+    }
     this.baseURL = resolveApiClientBaseUrl(options.baseURL);
     this.version = options.version ?? 'v1';
   }
@@ -84,7 +95,7 @@ export class RestClient {
     this.processing = false;
   }
 
-  private async _executeRequest<T>(method: string, endpoint: string, body?: any): Promise<T> {
+  private async _executeRequest<T>(method: string, endpoint: string, body?: any, retryCount = 0): Promise<T> {
     const bucketKey = this._getBucketKey(method, endpoint);
     const bucket = this.buckets.get(bucketKey);
 
@@ -94,12 +105,20 @@ export class RestClient {
     }
 
     const url = `${this.baseURL}/${this.version}${endpoint}`;
+    const token = this.tokenManager.getToken();
+    const timestamp = Date.now();
 
     const headers: Record<string, string> = {
-      Authorization: `Bot ${this.token}`,
+      Authorization: `Bot ${token}`,
       'Content-Type': 'application/json',
       'User-Agent': `beacon.js/2.5.0 (Beacon Project - ${this.baseURL})`,
+      'X-Beacon-Timestamp': timestamp.toString(),
     };
+
+    if (this.signer && body) {
+      const signature = await this.signer.sign(JSON.stringify(body), timestamp);
+      headers['X-Beacon-Signature'] = signature;
+    }
 
     const res = await fetch(url, {
       method,
@@ -124,7 +143,14 @@ export class RestClient {
     if (res.status === 429) {
       const retryAfter = Number(res.headers.get('Retry-After') ?? 1) * 1000;
       await this._sleep(retryAfter);
-      return this._executeRequest<T>(method, endpoint, body);
+      return this._executeRequest<T>(method, endpoint, body, retryCount);
+    }
+
+    // 5xx — exponential backoff retry
+    if (res.status >= 500 && retryCount < MAX_RETRIES) {
+      const delay = BASE_BACKOFF_MS * Math.pow(2, retryCount);
+      await this._sleep(delay);
+      return this._executeRequest<T>(method, endpoint, body, retryCount + 1);
     }
 
     if (res.status === 204) return undefined as T;
@@ -154,8 +180,8 @@ export class RestClient {
   // ─────────────────────────────────────────────────────────────
   // Channels
   // ─────────────────────────────────────────────────────────────
-  getChannel(channelId: string) {
-    return this.request('GET', `/channels/${channelId}`);
+  getChannel(channelId: string): Promise<RawChannel> {
+    return this.request<RawChannel>('GET', `/channels/${channelId}`);
   }
 
   modifyChannel(channelId: string, data: any) {
@@ -166,19 +192,19 @@ export class RestClient {
     return this.request('DELETE', `/channels/${channelId}`);
   }
 
-  getChannelMessages(channelId: string, options: { limit?: number; before?: string; after?: string; around?: string } = {}) {
+  getChannelMessages(channelId: string, options: { limit?: number; before?: string; after?: string; around?: string } = {}): Promise<RawMessage[]> {
     const params = new URLSearchParams();
     if (options.limit) params.set('limit', String(options.limit));
     if (options.before) params.set('before', options.before);
     if (options.after) params.set('after', options.after);
     if (options.around) params.set('around', options.around);
     const qs = params.toString();
-    return this.request('GET', `/channels/${channelId}/messages${qs ? `?${qs}` : ''}`);
+    return this.request<RawMessage[]>('GET', `/channels/${channelId}/messages${qs ? `?${qs}` : ''}`);
   }
 
-  createMessage(channelId: string, content: string | { content?: string; embeds?: any[]; reply_to?: string; attachments?: any[] }) {
+  createMessage(channelId: string, content: string | { content?: string; embeds?: any[]; reply_to?: string; attachments?: any[]; components?: any[] }): Promise<RawMessage> {
     const body = typeof content === 'string' ? { content } : content;
-    return this.request('POST', `/channels/${channelId}/messages`, body);
+    return this.request<RawMessage>('POST', `/channels/${channelId}/messages`, body);
   }
 
   editMessage(channelId: string, messageId: string, data: any) {
@@ -216,28 +242,32 @@ export class RestClient {
   // ─────────────────────────────────────────────────────────────
   // Guilds
   // ─────────────────────────────────────────────────────────────
-  getGuild(guildId: string) {
-    return this.request('GET', `/guilds/${guildId}`);
+  getGuild(guildId: string): Promise<RawGuild> {
+    return this.request<RawGuild>('GET', `/guilds/${guildId}`);
   }
 
   modifyGuild(guildId: string, data: any) {
     return this.request('PATCH', `/guilds/${guildId}`, data);
   }
 
-  getGuildChannels(guildId: string) {
-    return this.request('GET', `/guilds/${guildId}/channels`);
+  getGuildChannels(guildId: string): Promise<RawChannel[]> {
+    return this.request<RawChannel[]>('GET', `/guilds/${guildId}/channels`);
   }
 
   createGuildChannel(guildId: string, data: any) {
     return this.request('POST', `/guilds/${guildId}/channels`, data);
   }
 
-  getGuildMember(guildId: string, userId: string) {
-    return this.request('GET', `/guilds/${guildId}/members/${userId}`);
+  getGuildMember(guildId: string, userId: string): Promise<any> {
+    return this.request<any>('GET', `/guilds/${guildId}/members/${userId}`);
   }
 
-  listGuildMembers(guildId: string, limit = 1000) {
-    return this.request('GET', `/guilds/${guildId}/members?limit=${limit}`);
+  listGuildMembers(guildId: string, limit = 1000): Promise<any[]> {
+    return this.request<any[]>('GET', `/guilds/${guildId}/members?limit=${limit}`);
+  }
+
+  getGuildMembers(guildId: string, limit = 1000): Promise<any[]> {
+    return this.listGuildMembers(guildId, limit);
   }
 
   addGuildMemberRole(guildId: string, userId: string, roleId: string) {
@@ -263,12 +293,12 @@ export class RestClient {
     return this.request('DELETE', `/guilds/${guildId}/bans/${userId}`);
   }
 
-  getGuildBans(guildId: string) {
-    return this.request('GET', `/guilds/${guildId}/bans`);
+  getGuildBans(guildId: string): Promise<any[]> {
+    return this.request<any[]>('GET', `/guilds/${guildId}/bans`);
   }
 
-  getGuildRoles(guildId: string) {
-    return this.request('GET', `/guilds/${guildId}/roles`);
+  getGuildRoles(guildId: string): Promise<Role[]> {
+    return this.request<Role[]>('GET', `/guilds/${guildId}/roles`);
   }
 
   createGuildRole(guildId: string, data: any) {
@@ -283,22 +313,22 @@ export class RestClient {
     return this.request('DELETE', `/guilds/${guildId}/roles/${roleId}`);
   }
 
-  getAuditLogs(guildId: string, options: { limit?: number; action?: number } = {}) {
+  getAuditLogs(guildId: string, options: { limit?: number; action?: number } = {}): Promise<AuditLogEntry[]> {
     const params = new URLSearchParams();
     if (options.limit) params.set('limit', String(options.limit));
     if (options.action) params.set('action_type', String(options.action));
-    return this.request('GET', `/audit-logs/${guildId}?${params}`);
+    return this.request<AuditLogEntry[]>('GET', `/audit-logs/${guildId}?${params}`);
   }
 
   // ─────────────────────────────────────────────────────────────
   // Users
   // ─────────────────────────────────────────────────────────────
-  getCurrentUser() {
-    return this.request('GET', '/users/@me');
+  getCurrentUser(): Promise<RawUser> {
+    return this.request<RawUser>('GET', '/users/@me');
   }
 
-  getUser(userId: string) {
-    return this.request('GET', `/users/${userId}`);
+  getUser(userId: string): Promise<RawUser> {
+    return this.request<RawUser>('GET', `/users/${userId}`);
   }
 
   modifyCurrentUser(data: { username?: string; avatar?: string }) {
@@ -400,9 +430,10 @@ export class RestClient {
     }
 
     const url = `${this.baseURL}/${this.version}/channels/${channelId}/messages`;
+    const token = this.tokenManager.getToken();
     const res = await fetch(url, {
       method: 'POST',
-      headers: { Authorization: `Bot ${this.token}` }, // no Content-Type — FormData sets boundary
+      headers: { Authorization: `Bot ${token}` }, // no Content-Type — FormData sets boundary
       body: formData as any,
     });
 

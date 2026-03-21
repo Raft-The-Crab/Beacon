@@ -27,6 +27,10 @@ export function resolveApiBaseUrl(rawUrl?: string): string {
   const configured = trimTrailingSlashes(rawUrl || '')
 
   if (!configured) {
+    // Smart localhost detection: auto-target local API in dev mode
+    if (typeof window !== 'undefined' && isLocalDevHost(window.location.hostname)) {
+      return '/api'
+    }
     return 'https://api.beacon.qzz.io/api'
   }
 
@@ -61,17 +65,31 @@ export function resolveWebSocketUrl(rawUrl?: string, apiUrl?: string): string {
 
   if (typeof window !== 'undefined') {
     if (isLocalDevHost(window.location.hostname)) {
-      return 'ws://localhost:4001/gateway'
+      return '/gateway'
     }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     return `${protocol}//${window.location.host}/gateway`
   }
 
-  return 'ws://localhost:4001/gateway'
+  return 'ws://localhost:8080/gateway'
 }
 
-const configuredApiUrl = 'https://beacon-production-72fe.up.railway.app/api'
+export function resolveAssetUrl(url?: string | null): string {
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url
+  }
+  
+  const base = API_BASE_URL.replace(/\/api$/, '')
+  const path = url.startsWith('/') ? url : `/${url}`
+  return `${base}${path}`
+}
+
+const isLocal = typeof window !== 'undefined' && isLocalDevHost(window.location.hostname)
+
+const configuredApiUrl = (import.meta as any).env?.VITE_BACKEND_URL || (isLocal ? '/api' : 'https://beacon-v1-api.up.railway.app/api')
+const configuredWsUrl = (import.meta as any).env?.VITE_GATEWAY_URL || (isLocal ? '/gateway' : 'wss://beacon-v1-api.up.railway.app/gateway')
 
 export const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl)
-export const WS_BASE_URL = resolveWebSocketUrl('wss://beacon-production-72fe.up.railway.app/gateway', configuredApiUrl)
+export const WS_BASE_URL = resolveWebSocketUrl(configuredWsUrl, configuredApiUrl)

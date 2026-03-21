@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { BadgeCheck, Ban, MessageSquare, Shield, UserPlus, UserX } from 'lucide-react'
 import { Avatar } from '../ui'
 import { UserBadges } from '../ui/UserBadges'
-import type { UserBadge } from '@beacon/types'
+import type { UserBadge } from 'beacon-sdk'
 import { useTranslationStore } from '../../stores/useTranslationStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useServerStore } from '../../stores/useServerStore'
@@ -66,22 +66,35 @@ export function UserPopoverCard({
         if (!triggerRef.current) return
 
         const rect = triggerRef.current.getBoundingClientRect()
-        const popoverHeight = 340
+        const popoverHeight = 360 // Approximate height with padding
         const popoverWidth = 300
-        const viewportPadding = 12
+        const viewportPadding = 16
 
+        // Vertical Logic: Prefer Bottom, Flip to Top if no space
+        const spaceBelow = window.innerHeight - rect.bottom
         let top = rect.bottom + 8
-        if (top + popoverHeight > window.innerHeight - viewportPadding) {
+        
+        if (spaceBelow < popoverHeight + viewportPadding && rect.top > popoverHeight + viewportPadding) {
             top = rect.top - popoverHeight - 8
         }
-        if (top < viewportPadding) {
-            top = viewportPadding
+
+        // Horizontal Logic: Center on trigger
+        const triggerCenter = rect.left + rect.width / 2
+        let left = triggerCenter - popoverWidth / 2
+
+        // Clamp to Viewport
+        if (left < viewportPadding) {
+            left = viewportPadding
+        } else if (left + popoverWidth > window.innerWidth - viewportPadding) {
+            left = window.innerWidth - popoverWidth - viewportPadding
         }
 
-        const left = Math.min(
-            Math.max(rect.left, viewportPadding),
-            window.innerWidth - popoverWidth - viewportPadding,
-        )
+        // Final Clamping for Top (ensure it doesn't go offscreen)
+        if (top < viewportPadding) top = viewportPadding
+        if (top + popoverHeight > window.innerHeight - viewportPadding) {
+            // If it still doesn't fit, it's a very small screen
+            top = Math.max(viewportPadding, window.innerHeight - popoverHeight - viewportPadding)
+        }
 
         setPosition({ top, left })
         setIsOpen(!isOpen)
@@ -116,6 +129,12 @@ export function UserPopoverCard({
         document.addEventListener('keydown', handleEsc)
         return () => document.removeEventListener('keydown', handleEsc)
     }, [isOpen])
+
+    const resolveBannerUrl = (b?: string | null) => {
+        if (!b) return null
+        if (b.startsWith('http') || b.startsWith('https') || b.startsWith('data:') || b.startsWith('/')) return b
+        return `/art/banners/${b}.png`
+    }
 
     const parsedJoinedAt = joinedAt ? new Date(joinedAt) : null
     const headlineName = displayName || username
@@ -192,7 +211,7 @@ export function UserPopoverCard({
                         >
                             <div
                                 className="h-20 w-full bg-zinc-900/90"
-                                style={banner ? { backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                                style={resolveBannerUrl(banner) ? { backgroundImage: `url(${resolveBannerUrl(banner)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                             />
                             <div className="-mt-7 px-4">
                                 <Avatar src={avatar} alt={headlineName} size="lg" status={status} username={headlineName} avatarDecorationId={avatarDecorationId} />

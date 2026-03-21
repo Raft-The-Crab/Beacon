@@ -19,7 +19,11 @@ export interface ActionRowData {
 export class ActionRowBuilder {
   private components: ActionRowComponent[] = []
 
-  addComponent(component: ActionRowComponent): this {
+  static create(): ActionRowBuilder {
+    return new ActionRowBuilder()
+  }
+
+  addComponent(component: ActionRowComponent | any): this {
     if (this.components.length >= 5) {
       throw new Error('ActionRowBuilder: Maximum of 5 components per row.')
     }
@@ -27,15 +31,29 @@ export class ActionRowBuilder {
     return this
   }
 
-  addComponents(...components: ActionRowComponent[]): this {
+  addComponents(...components: (ActionRowComponent | any)[]): this {
     components.forEach(c => this.addComponent(c))
     return this
   }
 
   build(): ActionRowData {
+    return this.toJSON()
+  }
+
+  toJSON(): ActionRowData {
     if (this.components.length === 0) {
       throw new Error('ActionRowBuilder: At least one component is required.')
     }
-    return { components: [...this.components] }
+    return {
+      components: this.components.map(c => 
+        typeof c === 'object' && c !== null && 'toJSON' in c ? (c as any).toJSON() : c
+      ) 
+    } as any;
+  }
+
+  clone(): ActionRowBuilder {
+    const cloned = new ActionRowBuilder()
+    cloned.components = JSON.parse(JSON.stringify(this.components))
+    return cloned
   }
 }

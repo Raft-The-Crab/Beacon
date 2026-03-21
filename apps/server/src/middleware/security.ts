@@ -203,8 +203,9 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
   const cookieToken = req.cookies?.[CSRF_COOKIE]
 
   // Enforce CSRF for mutation requests — require both header and cookie to match.
-  if (!token || !cookieToken || token !== cookieToken) {
-    console.warn(`[CSRF] 403 Forbidden on ${req.method} ${req.path}. Header: ${!!token}, Cookie: ${!!cookieToken}, Match: ${token === cookieToken}`)
+   if (!token || !cookieToken || token !== cookieToken) {
+    const origin = req.headers.origin || 'no-origin'
+    console.warn(`[CSRF] 403 Forbidden | Method: ${req.method} | Path: ${req.path} | Origin: ${origin} | Header: ${!!token} | Cookie: ${!!cookieToken} | Match: ${token === cookieToken}`)
     res.status(403).json({ error: 'Invalid CSRF token' })
     return
   }
@@ -275,5 +276,15 @@ export async function wsRateLimit(
     return count <= limit
   } catch {
     return true // Fail open
+  }
+}
+/** Capture rich fingerprint for security tracking */
+export function getFingerprint(req: Request) {
+  return {
+    ip: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown',
+    ua: req.headers['user-agent'] || 'unknown',
+    lang: req.headers['accept-language'] || 'unknown',
+    host: req.headers.host || 'unknown',
+    ts: Date.now()
   }
 }

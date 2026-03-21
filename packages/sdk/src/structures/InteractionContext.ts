@@ -3,9 +3,11 @@
  */
 import { RestClient } from '../rest/RestClient';
 import { EmbedBuilder } from '../builders/EmbedBuilder';
+import { User } from './User';
+import { GuildMember } from './GuildMember';
 import type { ActionRowData } from '../builders/ActionRowBuilder';
 import type { CardData } from '../builders/CardBuilder';
-import { RawInteraction, InteractionOption } from './Message';
+import type { RawInteraction, InteractionOption } from '../types/index';
 
 export interface ReplyOptions {
   content?: string;
@@ -28,6 +30,7 @@ export class InteractionContext {
   private readonly _raw: RawInteraction;
   private _replied = false;
   private _deferred = false;
+  private readonly _userId: string;
 
   constructor(raw: RawInteraction, rest: RestClient) {
     this.id = raw.id;
@@ -35,6 +38,7 @@ export class InteractionContext {
     this.applicationId = raw.application_id;
     this.guildId = raw.guild_id;
     this.channelId = raw.channel_id;
+    this._userId = raw.member?.user?.id || raw.user?.id || '';
     this.commandName = raw.data?.name ?? '';
     this.commandId = raw.data?.id ?? '';
     this._rest = rest;
@@ -89,12 +93,28 @@ export class InteractionContext {
   }
 
   /** Reply to the interaction */
-  async reply(options: ReplyOptions | string): Promise<void> {
+  async reply(options: ReplyOptions | string | any): Promise<void> {
     if (this._replied) throw new Error('Already replied to this interaction');
     this._replied = true;
 
-    const data = typeof options === 'string' ? { content: options } : options;
+    let data: any = typeof options === 'string' ? { content: options } : options;
+    if (typeof options === 'object' && options !== null && 'toJSON' in options) {
+      data = options.toJSON();
+    }
+
     const flags = data.ephemeral ? 64 : 0;
+
+    // Standardize embeds and components
+    if (data.embeds) {
+      data.embeds = data.embeds.map((e: any) => 
+        typeof e === 'object' && e !== null && 'toJSON' in e ? e.toJSON() : e
+      );
+    }
+    if (data.components) {
+      data.components = data.components.map((c: any) => 
+        typeof c === 'object' && c !== null && 'toJSON' in c ? c.toJSON() : c
+      );
+    }
 
     await this._rest.request('POST', `/interactions/${this.id}/${this.token}/callback`, {
       type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
@@ -121,8 +141,23 @@ export class InteractionContext {
   }
 
   /** Edit the deferred reply or original response */
-  async editReply(options: ReplyOptions | string): Promise<void> {
-    const data = typeof options === 'string' ? { content: options } : options;
+  async editReply(options: ReplyOptions | string | any): Promise<void> {
+    let data: any = typeof options === 'string' ? { content: options } : options;
+    if (typeof options === 'object' && options !== null && 'toJSON' in options) {
+      data = options.toJSON();
+    }
+
+    // Standardize embeds and components
+    if (data.embeds) {
+      data.embeds = data.embeds.map((e: any) => 
+        typeof e === 'object' && e !== null && 'toJSON' in e ? e.toJSON() : e
+      );
+    }
+    if (data.components) {
+      data.components = data.components.map((c: any) => 
+        typeof c === 'object' && c !== null && 'toJSON' in c ? c.toJSON() : c
+      );
+    }
 
     await this._rest.request('PATCH', `/webhooks/${this.applicationId}/${this.token}/messages/@original`, {
       content: data.content,
@@ -133,15 +168,30 @@ export class InteractionContext {
   }
 
   /** Follow-up message after a reply */
-  async followUp(options: ReplyOptions | string): Promise<void> {
-    const data = typeof options === 'string' ? { content: options } : options;
-    const flags = (data as ReplyOptions).ephemeral ? 64 : 0;
+  async followUp(options: ReplyOptions | string | any): Promise<void> {
+    let data: any = typeof options === 'string' ? { content: options } : options;
+    if (typeof options === 'object' && options !== null && 'toJSON' in options) {
+      data = options.toJSON();
+    }
+    const flags = data.ephemeral ? 64 : 0;
+
+    // Standardize embeds and components
+    if (data.embeds) {
+      data.embeds = data.embeds.map((e: any) => 
+        typeof e === 'object' && e !== null && 'toJSON' in e ? e.toJSON() : e
+      );
+    }
+    if (data.components) {
+      data.components = data.components.map((c: any) => 
+        typeof c === 'object' && c !== null && 'toJSON' in c ? c.toJSON() : c
+      );
+    }
 
     await this._rest.request('POST', `/webhooks/${this.applicationId}/${this.token}`, {
       content: data.content,
-      embeds: (data as ReplyOptions).embeds,
-      components: (data as ReplyOptions).components,
-      cards: (data as ReplyOptions).cards,
+      embeds: data.embeds,
+      components: data.components,
+      cards: data.cards,
       flags,
     });
   }
@@ -200,34 +250,42 @@ export class InteractionContext {
 
   /** Get the value(s) submitted from a select menu component. */
   getSelectValues(): string[] {
-    return (this as any)._raw?.data?.values ?? [];
+    return (this._raw as any)?.data?.values ?? [];
   }
 
   /** Get the custom_id of the component that triggered this interaction. */
   get customId(): string {
-    return (this as any)._raw?.data?.custom_id ?? '';
+    return (this._raw as any)?.data?.custom_id ?? '';
   }
 
   /** The member/user who triggered the interaction. */
-  get userId(): string | undefined {
-    const raw = (this as any)._raw;
-    return raw?.member?.user?.id ?? raw?.user?.id;
+  get member(): GuildMember | null {
+    return this._raw?.member ? new GuildMember(this._rest.client, this._raw.member) : null;
+  }
+
+  get user(): User | null {
+    const userData = this._raw?.member?.user || this._raw?.user;
+    return userData ? new User(this._rest.client, userData) : null;
+  }
+
+  get userId(): string {
+    return this._userId;
   }
 
   /** Resolved users/members/channels/roles from option values. */
   get resolved(): Record<string, any> {
-    return (this as any)._raw?.data?.resolved ?? {};
+    return (this._raw as any)?.data?.resolved ?? {};
   }
 
   /** Role IDs for the member who triggered the interaction (guild interactions). */
   get memberRoleIds(): string[] {
-    const roles = (this as any)._raw?.member?.roles;
+    const roles = (this._raw as any)?.member?.roles;
     return Array.isArray(roles) ? roles : [];
   }
 
   /** Permission bitfield string for the member who triggered the interaction. */
   get memberPermissions(): string | undefined {
-    const raw = (this as any)._raw?.member?.permissions;
+    const raw = (this._raw as any)?.member?.permissions;
     if (raw === undefined || raw === null) return undefined;
     return String(raw);
   }
@@ -238,5 +296,10 @@ export class InteractionContext {
 
   get deferred(): boolean {
     return this._deferred;
+  }
+
+  /** The type of interaction (Ping = 1, Command = 2, Component = 3, Autocomplete = 4, ModalSubmit = 5) */
+  get type(): number {
+    return this._raw.type;
   }
 }

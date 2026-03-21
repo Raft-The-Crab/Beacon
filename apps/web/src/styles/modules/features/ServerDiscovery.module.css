@@ -325,7 +325,7 @@
     color: var(--text-muted);
     background: rgba(255, 255, 255, 0.05);
     padding: 4px 10px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-xl);
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -372,7 +372,7 @@
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 4px 12px rgba(0, 255, 135, 0.2);
 }
 

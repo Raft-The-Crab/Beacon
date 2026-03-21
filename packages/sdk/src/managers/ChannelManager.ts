@@ -1,10 +1,9 @@
-/**
- * ChannelManager — Fetch, create, edit channels and message history.
- */
 import { RestClient } from '../rest/RestClient';
 import { Channel } from '../structures/Channel';
 import { Message } from '../structures/Message';
 import { Collection } from '../structures/Collection';
+import { TTLCache } from '../cache/TTLCache';
+import type { FetchMessagesOptions } from '@beacon/types';
 
 export interface CreateChannelOptions {
     name: string;
@@ -27,18 +26,11 @@ export interface EditChannelOptions {
     parentId?: string | null;
 }
 
-export interface FetchMessagesOptions {
-    limit?: number;    // max 100, default 50
-    before?: string;   // message ID
-    after?: string;    // message ID
-    around?: string;   // message ID
-}
-
 export class ChannelManager {
-    public readonly cache: Collection<string, Channel>;
+    public readonly cache: TTLCache<string, Channel>;
 
     constructor(private rest: RestClient) {
-        this.cache = new Collection<string, Channel>().setMaxSize(500);
+        this.cache = new TTLCache<string, Channel>(3600000, 500); // 1 hour TTL
     }
 
     /** Fetch a channel by ID */
@@ -47,7 +39,7 @@ export class ChannelManager {
             const cached = this.cache.get(channelId);
             if (cached) return cached;
         }
-        const data = await this.rest.get(`/channels/${channelId}`);
+        const data = await this.rest.getChannel(channelId);
         const channel = new Channel(this.rest.client, data);
         this.cache.set(channelId, channel);
         return channel;
@@ -55,7 +47,7 @@ export class ChannelManager {
 
     /** Fetch all channels in a guild */
     async fetchGuildChannels(guildId: string): Promise<Collection<string, Channel>> {
-        const data = await this.rest.get(`/guilds/${guildId}/channels`);
+        const data = await this.rest.getGuildChannels(guildId);
         const channels = new Collection<string, Channel>();
         for (const raw of data) {
             const ch = new Channel(this.rest.client, raw);
@@ -89,14 +81,7 @@ export class ChannelManager {
 
     /** Fetch message history */
     async fetchMessages(channelId: string, options: FetchMessagesOptions = {}): Promise<Message[]> {
-        const params = new URLSearchParams();
-        if (options.limit) params.set('limit', String(options.limit));
-        if (options.before) params.set('before', options.before);
-        if (options.after) params.set('after', options.after);
-        if (options.around) params.set('around', options.around);
-
-        const qs = params.toString();
-        const data = await this.rest.get(`/channels/${channelId}/messages${qs ? '?' + qs : ''}`);
+        const data = await this.rest.getChannelMessages(channelId, options);
         return data.map((raw: any) => new Message(this.rest.client, raw));
     }
 
@@ -109,5 +94,26 @@ export class ChannelManager {
     /** Start typing indicator */
     async triggerTyping(channelId: string): Promise<void> {
         await this.rest.post(`/channels/${channelId}/typing`, {});
+    }
+
+    /** 
+     * Bulk delete messages (Beyond Discord: Simplified array/count handling)
+     * @param channelId The channel ID
+     * @param messageIds Array of message IDs OR a number of recent messages to delete
+     */
+    async bulkDelete(channelId: string, messages: string[] | number): Promise<void> {
+        let ids: string[] = [];
+        if (typeof messages === 'number') {
+            const msgs = await this.fetchMessages(channelId, { limit: messages });
+            ids = msgs.map(m => m.id);
+        } else {
+            ids = messages;
+        }
+
+        if (ids.length === 0) return;
+        
+        await this.rest.post(`/channels/${channelId}/messages/bulk-delete`, {
+            messages: ids
+        });
     }
 }

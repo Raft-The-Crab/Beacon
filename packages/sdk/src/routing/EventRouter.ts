@@ -25,7 +25,7 @@
  * ```
  */
 
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 
 export type RouteGuard<T> = (payload: T) => boolean | Promise<boolean>;
 export type RouteHandler<T> = (payload: T) => void | Promise<void>;

@@ -6,6 +6,7 @@ import helmet from 'helmet'
 import { connectMongo, redis } from './db'
 import { GatewayService } from './services/gateway'
 import { getProfile } from './utils/autoTune'
+import { logger } from './services/logger'
 
 const profile = getProfile('railway-gateway')
 
@@ -21,9 +22,9 @@ const wss = new WebSocketServer({ server, path: '/gateway' })
 
 const BASE_WS_PORT = Number(process.env.WS_PORT || 4001)
 if (process.env.WS_PORT) {
-    console.log(`[WS-PortCheck] Custom WS_PORT provided: ${process.env.WS_PORT}`);
+    logger.debug(`Custom WS_PORT provided: ${process.env.WS_PORT}`);
 } else {
-    console.log(`[WS-PortCheck] No WS_PORT env found, defaulting to: 4001`);
+    logger.debug(`No WS_PORT env found, defaulting to: 4001`);
 }
 
 async function listenWithPortFallback(basePort: number): Promise<number> {
@@ -53,7 +54,7 @@ async function listenWithPortFallback(basePort: number): Promise<number> {
             return await tryListen(port)
         } catch (err: any) {
             if (err?.code === 'EADDRINUSE' && !isProd) {
-                console.warn(`⚠️  Gateway port ${port} already in use, trying ${port + 1}...`)
+                logger.warn(`Gateway port ${port} already in use, trying ${port + 1}...`)
                 continue
             }
             throw err
@@ -111,13 +112,13 @@ function startKeepAlive(port: number | string) {
     const ping = async () => {
         try {
             const res = await fetch(url)
-            console.log(`[keep-alive] Railway ping ${res.ok ? '✅' : '⚠️'} (${res.status})`)
+            logger.debug(`Railway ping ${res.ok ? '✅' : '⚠️'} (${res.status})`)
         } catch (e: any) {
-            console.warn(`[keep-alive] ping failed: ${e.message}`)
+            logger.debug(`keep-alive ping failed: ${e.message}`)
         }
     }
     setInterval(ping, INTERVAL)
-    console.log(`[keep-alive] Self-pinging every 5 min → ${url}`)
+    logger.info(`Keep-alive active (Self-pinging every 5 min)`)
 }
 
 /**
@@ -133,7 +134,7 @@ function startMemoryPruner() {
         const usageRatio = mem.heapUsed / HEAP_LIMIT;
 
         if (usageRatio > MEM_THRESHOLD) {
-            console.warn(`[nano-engine] High memory detected (${Math.round(usageRatio * 100)}%). Pruning...`);
+            logger.warn(`High memory detected (${Math.round(usageRatio * 100)}%). Pruning...`);
 
             // 1. Manually trigger Node.js Garbage Collection (enabled via --expose-gc)
             if (global.gc) {
@@ -156,9 +157,9 @@ const start = async () => {
         const dbInit = async () => {
             try {
                 await connectMongo()
-                console.log('✅ Gateway MongoDB: Connected')
+                logger.success('Gateway MongoDB: Connected')
             } catch (error: any) {
-                console.warn('⚠️  Gateway MongoDB unavailable (continuing degraded):', error?.message || error)
+                logger.warn('Gateway MongoDB unavailable (continuing degraded): ' + (error?.message || error))
             }
             
             if (redis.isEnabled) {
@@ -166,13 +167,13 @@ const start = async () => {
                     .then(() => redis.ping())
                     .then((pong) => {
                         if (pong === 'PONG') {
-                            console.log('✅ Gateway Redis: Connected')
+                            logger.success('Gateway Redis: Connected')
                         } else {
-                            console.warn('⚠️  Gateway Redis ping unavailable')
+                            logger.warn('Gateway Redis ping unavailable')
                         }
                     })
                     .catch(err => {
-                        console.warn('⚠️  Gateway Redis connection failed:', err.message)
+                        logger.warn('Gateway Redis connection failed: ' + err.message)
                     })
             }
         }
@@ -182,13 +183,13 @@ const start = async () => {
         // Start background DB init after listening
         dbInit();
 
-        console.log(`\n✨ Gateway running on ws://localhost:${activePort}/gateway`)
+        logger.info(`Gateway running on ws://0.0.0.0:${activePort}/gateway`)
         if (process.env.NODE_ENV === 'production') {
             startKeepAlive(activePort)
             startMemoryPruner()
         }
-    } catch (err) {
-        console.error('❌ Failed to start Gateway:', err)
+    } catch (err: any) {
+        logger.error('Failed to start Gateway: ' + err.message)
         process.exit(1)
     }
 }

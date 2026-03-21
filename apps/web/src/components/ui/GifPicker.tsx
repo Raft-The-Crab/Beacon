@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Search, Loader } from 'lucide-react'
 import { giphyService, type GiphyGif } from '../../services/giphy'
@@ -66,7 +66,7 @@ export function GifPicker({ onSelect, onClose, anchorElement }: GifPickerProps) 
     } else {
       loadTrending()
     }
-  }, [searchQuery])
+  }, [searchQuery, isBeaconPlus])
 
   useEffect(() => {
     if (!anchorElement) {

@@ -1,6 +1,6 @@
 {
   "name": "beacon",
-  "version": "1.0.0",
+  "version": "2.5.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -31,11 +31,11 @@
     "deploy:server": "cd apps/server && railway up",
     "deploy:github": "git push origin main && git push origin --tags",
     "install:all": "npm install && cd apps/web && npm install && cd ../server && npm install && cd ../desktop && npm install && cd ../mobile && npm install",
-    "install:packages": "cd packages/types && npm install && cd ../sdk && npm install",
+    "install:packages": "cd packages/sdk && npm install",
     "prisma:generate": "cd apps/server && npx prisma generate",
     "prisma:migrate": "cd apps/server && npx prisma migrate deploy",
     "prisma:push": "cd apps/server && npx prisma db push",
-    "publish:packages": "npm run install:packages && cd packages/types && npm publish --access public ; cd ../sdk && npm publish --access public",
+    "publish:packages": "npm run install:packages && cd packages/sdk && npm publish --access public",
     "clean": "powershell -Command \"Get-ChildItem -Path . -Include node_modules,dist,build,target -Recurse -Directory | Remove-Item -Recurse -Force\"",
     "test": "echo \"No tests specified\" && exit 0"
   },
@@ -45,6 +45,7 @@
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
+    "prisma": "^7.5.0",
     "typescript": "^5.9.3"
   },
   "overrides": {
@@ -58,7 +59,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
     "bcryptjs": "^3.0.3",
-    "beacon-sdk": "^1.1.0",
+    "beacon-sdk": "file:packages/sdk",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -67,7 +68,6 @@
     "lucide-react": "^0.564.0",
     "mongoose": "^9.2.1",
     "multer": "^2.0.2",
-    "prisma": "^6.19.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.0",

@@ -1,4 +1,4 @@
-# Beacon Web Frontend Development
+# 📡 Beacon Web v2.5.0 (React)
 
 This is the React-based web frontend for Beacon, built with Vite.
 

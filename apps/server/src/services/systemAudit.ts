@@ -16,12 +16,15 @@ export enum AuditAction {
     USER_PASSWORD_CHANGE = 203,
     USER_MFA_ENABLE = 204,
     USER_MFA_DISABLE = 205,
+    USER_LOCKOUT_START = 206,
+    USER_LOCKOUT_END = 207,
 
     // Security/System Actions (300-399)
     IP_BLOCKED = 301,
     IP_UNBLOCKED = 302,
     RATE_LIMIT_HIT = 303,
     SENSITIVE_DATA_ACCESS = 310,
+    CORS_BLOCKED = 311,
 }
 
 export class SystemAuditService {
@@ -37,6 +40,7 @@ export class SystemAuditService {
         changes?: any;
         ip?: string;
         userAgent?: string;
+        fingerprint?: any;
         metadata?: any;
     }) {
         try {
@@ -51,7 +55,8 @@ export class SystemAuditService {
                         userId: params.userId || 'system',
                         guildId: params.guildId || 'system-global', // Fallback or sentinel ID
                         targetId: params.targetId || null,
-                        reason: params.reason || `IP: ${params.ip || 'unknown'} | UA: ${params.userAgent || 'unknown'}`,
+                        reason: params.reason || null,
+                        fingerprint: params.fingerprint || { ip: params.ip, ua: params.userAgent } || null,
                         changes: params.changes || params.metadata || null,
                     },
                 });

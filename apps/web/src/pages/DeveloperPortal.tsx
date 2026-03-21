@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Plus, Book, Rocket, Terminal, Trash2, Activity, Database, Zap, BarChart3, Clock, Cpu, Server, Globe, Layers } from 'lucide-react'
 import { Button } from '../components/ui/Button'
@@ -438,7 +438,7 @@ export function DeveloperPortal() {
 }
 
 function StatusRow({ icon, name, status, latency }: { icon: React.ReactNode, name: string, status: string, latency: string }) {
-  const tone = status.toLowerCase() === 'healthy' ? 'healthy' : status.toLowerCase() === 'unknown' ? 'unknown' : 'degraded'
+  const tone = String(status || '').toLowerCase() === 'healthy' ? 'healthy' : String(status || '').toLowerCase() === 'unknown' ? 'unknown' : 'degraded'
   return (
     <div className={`${styles.statusRow} glass-card`}>
       <div className={styles.statusPrimary}>

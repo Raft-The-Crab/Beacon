@@ -80,7 +80,7 @@
 .categoryButton {
   padding: 6px 7px;
   background: transparent;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.03);
   border-radius: var(--radius-md);
   font-size: 1.2rem;
   cursor: pointer;
@@ -127,8 +127,8 @@
 .emojiButton {
   padding: 5px;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-xl);
   font-size: 1.45rem;
   cursor: pointer;
   transition: background 0.12s, transform 0.1s;

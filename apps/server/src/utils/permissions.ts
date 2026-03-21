@@ -3,7 +3,7 @@
  * Based on bitwise BigInt operations for infinite scalability.
  */
 
-import { PermissionBit } from '@beacon/types';
+import { PermissionBit } from 'beacon-sdk';
 
 export const Permissions = {
     ADMINISTRATOR: BigInt(PermissionBit.ADMINISTRATOR),

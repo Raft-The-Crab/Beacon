@@ -30,17 +30,19 @@ import { generateCSRFToken } from '../middleware/security'
 const router = Router()
 
 router.get('/version', (req, res) => {
-  res.json({ version: '2.4.0', status: 'healthy', timestamp: new Date().toISOString() })
+  res.json({ version: '2.0.0', codename: 'Beacon V2', status: 'healthy', environment: process.env.NODE_ENV || 'development', timestamp: new Date().toISOString() })
 })
 
 router.get('/csrf-token', (req, res) => {
   const token = generateCSRFToken()
   const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1'
+   const isProduction = process.env.NODE_ENV === 'production'
   res.cookie('csrf_token', token, {
     httpOnly: false,
-    secure: process.env.NODE_ENV === 'production' && !isLocalhost,
-    sameSite: 'lax',
-    maxAge: 3600000
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax', // Support cross-domain cookies in production
+    maxAge: 3600000,
+    path: '/'
   })
   res.json({ token })
 })
@@ -52,10 +54,8 @@ router.use('/channels', channelsRouter)
 router.use('/friends', friendsRouter)
 router.use('/dms', dmRouter)
 router.use('/folders', folderRouter)
-router.use('/webhooks', webhookRouter)
-router.use('/audit-logs', auditLogRouter)
-router.use('/', beacoinRouter) // legacy path support: /users/@me/beacoin/*
 router.use('/beacoin', beacoinRouter)
+router.use('/', beacoinRouter) // Fallback for legacy /users/@me/beacoin
 router.use('/', notificationsRouter)
 router.use('/moderation', moderationRouter)
 router.use('/ai', aiRouter)

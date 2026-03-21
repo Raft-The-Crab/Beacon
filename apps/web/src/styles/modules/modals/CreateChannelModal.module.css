@@ -25,9 +25,9 @@
   padding: 12px;
   background: var(--bg-secondary);
   border-radius: var(--radius-xl);
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.03);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: left;
   width: 100%;
 }

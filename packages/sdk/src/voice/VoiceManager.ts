@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 import type { Client } from '../client';
 import { VoiceConnection } from './VoiceConnection';
 // Explicit import from local file

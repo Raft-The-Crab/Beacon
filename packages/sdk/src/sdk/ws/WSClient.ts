@@ -197,8 +197,8 @@ export class WSClient {
       token: this.token,
       properties: {
         os: 'web',
-        browser: 'beacon-sdk',
-        device: 'beacon-sdk'
+        browser: 'beacon.js',
+        device: 'beacon.js'
       }
     })
 

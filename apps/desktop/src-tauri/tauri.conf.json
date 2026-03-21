@@ -1,13 +1,13 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Beacon",
-  "version": "2.3.0",
+  "version": "2.0.0",
   "identifier": "com.beacon.app",
   "build": {
     "devUrl": "http://localhost:5173",
     "frontendDist": "../../web/dist",
     "beforeDevCommand": "",
-    "beforeBuildCommand": "cd ../../web && npm run build"
+    "beforeBuildCommand": ""
   },
   "bundle": {
     "active": true,
@@ -93,7 +93,6 @@
         "maximizable": true,
         "minimizable": true,
         "closable": true,
-        "fileDropEnabled": true,
         "url": "index.html"
       }
     ],
@@ -135,7 +134,7 @@
         "https://res.cloudinary.com/*",
         "https://*.mongodb.net/*",
         "https://redis-12216.c51.ap-southeast-2-1.ec2.cloud.redislabs.com/*",
-        "https://discord.com/api/*",
+        "https://beacon-production-72fe.up.railway.app/*",
         "wss://*"
       ]
     },

@@ -2,35 +2,43 @@ import { useMemo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import styles from '../../styles/modules/animations/CelebrationAnimation.module.css'
 
-interface Particle {
+interface Token {
   id: number
-  left: number
+  xFinal: number
+  yApex: number
+  yFinal: number
   delay: number
   duration: number
+  rotationX: number
+  rotationY: number
+  rotationZ: number
+  scale: number
   color: string
-  shape: 'square' | 'circle' | 'star' | 'ribbon'
-  size: number
-  xDrift: number
-  rotation: number
 }
 
 export function CelebrationAnimation() {
   const prefersReducedMotion = useReducedMotion()
 
-  const particles = useMemo<Particle[]>(() => {
-    const colors = ['#4f83ff', '#79a8ff', '#f0b232', '#23a55a', '#ff875f', '#00b0f4', '#ffffff', '#ffd166']
-    const shapes: Particle['shape'][] = ['square', 'circle', 'star', 'ribbon']
-    return Array.from({ length: prefersReducedMotion ? 24 : 70 }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      delay: Math.random() * 0.7,
-      duration: 2 + Math.random() * 1.5,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      shape: shapes[Math.floor(Math.random() * shapes.length)],
-      size: 6 + Math.random() * 7,
-      xDrift: (Math.random() - 0.5) * (prefersReducedMotion ? 160 : 320),
-      rotation: Math.random() * 760,
-    }))
+  const tokens = useMemo<Token[]>(() => {
+    return Array.from({ length: prefersReducedMotion ? 12 : 60 }, (_, i) => {
+      const angle = (Math.random() * Math.PI) + Math.PI; // Top half explosion
+      const distance = 200 + Math.random() * 600
+      const apex = -200 - Math.random() * 400
+      
+      return {
+        id: i,
+        xFinal: Math.cos(angle) * distance,
+        yApex: apex,
+        yFinal: 800 + Math.random() * 400, // Fall out of screen
+        delay: Math.random() * 0.3, // Initial burst
+        duration: 2 + Math.random() * 1.5,
+        rotationX: Math.random() * 1440,
+        rotationY: Math.random() * 1440,
+        rotationZ: Math.random() * 720,
+        scale: 0.8 + Math.random() * 1.5,
+        color: ['#f0b232', '#ffaa00', '#ffd166', '#ffffff'][Math.floor(Math.random() * 4)]
+      }
+    })
   }, [prefersReducedMotion])
 
   return (
@@ -40,82 +48,102 @@ export function CelebrationAnimation() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
       className={styles.container}
+      style={{ perspective: 1200 }}
     >
-      {/* Radial glow burst */}
+      {/* Central Supernova Burst */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.4 }}
+        initial={{ opacity: 0, scale: 0 }}
         animate={
           prefersReducedMotion
             ? { opacity: [0, 0.45, 0], scale: [0.8, 1.15, 1.3] }
-            : { opacity: [0, 0.85, 0], scale: [0.4, 1.8, 2.4] }
+            : { opacity: [0, 1, 0.8, 0], scale: [0, 2.5, 4, 0] }
         }
-        transition={{ duration: prefersReducedMotion ? 0.35 : 0.7, ease: 'easeOut' }}
+        transition={{ duration: prefersReducedMotion ? 0.35 : 1.2, ease: 'easeOut' }}
         className={styles.glowBurst}
       />
 
-      {/* Inner ring expand */}
-      <motion.div
-        initial={{ opacity: 1, scale: 0, borderWidth: 4 }}
-        animate={{ opacity: 0, scale: prefersReducedMotion ? 1.7 : 3.5, borderWidth: 1 }}
-        transition={{ duration: prefersReducedMotion ? 0.4 : 0.9, ease: 'easeOut' }}
-        className={styles.burstRing}
-      />
-
-      {/* Second ring, delayed */}
-      <motion.div
-        initial={{ opacity: 1, scale: 0, borderWidth: 3 }}
-        animate={{ opacity: 0, scale: prefersReducedMotion ? 1.5 : 2.8, borderWidth: 1 }}
-        transition={{ duration: prefersReducedMotion ? 0.35 : 0.9, delay: prefersReducedMotion ? 0.05 : 0.15, ease: 'easeOut' }}
-        className={styles.burstRingAlt}
-      />
-
-      {/* Confetti / particle shower */}
-      {particles.map((p) => (
+      {/* Outer Shockwaves */}
+      {[0, 1, 2].map((i) => (
         <motion.div
-          key={p.id}
-          className={`${styles.confetti} ${styles[p.shape]}`}
-          initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 0.8 }}
-          animate={{
-            x: p.xDrift,
-            y: (prefersReducedMotion ? 420 : 640) + Math.random() * 170,
-            opacity: [1, 1, 0],
-            rotate: p.rotation,
-            scale: prefersReducedMotion ? [0.8, 0.9, 0.8] : [0.8, 1.1, 0.7],
-          }}
-          transition={{
-            duration: p.duration,
-            delay: p.delay,
-            ease: 'easeOut',
-          }}
-          style={{
-            left: `${p.left}%`,
-            backgroundColor: p.shape !== 'star' ? p.color : 'transparent',
-            color: p.color,
-            width: p.size,
-            height: p.shape === 'ribbon' ? p.size * 3 : p.size,
-            position: 'absolute',
-            top: '45%',
-          }}
+          key={`shockwave-${i}`}
+          initial={{ opacity: 1, scale: 0, borderWidth: 10 - i * 2 }}
+          animate={{ opacity: 0, scale: 4 + i * 2, borderWidth: 1 }}
+          transition={{ duration: 0.8 + i * 0.2, delay: i * 0.1, ease: 'easeOut' }}
+          className={styles.burstRing}
         />
       ))}
 
-      {/* Crown sparkle cluster */}
-      {[0, 1, 2, 3, 4].map((i) => (
+      {/* 3D Physical Tokens */}
+      {tokens.map((t) => (
         <motion.div
-          key={`sparkle-${i}`}
-          className={styles.sparkle}
-          initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
-          animate={{
-            opacity: [1, 1, 0],
-            scale: prefersReducedMotion ? [0, 1.05, 0] : [0, 1.4, 0],
-            x: Math.cos((i / 5) * Math.PI * 2) * (prefersReducedMotion ? 46 : 70),
-            y: Math.sin((i / 5) * Math.PI * 2) * (prefersReducedMotion ? 46 : 70),
+          key={`token-${t.id}`}
+          className={styles.confetti}
+          initial={{ x: 0, y: 0, opacity: 1, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 0 }}
+          animate={
+            prefersReducedMotion
+              ? { opacity: 0 }
+              : {
+                  x: [0, t.xFinal * 0.8, t.xFinal], 
+                  y: [0, t.yApex, t.yFinal], // Arced gravity fall
+                  opacity: [0, 1, 1, 0],
+                  scale: [0, t.scale, t.scale, t.scale * 0.8],
+                  rotateX: t.rotationX,
+                  rotateY: t.rotationY,
+                  rotateZ: t.rotationZ,
+                }
+          }
+          transition={{
+            duration: t.duration,
+            delay: t.delay,
+            ease: "circIn", // Accelerates downward falling
+            x: { ease: "linear", duration: t.duration, delay: t.delay }, // Horizontal drift is linear
+            y: { ease: "circIn", duration: t.duration, delay: t.delay }, // Gravity effect
+            rotateX: { duration: t.duration, ease: 'linear' },
+            rotateY: { duration: t.duration, ease: 'linear' },
+            rotateZ: { duration: t.duration, ease: 'linear' }
           }}
-          transition={{ duration: prefersReducedMotion ? 0.45 : 0.9, delay: i * 0.06, ease: 'easeOut' }}
+          style={{
+            position: 'absolute',
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            backgroundColor: t.color,
+            border: '4px solid rgba(255,255,255,0.4)',
+            boxShadow: `0 0 15px ${t.color}, inset 0 0 10px rgba(0,0,0,0.2)`,
+            transformStyle: 'preserve-3d',
+            left: 'calc(50% - 16px)',
+            top: 'calc(50% - 16px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'rgba(0,0,0,0.3)',
+            fontWeight: 900,
+            fontSize: 18,
+          }}
         >
-          {['✨', '⭐', '💫', '🌟', '✦'][i]}
+          {/* Beacon+ Plus sign on the coin */}
+          +
         </motion.div>
       ))}
+
+      {/* Epic Title Reveal */}
+      <motion.div
+        initial={{ scale: 2, filter: 'blur(20px)', opacity: 0, y: -100 }}
+        animate={{ scale: 1, filter: 'blur(0px)', opacity: 1, y: -50 }}
+        transition={{ type: 'spring', damping: 12, stiffness: 100, delay: 0.2 }}
+        className={styles.rewardLabel}
+        style={{ position: 'absolute', top: '50%', width: '100%', textAlign: 'center', pointerEvents: 'none', zIndex: 100 }}
+      >
+        <h1 style={{ fontSize: 64, color: 'white', textShadow: '0 0 30px #f0b232', margin: 0 }}>BEACON+</h1>
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 1 }}
+          style={{ fontSize: 24, color: '#f0b232', fontWeight: 'bold' }}
+        >
+          ACTIVATED
+        </motion.p>
+      </motion.div>
     </motion.div>
   )
 }

@@ -13,7 +13,7 @@ export function UserPresenceWidget({ activities, compact }: UserPresenceWidgetPr
     return (
         <div className={`${styles.container} ${compact ? styles.compact : ''}`}>
             {activities.map((activity, index) => {
-                const isSpotify = activity.name.toLowerCase() === 'spotify'
+                const isSpotify = String(activity.name || '').toLowerCase() === 'spotify'
                 const isGame = activity.type === 'playing'
 
                 return (

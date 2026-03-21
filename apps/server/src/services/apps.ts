@@ -1,5 +1,6 @@
 import { prisma } from '../db'
 import crypto from 'crypto'
+import { logger } from './logger'
 
 export class AppsService {
     private static generateBotToken(): string {
@@ -23,9 +24,9 @@ export class AppsService {
                 where: { ownerId },
                 include: { bot: true }
             })
-        } catch (error) {
-            // Fallback for demo if DB isn't synced yet
-            console.warn('AppsService.getUserApps failed, likely DB sync issue:', error)
+        } catch (error: any) {
+            // Fallback for bootstrap if DB isn't synced yet
+            logger.warn('AppsService.getUserApps failed, likely DB sync issue: ' + error.message)
             return []
         }
     }

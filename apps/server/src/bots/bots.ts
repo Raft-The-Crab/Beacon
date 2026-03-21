@@ -9,6 +9,8 @@ export interface BotContext {
     content?: string; // For onMessage
     commandName?: string; // For onCommand
     options?: any[]; // For onCommand
+    targetId?: string; // For Context Menu commands
+    resolved?: any; // For user/channel/role options
     interactionData?: any;
     sourceMessageId?: string;
     history: string[];
@@ -113,6 +115,7 @@ export interface SlashCommandOption {
 export interface SlashCommand {
     name: string;
     description: string;
+    type?: 1 | 2 | 3; // 1: CHAT_INPUT, 2: USER, 3: MESSAGE
     options?: SlashCommandOption[];
     cooldownMs?: number; // per-user cooldown
     requiredRoleIds?: string[];
@@ -257,6 +260,16 @@ export abstract class BaseBot {
     async onComponentInteraction(_data: any, _context: BotContext): Promise<BotResponse | null> {
         return null;
     }
+
+    /** Handle a modal form submission */
+    async onModalSubmit(_data: any, _context: BotContext): Promise<BotResponse | null> {
+        return null;
+    }
+
+    /** Handle autocomplete for a slash command option */
+    async onAutocomplete(_data: any, _context: BotContext): Promise<BotResponse | null> {
+        return null;
+    }
 }
 
 // ─── Bot Framework ───────────────────────────────────────────────────────────
@@ -351,6 +364,8 @@ export class BotFramework {
             memberPermissions: interaction.member?.permissions !== undefined ? BigInt(interaction.member.permissions) : undefined,
             interactionData: interaction.data,
             sourceMessageId: interaction.message?.id,
+            targetId: interaction.data?.target_id,
+            resolved: interaction.data?.resolved,
             history: [],
             commandName: interaction.data?.name,
             options: interaction.data?.options,
@@ -365,62 +380,91 @@ export class BotFramework {
             }
         }
 
-        // 2. Native bot commands
+        // 2. Native bot commands (APPLICATION_COMMAND = 2)
         if (interaction.type === 2) {
+            const data = interaction.data;
+            if (!data) return null;
+
+            let currentPath = [data.name];
+            let options = Array.isArray(data.options) ? data.options : [];
             const args: Record<string, any> = {};
-            const options = Array.isArray(interaction.data?.options) ? interaction.data.options : [];
-            for (const opt of options) {
-                if (opt?.name) {
-                    args[opt.name] = opt.value;
+
+            // Recursive function to parse subcommands and collect arguments
+            const parseOptions = (opts: any[]) => {
+                for (const opt of opts) {
+                    if (opt.type === 1 || opt.type === 2) { // SUB_COMMAND or SUB_COMMAND_GROUP
+                        currentPath.push(opt.name);
+                        if (Array.isArray(opt.options)) {
+                            parseOptions(opt.options);
+                        }
+                    } else {
+                        args[opt.name] = opt.value;
+                    }
                 }
-            }
+            };
 
-            const cmd = bot.commands.get(interaction.data.name);
-            if (!cmd) {
-                return null;
-            }
+            parseOptions(options);
 
+            // Handle Context Menus (USER=2, MESSAGE=3)
+            const commandType = data.type || 1; // Default to CHAT_INPUT
+            const fullCommandName = currentPath.join(' ');
+            
+            // For User/Message commands, the "name" is the command name, but it has no options usually
+            // but we need to find the command in our map.
+            const cmd = bot.commands.get(data.name);
+            if (!cmd) return null;
+
+            // Permission & Cooldown checks
             if (cmd.requiredRoleIds?.length) {
                 const memberRoles = new Set(context.memberRoleIds || []);
                 const hasRole = cmd.requiredRoleIds.some(roleId => memberRoles.has(roleId));
                 if (!hasRole) {
-                    return {
-                        content: `❌ You are missing the required role to run \`/${interaction.data.name}\`.`,
-                        ephemeral: true,
-                    };
+                    return { content: `❌ Missing required roles for \`/${data.name}\`.`, ephemeral: true };
                 }
             }
 
             if (cmd.requiredPermissions?.length) {
                 const memberPerms = context.memberPermissions ?? 0n;
-                const hasAllPerms = cmd.requiredPermissions.every((perm) => {
-                    const required = BigInt(perm as any);
-                    return (memberPerms & required) === required;
-                });
+                const hasAllPerms = cmd.requiredPermissions.every((perm) => (memberPerms & BigInt(perm as any)) === BigInt(perm as any));
                 if (!hasAllPerms) {
-                    return {
-                        content: `❌ You are missing the required permissions to run \`/${interaction.data.name}\`.`,
-                        ephemeral: true,
-                    };
+                    return { content: `❌ Missing required permissions for \`/${data.name}\`.`, ephemeral: true };
                 }
             }
 
-            if (cmd.cooldownMs && bot.isOnCooldown(interaction.data.name, context.userId)) {
-                return {
-                    content: `⏳ Command \`/${interaction.data.name}\` is on cooldown. Try again shortly.`,
-                    ephemeral: true,
-                };
+            if (cmd.cooldownMs && bot.isOnCooldown(data.name, context.userId)) {
+                return { content: `⏳ Command \`/${data.name}\` is on cooldown.`, ephemeral: true };
+            }
+
+            // Set sub-command info in context if applicable
+            if (currentPath.length > 1) {
+                (context as any).subCommand = currentPath[currentPath.length - 1];
+                (context as any).subCommandGroup = currentPath.length > 2 ? currentPath[1] : undefined;
             }
 
             const response = await cmd.handler(args, context);
-            if (cmd.cooldownMs) {
-                bot.setCooldown(interaction.data.name, context.userId, cmd.cooldownMs);
-            }
+            if (cmd.cooldownMs) bot.setCooldown(data.name, context.userId, cmd.cooldownMs);
             return response;
         }
 
+        // 3. Component interaction (type 3) — buttons, selects
         if (interaction.type === 3) {
             return bot.onComponentInteraction(interaction.data, context);
+        }
+
+        // 4. Autocomplete (type 4)
+        if (interaction.type === 4) {
+            const result = await bot.onAutocomplete(interaction.data, context);
+            if (result) {
+                // Tag response so the controller knows this is an autocomplete result
+                (result as any)._responseType = 8; // APPLICATION_COMMAND_AUTOCOMPLETE_RESULT
+                (result as any)._choices = (result as any).choices || [];
+            }
+            return result;
+        }
+
+        // 5. Modal submit (type 5)
+        if (interaction.type === 5) {
+            return bot.onModalSubmit(interaction.data, context);
         }
 
         return null;

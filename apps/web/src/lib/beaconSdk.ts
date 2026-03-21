@@ -6,14 +6,10 @@ const resolvedWsUrl = resolveApiClientGatewayUrl(WS_BASE_URL, resolvedApiUrl)
 
 export function createWebSdkClient(token?: string): BeaconClient {
   return new BeaconClient({
-    apiUrl: resolvedApiUrl,
-    wsUrl: resolvedWsUrl,
-    token,
-    reconnect: true,
-    reconnectAttempts: 8,
-    reconnectDelay: 1500,
-    requestTimeout: 15000,
-    userAgent: 'BeaconWebSDK/1.0',
+    apiURL: resolvedApiUrl,
+    gatewayURL: resolvedWsUrl,
+    token: token || '',
+    debug: true
   })
 }
 

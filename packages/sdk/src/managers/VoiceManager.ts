@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 import { Gateway } from '../gateway';
 
 export class VoiceManager extends EventEmitter {

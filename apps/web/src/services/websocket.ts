@@ -1,4 +1,4 @@
-import type { WSEventType, WSPayload } from '@beacon/types'
+import type { WSEventType, WSPayload } from 'beacon-sdk'
 import { API_CONFIG } from '../config/api'
 
 // Conditional Tauri types
@@ -221,7 +221,8 @@ export class BeaconWebSocket {
         channel_id: channelId,
         self_mute: !!options.mute,
         self_deaf: !!options.deaf,
-        self_video: !!options.video
+        self_video: !!options.video,
+        is_beacon_plus: !!(options as any).isBeaconPlus
       }
     })
   }

@@ -6,74 +6,59 @@
 export * from './types/index';
 
 // SDK API Client (Consolidated)
-export { BeaconClient } from './sdk/BeaconClient';
 export { BeaconEventEmitter as SDKEventEmitter } from './sdk/BeaconEventEmitter';
-export { BotFramework, pingCommand, helpCommand, announceCommand, waitCommand } from './sdk/bot';
-export type {
-  BotCommand,
-  BotContext,
-  BotFrameworkApi,
-  BotFrameworkOptions,
-  BotMiddleware,
-  BotPlugin,
-  BotScheduleJob,
-  CommandOption as BotCommandOption,
-} from './sdk/bot';
-export type { MusicMetadata } from './types/index';
 
 // Core bot client
-export { Client } from './client';
+export { Client, type Plugin, Client as BeaconClient } from './client';
 export { AIClient, type AIClientOptions } from './enhanced';
 
 // Gateway
-export { Gateway, Intents, DEFAULT_INTENTS, type GatewayOptions } from './gateway';
+export { Intents, DEFAULT_INTENTS, type GatewayOptions, type ConnectionState } from './gateway';
 
 // REST
 export { RestClient, type RestClientOptions } from './rest/RestClient';
 export { resolveApiClientBaseUrl, resolveApiClientGatewayUrl } from './connection';
 
 // Builders
-export { CommandBuilder, CommandOptionBuilder, CommandOptionType, type Command, type CommandOption } from './builders/CommandBuilder';
-export { EmbedBuilder, type Embed } from './builders/EmbedBuilder';
-export { ButtonBuilder, type ButtonData, type ButtonStyle } from './builders/ButtonBuilder';
-export { SelectMenuBuilder, type SelectMenuData, type SelectMenuOption } from './builders/SelectMenuBuilder';
-export { ActionRowBuilder, type ActionRowData, type ActionRowComponent } from './builders/ActionRowBuilder';
-export { ModalBuilder, TextInputBuilder, type ModalData, type TextInputData } from './builders/ModalBuilder';
-export { PollBuilder, type PollData, type PollOption } from './builders/PollBuilder';
-export { CardBuilder, type CardData, type CardField } from './builders/CardBuilder';
-export { FormBuilder, type FormData, type FormField } from './builders/FormBuilder';
-export { PaginatorBuilder, type PaginatorData, type PaginatorPage } from './builders/PaginatorBuilder';
-export { TimelineBuilder, type TimelineData, type TimelineEvent } from './builders/TimelineBuilder';
-export { TableBuilder, type TableData, type TableColumn, type TableRow } from './builders/TableBuilder';
-export { DropdownBuilder, type DropdownData, type DropdownOption, type DropdownType } from './builders/DropdownBuilder';
+export * from './builders/index';
 
 // Structures
 export { Collection } from './structures/Collection';
-export { InteractionContext, type ReplyOptions } from './structures/InteractionContext';
-export { Collector, type CollectorOptions } from './structures/Collector';
-export type {
-  RawMessage,
-  RawUser,
-  RawGuild,
-  RawChannel,
-  RawRole,
-  RawMember,
-  RawAttachment,
-  RawReaction,
-  RawInteraction,
-  InteractionOption,
-} from './structures/Message';
 
 // Utility Managers
-export { VoiceManager } from './managers/VoiceManager';
+export { VoiceManager } from './voice/VoiceManager';
 export { GuildManager, type CreateGuildOptions, type EditGuildOptions } from './managers/GuildManager';
-export { ChannelManager, type CreateChannelOptions, type EditChannelOptions, type FetchMessagesOptions } from './managers/ChannelManager';
-export { MemberManager, type GuildMember, type ListMembersOptions } from './managers/MemberManager';
+export { ChannelManager, type CreateChannelOptions, type EditChannelOptions } from './managers/ChannelManager';
+export { MemberManager, type ListMembersOptions } from './managers/MemberManager';
+export { UserManager } from './managers/UserManager';
 export { PresenceManager, type Presence, type Activity } from './managers/PresenceManager';
+export { RoleManager, type RoleData } from './managers/RoleManager';
+export { GuildMemberManager } from './managers/GuildMemberManager';
+export { GuildChannelManager } from './managers/GuildChannelManager';
+export { GuildEmojiManager, type EmojiData } from './managers/GuildEmojiManager';
+export { AuditLogManager, type AuditLogFetchOptions } from './managers/AuditLogManager';
+export { GuildScheduledEventManager } from './managers/GuildScheduledEventManager';
 export { E2EEContext } from './structures/E2EEContext';
+
+// Structures
+export { Guild } from './structures/Guild';
+export { Channel } from './structures/Channel';
+export { User } from './structures/User';
+export { Message } from './structures/Message';
+export { GuildMember } from './structures/GuildMember';
+export { VoiceState } from './structures/VoiceState';
+export { InteractionContext } from './structures/InteractionContext';
+export { Collector, type CollectorOptions } from './structures/Collector';
+export { ReactionCollector, type ReactionData } from './structures/ReactionCollector';
+export { ComponentCollector } from './structures/ComponentCollector';
+export { VoiceStateCollector } from './structures/VoiceStateCollector';
+export { ModalCollector, type ModalCollectorOptions } from './structures/ModalCollector';
+export { AuditLog, AuditLogEntry } from './structures/AuditLog';
+export { ScheduledEvent } from './structures/ScheduledEvent';
 
 // Utilities
 export { Permissions, PermissionFlags, type PermissionFlagValues } from './utils/Permissions';
+export { IntentCalculator } from './utils/IntentCalculator';
 export { BeaconEventEmitter, type BeaconEvents } from './events/EventEmitter';
 
 // ─── Advanced SDK Systems ───────────────────────────────────────────────────
@@ -90,6 +75,10 @@ export {
   TimeoutError,
   UploadError,
 } from './errors';
+
+// Security (Supremacy Phase)
+export { RequestSigner } from './security/RequestSigner';
+export { TokenManager, type TokenInfo } from './security/TokenManager';
 
 // Cooldown management (per-user/channel/guild/global)
 export { CooldownManager, type CooldownOptions, type CooldownScope } from './cooldowns/CooldownManager';
@@ -147,8 +136,10 @@ export {
   type TaskFn,
 } from './tasks/ScheduledTask';
 
+export { InviteManager } from './managers/InviteManager';
+export { GuildInviteManager } from './managers/GuildInviteManager';
+export { PermissionOverwrite } from './structures/PermissionOverwrite';
+export { Invite } from './structures/Invite';
+
 // Event router (pattern-based gateway event routing)
 export { EventRouter, type RouteGuard, type RouteHandler } from './routing/EventRouter';
-
-// Plugin system types
-export type { Plugin } from './client';

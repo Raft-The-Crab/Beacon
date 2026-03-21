@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Search } from 'lucide-react'
 import { Input } from './Input'
@@ -81,7 +81,7 @@ export function EmojiPicker({ onSelect, onClose, anchorElement }: EmojiPickerPro
     if (searchQuery) {
       const filtered = emojis.filter(emoji =>
         emoji.includes(searchQuery) ||
-        category.toLowerCase().includes(searchQuery.toLowerCase())
+        String(category || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
       if (filtered.length > 0) {
         acc[category] = filtered
@@ -119,8 +119,8 @@ export function EmojiPicker({ onSelect, onClose, anchorElement }: EmojiPickerPro
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Select Reaction</div>
           <div className={styles.superToggle} onClick={() => setIsSuperMode(!isSuperMode)}>
             <div className={`${styles.toggleKnob} ${isSuperMode ? styles.toggleOn : ''}`} />
-            <span style={{ fontSize: 11, marginLeft: 28, color: isSuperMode ? 'var(--brand-experiment)' : 'var(--text-muted)' }}>
-              {isSuperMode ? 'SoundMoji' : 'Normal'}
+            <span style={{ fontSize: 11, marginLeft: 28, color: isSuperMode ? 'var(--beacon-brand)' : 'var(--text-muted)' }}>
+              {isSuperMode ? 'Super Reaction' : 'Normal'}
             </span>
           </div>
         </div>
@@ -135,24 +135,6 @@ export function EmojiPicker({ onSelect, onClose, anchorElement }: EmojiPickerPro
           />
         </div>
       </div>
-
-      {!searchQuery && (
-        <div className={styles.quickReactions}>
-          <div className={styles.sectionTitle}>Quick Reactions</div>
-          <div className={styles.quickGrid}>
-            {customReactions.map((emoji) => (
-              <button
-                key={emoji}
-                className={styles.emojiButton}
-                onClick={() => handleEmojiSelect(emoji)}
-                title={emoji}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {!searchQuery && (
         <div className={styles.categories}>
@@ -188,6 +170,24 @@ export function EmojiPicker({ onSelect, onClose, anchorElement }: EmojiPickerPro
           </div>
         ))}
       </div>
+
+      {!searchQuery && (
+        <div className={styles.quickReactions}>
+          <div className={styles.sectionTitle}>Quick Reactions</div>
+          <div className={styles.quickGrid}>
+            {customReactions.map((emoji) => (
+              <button
+                key={emoji}
+                className={styles.emojiButton}
+                onClick={() => handleEmojiSelect(emoji)}
+                title={emoji}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 

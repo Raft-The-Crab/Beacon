@@ -1,13 +1,15 @@
 import React, { useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Smile, Edit, Trash2, File, Pin, Shield, Languages, Flag } from 'lucide-react'
-import type { UserBadge } from '@beacon/types'
-import { Avatar, Tooltip, EmojiPicker } from '../ui'
+import type { UserBadge } from 'beacon-sdk'
+import { Avatar, Tooltip, EmojiPicker, ImageLightbox, Select } from '../ui'
 import { BotTag } from '../ui/UserBadges'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useUIStore } from '../../stores/useUIStore'
 import { MarkdownRenderer } from '../ui/MarkdownRenderer'
 import { useProfileArtStore } from '../../stores/useProfileArtStore'
 import { UserPopoverCard } from './UserPopoverCard'
+import { resolveAssetUrl } from '../../config/endpoints'
 import styles from '../../styles/modules/features/MessageItem.module.css'
 
 export interface MessageReaction {
@@ -118,6 +120,7 @@ export const MessageItem = React.memo(function MessageItem({
   const actionsReactionButtonRef = useRef<HTMLButtonElement>(null)
   const [translatedContent, setTranslatedContent] = useState<string | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const { user } = useAuthStore()
 
   // Normalize reaction shapes from optimistic client, grouped gateway payloads, and raw DB rows.
@@ -199,13 +202,19 @@ export const MessageItem = React.memo(function MessageItem({
     : ''
 
   return (
-    <div
+    <motion.div
+      layout="position"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
       className={`
         ${styles.message} 
         ${showActions ? styles.withActions : ''} 
         ${isContinuing ? styles.continuing : ''} 
         ${isMentioned ? styles.mentioned : ''}
       `}
+      data-author-id={authorId}
       onMouseEnter={() => {/* Trigger chromatic aberration in CSS */ }}
     >
       {!isContinuing ? (
@@ -330,21 +339,71 @@ export const MessageItem = React.memo(function MessageItem({
           <div className={styles.attachments}>
             {attachments?.map((attachment) => (
               <div key={attachment.id} className={styles.attachment}>
-                {attachment.contentType?.startsWith('image/') ? (
-                  <img
-                    src={attachment.url}
-                    alt={attachment.filename}
-                    className={styles.imageAttachment}
-                    onClick={() => window.open(attachment.url, '_blank')}
-                  />
-                ) : (
-                  <div className={styles.fileAttachment}>
-                    <File size={20} />
-                    <a href={attachment.url} target="_blank" rel="noopener noreferrer">
-                      {attachment.filename}
-                    </a>
-                  </div>
-                )}
+                {(() => {
+                  const rawUrl = attachment.url || ''
+                  const url = resolveAssetUrl(rawUrl)
+                  const lowerUrl = url.toLowerCase()
+                  const contentType = (attachment.contentType || '').toLowerCase()
+                  
+                  // Augmented detection logic
+                  const isVideo = contentType.startsWith('video/') || 
+                                 /\.(mp4|webm|mov|m4v|mkv)$/i.test(lowerUrl) ||
+                                 /\.(mp4|webm|mov|m4v|mkv)$/i.test(attachment.filename?.toLowerCase() || '')
+                  
+                  const isAudio = contentType.startsWith('audio/') || 
+                                 /\.(mp3|wav|ogg|m4a|aac|flac|m4b)$/i.test(lowerUrl) ||
+                                 /\.(mp3|wav|ogg|m4a|aac|flac|m4b)$/i.test(attachment.filename?.toLowerCase() || '')
+                                 
+                  const isImage = contentType.startsWith('image/') || 
+                                 /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i.test(lowerUrl) ||
+                                 /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i.test(attachment.filename?.toLowerCase() || '')
+
+                  if (isImage) {
+                     return (
+                      <img
+                        src={url}
+                        alt={attachment.filename}
+                        className={styles.imageAttachment}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setLightboxSrc(url)
+                        }}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    )
+                  }
+
+                  if (isVideo) {
+                     return (
+                      <video
+                        src={url}
+                        controls
+                        className={styles.videoAttachment}
+                        preload="metadata"
+                      />
+                    )
+                  }
+
+                  if (isAudio) {
+                     return (
+                      <audio
+                        src={url}
+                        controls
+                        className={styles.audioAttachment}
+                        preload="metadata"
+                      />
+                    )
+                  }
+
+                  return (
+                    <div className={styles.fileAttachment}>
+                      <File size={20} />
+                       <a href={url} target="_blank" rel="noopener noreferrer">
+                        {attachment.filename}
+                      </a>
+                    </div>
+                  )
+                })()}
               </div>
             ))}
           </div>
@@ -386,8 +445,7 @@ export const MessageItem = React.memo(function MessageItem({
 
                       return (
                         <div key={j} className={styles.selectWrapper}>
-                          <select
-                            className={styles.selectMenu}
+                          <Select
                             disabled={comp.disabled || options.length === 0}
                             multiple={isMultiSelect}
                             defaultValue={isMultiSelect ? [] : ''}
@@ -410,7 +468,7 @@ export const MessageItem = React.memo(function MessageItem({
                                 {option.label}
                               </option>
                             ))}
-                          </select>
+                          </Select>
                         </div>
                       )
                     }
@@ -487,24 +545,7 @@ export const MessageItem = React.memo(function MessageItem({
           {/* Quick Reactions */}
           {onReaction && (
             <>
-              <button className={styles.actionBtn} onClick={() => onReaction('👍', false)} title="Add 👍">
-                👍
-              </button>
-              <button className={styles.actionBtn} onClick={() => onReaction('❤️', false)} title="Add ❤️">
-                ❤️
-              </button>
-              <button className={styles.actionBtn} onClick={() => onReaction('😂', false)} title="Add 😂">
-                😂
-              </button>
-              <button className={styles.actionBtn} onClick={() => onReaction('😮', false)} title="Add 😮">
-                😮
-              </button>
-              <button className={styles.actionBtn} onClick={() => onReaction('😢', false)} title="Add 😢">
-                😢
-              </button>
-              <button className={styles.actionBtn} onClick={() => onReaction('🔥', false)} title="Add 🔥">
-                🔥
-              </button>
+              {/* Removed hardcoded duplicate quick reactions */}
               <div className={styles.actionsDivider} />
               <Tooltip content="More reactions" position="top">
                 <button
@@ -638,7 +679,13 @@ export const MessageItem = React.memo(function MessageItem({
           </Tooltip>
         </div>
       )}
-    </div>
+
+      <ImageLightbox 
+        isOpen={!!lightboxSrc} 
+        src={lightboxSrc || ''} 
+        onClose={() => setLightboxSrc(null)} 
+      />
+    </motion.div>
   )
 }, (prevProps, nextProps) => {
   return (

@@ -26,6 +26,10 @@ export interface TimelineData {
 export class TimelineBuilder {
   private data: TimelineData = { events: [] }
 
+  static create(): TimelineBuilder {
+    return new TimelineBuilder()
+  }
+
   setTitle(title: string): this {
     this.data.title = title
     return this
@@ -53,7 +57,17 @@ export class TimelineBuilder {
   }
 
   build(): TimelineData {
+    return this.toJSON()
+  }
+
+  toJSON(): TimelineData {
     if (this.data.events.length === 0) throw new Error('TimelineBuilder: At least one event is required.')
     return { ...this.data, events: [...this.data.events] }
+  }
+
+  clone(): TimelineBuilder {
+    const cloned = new TimelineBuilder()
+    cloned.data = JSON.parse(JSON.stringify(this.data))
+    return cloned
   }
 }

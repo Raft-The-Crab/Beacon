@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { MessageReaction } from '../components/features/MessageItem'
-import { PresenceStatus } from '@beacon/types'
+import { PresenceStatus } from 'beacon-sdk'
 import { api } from '../lib/api'
 import { useAuthStore } from './useAuthStore'
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { User, PresenceStatus } from '@beacon/types'
+import type { User, PresenceStatus } from 'beacon.js'
 import { api } from '../lib/api'
 
 function extractFriendsPayload(payload: any): any[] {
@@ -21,6 +21,8 @@ async function fetchFriendsList() {
 }
 
 export interface Friend extends User {
+  id: string
+  username: string
   status: PresenceStatus
   lastSeen?: string
 }
@@ -142,7 +144,7 @@ export const useUserListStore = create<UserListState>((set, get) => ({
       if (!friend) return state
       return {
         friends: state.friends.map((f) =>
-          f.id === userId ? { ...f, status } : f
+          f.id === userId ? ({ ...f, status } as any) : f
         ),
       }
     }),
@@ -180,7 +182,7 @@ export const useUserListStore = create<UserListState>((set, get) => ({
       const user = state.users.get(userId)
       if (!user) return state
       const newUsers = new Map(state.users)
-      newUsers.set(userId, { ...user, ...updates })
+      newUsers.set(userId, { ...user, ...updates } as any)
       return { users: newUsers }
     }),
 }))

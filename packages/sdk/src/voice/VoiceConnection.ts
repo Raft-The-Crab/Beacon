@@ -1,5 +1,8 @@
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 import type { Client } from '../client';
+import { AudioPlayer } from './AudioPlayer';
+import { VoiceInteraction } from './VoiceInteraction';
+import type { Readable } from 'stream';
 
 let cachedRTCPeerConnection: any | null | undefined;
 
@@ -8,8 +11,20 @@ function getRTCPeerConnectionCtor() {
         return cachedRTCPeerConnection;
     }
 
+    // 1. Check if we're in a browser (Native RTCPeerConnection)
+    if (typeof window !== 'undefined' && (window as any).RTCPeerConnection) {
+        cachedRTCPeerConnection = (window as any).RTCPeerConnection;
+        return cachedRTCPeerConnection;
+    }
+
+    // 2. Check for global RTCPeerConnection (e.g. newer Node.js or polyfilled environments)
+    if (typeof global !== 'undefined' && (global as any).RTCPeerConnection) {
+        cachedRTCPeerConnection = (global as any).RTCPeerConnection;
+        return cachedRTCPeerConnection;
+    }
+
+    // 3. Fallback to optional 'wrtc' dependency for Node.js
     try {
-        // Optional native dependency. Voice should not crash the entire SDK when absent.
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const maybeWrtc = require('wrtc');
         cachedRTCPeerConnection = maybeWrtc?.RTCPeerConnection || maybeWrtc?.default?.RTCPeerConnection || null;
@@ -31,20 +46,24 @@ export enum ConnectionState {
 export class VoiceConnection extends EventEmitter {
     public state: ConnectionState = ConnectionState.DISCONNECTED;
     private pc: any | null = null;
-    private audioTrack: any | null = null;
-    private stream: any | null = null;
+    private audioPlayer: AudioPlayer | null = null;
+    public interaction: VoiceInteraction;
+    public ping = -1;
 
     constructor(
-        private client: Client,
+        public readonly client: Client,
         public guildId: string,
         public channelId: string
     ) {
         super();
+        this.interaction = new VoiceInteraction(this);
     }
 
     async connect() {
+        if (this.state === ConnectionState.READY) return;
+        
         this._setState(ConnectionState.CONNECTING);
-        console.log(`[Voice] Connecting to channel ${this.channelId}...`);
+        this.client.emit('debug', `[Voice] Connecting to channel ${this.channelId}...`);
 
         try {
             const RTCPeerConnectionCtor = getRTCPeerConnectionCtor();
@@ -59,44 +78,71 @@ export class VoiceConnection extends EventEmitter {
             this.pc.onicecandidate = (event: any) => {
                 if (event.candidate) {
                     this.client.emit('debug', `[Voice] ICE Candidate for ${this.channelId}`);
-                    // In a real implementation, we'd send this to the gateway
                 }
             };
 
             this.pc.onconnectionstatechange = () => {
-                this.client.emit('debug', `[Voice] State changed: ${this.pc?.connectionState}`);
-                if (this.pc?.connectionState === 'connected') {
+                const pcState = this.pc?.connectionState;
+                this.client.emit('debug', `[Voice] WebRTC State: ${pcState}`);
+                
+                if (pcState === 'connected') {
                     this._setState(ConnectionState.READY);
-                } else if (this.pc?.connectionState === 'failed') {
+                } else if (pcState === 'failed' || pcState === 'closed') {
                     this._setState(ConnectionState.FAILED);
                 }
             };
 
-            // Create a dummy audio track data for now (to be replaced by AudioPlayer)
-            // This is the "Better than Discord" part - simplified streaming interface
-
             this._setState(ConnectionState.AUTHENTICATING);
 
-            // Notify the server we want to join
-            this.client.rest.request('POST', `/guilds/${this.guildId}/voice-join`, {
+            // Notify server & get join payload
+            await this.client.rest.post(`/guilds/${this.guildId}/voice-join`, {
                 channelId: this.channelId
-            }).catch(err => {
-                this.emit('error', err);
-                this._setState(ConnectionState.FAILED);
             });
 
         } catch (err) {
             this._setState(ConnectionState.FAILED);
             this.emit('error', err);
+            throw err;
+        }
+    }
+
+    /**
+     * Create or get the AudioPlayer for this connection
+     */
+    player(): AudioPlayer {
+        if (!this.audioPlayer) {
+            this.audioPlayer = new AudioPlayer();
+            this.audioPlayer.on('packet', (packet) => this._sendPacket(packet));
+            this.audioPlayer.on('error', (err) => this.emit('error', err));
+        }
+        return this.audioPlayer;
+    }
+
+    private _sendPacket(packet: Buffer) {
+        if (this.state !== ConnectionState.READY || !this.pc) return;
+        
+        // High-End Logic: In WebRTC environments, we use a DataChannel or MediaStreamTrack
+        // For custom Opus streaming, we'll emit the packet for the underlying driver
+        this.emit('packet', packet);
+        
+        // Bridge to RTCPeerConnection if a data channel is active
+        if (this.pc._dataChannel && this.pc._dataChannel.readyState === 'open') {
+            this.pc._dataChannel.send(packet);
         }
     }
 
     private _setState(state: ConnectionState) {
+        if (this.state === state) return;
+        const oldState = this.state;
         this.state = state;
-        this.emit('stateChange', state);
+        this.emit('stateChange', { oldState, newState: state });
     }
 
     async destroy() {
+        if (this.audioPlayer) {
+            this.audioPlayer.stop();
+            this.audioPlayer = null;
+        }
         if (this.pc) {
             this.pc.close();
             this.pc = null;
@@ -106,13 +152,21 @@ export class VoiceConnection extends EventEmitter {
     }
 
     /**
-     * Play an audio stream (Beyond Discord: Native Stream Support)
+     * Play an audio stream (Beyond Discord: Simplified native modulation)
      */
-    async play(audioSource: any) {
-        if (this.state !== ConnectionState.READY) {
-            throw new Error('Connection not ready. Wait for READY state.');
-        }
-        // Implementation for AudioPlayer integration will go here
-        console.log('[Voice] AudioPlayer starting stream...');
+    async play(source: Readable | Buffer) {
+        return this.player().play(source);
+    }
+
+    setMute(muted: boolean) {
+        this.client.rest.patch(`/guilds/${this.guildId}/members/@me`, {
+            mute: muted
+        });
+    }
+
+    setDeaf(deafened: boolean) {
+        this.client.rest.patch(`/guilds/${this.guildId}/members/@me`, {
+            deaf: deafened
+        });
     }
 }

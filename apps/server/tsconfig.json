@@ -27,7 +27,7 @@
     "noEmitOnError": false,
     "baseUrl": ".",
     "paths": {
-      "@beacon/types": [
+      "beacon-types": [
         "src/types/index.ts"
       ],
       "beacon-sdk/browser": [

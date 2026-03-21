@@ -1,37 +1,12 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useServerStore } from '../../stores/useServerStore';
-import { Role } from '@beacon/types';
+import type { Role, Permission } from 'beacon-sdk'
+import { PermissionBit } from 'beacon-sdk'
 import styles from '../../styles/modules/roles/RolesManager.module.css';
 
-// Local permission flags for the UI to avoid dependency loops in this fix
-const PermissionFlags: Record<string, bigint> = {
-  ADMINISTRATOR: 1n << 3n,
-  MANAGE_CHANNELS: 1n << 4n,
-  MANAGE_GUILD: 1n << 5n,
-  ADD_REACTIONS: 1n << 6n,
-  VIEW_AUDIT_LOG: 1n << 7n,
-  PRIORITY_SPEAKER: 1n << 8n,
-  STREAM: 1n << 9n,
-  VIEW_CHANNEL: 1n << 10n,
-  SEND_MESSAGES: 1n << 11n,
-  SEND_TTS_MESSAGES: 1n << 12n,
-  MANAGE_MESSAGES: 1n << 13n,
-  EMBED_LINKS: 1n << 14n,
-  ATTACH_FILES: 1n << 15n,
-  READ_MESSAGE_HISTORY: 1n << 16n,
-  MENTION_EVERYONE: 1n << 17n,
-  USE_EXTERNAL_EMOJIS: 1n << 18n,
-  CONNECT: 1n << 20n,
-  SPEAK: 1n << 21n,
-  MUTE_MEMBERS: 1n << 22n,
-  DEAFEN_MEMBERS: 1n << 23n,
-  MOVE_MEMBERS: 1n << 24n,
-  MANAGE_ROLES: 1n << 28n,
-  MANAGE_WEBHOOKS: 1n << 29n,
-  MANAGE_EMOJIS_AND_STICKERS: 1n << 30n,
-  MANAGE_EVENTS: 1n << 33n,
-  MODERATE_MEMBERS: 1n << 40n,
-};
+// We use PermissionBit directly from beacon-sdk
+const PermissionFlags = PermissionBit;
 
 export const RolesManager: React.FC = () => {
   const currentServer = useServerStore(state => state.currentServer);
@@ -77,25 +52,38 @@ export const RolesManager: React.FC = () => {
           <span>ROLES</span>
           <button className={styles.addRoleBtn}>+</button>
         </div>
-        {roles.map((role: Role, idx: number) => (
-          <div
-            key={role.id}
-            className={`${styles.roleItem} ${selectedRoleId === role.id ? styles.active : ''}`}
-            onClick={() => setSelectedRoleId(role.id)}
-          >
-            <div className={styles.roleColorDot} style={{ background: role.color || '#99aab5' }} />
-            <span className={styles.roleNameText}>{role.name}</span>
-            <div className={styles.reorderBtns}>
-              <button onClick={(e) => { e.stopPropagation(); handleReorder(role.id, 'up') }} disabled={idx === 0}>↑</button>
-              <button onClick={(e) => { e.stopPropagation(); handleReorder(role.id, 'down') }} disabled={idx === roles.length - 1}>↓</button>
-            </div>
-          </div>
-        ))}
+        <AnimatePresence>
+          {roles.map((role: Role, idx: number) => (
+            <motion.div
+              layout
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ delay: Math.min(idx * 0.03, 0.3), type: 'spring', damping: 25, stiffness: 300 }}
+              key={role.id}
+              className={`${styles.roleItem} ${selectedRoleId === role.id ? styles.active : ''}`}
+              onClick={() => setSelectedRoleId(role.id)}
+            >
+              <div className={styles.roleColorDot} style={{ background: role.color || '#99aab5' }} />
+              <span className={styles.roleNameText}>{role.name}</span>
+              <div className={styles.reorderBtns}>
+                <button onClick={(e) => { e.stopPropagation(); handleReorder(role.id, 'up') }} disabled={idx === 0}>↑</button>
+                <button onClick={(e) => { e.stopPropagation(); handleReorder(role.id, 'down') }} disabled={idx === roles.length - 1}>↓</button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       <div className={styles.roleDetails}>
         {selectedRole ? (
-          <div className={styles.scrollArea}>
+          <motion.div 
+            key={selectedRole.id}
+            className={styles.scrollArea}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          >
             <div className={styles.detailHeader}>
               <h2>Edit Role — {selectedRole.name}</h2>
               <div className={styles.dangerZone}>
@@ -161,7 +149,7 @@ export const RolesManager: React.FC = () => {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         ) : (
           <div className={styles.emptyState}>
             <img src="/assets/illustrations/roles.svg" alt="" className={styles.emptyImg} onError={(e) => e.currentTarget.style.display = 'none'} />

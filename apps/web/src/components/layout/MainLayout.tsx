@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useUIStore } from '../../stores/useUIStore'
 import { useServerStore } from '../../stores/useServerStore'
@@ -7,12 +7,15 @@ import { Sidebar } from './Sidebar'
 import { ChatArea } from '../chat/ChatArea'
 import { MemberList } from './MemberList'
 import { QuickSwitcher } from '../features/QuickSwitcher'
+import { ServerSearchPanel } from './ServerSearchPanel'
+import { motion, AnimatePresence } from 'framer-motion'
 import styles from '../../styles/modules/layout/MainLayout.module.css'
 
 export function MainLayout() {
   const { serverId, channelId } = useParams<{ serverId: string; channelId: string }>()
   const navigate = useNavigate()
   const [showQuickSwitcher, setShowQuickSwitcher] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
 
   const setCurrentChannel = useUIStore(state => state.setCurrentChannel)
   const storeCurrentChannelId = useUIStore(state => state.currentChannelId)
@@ -23,12 +26,15 @@ export function MainLayout() {
   const storeCurrentServer = useServerStore(state => state.currentServer)
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    // Toggle Search (Ctrl + F)
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
       e.preventDefault()
-      setShowQuickSwitcher(prev => !prev)
+      setShowSearch(prev => !prev)
     }
-    if (e.key === 'Escape' && showQuickSwitcher) {
-      setShowQuickSwitcher(false)
+
+    if (e.key === 'Escape') {
+      if (showQuickSwitcher) setShowQuickSwitcher(false)
+      if (showSearch) setShowSearch(false)
     }
 
     // Toggle Member List
@@ -130,10 +136,27 @@ export function MainLayout() {
       sidebar={<Sidebar />}
       rightPanel={showMemberList ? <MemberList /> : undefined}
     >
-      <ChatArea channelId={resolvedChannelId} />
+       <div className={styles.chatContainer}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={resolvedChannelId}
+            initial={{ opacity: 0, scale: 0.995, y: 4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 1.005, y: -4 }}
+            transition={{ duration: 0.15, ease: [0.2, 0.8, 0.2, 1] }}
+            className={styles.motionWrapper}
+          >
+            <ChatArea channelId={resolvedChannelId} />
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
       {showQuickSwitcher && (
         <QuickSwitcher onClose={() => setShowQuickSwitcher(false)} />
+      )}
+
+      {showSearch && (
+        <ServerSearchPanel onClose={() => setShowSearch(false)} />
       )}
     </WorkspaceLayout>
   )

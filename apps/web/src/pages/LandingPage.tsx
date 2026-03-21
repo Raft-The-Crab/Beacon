@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Shield, Zap, Cpu, Globe, Rocket, MessageCircle, Star, Github, Users } from 'lucide-react'
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout'
-import { Tooltip } from '../components/ui'
+import { Tooltip, SelectDropdown } from '../components/ui'
 import styles from '../styles/modules/pages/LandingPage.module.css'
 import { useTranslationStore } from '../stores/useTranslationStore'
 
@@ -17,18 +17,9 @@ export function LandingPage() {
             <Rocket size={18} />
             <span>{t('common.introduction')}</span>
           </Link>
-          <Link to="/discovery" className={styles.navItem}>
-            <Globe size={18} />
-            <span>{t('common.discovery')}</span>
-          </Link>
           <Link to="/apps" className={styles.navItem}>
-            <Rocket size={18} />
+            <Zap size={18} />
             <span>{t('common.app_directory')}</span>
-            <span className={styles.newBadge}>{t('common.new')}</span>
-          </Link>
-          <Link to="/community" className={styles.navItem}>
-            <Users size={18} />
-            <span>{t('common.community_hub')}</span>
             <span className={styles.newBadge}>{t('common.new')}</span>
           </Link>
           <Link to="/docs" className={styles.navItem}>
@@ -57,62 +48,41 @@ export function LandingPage() {
         <Link to="/login" className={styles.loginBtn}>{t('common.open_beacon')}</Link>
 
         <div className={styles.langSelector}>
-          <Globe size={14} />
-          <select
+          <SelectDropdown
+            options={[
+              { label: 'English', value: 'en' },
+              { label: 'Filipino', value: 'fil' },
+              { label: '日本語', value: 'ja' },
+              { label: '한국어', value: 'ko' },
+              { label: '中文', value: 'zh' },
+              { label: 'Français', value: 'fr' },
+              { label: 'Deutsch', value: 'de' },
+              { label: 'Español', value: 'es' },
+              { label: 'Italiano', value: 'it' },
+              { label: 'Português', value: 'pt' },
+              { label: 'Nederlands', value: 'nl' },
+              { label: 'Русский', value: 'ru' },
+              { label: 'العربية', value: 'ar' },
+              { label: 'हिन्दी', value: 'hi' },
+              { label: 'Türkçe', value: 'tr' },
+              { label: 'ไทย', value: 'th' },
+              { label: 'Tiếng Việt', value: 'vi' },
+              { label: 'Bahasa Indonesia', value: 'id' },
+              { label: 'Polski', value: 'pl' },
+              { label: 'Svenska', value: 'sv' },
+            ]}
             value={useTranslationStore.getState().language}
-            onChange={(e) => useTranslationStore.getState().setLanguage(e.target.value)}
+            onChange={(val: string | number | null) => val && useTranslationStore.getState().setLanguage(val as string)}
+            size="sm"
+            searchable={false}
             className={styles.langSelect}
-          >
-            <option value="en">English</option>
-            <option value="fil">Filipino</option>
-            <option value="ja">日本語</option>
-            <option value="ko">한국어</option>
-            <option value="zh">中文</option>
-            <option value="fr">Français</option>
-            <option value="de">Deutsch</option>
-            <option value="es">Español</option>
-            <option value="it">Italiano</option>
-            <option value="pt">Português</option>
-            <option value="nl">Nederlands</option>
-            <option value="ru">Русский</option>
-            <option value="ar">العربية</option>
-            <option value="hi">हिन्दी</option>
-            <option value="tr">Türkçe</option>
-            <option value="th">ไทย</option>
-            <option value="vi">Tiếng Việt</option>
-            <option value="id">Bahasa Indonesia</option>
-            <option value="pl">Polski</option>
-            <option value="sv">Svenska</option>
-          </select>
+          />
         </div>
       </div>
     </div>
   )
 
-  const rightPanel = (
-    <div className={styles.statusIsland}>
-      <h3 className={styles.islandTitle}>{t('landing.status.header')}</h3>
-      <div className={styles.statusList}>
-        <div className={styles.statusItem}>
-          <div className={styles.statusDot} style={{ background: 'var(--status-online)' }} />
-          <span>{t('landing.status.gateway')}</span>
-        </div>
-        <div className={styles.statusItem}>
-          <div className={styles.statusDot} style={{ background: 'var(--status-online)' }} />
-          <span>{t('landing.status.api')}</span>
-        </div>
-        <div className={styles.statusItem}>
-          <div className={styles.statusDot} style={{ background: 'var(--status-online)' }} />
-          <span>{t('landing.status.voice')}</span>
-        </div>
-      </div>
-
-      <div className={styles.statCard}>
-        <div className={styles.statValue}>LIVE</div>
-        <div className={styles.statLabel}>Network telemetry is shown only when live metrics are available.</div>
-      </div>
-    </div>
-  )
+  const rightPanel = null;
 
   return (
     <WorkspaceLayout sidebar={sidebar} rightPanel={rightPanel}>
@@ -137,20 +107,28 @@ export function LandingPage() {
 
         <section className={styles.features}>
           <div className={styles.featureGrid}>
-            <div className={styles.featureCard}>
-              <Cpu className={styles.featureIcon} size={28} />
-              <h3>{t('landing.features.native')}</h3>
-              <p>{t('landing.features.native_desc')}</p>
+            <div className={`${styles.featureCard} ${styles.featureCoreEngine}`}>
+              <div className={styles.iconWrapper}>
+                <Cpu className={styles.featureIcon} size={32} />
+              </div>
+              <h3>Core Engine</h3>
+              <p>Ultra-low latency infrastructure engineered for instantaneous global synchronization of voice and state data.</p>
             </div>
-            <div className={styles.featureCard}>
-              <Shield className={styles.featureIcon} size={28} />
-              <h3>{t('landing.features.security')}</h3>
-              <p>{t('landing.features.security_desc')}</p>
+            
+            <div className={`${styles.featureCard} ${styles.featurePrivacy}`}>
+              <div className={styles.iconWrapper}>
+                <Shield className={styles.featureIcon} size={32} />
+              </div>
+              <h3>Privacy Architecture</h3>
+              <p>Encrypted tunnels for every interaction, featuring metadata stripping and user-governed identity control by default.</p>
             </div>
-            <div className={styles.featureCard}>
-              <Zap className={styles.featureIcon} size={28} />
-              <h3>{t('landing.features.sdk')}</h3>
-              <p>{t('landing.features.sdk_desc')}</p>
+            
+            <div className={`${styles.featureCard} ${styles.featureDeveloperAPI}`}>
+              <div className={styles.iconWrapper}>
+                <Zap className={styles.featureIcon} size={32} />
+              </div>
+              <h3>Developer Ecosystem</h3>
+              <p>Sovereign platform featuring programmable bot hooks, extensible JSON schemas, and industrial-grade throughput protection.</p>
             </div>
           </div>
         </section>

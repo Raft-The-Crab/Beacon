@@ -1,8 +1,9 @@
-﻿import { useState, useEffect, useRef } from 'react'
-import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book, AlignLeft, Layers, Zap, Palette, Gift, ImageIcon, Trash2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { X, LogOut, User, Shield, Bell, Code, Lock, Settings, Users, Globe, Moon, Sun, Book, AlignLeft, Layers, Zap, Palette, Gift, ImageIcon, Trash2, Volume2, Video } from 'lucide-react'
 import { useUIStore } from '../../stores/useUIStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useServerStore } from '../../stores/useServerStore'
+import { useVoiceStore } from '../../stores/useVoiceStore'
 import { useNavigate } from 'react-router-dom'
 import { Button, Input, AvatarUpload, Switch, Avatar } from '../ui'
 import { SelectDropdown } from '../ui/SelectDropdown'
@@ -61,7 +62,7 @@ interface SettingsModalProps {
 
 import { ProfileArtPicker } from '../features/ProfileArtPicker'
 
-type TabId = 'profile' | 'profileArt' | 'security' | 'notifications' | 'advanced' | 'server' | 'appearance' | 'tasks' | 'redeem' | 'about'
+type TabId = 'profile' | 'profileArt' | 'security' | 'notifications' | 'voice' | 'advanced' | 'server' | 'appearance' | 'tasks' | 'redeem' | 'about'
 const SETTINGS_INITIAL_TAB_KEY = 'beacon:settings_initial_tab'
 
 function isTabId(value: string): value is TabId {
@@ -81,37 +82,37 @@ const TAB_META: Record<TabId, { title: string; eyebrow: string; description: str
     profile: {
         title: 'Profile',
         eyebrow: 'Identity',
-        description: 'Update the way people see you across Beacon, including your name, username, avatar, and bio.',
+        description: 'Update the way people see you across Beacon, including your display name, username, avatar, and bio.',
     },
     profileArt: {
         title: 'Profile Art',
         eyebrow: 'Cosmetics',
-        description: 'Equip your frame and, with Beacon+, tune the chat bubble finish shown on your own messages.',
+        description: 'Equip a profile frame and customize your chat bubble style to stand out. (Bubbles require Beacon+)',
     },
     security: {
         title: 'Security',
         eyebrow: 'Protection',
-        description: 'Manage your email, password, and account protection settings in one place.',
+        description: 'Manage your email, password, and two-factor authentication to keep your account safe.',
     },
     notifications: {
         title: 'Notifications',
         eyebrow: 'Alerts',
-        description: 'Choose exactly which pings, requests, and desktop notifications Beacon should send you.',
+        description: 'Control your notification preferences for messages, friend requests, and desktop alerts.',
     },
     advanced: {
         title: 'Advanced',
         eyebrow: 'Developer',
-        description: 'Enable advanced behavior, diagnostics, and developer-facing controls when you need them.',
+        description: 'Developer features, bot management, and advanced client diagnostics.',
     },
     server: {
         title: 'Server',
         eyebrow: 'Workspace',
-        description: 'See the active server context and jump into server-specific management details.',
+        description: 'View and manage details for the currently active server.',
     },
     appearance: {
         title: 'Appearance',
         eyebrow: 'Interface',
-        description: 'Control themes, density, language, performance mode, and the overall feel of the app shell.',
+        description: 'Customize the interface with themes, glassmorphism, message density modes, and performance toggles.',
     },
     tasks: {
         title: 'Tasks',
@@ -122,6 +123,11 @@ const TAB_META: Record<TabId, { title: string; eyebrow: string; description: str
         title: 'Redeem Code',
         eyebrow: 'Rewards',
         description: 'Enter official drops, promo codes, and reward codes to unlock Beacoins or Beacon+ time.',
+    },
+    voice: {
+        title: 'Voice & Video',
+        eyebrow: 'Streaming',
+        description: 'Configure your microphone, camera, and screen share quality settings.',
     },
     about: {
         title: 'About',
@@ -143,6 +149,7 @@ const SETTINGS_NAV: Array<{ section: string; items: Array<{ id: TabId; label: st
         section: 'App',
         items: [
             { id: 'notifications', label: 'Notifications', icon: Bell },
+            { id: 'voice', label: 'Voice & Video', icon: Volume2 },
             { id: 'appearance', label: 'Appearance', icon: Settings },
             { id: 'advanced', label: 'Advanced', icon: Code },
             { id: 'tasks', label: 'Tasks', icon: Book },
@@ -180,6 +187,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
 
     const { language, setLanguage } = useTranslationStore()
     const { enabled: lowBandwidth, toggle: toggleLowBandwidth } = useLowBandwidthStore()
+    const { videoQuality, setVideoQuality, frameRate, setFrameRate } = useVoiceStore()
 
     const isOpen = propIsOpen !== undefined ? propIsOpen : showUserSettings
     const onClose = propOnClose || (() => setShowUserSettings(false))
@@ -245,6 +253,17 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [isOpen, onClose])
+
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.style.overflow = ''
+        }
+        return () => {
+            document.body.style.overflow = ''
+        }
+    }, [isOpen])
 
     useEffect(() => {
         if (!isOpen) return
@@ -339,6 +358,12 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
         }
     }
 
+    const resolveBannerUrl = (b?: string | null) => {
+        if (!b) return null
+        if (b.startsWith('http') || b.startsWith('https') || b.startsWith('data:') || b.startsWith('/')) return b
+        return `/art/banners/${b}.png`
+    }
+
     const renderTabContent = () => {
         switch (activeTab) {
             case 'profile':
@@ -349,7 +374,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                             <label className={styles.formLabel}>Profile Banner</label>
                             <div
                                 className={styles.bannerPreview}
-                                style={bannerUrl ? { backgroundImage: `url(${bannerUrl})` } : undefined}
+                                style={resolveBannerUrl(bannerUrl) ? { backgroundImage: `url(${resolveBannerUrl(bannerUrl)})` } : undefined}
                             >
                                 {!bannerUrl && (
                                     <div className={styles.bannerEmpty}>
@@ -428,7 +453,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                     setSecurityLoading(true)
                     const res = await apiClient.updateEmail({ email: newEmail, password: oldPassword })
                     if (res.success) {
-                        setUser({ ...user!, email: newEmail })
+                        setUser({ ...user!, email: newEmail } as any)
                         setShowEmailForm(false)
                         setNewEmail('')
                         setOldPassword('')
@@ -474,7 +499,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                     setSecurityLoading(true)
                     const res = await apiClient.verify2FA(twoFACode)
                     if (res.success) {
-                        setUser({ ...user!, twoFactorEnabled: true })
+                        setUser({ ...user!, twoFactorEnabled: true } as any)
                         setShow2FAForm(false)
                         setTwoFASecret(null)
                         setTwoFACode('')
@@ -666,7 +691,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                             </div>
                             <div className={styles.detailItem}>
                                 <span className={styles.detailLabel}>Created</span>
-                                <span className={styles.detailValue}>{new Date(currentServer.createdAt).toLocaleDateString()}</span>
+                                <span className={styles.detailValue}>{new Date(currentServer.createdAt || '').toLocaleDateString()}</span>
                             </div>
                             <div className={styles.detailItem}>
                                 <span className={styles.detailLabel}>Member Count</span>
@@ -714,6 +739,14 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                                 >
                                     <Zap size={16} />
                                     Neon
+                                </Button>
+                                <Button
+                                    variant={theme === 'dracula' ? 'primary' : 'secondary'}
+                                    onClick={() => setTheme('dracula')}
+                                    className={styles.themeButton}
+                                >
+                                    <Moon size={16} />
+                                    Dracula
                                 </Button>
                                 <Button
                                     variant={theme === 'midnight' ? 'primary' : 'secondary'}
@@ -814,12 +847,13 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                             <div className={styles.formGroup}>
                                 <label className={styles.inputLabel}>App Background</label>
                                 <div className={styles.backgroundControls}>
-                                    <Input
-                                        value={customBackground || ''}
-                                        onChange={(e: any) => setCustomBackground(e.target.value || null)}
-                                        placeholder="Enter image URL..."
-                                        className={styles.bgInput}
-                                    />
+                                    <div style={{ flex: 1 }}>
+                                        <Input
+                                            value={customBackground || ''}
+                                            onChange={(e: any) => setCustomBackground(e.target.value || null)}
+                                            placeholder="Enter image URL..."
+                                        />
+                                    </div>
                                     <div className={styles.uploadBox}>
                                         <Button
                                             variant="secondary"

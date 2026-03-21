@@ -2,14 +2,41 @@ import express from 'express';
 import { AuthService, RegisterSchema, LoginSchema } from '../services/auth';
 import { prisma } from '../db';
 import { SystemAuditService, AuditAction } from '../services/systemAudit';
+import { NotificationService } from '../services/notification';
+import { logger } from '../services/logger';
+import { getFingerprint } from '../middleware/security';
 
 type Request = express.Request;
 type Response = express.Response;
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MIN = 15;
+
+/** Centralized cookie config — eliminates 8x duplication across auth handlers */
+function getCookieConfig(req: Request) {
+    const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1';
+    const secure = process.env.NODE_ENV === 'production' && !isLocalhost;
+    const sameSite: 'none' | 'lax' = secure ? 'none' : 'lax';
+    return { httpOnly: true, secure, sameSite, path: '/' } as const;
+}
+
+/** Sets access + refresh token cookies on the response */
+function setAuthCookies(res: Response, req: Request, accessToken: string, refreshToken?: string) {
+    const base = getCookieConfig(req);
+    res.cookie('token', accessToken, { ...base, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    if (refreshToken) {
+        res.cookie('refreshToken', refreshToken, { ...base, maxAge: 30 * 24 * 60 * 60 * 1000 });
+    }
+}
+
 function isDatabaseUnavailable(error: unknown): boolean {
     if (!prisma) return true;
     const message = error instanceof Error ? error.message : String(error);
-    return /database not available|can't reach database|failed to connect|prisma/i.test(message);
+    const isUnavailable = /database not available|can't reach database|failed to connect|prisma|timeout|pool/i.test(message);
+    if (isUnavailable) {
+        logger.error(`[AUTH] Database connection error detected: ${message}`);
+    }
+    return isUnavailable;
 }
 
 export class AuthController {
@@ -18,8 +45,21 @@ export class AuthController {
             const data = RegisterSchema.parse(req.body);
             const result = await AuthService.register(data);
 
+            if (result.verificationRequired) {
+                return res.status(200).json({
+                    message: 'Registration successful. Please check your email for a verification code.',
+                    verificationRequired: true,
+                    email: result.user.email
+                });
+            }
+
+            // Fallback path for social login or future flows that bypass verification
+            if ((result as any).accessToken) {
+                setAuthCookies(res, req, (result as any).accessToken, (result as any).refreshToken);
+            }
+
             await SystemAuditService.log({
-                action: AuditAction.USER_LOGIN_SUCCESS, // Reuse for register success
+                action: AuditAction.USER_LOGIN_SUCCESS,
                 userId: result.user.id,
                 reason: 'New account registered',
                 ip: req.ip,
@@ -28,7 +68,7 @@ export class AuthController {
 
             res.json(result);
         } catch (error: any) {
-            console.error('Register error:', error);
+            logger.error(`[AUTH] Register error: ${error.message}`, error);
             if (isDatabaseUnavailable(error)) {
                 return res.status(503).json({ error: 'Authentication service unavailable. Check the database connection.' });
             }
@@ -39,66 +79,122 @@ export class AuthController {
     static async login(req: Request, res: Response) {
         try {
             const data = LoginSchema.parse(req.body);
+            
+            const userForLockout = await (prisma.user as any).findFirst({
+                where: {
+                    OR: [
+                        { email: { equals: data.identifier, mode: 'insensitive' } },
+                        { username: { equals: data.identifier, mode: 'insensitive' } }
+                    ]
+                },
+                select: { id: true, loginAttempts: true, lockoutUntil: true }
+            });
+
+            if (userForLockout?.lockoutUntil && userForLockout.lockoutUntil > new Date()) {
+                const waitMinutes = Math.ceil(((userForLockout.lockoutUntil as Date).getTime() - Date.now()) / 60000);
+                return res.status(403).json({ 
+                    error: `Account is temporarily locked. Please try again in ${waitMinutes} minutes.` 
+                });
+            }
+
             const result = await AuthService.login(data);
 
-            await SystemAuditService.log({
-                action: AuditAction.USER_LOGIN_SUCCESS,
-                userId: result.user?.id,
-                ip: req.ip,
-                userAgent: req.headers['user-agent'] as string
-            });
+            if (result.verificationRequired) {
+                return res.status(200).json({
+                    message: 'Account not verified. Please verify your email.',
+                    verificationRequired: true,
+                    email: result.email
+                });
+            }
+
+            // Successful login — reset lockout counters
+            if (userForLockout?.id) {
+                await (prisma.user as any).update({
+                    where: { id: userForLockout.id },
+                    data: { loginAttempts: 0, lockoutUntil: null }
+                });
+            }
+
+            if (!('mfaRequired' in result) && (result as any).accessToken) {
+                setAuthCookies(res, req, (result as any).accessToken, (result as any).refreshToken);
+            }
 
             res.json(result);
         } catch (error: any) {
-            await SystemAuditService.log({
-                action: AuditAction.USER_LOGIN_FAILED,
-                reason: error.message || 'Invalid credentials',
-                metadata: { email: req.body.email },
-                ip: req.ip,
-                userAgent: req.headers['user-agent'] as string
-            });
-            if (isDatabaseUnavailable(error)) {
-                return res.status(503).json({ error: 'Authentication service unavailable. Check the database connection.' });
+            if (isDatabaseUnavailable(error)) return res.status(503).json({ error: 'Database unavailable' });
+            
+            // Increment lockout on failed credentials
+            if (error.message === 'Invalid credentials') {
+                try {
+                    const data = LoginSchema.parse(req.body);
+                    const failedUser = await (prisma.user as any).findFirst({
+                        where: {
+                            OR: [
+                                { email: { equals: data.identifier, mode: 'insensitive' } },
+                                { username: { equals: data.identifier, mode: 'insensitive' } }
+                            ]
+                        },
+                        select: { id: true, loginAttempts: true }
+                    });
+                    if (failedUser) {
+                        const attempts = (failedUser.loginAttempts || 0) + 1;
+                        const updateData: any = { loginAttempts: attempts };
+                        if (attempts >= MAX_LOGIN_ATTEMPTS) {
+                            updateData.lockoutUntil = new Date(Date.now() + LOCKOUT_DURATION_MIN * 60 * 1000);
+                            logger.warn(`[AUTH] Account locked: ${failedUser.id} after ${attempts} failed attempts`);
+                        }
+                        await (prisma.user as any).update({ where: { id: failedUser.id }, data: updateData });
+                    }
+                } catch (lockoutErr) {
+                    logger.error(`[AUTH] Failed to update lockout counter: ${lockoutErr}`);
+                }
+                return res.status(401).json({ error: 'Invalid credentials' });
             }
-            res.status(401).json({ error: 'Invalid credentials' });
+            
+            logger.error(`[AUTH] Login error: ${error.message}`);
+            res.status(500).json({ error: 'Internal Server Error during login' });
+        }
+    }
+
+    static async verify(req: Request, res: Response) {
+        try {
+            const { email, code } = req.body;
+            if (!email || !code) return res.status(400).json({ error: 'Email and code required' });
+
+            const result = await AuthService.verifyEmail(email, code);
+            setAuthCookies(res, req, result.accessToken, result.refreshToken);
+
+            res.json(result);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message || 'Verification failed' });
+        }
+    }
+
+    static async resendVerification(req: Request, res: Response) {
+        try {
+            const { email } = req.body;
+            if (!email) return res.status(400).json({ error: 'Email required' });
+
+            const result = await AuthService.resendVerification(email);
+            res.json(result);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message || 'Failed to resend code' });
         }
     }
 
     static async getMe(req: Request, res: Response) {
         try {
-            const userId = req.user?.id;
+            const userId = (req as any).user?.id;
             if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-            if (!prisma) return res.status(503).json({ error: 'User service unavailable. Check the database connection.' });
+            if (!prisma) return res.status(503).json({ error: 'User service unavailable.' });
 
-            let user: any = null
-            try {
-                user = await prisma.user.findUnique({
-                    where: { id: userId },
-                    select: { id: true, username: true, displayName: true, email: true, avatar: true, discriminator: true, badges: true, status: true, customStatus: true }
-                });
-            } catch (selectError) {
-                console.warn('AuthController.getMe full select failed, falling back to minimal profile:', selectError)
-                user = await prisma.user.findUnique({
-                    where: { id: userId },
-                    select: { id: true, username: true, displayName: true, email: true, avatar: true, discriminator: true }
-                });
-                if (user) {
-                    user = {
-                        ...user,
-                        badges: [],
-                        status: 'online',
-                        customStatus: null,
-                    }
-                }
-            }
+            const user = await (prisma.user as any).findUnique({
+                where: { id: userId }
+            });
 
             if (!user) return res.status(404).json({ error: 'User not found' });
-
             res.json(AuthService.sanitizeUser(user));
         } catch (error) {
-            if (isDatabaseUnavailable(error)) {
-                return res.status(503).json({ error: 'User service unavailable. Check the database connection.' });
-            }
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
@@ -187,6 +283,11 @@ export class AuthController {
             if (!userId || !token) return res.status(400).json({ error: 'User ID and token required' });
 
             const result = await AuthService.verifyMFA(userId, token);
+
+            if (result.accessToken) {
+                setAuthCookies(res, req, result.accessToken, result.refreshToken);
+            }
+
             res.json(result);
         } catch (error: any) {
             res.status(401).json({ error: error.message || 'Verification failed' });
@@ -203,6 +304,7 @@ export class AuthController {
 
             const accessToken = AuthService.generateToken(payload.id);
             const newRefreshToken = AuthService.generateRefreshToken(payload.id);
+            setAuthCookies(res, req, accessToken, newRefreshToken);
 
             res.json({
                 accessToken,
@@ -210,6 +312,184 @@ export class AuthController {
             });
         } catch (error) {
             res.status(500).json({ error: 'Failed to refresh token' });
+        }
+    }
+
+    static async logout(req: Request, res: Response) {
+        try {
+            const base = getCookieConfig(req);
+            res.clearCookie('token', base);
+            res.clearCookie('refreshToken', base);
+            res.json({ success: true, message: 'Logged out successfully' });
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to logout' });
+        }
+    }
+
+    static async getProfilePreview(req: Request, res: Response) {
+        try {
+            const { identifier } = req.params;
+            if (!identifier) return res.status(400).json({ error: 'Identifier required' });
+
+            const cleanIdentifier = decodeURIComponent(identifier).trim();
+            const user = await (prisma.user as any).findFirst({
+                where: {
+                    OR: [
+                        { email: { equals: cleanIdentifier, mode: 'insensitive' } },
+                        { username: { equals: cleanIdentifier, mode: 'insensitive' } }
+                    ]
+                },
+                select: {
+                    username: true,
+                    avatar: true,
+                    displayName: true,
+                    globalName: true
+                } as any
+            });
+
+            if (!user) {
+                return res.status(200).json(null);
+            }
+
+            res.status(200).json(user);
+        } catch (error) {
+            logger.error(`Auth: Profile preview error for ${req.params.identifier}: ${error}`);
+            res.status(200).json(null);
+        }
+    }
+
+    static async forgotPassword(req: Request, res: Response) {
+        try {
+            const { email } = req.body;
+            if (!email) return res.status(400).json({ error: 'Email required' });
+
+            const result = await AuthService.forgotPassword(email);
+            res.json(result);
+        } catch (error: any) {
+            res.status(500).json({ error: error.message || 'Internal Server Error' });
+        }
+    }
+
+    static async resetPassword(req: Request, res: Response) {
+        try {
+            const result = await AuthService.resetPassword(req.body);
+            res.json(result);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message || 'Invalid request' });
+        }
+    }
+
+    static async googleLogin(req: Request, res: Response) {
+        try {
+            const { idToken } = req.body;
+            logger.info(`[GOOGLE_LOGIN] Attempt received. Token length: ${idToken?.length || 0}`);
+            
+            if (!idToken) {
+                logger.warn('[GOOGLE_LOGIN] Missing ID token');
+                return res.status(400).json({ error: 'ID Token required' });
+            }
+
+            const { admin } = await import('../config/firebase');
+            if (!admin.apps.length) {
+                logger.error('[GOOGLE_LOGIN] Firebase Admin not initialized');
+                return res.status(503).json({ error: 'Google Login is currently unavailable (Firebase not configured).' });
+            }
+
+            // 1. Verify ID Token
+            logger.info('[GOOGLE_LOGIN] Verifying ID token with Firebase...');
+            let decodedToken;
+            try {
+                decodedToken = await admin.auth().verifyIdToken(idToken);
+            } catch (authErr: any) {
+                logger.error(`[GOOGLE_LOGIN] Firebase token verification failed: ${authErr.message} (Code: ${authErr.code})`);
+                return res.status(401).json({ 
+                    error: 'Invalid Google Token', 
+                    message: authErr.message,
+                    code: authErr.code 
+                });
+            }
+
+            const { email, name, picture, uid } = decodedToken;
+            logger.info(`[GOOGLE_LOGIN] Decoded token: email=${email}, name=${name}, uid=${uid}`);
+
+            if (!email) {
+                logger.warn('[GOOGLE_LOGIN] Email missing in Google token');
+                return res.status(400).json({ error: 'Email not provided by Google' });
+            }
+
+            // 2. Find or Create User
+            logger.info(`[GOOGLE_LOGIN] Looking for user: ${email}`);
+            let user = await (prisma.user as any).findUnique({ where: { email } });
+
+            if (!user) {
+                logger.info(`[GOOGLE_LOGIN] Creating new user for ${email}`);
+                const discriminator = Math.floor(1000 + Math.random() * 9000).toString();
+                // Sanitize username — strip non-alphanumeric, enforce length
+                const rawName = (email.split('@')[0] || 'user').replace(/[^a-zA-Z0-9_.-]/g, '');
+                const username = (rawName + discriminator).substring(0, 32);
+
+                try {
+                    user = await (prisma.user as any).create({
+                        data: {
+                            email,
+                            username,
+                            displayName: name || email.split('@')[0],
+                            avatar: picture || null,
+                            discriminator,
+                            password: '', // No password for social login users
+                            status: 'online',
+                            isVerified: true, // Social login bypasses email verification
+                        }
+                    });
+                    logger.success(`[GOOGLE_LOGIN] New user created: ${user.id}`);
+                    
+                    // Trigger welcome email asynchronously
+                    NotificationService.sendWelcomeEmail(user.email, user.displayName).catch(err => {
+                        logger.error(`[GOOGLE_LOGIN] Failed to send welcome email to ${user.email}: ${err.message}`);
+                    });
+                } catch (dbErr: any) {
+                    logger.error(`[GOOGLE_LOGIN] User creation failed: ${dbErr.message}`);
+                    return res.status(500).json({ error: 'Failed to create user account' });
+                }
+
+                await SystemAuditService.log({
+                    action: AuditAction.USER_LOGIN_SUCCESS,
+                    userId: user.id,
+                    reason: 'New user registered via Google',
+                    ip: req.ip,
+                    userAgent: req.headers['user-agent'] as string,
+                    fingerprint: getFingerprint(req)
+                });
+            } else {
+                logger.info(`[GOOGLE_LOGIN] Existing user logged in: ${user.id}`);
+            }
+
+            // 3. Generate Beacon Tokens
+            const accessToken = AuthService.generateToken(user.id);
+            const refreshToken = AuthService.generateRefreshToken(user.id);
+            setAuthCookies(res, req, accessToken, refreshToken);
+
+            await SystemAuditService.log({
+                action: AuditAction.USER_LOGIN_SUCCESS,
+                userId: user.id,
+                reason: 'Login via Google',
+                ip: req.ip,
+                userAgent: req.headers['user-agent'] as string,
+                fingerprint: getFingerprint(req)
+            });
+
+            logger.info(`[GOOGLE_LOGIN] Successful login for user: ${user.id}`);
+            res.json({
+                user: AuthService.sanitizeUser(user),
+                accessToken,
+                refreshToken
+            });
+        } catch (error: any) {
+            if (isDatabaseUnavailable(error)) {
+                return res.status(503).json({ error: 'Database unavailable. Please try again in a moment.' });
+            }
+            logger.error(`[GOOGLE_LOGIN] Unexpected fatal error: ${error.stack || error.message}`);
+            res.status(500).json({ error: 'Internal Server Error during Google Login' });
         }
     }
 }

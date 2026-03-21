@@ -71,7 +71,7 @@ const ModerationManager: React.FC<ModerationManagerProps> = ({ guildId }) => {
     const filteredMembers = members.filter(m => {
         const query = search.toLowerCase();
         return (
-            m.user.username.toLowerCase().includes(query) ||
+            String(m.user.username || '').toLowerCase().includes(query) ||
             m.nickname?.toLowerCase().includes(query) ||
             m.userId.includes(query)
         );

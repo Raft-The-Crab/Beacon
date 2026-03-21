@@ -104,7 +104,8 @@ export function getSimulatedFrameForUser(username?: string) {
   if (!username) return null
 
   const storeArts = useProfileArtStore.getState().arts
-  if (username.toLowerCase().includes('beaconbot') || username.toLowerCase() === 'system') {
+  const lowerName = String(username || '').toLowerCase()
+  if (lowerName.includes('beaconbot') || lowerName === 'system') {
     return storeArts.find((entry) => entry.id === 'frame-beacon-og') || null
   }
 

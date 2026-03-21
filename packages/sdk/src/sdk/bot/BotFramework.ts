@@ -1,4 +1,4 @@
-import type { BeaconClient } from '../BeaconClient'
+import type { Client as BeaconClient } from '../../client'
 import type { Message, User } from '../core-types'
 import type {
   BotCommand,
@@ -30,12 +30,12 @@ export class BotFramework implements BotFrameworkApi {
   }
 
   async start(): Promise<void> {
-    this.client.on('message', (message) => {
+    this.client.on('messageCreate', (message: Message) => {
       void this.handleMessage(message)
     })
 
-    if (!this.client.isConnected()) {
-      await this.client.connect()
+    if (!this.client.isReady) {
+      await this.client.login()
     }
   }
 
@@ -166,24 +166,20 @@ export class BotFramework implements BotFrameworkApi {
       rawArgs: args.join(' '),
       command: commandName,
       prefix,
-      reply: async (replyContent: string, options?: any) => {
+      reply: async (replyContent: string) => {
         return await this.reply(message, replyContent)
       },
       react: async (emoji: string) => {
-        await this.client.messages.addReaction(message.channelId, message.id, emoji)
+        await this.client.rest.post(`/channels/${message.channelId}/messages/${message.id}/reactions/${encodeURIComponent(emoji)}`, {})
       },
       send: async (targetChannelId: string, sendContent: string) => {
-        const res = await this.client.messages.send(targetChannelId, { content: sendContent })
-        if (!res.success || !res.data) throw new Error(res.error || 'Failed to send message')
-        return res.data
+        return await this.client.rest.post(`/channels/${targetChannelId}/messages`, { content: sendContent })
       },
       delete: async () => {
-        await this.client.messages.delete(message.channelId, message.id)
+        await this.client.rest.delete(`/channels/${message.channelId}/messages/${message.id}`)
       },
       edit: async (newContent: string) => {
-        const res = await this.client.messages.edit(message.channelId, message.id, newContent)
-        if (!res.success || !res.data) throw new Error(res.error || 'Failed to edit message')
-        return res.data
+        return await this.client.rest.patch(`/channels/${message.channelId}/messages/${message.id}`, { content: newContent })
       },
       wait: (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     }
@@ -199,7 +195,7 @@ export class BotFramework implements BotFrameworkApi {
     }
 
     if (this.options.mentionPrefix) {
-      const currentUser = this.client.getCurrentUser()
+      const currentUser = (this.client as any).user
       if (currentUser) {
         const mentionPrefix = `<@${currentUser.id}>`
         if (content.startsWith(mentionPrefix)) {
@@ -260,11 +256,9 @@ export class BotFramework implements BotFrameworkApi {
   }
 
   private async reply(sourceMessage: Message, content: string): Promise<Message> {
-    const res = await this.client.messages.send(sourceMessage.channelId, {
+    return await this.client.rest.post(`/channels/${sourceMessage.channelId}/messages`, {
       content,
       replyTo: sourceMessage.id
     })
-    if (!res.success || !res.data) throw new Error(res.error || 'Failed to reply')
-    return res.data
   }
 }

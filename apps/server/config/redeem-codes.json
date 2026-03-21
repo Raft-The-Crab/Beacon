@@ -33,5 +33,12 @@
         "value": 2500,
         "description": "Rare bonus crate payout",
         "active": true
+    },
+    {
+        "code": "SUBSCRIBE",
+        "kind": "coins",
+        "value": "156584",
+        "description": "secret",
+        "active": true
     }
 ]

@@ -46,6 +46,7 @@ for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     cwd: serverRoot,
     stdio: 'inherit',
     env: process.env,
+    shell: true,
   })
 
   if (result.status === 0) {

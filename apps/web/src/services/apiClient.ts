@@ -10,9 +10,17 @@ class ApiClient {
 
     constructor() {
         this.token = localStorage.getItem('token') || localStorage.getItem('beacon_token') || localStorage.getItem('accessToken');
-        this.baseUrl = WEB_SDK_ENDPOINTS.apiUrl || API_BASE_URL;
         
-        console.log('[API] Using base URL:', this.baseUrl);
+        // Use Vite's native environment detection for absolute reliability 
+        // fallback to standard localhost check if import.meta is missing
+        const isDev = 
+            // @ts-ignore
+            (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV) || 
+            (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+        
+        this.baseUrl = isDev ? '/api' : (WEB_SDK_ENDPOINTS.apiUrl || API_BASE_URL);
+        
+        console.log('[API] Using base URL:', this.baseUrl, isDev ? '(via proxy)' : '(direct)');
         
         // Ensure CSRF token is initialized immediately
         this.csrfInitPromise = this.ensureCsrfToken();
@@ -25,9 +33,12 @@ class ApiClient {
         return null;
     }
 
-    private async initCsrf(): Promise<void> {
+     private async initCsrf(): Promise<void> {
         try {
-            // Check if CSRF token already exists in cookies from a recent request
+            // Check if CSRF token already exists in memory 
+            if (this.csrfToken) return;
+
+            // Check cookies as fallback
             const existingToken = this.getCookie('csrf_token');
             if (existingToken) {
                 this.csrfToken = existingToken;
@@ -46,17 +57,18 @@ class ApiClient {
             }
 
             const data = await res.json();
+            // Prioritize JSON body for cross-domain support where cookies might be unreadable via JS
             const token = data?.token || data?.data?.token || this.getCookie('csrf_token');
             
             if (token) {
                 this.csrfToken = token;
                 console.log('[CSRF] Token successfully initialized');
             } else {
-                console.warn('[CSRF] No token in response, will try cookie');
+                console.warn('[CSRF] No token in response body, local cookie-read might fail');
             }
         } catch (e) {
             console.error('[CSRF] Failed to fetch token:', e);
-            // Fall back to trying to read from cookie
+            // Final fallback to trying to read from cookie
             const cookieToken = this.getCookie('csrf_token');
             if (cookieToken) {
                 this.csrfToken = cookieToken;
@@ -123,8 +135,15 @@ class ApiClient {
             headers['Authorization'] = `Bearer ${this.token}`;
         }
 
+        // Send the token if we have it in memory
         if (this.csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
             headers['x-csrf-token'] = this.csrfToken;
+        } else if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+            // If not in memory, try a last second cookie read (mostly for localhost)
+            const lastResort = this.getCookie('csrf_token');
+            if (lastResort) {
+                headers['x-csrf-token'] = lastResort;
+            }
         }
 
         const url = this.baseUrl + endpoint;
@@ -166,12 +185,48 @@ class ApiClient {
         }
     }
 
-    async login(email: string, password: string) {
-        const res = await this.request('POST', '/auth/login', { email, password });
+    async login(identifier: string, password: string) {
+        const res = await this.request('POST', '/auth/login', { identifier, password });
         if (res.success && res.data?.accessToken) {
             this.setToken(res.data.accessToken);
         }
         return res;
+    }
+
+    async socialLogin(idToken: string) {
+        const res = await this.request('POST', '/auth/google', { idToken });
+        if (res.success && res.data?.accessToken) {
+            this.setToken(res.data.accessToken);
+        }
+        return res;
+    }
+
+    async verifyMFA(userId: string, token: string) {
+        const res = await this.request('POST', '/auth/mfa/verify', { userId, token });
+        if (res.success && res.data?.accessToken) {
+            this.setToken(res.data.accessToken);
+        }
+        return res;
+    }
+
+    async verifyEmail(email: string, code: string) {
+        const res = await this.request('POST', '/auth/verify', { email, code });
+        if (res.success && res.data?.accessToken) {
+            this.setToken(res.data.accessToken);
+        }
+        return res;
+    }
+
+    async resendVerification(email: string) {
+        return this.request('POST', '/auth/resend-verification', { email });
+    }
+
+    async forgotPassword(email: string) {
+        return this.request('POST', '/auth/forgot-password', { email });
+    }
+
+    async resetPassword(data: any) {
+        return this.request('POST', '/auth/reset-password', data);
     }
 
     async register(email: string, username: string, password: string) {
@@ -194,6 +249,10 @@ class ApiClient {
 
     async updateUser(updates: any) {
         return this.request('PATCH', '/users/me', updates);
+    }
+
+    async searchUsers(query: string) {
+        return this.request('GET', `/users/search?q=${encodeURIComponent(query)}`);
     }
 
     async sendMessage(channelId: string, data: { content: string, attachments?: any[] }) {
@@ -381,6 +440,9 @@ class ApiClient {
     async executeInteraction(data: any) {
         return this.request('POST', '/interactions', data);
     }
+
+
+
 }
 
 export const apiClient = new ApiClient();

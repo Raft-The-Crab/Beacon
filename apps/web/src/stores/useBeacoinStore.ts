@@ -132,31 +132,8 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
         transactions: [data.transaction, ...state.transactions]
       }))
     } catch (err: any) {
-      const message = String(err?.response?.data?.error || err?.message || '')
-      const isDbOrNetwork = /database not connected|network|failed to fetch/i.test(message)
-
-      if (!isDbOrNetwork) {
-        set({ isLoading: false })
-        throw err
-      }
-
-      const baseCost = tier === 'yearly' ? 10000 : 1250
-      set((state) => {
-        if (state.balance < baseCost) {
-          return { isLoading: false }
-        }
-        return {
-          isLoading: false,
-          balance: state.balance - baseCost,
-          transactions: [{
-            id: `local-sub-${Date.now()}`,
-            type: 'spend',
-            amount: baseCost,
-            description: `Beacon+ ${tier} (offline mode)`,
-            timestamp: new Date().toISOString(),
-          } as any, ...state.transactions],
-        }
-      })
+      set({ isLoading: false })
+      throw err
     }
   },
 
@@ -177,20 +154,30 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
       timestamp: now,
     }
 
-    // Try API, fall back to local
     try {
-      await api.post('/users/@me/beacoin/daily')
-    } catch {
-      // Offline — apply locally
+      const { data } = await api.post('/users/@me/beacoin/daily')
+      const now = new Date().toISOString()
+      
+      set((state) => ({
+        balance: state.balance + reward,
+        streak: newStreak,
+        lastDailyClaim: now,
+        dailyRewards: generateDailyRewards(newStreak),
+        transactions: [
+          {
+            id: data.transaction?.id || `daily-${Date.now()}`,
+            type: 'earn',
+            amount: reward,
+            description: isStreakDay ? `Daily reward + ${STREAK_BONUS} streak bonus! 🔥` : 'Daily check-in reward',
+            timestamp: now,
+          },
+          ...state.transactions
+        ],
+      }))
+    } catch (err) {
+      console.error('Failed to claim daily reward:', err)
+      throw err
     }
-
-    set((state) => ({
-      balance: state.balance + reward,
-      streak: newStreak,
-      lastDailyClaim: now,
-      dailyRewards: generateDailyRewards(newStreak),
-      transactions: [tx, ...state.transactions],
-    }))
   },
 
   claimActivityReward: async () => {
@@ -206,16 +193,24 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
     }
 
     try {
-      await api.post('/users/@me/beacoin/activity')
-    } catch {
-      // Offline — apply locally
+      const { data } = await api.post('/users/@me/beacoin/activity')
+      set((state) => ({
+        balance: state.balance + ACTIVITY_REWARD,
+        messageCount: 0, // reset count
+        transactions: [
+          {
+            id: data.transaction?.id || `activity-${Date.now()}`,
+            type: 'earn',
+            amount: ACTIVITY_REWARD,
+            description: `Activity milestone: ${ACTIVITY_THRESHOLD} messages! 💬`,
+            timestamp: new Date().toISOString(),
+          },
+          ...state.transactions
+        ],
+      }))
+    } catch (err) {
+      console.error('Failed to claim activity reward:', err)
     }
-
-    set((state) => ({
-      balance: state.balance + ACTIVITY_REWARD,
-      messageCount: 0, // reset count
-      transactions: [tx, ...state.transactions],
-    }))
   },
 
   claimInviteBonus: async (invitedUserId: string) => {
@@ -229,15 +224,24 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
     }
 
     try {
-      await api.post('/users/@me/beacoin/invite', { invitedUserId })
-    } catch {
-      // Offline
+      const { data } = await api.post('/users/@me/beacoin/invite', { invitedUserId })
+      set((state) => ({
+        balance: state.balance + INVITE_BONUS,
+        transactions: [
+          {
+            id: data.transaction?.id || `invite-${Date.now()}`,
+            type: 'bonus',
+            amount: INVITE_BONUS,
+            description: 'Invite bonus — a friend joined Beacon!',
+            timestamp: new Date().toISOString(),
+            fromUserId: invitedUserId,
+          },
+          ...state.transactions
+        ],
+      }))
+    } catch (err) {
+      console.error('Failed to claim invite bonus:', err)
     }
-
-    set((state) => ({
-      balance: state.balance + INVITE_BONUS,
-      transactions: [tx, ...state.transactions],
-    }))
   },
 
   incrementMessages: () => {

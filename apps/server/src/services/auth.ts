@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { z } from 'zod'
 import { validateUsername } from '../middleware/validation'
+import { logger } from './logger'
+import { NotificationService } from './notification'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-me'
 
@@ -14,8 +16,13 @@ export const RegisterSchema = z.object({
 })
 
 export const LoginSchema = z.object({
-  email: z.string().email(),
+  identifier: z.string().min(2),
   password: z.string()
+})
+
+const ResetPasswordSchema = z.object({
+  token: z.string(),
+  newPassword: z.string().min(8)
 })
 
 const BADGE_NORMALIZATION_MAP: Record<string, string> = {
@@ -111,6 +118,10 @@ export class AuthService {
       isBeaconPlus = true
     }
 
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
+    const verificationExpires = new Date()
+    verificationExpires.setHours(verificationExpires.getHours() + 24)
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -122,34 +133,53 @@ export class AuthService {
         isBeaconPlus,
         beaconPlusSince: isBeaconPlus ? new Date() : null,
         theme: 'auto',
-        developerMode: username.toLowerCase() === 'raftthecrab'
+        developerMode: username.toLowerCase() === 'raftthecrab',
+        isVerified: false,
+        verificationCode,
+        verificationExpires
       }
     })
 
-    const accessToken = this.generateToken(user.id)
-    const refreshToken = this.generateRefreshToken(user.id)
+    await NotificationService.sendVerificationCode(email, verificationCode)
 
     return {
       user: this.sanitizeUser(user),
-      accessToken,
-      refreshToken
+      verificationRequired: true
     }
   }
 
   static async login(data: z.infer<typeof LoginSchema>) {
     if (!prisma) throw new Error('Database not available')
 
-    const user = await prisma.user.findUnique({
-      where: { email: data.email }
+    const identifier = data.identifier.trim()
+    const user = await prisma.user.findFirst({
+        where: {
+            OR: [
+                { email: { equals: identifier, mode: 'insensitive' } },
+                { username: { equals: identifier, mode: 'insensitive' } }
+            ]
+        }
     })
 
     if (!user) {
       throw new Error('Invalid credentials')
     }
 
+    // Guard: password-less accounts (Google login) cannot use credential login
+    if (!user.password) {
+      throw new Error('This account uses social login. Please sign in with Google.')
+    }
+
     const validPassword = await bcrypt.compare(data.password, user.password)
     if (!validPassword) {
       throw new Error('Invalid credentials')
+    }
+
+    if (!user.isVerified) {
+      return {
+        verificationRequired: true,
+        email: user.email
+      }
     }
 
     // Retroactive RaftTheCrab Ascension
@@ -175,13 +205,9 @@ export class AuthService {
       }
     }
 
-    const accessToken = this.generateToken(user.id)
-    const refreshToken = this.generateRefreshToken(user.id)
-
     return {
       user: this.sanitizeUser(user),
-      accessToken,
-      refreshToken
+      ...this.generateTokenPair(user.id)
     }
   }
 
@@ -191,6 +217,14 @@ export class AuthService {
 
   static generateToken(userId: string) {
     return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: '7d' })
+  }
+
+  /** Generate both access and refresh tokens in one call */
+  static generateTokenPair(userId: string) {
+    return {
+      accessToken: this.generateToken(userId),
+      refreshToken: this.generateRefreshToken(userId)
+    }
   }
 
   static verifyToken(token: string) {
@@ -232,13 +266,129 @@ export class AuthService {
       throw new Error('Invalid 2FA token')
     }
 
-    const accessToken = this.generateToken(user.id)
-    const refreshToken = this.generateRefreshToken(user.id)
-
     return {
       user: this.sanitizeUser(user),
-      accessToken,
-      refreshToken
+      ...this.generateTokenPair(user.id)
     }
+  }
+
+  static async forgotPassword(email: string) {
+    if (!prisma) throw new Error('Database not available')
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() }
+    })
+
+    if (!user) {
+      // Don't leak user existence in production, but for testing we return success
+      return { success: true }
+    }
+
+    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    const expires = new Date()
+    expires.setHours(expires.getHours() + 1)
+
+    await (prisma.user as any).update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: token,
+        passwordResetExpires: expires
+      }
+    })
+
+    await NotificationService.sendPasswordReset(email, token)
+    logger.info(`Password reset requested for ${email}. Token: ${token}`)
+
+    return { 
+      success: true, 
+      token, // Return token directly for local testing as per user's "non-production" context
+      message: 'If an account exists with this email, a reset token has been generated.' 
+    }
+  }
+
+  static async resetPassword(data: z.infer<typeof ResetPasswordSchema>) {
+    if (!prisma) throw new Error('Database not available')
+
+    const user = await (prisma.user as any).findFirst({
+      where: {
+        passwordResetToken: data.token,
+        passwordResetExpires: { gt: new Date() }
+      }
+    })
+
+    if (!user) {
+      throw new Error('Invalid or expired reset token')
+    }
+
+    const rounds = parseInt(process.env.BCRYPT_ROUNDS || '10', 10)
+    const hashedPassword = await bcrypt.hash(data.newPassword, isNaN(rounds) ? 10 : rounds)
+
+    await (prisma.user as any).update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null
+      }
+    })
+
+    return { success: true, message: 'Password has been reset successfully' }
+  }
+
+  static async verifyEmail(email: string, code: string) {
+    if (!prisma) throw new Error('Database not available')
+
+    const user = await prisma.user.findFirst({
+      where: {
+        email: email.toLowerCase().trim(),
+        verificationCode: code,
+        verificationExpires: { gt: new Date() }
+      }
+    })
+
+    if (!user) {
+      throw new Error('Invalid or expired verification code')
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isVerified: true,
+        verificationCode: null,
+        verificationExpires: null
+      }
+    })
+
+    return {
+      success: true,
+      user: this.sanitizeUser(user),
+      ...this.generateTokenPair(user.id)
+    }
+  }
+
+  static async resendVerification(email: string) {
+    if (!prisma) throw new Error('Database not available')
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() }
+    })
+
+    if (!user) throw new Error('User not found')
+    if (user.isVerified) throw new Error('Account already verified')
+
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
+    const verificationExpires = new Date()
+    verificationExpires.setHours(verificationExpires.getHours() + 24)
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationCode,
+        verificationExpires
+      }
+    })
+
+    await NotificationService.sendVerificationCode(user.email, verificationCode)
+    return { success: true, message: 'Verification code resent' }
   }
 }

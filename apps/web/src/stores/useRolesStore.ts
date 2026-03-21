@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { api } from '../lib/api'
 
-import { PermissionBit } from '@beacon/types'
+
+import { PermissionBit } from 'beacon-sdk'
 
 export type Permission = keyof typeof PermissionBit
 

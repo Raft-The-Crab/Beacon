@@ -60,7 +60,7 @@
   width: 120px;
   height: 100px;
   background: linear-gradient(135deg, rgba(255, 200, 0, 0.4), rgba(240, 178, 50, 0.15));
-  border-radius: 8px;
+  border-radius: var(--radius-xl);
   transform-origin: bottom center;
   transform: rotateX(-90deg) translateZ(50px);
 }
@@ -68,7 +68,7 @@
 .crateFront {
   width: 120px;
   height: 100px;
-  border-radius: 8px;
+  border-radius: var(--radius-xl);
   transform: translateZ(60px);
   background: linear-gradient(to right, rgba(240, 178, 50, 0.15), rgba(240, 178, 50, 0.25));
 }
@@ -76,14 +76,14 @@
 .crateLeft {
   width: 60px;
   height: 100px;
-  border-radius: 8px;
+  border-radius: var(--radius-xl);
   transform: rotateY(90deg) translateZ(60px);
 }
 
 .crateRight {
   width: 60px;
   height: 100px;
-  border-radius: 8px;
+  border-radius: var(--radius-xl);
   transform: rotateY(-90deg) translateZ(60px);
 }
 

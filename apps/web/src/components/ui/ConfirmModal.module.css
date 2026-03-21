@@ -1,0 +1,58 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px 8px 8px;
+}
+
+.iconWrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.primary {
+    color: var(--beacon-brand);
+    background: rgba(114, 137, 218, 0.1);
+}
+
+.danger {
+    color: #ed4245;
+    background: rgba(237, 66, 69, 0.1);
+}
+
+.info {
+    color: #3ba55c;
+    background: rgba(59, 165, 92, 0.1);
+}
+
+.title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.message {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    max-width: 320px;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.actions button {
+    flex: 1;
+}

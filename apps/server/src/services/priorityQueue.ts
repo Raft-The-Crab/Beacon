@@ -91,6 +91,12 @@ class PriorityQueueService {
      * Used for media processing: runs in background, publishes result to Redis.
      */
     enqueue<T = any>(type: JobType, data: T, onComplete?: string): string {
+        const MAX_QUEUE_SIZE = 500
+        if (this.slowQueue.length >= MAX_QUEUE_SIZE) {
+            console.warn(`[Queue] Overloaded! Dropping ${type} job to prevent OOM.`)
+            throw new Error('Moderation queue overloaded (backpressure)')
+        }
+        
         const job: QueueJob<T> = {
             id: `slow_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
             type,

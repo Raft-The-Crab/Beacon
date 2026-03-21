@@ -70,7 +70,7 @@ export function StickerPicker({ isOpen, onClose, onStickerSelect, onSuperReactio
     if (!isOpen) return null
 
     const filteredStickers = STICKERS.filter(s => {
-        const matchesSearch = !search || s.name.toLowerCase().includes(search.toLowerCase())
+        const matchesSearch = !search || String(s.name || '').toLowerCase().includes(search.toLowerCase())
         const matchesCategory = activeCategory === 'popular' ? true : s.category === activeCategory
         return matchesSearch && matchesCategory
     })

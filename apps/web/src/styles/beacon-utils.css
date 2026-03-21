@@ -1,4 +1,4 @@
-/* Discord-like Utility Classes */
+/* Beacon UI Utility Classes — v2.0.0 */
 
 /* Interactive Elements */
 .interactive {
@@ -18,10 +18,10 @@
 /* Clickable Row */
 .clickable-row {
   padding: 8px 8px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
   cursor: pointer;
   transition: background 0.15s;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .clickable-row:hover {
@@ -247,7 +247,7 @@
   );
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
 }
 
 @keyframes skeleton-loading {
@@ -265,7 +265,7 @@
   background: var(--bg-tertiary);
   color: var(--text-primary);
   padding: 8px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
   font-size: 14px;
   font-weight: 500;
   box-shadow: var(--shadow-lg);
@@ -274,7 +274,7 @@
   z-index: var(--z-modal);
 }
 
-/* Discord-like Mention */
+/* Beacon Mention */
 .mention {
   background: rgba(88, 101, 242, 0.15);
   color: var(--beacon-brand);

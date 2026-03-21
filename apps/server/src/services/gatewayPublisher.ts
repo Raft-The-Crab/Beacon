@@ -1,5 +1,5 @@
 import { redis } from '../db';
-import { WSEventType } from '@beacon/types';
+import { WSEventType } from 'beacon-sdk';
 
 /**
  * Utility to publish an event to the Redis gateway.

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { X, Upload, Trash2, Plus, Shield, Users, Globe, Ban, Lock, BarChart2, Webhook, FileText } from 'lucide-react'
+import { X, Upload, Trash2, Plus, Shield, Users, Globe, Ban, Lock, BarChart2, Webhook, FileText, Rocket, ChevronLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUIStore } from '../stores/useUIStore'
 import { useServerStore } from '../stores/useServerStore'
@@ -8,8 +8,9 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { AuditLogModal } from '../components/modals/AuditLogModal'
 import WebhooksManager from '../components/modals/WebhooksManager'
 import { fileUploadService } from '../services/fileUpload'
-import { Avatar, useToast } from '../components/ui'
+import { Avatar, useToast, ConfirmModal, Select } from '../components/ui'
 import { apiClient } from '../services/apiClient'
+import { ServerBoosting } from '../components/features/ServerBoosting'
 import styles from '../styles/modules/pages/ServerSettings.module.css'
 
 type TabId =
@@ -22,11 +23,13 @@ type TabId =
   | 'webhooks'
   | 'auditlog'
   | 'insights'
+  | 'boost'
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode; group: string }[] = [
   { id: 'overview', label: 'Overview', icon: <Globe size={15} />, group: 'Settings' },
   { id: 'roles', label: 'Roles', icon: <Shield size={15} />, group: 'Settings' },
   { id: 'members', label: 'Members', icon: <Users size={15} />, group: 'Settings' },
+  { id: 'boost', label: 'Server Boost', icon: <Rocket size={15} color="#f47fff" />, group: 'Settings' },
   { id: 'moderation', label: 'Moderation', icon: <Ban size={15} />, group: 'Community' },
   { id: 'invites', label: 'Invites', icon: <Plus size={15} />, group: 'Community' },
   { id: 'bans', label: 'Bans', icon: <Lock size={15} />, group: 'Community' },
@@ -42,6 +45,17 @@ type GuildRole = {
   permissions?: string
   position?: number
 }
+
+const AVAILABLE_PERMISSIONS = [
+  { name: 'Administrator', bit: BigInt(8), desc: 'Bypasses all other permissions' },
+  { name: 'Manage Server', bit: BigInt(32), desc: 'Allows changing server name, regions, and other settings' },
+  { name: 'Manage Roles', bit: BigInt(268435456), desc: 'Allows modifying and deleting roles' },
+  { name: 'Manage Channels', bit: BigInt(16), desc: 'Allows creating, editing, and deleting channels' },
+  { name: 'Kick Members', bit: BigInt(2), desc: 'Allows removing members' },
+  { name: 'Ban Members', bit: BigInt(4), desc: 'Allows permanently banning members' },
+  { name: 'Manage Messages', bit: BigInt(8192), desc: 'Allows deleting other members\' messages' },
+  { name: 'Send Messages', bit: BigInt(2048), desc: 'Allows sending text messages' },
+]
 
 export function ServerSettings() {
   const navigate = useNavigate()
@@ -66,6 +80,21 @@ export function ServerSettings() {
   const [loadingRoles, setLoadingRoles] = useState(false)
   const [creatingRole, setCreatingRole] = useState(false)
   const [newRoleName, setNewRoleName] = useState('')
+  const [editingRole, setEditingRole] = useState<GuildRole | null>(null)
+  
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    onConfirm: () => void | Promise<void>
+    variant?: 'danger' | 'primary' | 'info'
+    confirmLabel?: string
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  })
 
   const isRouteMode = !!routeServerId
   const isOpen = isRouteMode || showServerSettings
@@ -158,28 +187,44 @@ export function ServerSettings() {
 
   const handleKickMember = async (userId: string) => {
     if (!currentServer) return
-    if (!confirm('Kick this member from the server?')) return
-
-    const res = await apiClient.kickMember(currentServer.id, userId)
-    if (res.success) {
-      await fetchGuild(currentServer.id)
-      toast.success('Member kicked')
-      return
-    }
-    toast.error(res.error || 'Failed to kick member')
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Kick Member',
+      message: 'Are you sure you want to kick this member from the server?',
+      variant: 'danger',
+      confirmLabel: 'Kick',
+      onConfirm: async () => {
+        const res = await apiClient.kickMember(currentServer.id, userId)
+        if (res.success) {
+          await fetchGuild(currentServer.id)
+          toast.success('Member kicked')
+        } else {
+          toast.error(res.error || 'Failed to kick member')
+        }
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      }
+    })
   }
 
   const handleBanMember = async (userId: string) => {
     if (!currentServer) return
-    if (!confirm('Ban this member from the server?')) return
-
-    const res = await apiClient.banMember(currentServer.id, userId)
-    if (res.success) {
-      await fetchGuild(currentServer.id)
-      toast.success('Member banned')
-      return
-    }
-    toast.error(res.error || 'Failed to ban member')
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Ban Member',
+      message: 'Are you sure you want to ban this member from the server? They will not be able to rejoin unless unbanned.',
+      variant: 'danger',
+      confirmLabel: 'Ban',
+      onConfirm: async () => {
+        const res = await apiClient.banMember(currentServer.id, userId)
+        if (res.success) {
+          await fetchGuild(currentServer.id)
+          toast.success('Member banned')
+        } else {
+          toast.error(res.error || 'Failed to ban member')
+        }
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      }
+    })
   }
 
   const handleCreateRole = async () => {
@@ -217,16 +262,73 @@ export function ServerSettings() {
       toast.error('Cannot delete @everyone role')
       return
     }
-    if (!confirm(`Delete role "${role.name}"?`)) return
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Role',
+      message: `Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`,
+      variant: 'danger',
+      confirmLabel: 'Delete Role',
+      onConfirm: async () => {
+        const res = await apiClient.deleteGuildRole(currentServer.id, role.id)
+        if (res.success) {
+          setRoles(prev => prev.filter(r => r.id !== role.id))
+          toast.success('Role deleted')
+        } else {
+          toast.error(res.error || 'Failed to delete role')
+        }
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      }
+    })
+  }
 
-    const res = await apiClient.deleteGuildRole(currentServer.id, role.id)
-    if (!res.success) {
-      toast.error(res.error || 'Failed to delete role')
-      return
+  const handleTogglePermission = async (role: GuildRole, bit: bigint) => {
+    if (!currentServer) return
+    const currentPerms = BigInt(role.permissions ?? "0")
+    let newPerms = currentPerms
+    if ((currentPerms & bit) === bit) {
+      newPerms = currentPerms & ~bit
+    } else {
+      newPerms = currentPerms | bit
+    }
+    
+    // Optimistic update
+    setRoles(prev => prev.map(r => r.id === role.id ? { ...r, permissions: newPerms.toString() } : r))
+    if (editingRole?.id === role.id) {
+        setEditingRole({ ...role, permissions: newPerms.toString() })
     }
 
-    setRoles(prev => prev.filter(r => r.id !== role.id))
-    toast.success('Role deleted')
+    try {
+      await apiClient.updateGuildRole(currentServer.id, role.id, { permissions: newPerms.toString() })
+    } catch {
+      toast.error('Failed to update permissions')
+      // Revert optimistic update
+      setRoles(prev => prev.map(r => r.id === role.id ? { ...r, permissions: currentPerms.toString() } : r))
+      if (editingRole?.id === role.id) {
+          setEditingRole({ ...role, permissions: currentPerms.toString() })
+      }
+    }
+  }
+
+  const handleAssignRole = async (userId: string, roleId: string) => {
+    if (!currentServer) return
+    try {
+        await apiClient.request('PUT', `/guilds/${currentServer.id}/members/${userId}/roles/${roleId}`)
+        await fetchGuild(currentServer.id)
+        toast.success('Role added')
+    } catch {
+        toast.error('Failed to add role')
+    }
+  }
+
+  const handleRemoveRole = async (userId: string, roleId: string) => {
+    if (!currentServer) return
+    try {
+        await apiClient.request('DELETE', `/guilds/${currentServer.id}/members/${userId}/roles/${roleId}`)
+        await fetchGuild(currentServer.id)
+        toast.success('Role removed')
+    } catch (e: any) {
+        toast.error('Failed to remove role')
+    }
   }
 
   if (!isOpen) return null
@@ -273,15 +375,23 @@ export function ServerSettings() {
   }
 
   const handleDelete = async () => {
-    if (confirm(`Are you sure you want to delete "${currentServer.name}"? This cannot be undone.`)) {
-      try {
-        await deleteGuild(currentServer.id)
-        closeSettings()
-        toast.success('Server deleted.')
-      } catch {
-        toast.error('Failed to delete server.')
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Server',
+      message: `Are you sure you want to delete "${currentServer.name}"? This action is permanent and cannot be undone.`,
+      variant: 'danger',
+      confirmLabel: 'Delete Server',
+      onConfirm: async () => {
+        try {
+          await deleteGuild(currentServer.id)
+          closeSettings()
+          toast.success('Server deleted.')
+        } catch {
+          toast.error('Failed to delete server.')
+        }
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }))
       }
-    }
+    })
   }
 
   const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -431,7 +541,7 @@ export function ServerSettings() {
                         </div>
                         <div className={styles.infoItem}>
                           <span className={styles.infoLabel}>Created</span>
-                          <span className={styles.infoValue}>{new Date(currentServer.createdAt).toLocaleDateString()}</span>
+                          <span className={styles.infoValue}>{new Date(currentServer.createdAt || '').toLocaleDateString()}</span>
                         </div>
                         <div className={styles.infoItem}>
                           <span className={styles.infoLabel}>Members</span>
@@ -445,60 +555,95 @@ export function ServerSettings() {
                 {/* ── Roles ── */}
                 {activeTab === 'roles' && (
                   <div>
-                    <p className={styles.tabIntro}>
-                      Create and manage role groups for your server members.
-                    </p>
-                    <div className={`${styles.inviteCreate} glass-panel`}>
-                      <div className={styles.inviteInfo}>
-                        <span>Create a new role</span>
-                        <code className={styles.inviteCode}>Roles control permission bundles and hierarchy.</code>
-                      </div>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <input
-                          className={styles.input}
-                          style={{ minWidth: 180 }}
-                          placeholder="Role name"
-                          value={newRoleName}
-                          onChange={(e) => setNewRoleName(e.target.value)}
-                          maxLength={100}
-                        />
-                        <button className={styles.copyBtn} onClick={handleCreateRole} disabled={creatingRole}>
-                          {creatingRole ? 'Creating...' : 'Create Role'}
+                    {editingRole ? (
+                      <div className={styles.editingRoleView}>
+                        <button className={styles.backBtn} onClick={() => setEditingRole(null)}>
+                            <ChevronLeft size={16} style={{ marginRight: 4 }} /> Back to Roles
                         </button>
-                      </div>
-                    </div>
-
-                    {loadingRoles ? (
-                      <p style={{ color: 'var(--text-muted)', marginTop: 16 }}>Loading roles...</p>
-                    ) : roles.length === 0 ? (
-                      <div className={styles.emptyState}>
-                        <Shield size={48} className={styles.emptyIcon} />
-                        <h3>No roles found</h3>
-                        <p>Create your first role to start assigning permissions.</p>
+                        <h3 style={{ marginTop: 16, marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 999, background: editingRole.color || '#99aab5', marginRight: 8 }} />
+                            Editing Role: {editingRole.name}
+                        </h3>
+                        <p className={styles.tabIntro}>Toggle permissions for this role below.</p>
+                        
+                        <div className={`${styles.settingGroup} glass-panel`} style={{ marginTop: 24 }}>
+                            {AVAILABLE_PERMISSIONS.map(p => {
+                                const currentPerms = BigInt(editingRole.permissions ?? "0")
+                                const hasPerm = (currentPerms & p.bit) === p.bit
+                                return (
+                                <div key={p.name} className={styles.settingRow}>
+                                    <div>
+                                    <div className={styles.settingLabel}>{p.name}</div>
+                                    <div className={styles.settingDesc}>{p.desc}</div>
+                                    </div>
+                                    <label className="switch">
+                                        <input type="checkbox" checked={hasPerm} onChange={() => handleTogglePermission(editingRole, p.bit)} />
+                                        <span className="slider round"></span>
+                                    </label>
+                                </div>
+                                )
+                            })}
+                        </div>
                       </div>
                     ) : (
-                      <div className={styles.memberList} style={{ marginTop: 16 }}>
-                        {roles.map((role) => (
-                          <div key={role.id} className={`${styles.memberRow} glass-hover`}>
-                            <div className={styles.memberInfo}>
-                              <span className={styles.memberName}>
-                                <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 999, background: role.color || '#99aab5', marginRight: 8 }} />
-                                {role.name}
-                              </span>
-                              <span className={styles.memberRole}>Permissions: {String(role.permissions ?? '0')}</span>
+                      <>
+                        <p className={styles.tabIntro}>
+                        Create and manage role groups for your server members.
+                        </p>
+                        <div className={`${styles.inviteCreate} glass-panel`}>
+                        <div className={styles.inviteInfo}>
+                            <span>Create a new role</span>
+                            <code className={styles.inviteCode}>Roles control permission bundles and hierarchy.</code>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <input
+                            className={styles.input}
+                            style={{ minWidth: 180 }}
+                            placeholder="Role name"
+                            value={newRoleName}
+                            onChange={(e) => setNewRoleName(e.target.value)}
+                            maxLength={100}
+                            />
+                            <button className={styles.copyBtn} onClick={handleCreateRole} disabled={creatingRole}>
+                            {creatingRole ? 'Creating...' : 'Create Role'}
+                            </button>
+                        </div>
+                        </div>
+
+                        {loadingRoles ? (
+                        <p style={{ color: 'var(--text-muted)', marginTop: 16 }}>Loading roles...</p>
+                        ) : roles.length === 0 ? (
+                        <div className={styles.emptyState}>
+                            <Shield size={48} className={styles.emptyIcon} />
+                            <h3>No roles found</h3>
+                            <p>Create your first role to start assigning permissions.</p>
+                        </div>
+                        ) : (
+                        <div className={styles.memberList} style={{ marginTop: 16 }}>
+                            {roles.map((role) => (
+                            <div key={role.id} className={`${styles.memberRow} glass-hover`}>
+                                <div className={styles.memberInfo}>
+                                <span className={styles.memberName}>
+                                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 999, background: role.color || '#99aab5', marginRight: 8 }} />
+                                    {role.name}
+                                </span>
+                                <span className={styles.memberRole}>{AVAILABLE_PERMISSIONS.filter(p => (BigInt(role.permissions ?? "0") & p.bit) === p.bit).map(p => p.name).join(', ') || 'No Permissions'}</span>
+                                </div>
+                                <div className={styles.memberActions}>
+                                <button className={styles.memberBtn} onClick={() => setEditingRole(role)}>Edit</button>
+                                <button
+                                    className={`${styles.memberBtn} ${styles.memberBtnDanger}`}
+                                    onClick={() => handleDeleteRole(role)}
+                                    disabled={role.name === '@everyone'}
+                                >
+                                    Delete
+                                </button>
+                                </div>
                             </div>
-                            <div className={styles.memberActions}>
-                              <button
-                                className={`${styles.memberBtn} ${styles.memberBtnDanger}`}
-                                onClick={() => handleDeleteRole(role)}
-                                disabled={role.name === '@everyone'}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                            ))}
+                        </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
@@ -526,7 +671,30 @@ export function ServerSettings() {
                             />
                             <div className={styles.memberInfo}>
                               <span className={styles.memberName}>{m.user?.username || m.userId}</span>
-                              <span className={styles.memberRole}>{m.roles?.[0]?.name || 'Member'}</span>
+                              <div className={styles.memberRolesList} style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                                  {(m.roles || []).map((r: any) => (
+                                      <span key={r.id} className={styles.memberRoleBadge} style={{ fontSize: 11, padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                          <span style={{ width: 6, height: 6, borderRadius: 999, background: r.color || '#99aab5' }} />
+                                          {r.name}
+                                          <X size={10} style={{ cursor: 'pointer', opacity: 0.6 }} onClick={() => handleRemoveRole(m.userId, r.id)} />
+                                      </span>
+                                  ))}
+                                  {m.userId !== currentServer.ownerId && (
+                                    <div className={styles.roleSelectWrapper} style={{ position: 'relative' }}>
+                                      <Select 
+                                        className={styles.roleSelect} 
+                                        style={{ fontSize: 11, padding: '2px 6px', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 12, cursor: 'pointer', width: 40 }}
+                                        value="" 
+                                        onChange={(e) => handleAssignRole(m.userId, e.target.value)}
+                                      >
+                                          <option value="" disabled>+</option>
+                                          {roles.filter(r => !(m.roles || []).some((mr: any) => mr.id === r.id) && r.name !== '@everyone').map(r => (
+                                              <option key={r.id} value={r.id}>{r.name}</option>
+                                          ))}
+                                      </Select>
+                                    </div>
+                                  )}
+                              </div>
                             </div>
                             {m.userId !== currentServer.ownerId && (
                               <div className={styles.memberActions}>
@@ -732,6 +900,10 @@ export function ServerSettings() {
                     </div>
                   </div>
                 )}
+                {/* ── Boost ── */}
+                {activeTab === 'boost' && (
+                  <ServerBoosting onClose={() => setActiveTab('overview')} />
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -752,6 +924,16 @@ export function ServerSettings() {
           )}
         </div>
       </motion.div>
+
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        variant={confirmConfig.variant}
+        confirmLabel={confirmConfig.confirmLabel}
+      />
     </div>
   )
 }

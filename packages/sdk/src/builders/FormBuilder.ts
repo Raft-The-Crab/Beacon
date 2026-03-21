@@ -33,6 +33,10 @@ export interface FormData {
 export class FormBuilder {
   private data: FormData = { id: '', title: '', fields: [] }
 
+  static create(): FormBuilder {
+    return new FormBuilder()
+  }
+
   setId(id: string): this {
     this.data.id = id
     return this
@@ -62,9 +66,19 @@ export class FormBuilder {
   }
 
   build(): FormData {
+    return this.toJSON()
+  }
+
+  toJSON(): FormData {
     if (!this.data.id) throw new Error('FormBuilder: id is required.')
     if (!this.data.title) throw new Error('FormBuilder: title is required.')
     if (this.data.fields.length === 0) throw new Error('FormBuilder: At least one field is required.')
     return { submitLabel: 'Submit', ...this.data, fields: [...this.data.fields] }
+  }
+
+  clone(): FormBuilder {
+    const cloned = new FormBuilder()
+    cloned.data = JSON.parse(JSON.stringify(this.data))
+    return cloned
   }
 }

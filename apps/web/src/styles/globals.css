@@ -384,6 +384,46 @@
   --accent-gradient: linear-gradient(135deg, #88c0d0 0%, #5e81ac 100%);
 }
 
+/* ─── Dracula Theme — Vampire Night ─────────────────────────────────────── */
+[data-theme="dracula"] {
+  --beacon-brand: #ff79c6;
+  --beacon-brand-hover: #ff92cf;
+  --beacon-brand-muted: rgba(255, 121, 198, 0.1);
+
+  --bg-primary: #282a36;
+  --bg-secondary: #44475a;
+  --bg-tertiary: #282a36;
+  --bg-main: #282a36;
+  --bg-side: #1e1f29;
+  --bg-panel: #44475a;
+  --bg-surface-soft: #282a36;
+  --bg-surface-elevated: #44475a;
+
+  --bg-hover: rgba(255, 121, 198, 0.1);
+  --bg-active: rgba(255, 121, 198, 0.15);
+
+  --text-primary: #f8f8f2;
+  --text-secondary: #f1fa8c;
+  --text-muted: #6272a4;
+  --text-normal: #f8f8f2;
+  --text-link: #8be9fd;
+
+  --glass-bg: rgba(40, 42, 54, 0.8);
+  --glass-border: rgba(98, 114, 164, 0.2);
+  --border-soft: rgba(98, 114, 164, 0.5);
+
+  --status-success: #50fa7b;
+  --status-error: #ff5555;
+  --status-warning: #ffb86c;
+
+  --accent-gradient: linear-gradient(135deg, #ff79c6 0%, #bd93f9 100%);
+  --accent-glow: 0 0 30px rgba(255, 121, 198, 0.3);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
 /* ─── Message Density Modes ─────────────────────────────────────────────── */
 
 /* Cozy (default) */
@@ -450,6 +490,10 @@ html {
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
@@ -460,7 +504,7 @@ html {
 
 @media (max-width: 480px) {
   html {
-    font-size: 14px;
+    font-size: 13.5px; /* Slightly smaller base for Android/small devices */
   }
 }
 
@@ -470,6 +514,20 @@ body {
   background-image: none !important;
   color: var(--text-primary);
   line-height: 1.5;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* ZERO TOLERANCE: Force all scrolling into internal app shell containers */
+  overscroll-behavior: none; /* Prevent rubber-banding on Android */
+  -webkit-text-size-adjust: 100%; /* Prevent automatic scaling */
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -541,9 +599,13 @@ button {
   background: transparent;
   color: var(--text-primary);
   padding: 0;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+}
+
+button:active {
+  transform: scale(0.97);
 }
 
 /* Input & Select Base — Clean Minimalistic */
@@ -555,7 +617,7 @@ select {
   color: var(--text-primary);
   background: var(--bg-tertiary);
   border: 1px solid var(--border-soft);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
   padding: 0 var(--space-md);
   min-height: 36px;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -676,7 +738,7 @@ select {
 }
 
 .rounded-sm {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
 }
 
 .rounded-md {
@@ -920,8 +982,8 @@ h4 {
 
 /* ─── Premium Scrollbar v3 — Reactive & Minimalist ─── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px; /* MORE MINIMALIST */
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -929,10 +991,10 @@ h4 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-2xl);
-  border: 1px solid rgba(255, 255, 255, 0.02);
-  transition: background 0.3s var(--transition-smooth);
+  background: rgba(255, 255, 255, 0.03); /* MORE SUBTLE BY DEFAULT */
+  border-radius: var(--radius-full);
+  border: none;
+  transition: background 0.25s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {

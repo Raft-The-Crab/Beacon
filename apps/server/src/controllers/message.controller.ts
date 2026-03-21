@@ -63,14 +63,25 @@ export async function getMessages(req: Request, res: Response) {
   const after = req.query.after as string | undefined;
 
   try {
-    const messages = await prisma.message.findMany({
+    // Fast path: cached first page
+    const isFirstPage = !before && !after && limit === 50;
+    const cacheKey = `channel:${channelId}:messages:first_page`;
+
+    if (isFirstPage) {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        return res.json(JSON.parse(cached));
+      }
+    }
+
+    const messages = await (prisma.message as any).findMany({
       where: {
         channelId,
         ...(before ? { id: { lt: before } } : {}),
         ...(after ? { id: { gt: after } } : {}),
       },
       include: {
-        author: { select: { id: true, username: true, avatar: true, discriminator: true } },
+        author: { select: { id: true, username: true, globalName: true, accountTier: true, avatar: true, discriminator: true } },
         reactions: true,
         attachments: true,
       },
@@ -78,7 +89,13 @@ export async function getMessages(req: Request, res: Response) {
       take: limit,
     });
 
-    return res.json(serializeBigInt(messages.reverse()));
+    const serialized = serializeBigInt(messages.reverse());
+
+    if (isFirstPage) {
+      await redis.set(cacheKey, JSON.stringify(serialized), 'EX', 120); // 2 minute cache
+    }
+
+    return res.json(serialized);
   } catch (err) {
     console.error('getMessages error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -88,10 +105,31 @@ export async function getMessages(req: Request, res: Response) {
 // ─────────────────────────────────────────────────────────────
 // POST /channels/:channelId/messages
 // ─────────────────────────────────────────────────────────────
+import { z } from 'zod';
+
+const AttachmentSchema = z.object({
+  filename: z.string().min(1),
+  url: z.string().url(),
+  size: z.number().int().min(0),
+  contentType: z.string().min(1)
+});
+
+const CreateMessageSchema = z.object({
+  content: z.string().max(4000).optional(),
+  embeds: z.array(z.any()).max(10).optional(),
+  attachments: z.array(AttachmentSchema).max(10).optional(),
+  replyTo: z.string().optional().nullable()
+});
+
 export async function createMessage(req: Request, res: Response) {
   const userId = req.user?.id;
   const { channelId } = req.params;
-  const { content, embeds, replyTo, attachments } = req.body;
+  
+  const parsed = CreateMessageSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid message payload' });
+  }
+  const { content, embeds, replyTo, attachments } = parsed.data;
 
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
   if (!content && (!embeds || embeds.length === 0) && (!attachments || attachments.length === 0)) {
@@ -157,7 +195,7 @@ export async function createMessage(req: Request, res: Response) {
       await redis.set(cacheKey, Date.now().toString(), 'EX', channel.slowmode);
     }
 
-    const message = await prisma.message.create({
+    const message = await (prisma.message as any).create({
       data: {
         content: content || '',
         channelId,
@@ -174,7 +212,7 @@ export async function createMessage(req: Request, res: Response) {
         },
       },
       include: {
-        author: { select: { id: true, username: true, avatar: true, discriminator: true } },
+        author: { select: { id: true, username: true, globalName: true, accountTier: true, avatar: true, discriminator: true } },
         reactions: true,
         attachments: true,
         replyTo: {
@@ -187,6 +225,7 @@ export async function createMessage(req: Request, res: Response) {
 
     // Broadcast via Redis Gateway
     await publishGatewayEvent('MESSAGE_CREATE', message);
+    await redis.del(`channel:${channelId}:messages:first_page`);
 
     // SLOW lane media moderation (queued, non-blocking)
     if (process.env.ENABLE_MODERATION !== 'false' && Array.isArray(attachments) && attachments.length > 0) {
@@ -230,13 +269,16 @@ export async function createThread(req: Request, res: Response) {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
+    const parentChannel = await prisma.channel.findUnique({ where: { id: channelId } });
+    if (!parentChannel) return res.status(404).json({ error: 'Parent channel not found' });
+
     const thread = await prisma.channel.create({
       data: {
         id: generateShortId('c', 12),
         name,
         type: 'THREAD',
         parentId: channelId,
-        guildId: (await (prisma.channel as any).findUnique({ where: { id: channelId } })).guildId,
+        guildId: parentChannel.guildId,
       }
     });
 
@@ -259,10 +301,20 @@ export async function createThread(req: Request, res: Response) {
 // ─────────────────────────────────────────────────────────────
 // PATCH /channels/:channelId/messages/:messageId
 // ─────────────────────────────────────────────────────────────
+const EditMessageSchema = z.object({
+  content: z.string().max(4000).optional(),
+  embeds: z.array(z.any()).max(10).optional()
+});
+
 export async function editMessage(req: Request, res: Response) {
   const userId = req.user?.id;
   const { channelId, messageId } = req.params;
-  const { content, embeds } = req.body;
+  
+  const parsed = EditMessageSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Invalid edit payload' });
+  }
+  const { content, embeds } = parsed.data;
 
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -271,7 +323,7 @@ export async function editMessage(req: Request, res: Response) {
     if (!existing) return res.status(404).json({ error: 'Message not found' });
     if (existing.authorId !== userId) return res.status(403).json({ error: 'Cannot edit others\' messages' });
 
-    const message = await prisma.message.update({
+    const message = await (prisma.message as any).update({
       where: { id: messageId },
       data: {
         content: content !== undefined ? content : existing.content,
@@ -279,13 +331,14 @@ export async function editMessage(req: Request, res: Response) {
         editedAt: new Date(),
       },
       include: {
-        author: { select: { id: true, username: true, avatar: true, discriminator: true } },
+        author: { select: { id: true, username: true, globalName: true, accountTier: true, avatar: true, discriminator: true } },
         reactions: true,
         attachments: true,
       },
     });
 
     await publishGatewayEvent('MESSAGE_UPDATE', message);
+    await redis.del(`channel:${channelId}:messages:first_page`);
 
     return res.json(serializeBigInt(message));
   } catch (err) {
@@ -321,6 +374,7 @@ export async function deleteMessage(req: Request, res: Response) {
     await prisma.message.delete({ where: { id: messageId } });
 
     await publishGatewayEvent('MESSAGE_DELETE', { id: messageId, channelId });
+    await redis.del(`channel:${channelId}:messages:first_page`);
 
     return res.status(204).send();
   } catch (err) {
@@ -348,6 +402,7 @@ export async function pinMessage(req: Request, res: Response) {
     });
 
     await publishGatewayEvent('MESSAGE_PIN_ADD', { channelId, messageId, pinnedBy: userId });
+    await redis.del(`channel:${channelId}:messages:first_page`);
 
     return res.status(204).send();
   } catch (err) {
@@ -372,6 +427,7 @@ export async function unpinMessage(req: Request, res: Response) {
     });
 
     await publishGatewayEvent('MESSAGE_PIN_REMOVE', { channelId, messageId });
+    await redis.del(`channel:${channelId}:messages:first_page`);
 
     return res.status(204).send();
   } catch (err) {
@@ -448,6 +504,7 @@ export async function addReaction(req: Request, res: Response) {
     }));
 
     await publishGatewayEvent('MESSAGE_REACTION_ADD', { messageId, channelId, userId, emoji: decodedEmoji, isSuper, reactions });
+    await redis.del(`channel:${channelId}:messages:first_page`);
 
     return res.status(204).send();
   } catch (err: any) {
@@ -463,6 +520,7 @@ export async function addReaction(req: Request, res: Response) {
         isSuper,
         reactions: [{ emoji: { name: decodedEmoji }, users: [userId], isSuper }],
       });
+      await redis.del(`channel:${channelId}:messages:first_page`);
       return res.status(204).send();
     }
 
@@ -510,6 +568,7 @@ export async function removeReaction(req: Request, res: Response) {
     }));
 
     await publishGatewayEvent('MESSAGE_REACTION_REMOVE', { messageId, channelId, userId, emoji: decodedEmoji, reactions });
+    await redis.del(`channel:${channelId}:messages:first_page`);
 
     return res.status(204).send();
   } catch (err: any) {
@@ -523,6 +582,7 @@ export async function removeReaction(req: Request, res: Response) {
         emoji: decodedEmoji,
         reactions: [],
       });
+      await redis.del(`channel:${channelId}:messages:first_page`);
       return res.status(204).send();
     }
 

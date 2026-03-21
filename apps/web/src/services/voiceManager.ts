@@ -1,6 +1,7 @@
 import type SimplePeerModule from 'simple-peer';
 import SimplePeerBrowser from 'simple-peer/simplepeer.min.js';
 import { wsClient } from './websocket';
+import { useAuthStore } from '../stores/useAuthStore';
 import { useVoiceStore, type VoiceState } from '../stores/useVoiceStore';
 
 const SimplePeer = SimplePeerBrowser as unknown as typeof SimplePeerModule;
@@ -96,7 +97,9 @@ class VoiceManagerClass {
       selfDeaf: !!data.self_deaf,
       selfVideo: !!data.self_video,
       selfStream: !!data.channel_id,
+      selfScreen: !!data.self_screen,
       speaking: false,
+      isBeaconPlus: !!data.is_beacon_plus,
     };
   }
 
@@ -114,7 +117,9 @@ class VoiceManagerClass {
       selfDeaf: partial.selfDeaf ?? store.currentVoiceState?.selfDeaf ?? false,
       selfVideo: partial.selfVideo ?? store.currentVoiceState?.selfVideo ?? false,
       selfStream: partial.selfStream ?? Boolean(this.localStream),
+      selfScreen: partial.selfScreen ?? store.currentVoiceState?.selfScreen ?? false,
       speaking: partial.speaking ?? store.currentVoiceState?.speaking ?? false,
+      isBeaconPlus: partial.isBeaconPlus ?? store.currentVoiceState?.isBeaconPlus ?? (useAuthStore.getState().user as any)?.isBeaconPlus ?? false,
       position: partial.position ?? store.currentVoiceState?.position,
       audioLevel: partial.audioLevel ?? store.currentVoiceState?.audioLevel,
     };
@@ -235,53 +240,41 @@ class VoiceManagerClass {
     }
 
     try {
-      const audioConstraints: MediaTrackConstraints = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        sampleRate: 48000,
-        channelCount: 2,
-      };
-
-      const preferredVideo = !!options.video;
       let mediaError: unknown = null;
+      const user = useAuthStore.getState().user;
+      const isBeaconPlus = (user as any)?.isBeaconPlus;
+      const videoConstraints = isBeaconPlus
+        ? { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60 } }
+        : { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } };
 
       try {
         this.localStream = await navigator.mediaDevices.getUserMedia({
-          audio: audioConstraints,
-          video: preferredVideo,
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          },
+          video: videoConstraints
         });
-      } catch (error) {
-        mediaError = error;
-
-        // If camera capture fails, still attempt audio-only so voice can work.
-        if (preferredVideo) {
-          try {
-            this.localStream = await navigator.mediaDevices.getUserMedia({
-              audio: audioConstraints,
-              video: false,
-            });
-            console.warn('Video device unavailable, joined with audio-only stream:', error);
-          } catch {
-            // Ignore and continue to the video-only fallback below.
-          }
-        }
-
-        // If microphone capture fails, still attempt video-only.
-        if (!this.localStream && preferredVideo) {
+        console.log(`[VoiceManager] Joined with ${isBeaconPlus ? '1080p 60fps' : '720p 30fps'} (Beacon+: ${isBeaconPlus})`);
+      } catch (e) {
+        mediaError = e;
+        console.warn('[VoiceManager] Audio/Video failed, trying audio-only fallback', e);
+        try {
+          this.localStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true }
+          });
+        } catch (e2) {
+          console.warn('[VoiceManager] Audio fallback failed, trying video-only fallback', e2);
           try {
             this.localStream = await navigator.mediaDevices.getUserMedia({
               audio: false,
-              video: true,
+              video: videoConstraints,
             });
-            console.warn('Microphone unavailable, joined with video-only stream:', error);
-          } catch {
-            // Ignore and fall through to listen-only mode.
+          } catch (vErr) {
+            console.warn('[VoiceManager] All media capture failed, falling back to listen-only mode', { mediaError, vErr });
+            this.localStream = new MediaStream();
           }
-        }
-
-        if (!this.localStream) {
-          throw mediaError;
         }
       }
 
@@ -296,6 +289,16 @@ class VoiceManagerClass {
       }
 
       const hasVideoTrack = this.localStream.getVideoTracks().length > 0;
+      if (options.video && !hasVideoTrack) {
+        // Attempt to upgrade to video if requested but not available in current localStream
+        try {
+          const videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          const vTrack = videoStream.getVideoTracks()[0];
+          if (vTrack) this.localStream.addTrack(vTrack);
+        } catch (vErr) {
+          console.warn('[VoiceManager] Video upgrade failed', vErr);
+        }
+      }
 
       this.currentGuildId = guildId;
       this.currentChannelId = channelId;
@@ -303,8 +306,9 @@ class VoiceManagerClass {
       this.syncLocalVoiceState({
         selfMute: audioTracks.length === 0 ? true : !!options.mute,
         selfDeaf: !!options.deaf,
-        selfVideo: hasVideoTrack,
+        selfVideo: this.localStream.getVideoTracks().length > 0 && !!options.video,
         selfStream: true,
+        selfScreen: false,
         speaking: false,
       });
 
@@ -327,6 +331,7 @@ class VoiceManagerClass {
         selfDeaf: !!options.deaf,
         selfVideo: false,
         selfStream: false,
+        selfScreen: false,
         speaking: false,
       });
 
@@ -336,15 +341,22 @@ class VoiceManagerClass {
   }
 
   async leaveChannel(): Promise<void> {
-    if (!this.currentGuildId) return;
-
-    wsClient.sendVoiceStateUpdate(this.currentGuildId, null);
-    this.peers.forEach((_, userId) => this.destroyPeer(userId));
-
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
       this.localStream = null;
     }
+
+    if (!this.currentGuildId) {
+      // Still clear state even if guildId is missing
+      const store = useVoiceStore.getState();
+      store.setCurrentVoiceState(null);
+      store.setConnectedChannel(null);
+      this.currentChannelId = null;
+      return;
+    }
+
+    wsClient.sendVoiceStateUpdate(this.currentGuildId, null);
+    this.peers.forEach((_, userId) => this.destroyPeer(userId));
 
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
@@ -388,7 +400,15 @@ class VoiceManagerClass {
   private startAnalysisLoop() {
     if (this.animationId) return;
 
-    const update = () => {
+    let lastUpdate = 0;
+    const update = (now: number) => {
+      // Throttle analysis to ~10 FPS to prevent render bloat
+      if (now - lastUpdate < 100) {
+        this.animationId = requestAnimationFrame(update);
+        return;
+      }
+      lastUpdate = now;
+
       const dataArray = new Uint8Array(128);
 
       if (this.localAnalyzer) {
@@ -407,7 +427,7 @@ class VoiceManagerClass {
       this.animationId = requestAnimationFrame(update);
     };
 
-    update();
+    this.animationId = requestAnimationFrame(update);
   }
 
   getLocalStream(): MediaStream | null {
@@ -458,18 +478,22 @@ class VoiceManagerClass {
         throw new Error(this.getMediaErrorMessage(error, 'microphone'));
       }
     }
-
-    this.localStream.getAudioTracks().forEach((track) => {
+    
+    audioTracks.forEach((track) => {
       track.enabled = !mute;
     });
 
-    this.syncLocalVoiceState({ selfMute: mute });
-    wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { mute });
+    const user = useAuthStore.getState().user;
+    const isBeaconPlus = (user as any)?.isBeaconPlus;
+    this.syncLocalVoiceState({ selfMute: mute, isBeaconPlus });
+    wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { mute, isBeaconPlus } as any);
   }
 
   setDeaf(guildId: string, deaf: boolean): void {
-    this.syncLocalVoiceState({ selfDeaf: deaf });
-    wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { deaf });
+    const user = useAuthStore.getState().user;
+    const isBeaconPlus = (user as any)?.isBeaconPlus;
+    this.syncLocalVoiceState({ selfDeaf: deaf, isBeaconPlus });
+    wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { deaf, isBeaconPlus } as any);
     this.emit('deafenStateChange', { guildId, deaf });
   }
 
@@ -484,20 +508,32 @@ class VoiceManagerClass {
       this.localStream.getVideoTracks().forEach((track) => {
         track.enabled = false;
       });
-      this.syncLocalVoiceState({ selfVideo: false });
-      wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false });
+      const user = useAuthStore.getState().user;
+      const isBeaconPlus = (user as any)?.isBeaconPlus;
+      this.syncLocalVoiceState({ selfVideo: false, isBeaconPlus });
+      wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false, isBeaconPlus } as any);
       return;
     }
 
+    const user = useAuthStore.getState().user;
+    const isBeaconPlus = (user as any)?.isBeaconPlus;
+
     if (existingTrack) {
       existingTrack.enabled = true;
-      this.syncLocalVoiceState({ selfVideo: true });
-      wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true });
+      this.syncLocalVoiceState({ selfVideo: true, isBeaconPlus });
+      wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true, isBeaconPlus } as any);
       return;
     }
 
     try {
-      const videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      const videoStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 }
+        },
+        audio: false
+      });
       const track = videoStream.getVideoTracks()[0];
       if (!track || !this.localStream) {
         throw new Error('No camera track available.');
@@ -506,22 +542,22 @@ class VoiceManagerClass {
       this.localStream.addTrack(track);
 
       const peers = this.getPeerConnections();
-      const senders = peers.flatMap((pc) => pc.getSenders()).filter((sender) => sender.track?.kind === 'video');
-      if (senders.length > 0) {
-        senders.forEach((sender) => {
+      // Ensure we replace any existing video senders or add a new track
+      peers.forEach((pc) => {
+        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+        if (sender) {
           void sender.replaceTrack(track);
-        });
-      } else {
-        peers.forEach((pc) => {
+        } else {
           pc.addTrack(track, this.localStream as MediaStream);
-        });
-      }
+        }
+      });
 
-      this.syncLocalVoiceState({ selfVideo: true });
-      wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true });
+      this.syncLocalVoiceState({ selfVideo: true, isBeaconPlus });
+      wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true, isBeaconPlus } as any);
     } catch (error) {
-      this.syncLocalVoiceState({ selfVideo: false });
-      wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false });
+      console.error('[VoiceManager] setVideo error:', error);
+      this.syncLocalVoiceState({ selfVideo: false, isBeaconPlus });
+      wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false, isBeaconPlus } as any);
       throw new Error(this.getMediaErrorMessage(error, 'camera'));
     }
   }
@@ -535,7 +571,6 @@ class VoiceManagerClass {
       throw new Error('Screen sharing is not supported in this browser');
     }
 
-    const peerConnections = this.getPeerConnections();
     const localVideoSenders = this.getVideoSenders();
 
     if (this.screenStream) {
@@ -549,25 +584,38 @@ class VoiceManagerClass {
       }
 
       const cameraTrack = this.localStream.getVideoTracks()[0] || null;
+      const user = useAuthStore.getState().user;
+      const isBeaconPlus = (user as any)?.isBeaconPlus;
+
       if (cameraTrack && localVideoSenders.length > 0) {
         localVideoSenders.forEach((sender) => {
           void sender.replaceTrack(cameraTrack);
         });
-        this.syncLocalVoiceState({ selfVideo: true });
-        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true });
+        this.syncLocalVoiceState({ selfVideo: true, isBeaconPlus });
+        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true, isBeaconPlus } as any);
       } else {
         localVideoSenders.forEach((sender) => {
           void sender.replaceTrack(null);
         });
-        this.syncLocalVoiceState({ selfVideo: false });
-        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false });
+        this.syncLocalVoiceState({ selfVideo: false, selfScreen: false, isBeaconPlus });
+        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false, screen: false, isBeaconPlus } as any);
       }
       return;
     }
 
     let displayStream: MediaStream;
     try {
-      displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const user = useAuthStore.getState().user;
+      const isBeaconPlus = (user as any)?.isBeaconPlus;
+      
+      const screenConstraints = isBeaconPlus
+        ? { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 60 } }
+        : { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } }; // Keep 1080p for everyone but lower FPS for normal
+
+      displayStream = await navigator.mediaDevices.getDisplayMedia({ 
+        video: screenConstraints, 
+        audio: false 
+      });
     } catch (error) {
       throw new Error(this.getMediaErrorMessage(error, 'screen'));
     }
@@ -587,34 +635,53 @@ class VoiceManagerClass {
       }
 
       const cameraTrack = this.localStream?.getVideoTracks()[0] || null;
+      const user = useAuthStore.getState().user;
+      const isBeaconPlus = (user as any)?.isBeaconPlus;
+
       if (cameraTrack && localVideoSenders.length > 0) {
         localVideoSenders.forEach((sender) => {
           void sender.replaceTrack(cameraTrack);
         });
-        this.syncLocalVoiceState({ selfVideo: true });
-        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true });
+        this.syncLocalVoiceState({ selfVideo: true, isBeaconPlus });
+        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true, isBeaconPlus } as any);
       } else {
         localVideoSenders.forEach((sender) => {
           void sender.replaceTrack(null);
         });
-        this.syncLocalVoiceState({ selfVideo: false });
-        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false });
+        this.syncLocalVoiceState({ selfVideo: false, selfScreen: false, isBeaconPlus });
+        wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: false, screen: false, isBeaconPlus } as any);
       }
     };
 
     this.screenStream = displayStream;
+    
+    // Replace existing video tracks in localStream with the display track
+    this.localStream.getVideoTracks().forEach(t => {
+      if (t !== displayTrack) {
+        // We don't stop the camera track here, just remove it from the stream
+        // so the local <video> element switches to the screen share.
+        this.localStream?.removeTrack(t);
+      }
+    });
     this.localStream.addTrack(displayTrack);
 
-    if (localVideoSenders.length > 0) {
-      await Promise.all(localVideoSenders.map((sender) => sender.replaceTrack(displayTrack)));
-    } else {
-      peerConnections.forEach((pc) => {
+    // Swap all existing video senders to the display track
+    const peers = this.getPeerConnections();
+    peers.forEach((pc) => {
+      const senders = pc.getSenders();
+      const videoSender = senders.find(s => s.track?.kind === 'video');
+      if (videoSender) {
+        void videoSender.replaceTrack(displayTrack);
+      } else {
+        // If no video sender exists, add it
         pc.addTrack(displayTrack, this.localStream as MediaStream);
-      });
-    }
+      }
+    });
 
-    this.syncLocalVoiceState({ selfVideo: true });
-    wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true });
+    const user = useAuthStore.getState().user;
+    const isBeaconPlus = (user as any)?.isBeaconPlus;
+    this.syncLocalVoiceState({ selfVideo: true, selfScreen: true, isBeaconPlus });
+    wsClient.sendVoiceStateUpdate(guildId, this.currentChannelId, { video: true, screen: true, isBeaconPlus } as any);
   }
 }
 

@@ -4,7 +4,7 @@ import {
     Shirt, UtensilsCrossed, Plane, Briefcase, Coins,
     Landmark, Newspaper, Pin, ImagePlus
 } from 'lucide-react'
-import type { ServerTag as ServerTagType } from '@beacon/types'
+import type { ServerTag as ServerTagType } from 'beacon-sdk'
 import styles from '../../styles/modules/ui/ServerTags.module.css'
 
 interface ServerTagProps {

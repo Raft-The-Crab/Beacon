@@ -3,16 +3,14 @@ import {
   ChevronDown, ChevronRight, Bell, BellOff, Link, Trash2, Edit2,
   Megaphone, MessageSquare, ShieldAlert, GitBranch, Radio,
   Users, FolderPlus,
-  Copy, Settings, LogOut, ChevronDown as ChevronDownSmall
+  Copy, Settings, LogOut, ChevronDown as ChevronDownSmall, Crown
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useCallback } from 'react'
 import { useServerStore } from '../../stores/useServerStore'
 import { useUIStore } from '../../stores/useUIStore'
-import { apiClient } from '../../services/apiClient'
-
-import { useToast } from '../ui'
+import { useToast, SkeletonChannel } from '../ui'
 import { CurrentUserControls } from '../features/CurrentUserControls'
 import { openCreateChannelModal } from '../../utils/modals'
 
@@ -311,26 +309,6 @@ export function Sidebar() {
     }
   }, [currentServer, currentChannelId, deleteChannel, navigate, show])
 
-  const handleInvitePeople = useCallback(async () => {
-    if (!currentServer) return
-    try {
-      const res = await apiClient.createInvite(currentServer.id)
-      const code = String(
-        res?.data?.code ||
-        res?.data?.inviteCode ||
-        ''
-      ).trim()
-      if (code) {
-        await navigator.clipboard.writeText(`${window.location.origin}/invite/${code}`)
-        show('Invite link copied!', 'success')
-      } else {
-        show('Failed to generate invite link', 'error')
-      }
-    } catch {
-      show('Failed to create invite', 'error')
-    }
-  }, [currentServer, show])
-
   const handleChannelClick = useCallback((channelId: string) => {
     if (!currentServer) return
     const channel = allChannels.find((ch: any) => ch.id === channelId)
@@ -343,11 +321,12 @@ export function Sidebar() {
 
   const serverCtxMenu = useContextMenuTrigger([
     { id: 'settings', label: 'Server Settings', icon: <Settings size={15} />, onClick: () => setShowServerSettings(true) },
+    { id: 'boost', label: 'Server Boost', icon: <Crown size={15} color="#f0b232" />, onClick: () => window.dispatchEvent(new CustomEvent('open-server-boost')) },
     { id: 'create-channel', label: 'Create Channel', icon: <Plus size={15} />, onClick: () => openCreateChannelModal() },
     { id: 'create-category', label: 'Create Category', icon: <FolderPlus size={15} />, onClick: () => openCreateChannelModal('category') },
     { id: 'd1', divider: true, label: '' },
     { id: 'copy-id', label: 'Copy Server ID', icon: <Copy size={15} />, onClick: () => currentServer && navigator.clipboard.writeText(currentServer.id) },
-    { id: 'invite', label: 'Invite People', icon: <Link size={15} />, onClick: () => void handleInvitePeople() },
+    { id: 'invite', label: 'Invite People', icon: <Link size={15} />, onClick: () => window.dispatchEvent(new CustomEvent('open-server-invite')) },
   ])
 
   const memberCount = currentServer?.members?.length || 0
@@ -393,6 +372,9 @@ export function Sidebar() {
             <button className={styles.serverMenuItem} onClick={() => { setShowServerSettings(true); setShowServerMenu(false) }}>
               <Settings size={15} /> Server Settings
             </button>
+            <button className={styles.serverMenuItem} onClick={() => { window.dispatchEvent(new CustomEvent('open-server-boost')); setShowServerMenu(false) }}>
+              <Crown size={15} color="#f0b232" /> Server Boost
+            </button>
             <button className={styles.serverMenuItem} onClick={() => { openCreateChannelModal(); setShowServerMenu(false) }}>
               <Plus size={15} /> Create Channel
             </button>
@@ -400,7 +382,7 @@ export function Sidebar() {
               <FolderPlus size={15} /> Create Category
             </button>
             <div className={styles.serverMenuDivider} />
-            <button className={styles.serverMenuItem} onClick={() => { void handleInvitePeople(); setShowServerMenu(false) }}>
+            <button className={styles.serverMenuItem} onClick={() => { window.dispatchEvent(new CustomEvent('open-server-invite')); setShowServerMenu(false) }}>
               <Link size={15} /> Invite People
             </button>
             <button className={styles.serverMenuItem} onClick={() => { navigator.clipboard.writeText(currentServer.id); setShowServerMenu(false) }}>
@@ -431,6 +413,18 @@ export function Sidebar() {
         {!currentServer ? (
           <div className={styles.emptyState}>
             <span className={styles.emptyText}>Select a server to view channels</span>
+          </div>
+        ) : allChannels.length === 0 ? (
+          <div className={styles.skeletonContainer}>
+            <div className={styles.categorySkeleton}>
+              <SkeletonChannel />
+              <SkeletonChannel />
+              <SkeletonChannel />
+            </div>
+            <div className={styles.categorySkeleton}>
+              <SkeletonChannel />
+              <SkeletonChannel />
+            </div>
           </div>
         ) : (
           <>

@@ -3,7 +3,7 @@
  * Each shard gets a slice of guilds. Handles restarts, health checks, and IPC.
  */
 
-import { EventEmitter } from 'events';
+import EventEmitter from 'eventemitter3';
 import { Gateway, GatewayOptions } from '../gateway';
 import { ShardError } from '../errors';
 
@@ -129,7 +129,7 @@ export class ShardManager extends EventEmitter {
   private _wireShardEvents(shard: ShardState): void {
     const { gateway } = shard;
 
-    gateway.on('ready', (data: any) => {
+    gateway.on('ready', () => {
       shard.status = 'ready';
       shard.readyAt = Date.now();
       shard.restarts = 0;

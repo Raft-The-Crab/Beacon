@@ -4,23 +4,27 @@
   flex-direction: column;
   height: 100dvh;
   background:
-    radial-gradient(circle at 10% 10%, rgba(104, 131, 255, 0.14), transparent 32%),
-    radial-gradient(circle at 88% 84%, rgba(62, 205, 194, 0.12), transparent 28%),
-    linear-gradient(180deg, var(--bg-tertiary), var(--bg-primary));
+    radial-gradient(circle at 10% 10%, rgba(104, 131, 255, 0.2), transparent 40%),
+    radial-gradient(circle at 88% 84%, rgba(62, 205, 194, 0.15), transparent 35%),
+    linear-gradient(180deg, rgba(15, 15, 18, 0.9), rgba(9, 9, 11, 0.95));
+  background-color: #09090b;
   overflow: hidden;
   font-family: var(--font-family);
 }
 
 /* Top bar */
 .topBar {
-  height: 52px;
-  padding: 0 20px;
+  height: 60px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(15, 15, 18, 0.6) 0%, rgba(15, 15, 18, 0.3) 100%);
+  backdrop-filter: blur(24px);
   flex-shrink: 0;
+  z-index: 10;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
 .topLeft {
@@ -216,10 +220,6 @@
   padding-top: 68px;
 }
 
-.videoAreaShrunk {
-  /* when side panel is open */
-}
-
 .emptyVoice {
   display: flex;
   flex-direction: column;
@@ -264,12 +264,19 @@
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Tile ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 .tile {
   position: relative;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-  border-radius: var(--radius-xl);
+  background: linear-gradient(145deg, rgba(25, 25, 30, 0.7) 0%, rgba(15, 15, 18, 0.9) 100%);
+  border-radius: var(--radius-2xl);
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  border: 2px solid transparent;
-  transition: border-color 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tile:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .tileSpeaking {
@@ -281,6 +288,10 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.localVideo {
+  transform: scaleX(-1);
 }
 
 .tileAvatar {
@@ -314,6 +325,25 @@
 
 .roleOwner { background: rgba(240, 178, 50, 0.2); color: #f0b232; }
 .roleMod   { background: rgba(35, 165, 89, 0.2);  color: #23a559; }
+
+.premiumBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 204, 0, 0.15);
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 204, 0, 0.25);
+  z-index: 5;
+}
+
+.premiumBadge + .roleBadge {
+  right: 40px;
+}
 
 .tileStatus {
   position: absolute;
@@ -381,12 +411,14 @@
 
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Side panel ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 .sidePanel {
-  width: 280px;
-  border-left: 1px solid var(--glass-border);
-  background: linear-gradient(180deg, rgba(19, 24, 39, 0.94), rgba(13, 18, 31, 0.95));
+  width: 300px;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 15, 18, 0.75);
+  backdrop-filter: blur(24px);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.2);
 }
 
 .panelHeader {
@@ -559,14 +591,17 @@
 
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Controls bar ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 .controls {
-  height: 80px;
+  height: 88px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  background: linear-gradient(180deg, rgba(12, 16, 27, 0.96), rgba(8, 12, 21, 0.96));
-  border-top: 1px solid var(--glass-border);
+  padding: 0 32px;
+  background: rgba(9, 9, 11, 0.85);
+  backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 10;
 }
 
 .controlsLeft {

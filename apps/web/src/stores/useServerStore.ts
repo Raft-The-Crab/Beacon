@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Server, Channel } from '@beacon/types'
+import type { Guild as Server, Channel } from 'beacon-sdk'
 import { api } from '../lib/api'
 
 interface ServerFolder {
@@ -83,18 +83,25 @@ export const useServerStore = create<ServerState>((set, get) => ({
   eagerLoad: async () => {
     try {
       const [{ data: guilds }, { data: folders }] = await Promise.all([
-        api.get<Server[]>('/guilds/me'),
-        api.get<ServerFolder[]>('/folders')
+        api.get<Server[]>('/guilds/me').catch(() => ({ data: [] })),
+        api.get<ServerFolder[]>('/folders').catch(() => ({ data: [] }))
       ]);
+
+      const safeGuilds = Array.isArray(guilds) ? guilds : [];
+      const safeFoldersRaw = Array.isArray(folders) ? folders : [];
+
       set({
-        servers: guilds,
-        folders: (folders as any[]).map(normalizeFolder)
+        servers: safeGuilds,
+        folders: safeFoldersRaw.map(normalizeFolder)
       });
-      if (guilds.length > 0 && !get().currentServerId) {
-        get().setCurrentServer(guilds[0].id);
+
+      if (safeGuilds.length > 0 && !get().currentServerId) {
+        get().setCurrentServer(safeGuilds[0].id);
       }
     } catch (error) {
-      console.error('Store eager load failed', error);
+      console.error('Store eager load critical failure', error);
+      // Ensure state is at least normalized even on failure
+      set({ servers: [], folders: [] });
     }
   },
 
@@ -111,7 +118,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
     try {
       const { data } = await api.get(`/guilds/${id}`);
       set(state => ({
-        servers: state.servers.map(s => s.id === id ? { ...s, ...data } : s),
+        servers: state.servers.map(s => s.id === id ? { ...s, ...data } : s) as any,
         currentServer: state.currentServerId === id ? ({ ...state.currentServer, ...data } as any) : state.currentServer
       }));
     } catch (error) {
@@ -123,9 +130,9 @@ export const useServerStore = create<ServerState>((set, get) => ({
     try {
       const { data } = await api.post('/guilds', { name, icon })
       set(state => ({
-        servers: [...state.servers, data],
+        servers: [...state.servers, data] as any,
         currentServerId: data.id,
-        currentServer: data
+        currentServer: data as any
       }))
     } catch (error) {
       throw error;
@@ -138,7 +145,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
       set(state => ({
         servers: state.servers.map(s => {
           if (s.id === guildId) {
-            return { ...s, channels: [...(s.channels || []), data] }
+            return { ...s, channels: [...(s.channels || []), data] } as any
           }
           return s
         }),
@@ -161,7 +168,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
             return {
               ...s,
               channels: s.channels?.map(c => c.id === channelId ? { ...c, ...data } : c) || []
-            }
+            } as any
           }
           return s
         }),
@@ -187,7 +194,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
             return {
               ...s,
               channels: s.channels?.filter(c => c.id !== channelId) || []
-            }
+            } as any
           }
           return s
         }),
@@ -280,7 +287,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
     try {
       const { data } = await api.post(`/guilds/${guildId}/join`);
       set(state => ({
-        servers: [...state.servers.filter(s => s.id !== data.id), data]
+        servers: [...state.servers.filter(s => s.id !== data.id), data] as any
       }));
       get().setCurrentServer(data.id);
     } catch (error) {
@@ -346,7 +353,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
   },
 
   handleGuildCreate: (guild) => set(state => ({
-    servers: [...state.servers.filter(s => s.id !== guild.id), guild]
+    servers: [...state.servers.filter(s => s.id !== guild.id), guild] as any
   })),
   handleChannelCreate: (channel) => {
     set(state => ({
@@ -354,7 +361,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
         if (s.id === channel.guildId) {
           const channels = s.channels || []
           if (channels.some(c => (c as Channel).id === channel.id)) return s
-          return { ...s, channels: [...channels, channel] }
+          return { ...s, channels: [...channels, channel] } as any
         }
         return s
       }),
@@ -366,24 +373,24 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
     handleGuildUpdate: (guildId, updates) =>
       set(state => ({
-        servers: state.servers.map(s => s.id === guildId ? { ...s, ...updates } : s),
-        currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...updates } as Server) : state.currentServer
+        servers: state.servers.map(s => s.id === guildId ? { ...s, ...updates } : s) as any,
+        currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...updates } as any) : state.currentServer
       })),
 
     handleChannelUpdate: (guildId, channelId, updates) =>
       set(state => ({
         servers: state.servers.map(s => s.id === guildId
-          ? { ...s, channels: s.channels?.map(c => (c as Channel).id === channelId ? { ...c, ...updates } : c) || [] }
+          ? { ...s, channels: s.channels?.map(c => (c as Channel).id === channelId ? { ...c, ...updates } : c) || [] } as any
           : s),
         currentServer: state.currentServerId === guildId
-          ? { ...state.currentServer!, channels: state.currentServer?.channels?.map(c => (c as Channel).id === channelId ? { ...c, ...updates } : c) || [] } as Server
+          ? { ...state.currentServer!, channels: state.currentServer?.channels?.map(c => (c as Channel).id === channelId ? { ...c, ...updates } : c) || [] } as any
           : state.currentServer
       })),
 
     handleChannelDelete: (guildId, channelId) =>
       set(state => ({
         servers: state.servers.map(s => s.id === guildId
-          ? { ...s, channels: s.channels?.filter(c => (c as Channel).id !== channelId) || [] }
+          ? { ...s, channels: s.channels?.filter(c => (c as Channel).id !== channelId) || [] } as any
           : s),
         currentServer: state.currentServerId === guildId
           ? { ...state.currentServer!, channels: state.currentServer?.channels?.filter(c => (c as Channel).id !== channelId) || [] } as Server
@@ -393,10 +400,10 @@ export const useServerStore = create<ServerState>((set, get) => ({
     handleMemberRemove: (guildId, userId) =>
       set(state => ({
         servers: state.servers.map(s => s.id === guildId
-          ? { ...s, members: (s as any).members?.filter((m: any) => m.userId !== userId) || [] }
+          ? { ...s, members: (s as any).members?.filter((m: any) => m.userId !== userId) || [] } as any
           : s),
         currentServer: state.currentServerId === guildId
-          ? { ...state.currentServer!, members: (state.currentServer as any)?.members?.filter((m: any) => m.userId !== userId) || [] } as Server
+          ? { ...state.currentServer!, members: (state.currentServer as any)?.members?.filter((m: any) => m.userId !== userId) || [] } as any
           : state.currentServer
       })),
 }))

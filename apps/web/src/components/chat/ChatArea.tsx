@@ -1,9 +1,10 @@
-﻿import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { Hash, Pin, Users, Search, Phone, Video, ChevronDown } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { InteractionType } from '@beacon/types'
+import { InteractionType } from 'beacon-sdk'
+import type { Channel, MessageWithExtras as Message } from 'beacon-sdk'
 import { useMessageStore } from '../../stores/useMessageStore'
 import { useVoiceStore } from '../../stores/useVoiceStore'
 import { useServerStore } from '../../stores/useServerStore'
@@ -14,7 +15,7 @@ import { MessageItem } from '../features/MessageItem'
 import { TypingIndicator } from '../typing/TypingIndicator'
 import { type UploadedFile } from '../../services/fileUpload'
 import styles from '../../styles/modules/chat/ChatArea.module.css'
-import { Modal, Button, ToastContainer, useToast, Avatar } from '../ui'
+import { Modal, Button, ToastContainer, useToast, Avatar, Tooltip, Select, SkeletonMessage } from '../ui'
 import { wsClient } from '../../services/websocket'
 import { apiClient } from '../../services/apiClient'
 import { usePinnedMessagesStore } from '../../stores/usePinnedMessagesStore'
@@ -220,16 +221,37 @@ export function ChatArea({ channelId }: ChatAreaProps) {
     return true
   }, [channelId, handleMessageCreate])
 
-  const handleInteractionResult = useCallback((payload: any, successLabel: string) => {
-    const rendered = appendInteractionMessage(payload)
+  const handleInteractionResult = useCallback((payload: any, successLabel: string, context?: { applicationId: string, id?: string, token?: string }) => {
+    // 1. Handle Modal (type 9)
+    if (payload?.type === 9 && payload.data) {
+      useUIStore.getState().setShowBotModal(true, {
+        id: context?.id || `modal-${Date.now()}`,
+        token: context?.token || 'legacy',
+        applicationId: context?.applicationId || 'unknown',
+        title: payload.data.title || 'Bot Modal',
+        customId: payload.data.custom_id,
+        components: payload.data.components || [],
+      })
+      return
+    }
 
-    if (payload?.flags === 64) {
-      show(payload.content || `${successLabel} completed`, 'info')
+    // 2. Handle Deferred (type 5/6)
+    if (payload?.type === 5 || payload?.type === 6) {
+      // In a real app we might show a "Thinking..." indicator
+      // For now, we'll just show a toast if it's taking a while
+      console.log('[Interaction] Bot is thinking...')
+      return
+    }
+
+    const rendered = appendInteractionMessage(payload.data || payload)
+
+    if (payload?.flags === 64 || payload?.data?.flags === 64) {
+      show(payload.content || payload.data?.content || `${successLabel} completed`, 'info')
       return
     }
 
     if (!rendered) {
-      show(payload?.content || `${successLabel} completed`, 'success')
+      show(payload?.content || payload?.data?.content || `${successLabel} completed`, 'success')
     }
   }, [appendInteractionMessage, show])
 
@@ -285,9 +307,12 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       const result = await apiClient.sendMessage(channelId, { content, attachments: messageAttachments })
       if (result.success && result.data) {
         handleMessageCreate({ ...result.data, channelId } as any)
+      } else {
+        show(result.error || 'Failed to send message', 'error')
       }
     } catch (err) {
       console.warn('Send message failed:', err)
+      show('Network error. Check your connection.', 'error')
     }
   }
 
@@ -438,12 +463,42 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         return
       }
 
-      handleInteractionResult(res.data, 'Interaction')
+      handleInteractionResult(res.data, 'Interaction', {
+        applicationId: (message as any).applicationId || (message as any).author?.applicationId || 'unknown',
+        id: res.data?.id,
+        token: res.data?.token
+      })
     } catch (err) {
       console.warn('Component interaction failed:', err)
       show('Interaction failed', 'error')
     }
   }, [channelId, currentServer?.id, handleInteractionResult, show])
+
+  useEffect(() => {
+    const handleTypingStart = (event: any) => {
+      const { channelId: evtChannelId, userId } = event.data || {}
+      if (evtChannelId === channelId && userId && userId !== user?.id) {
+        addTypingUser(userId)
+        // Auto-clear fallback
+        setTimeout(() => removeTypingUser(userId), 8000)
+      }
+    }
+
+    const handleTypingStop = (event: any) => {
+      const { channelId: evtChannelId, userId } = event.data || {}
+      if (evtChannelId === channelId && userId) {
+        removeTypingUser(userId)
+      }
+    }
+
+    wsClient.on('TYPING_START', handleTypingStart)
+    wsClient.on('TYPING_STOP', handleTypingStop)
+
+    return () => {
+      wsClient.off('TYPING_START', handleTypingStart)
+      wsClient.off('TYPING_STOP', handleTypingStop)
+    }
+  }, [channelId, user?.id, addTypingUser, removeTypingUser])
 
   return (
     <motion.div
@@ -462,27 +517,32 @@ export function ChatArea({ channelId }: ChatAreaProps) {
             )}
             <span className={styles.channelName}>{channelDisplayName}</span>
           </div>
-          {canStartCall && (
-            <div className={styles.voiceActions}>
-              <button 
-                className={styles.headerButton} 
-                onClick={openCall}
-                aria-label="Start voice call"
-              >
-                <Phone size={20} />
-              </button>
-              <button 
-                className={styles.headerButton} 
-                onClick={openCall}
-                aria-label="Start video call"
-              >
-                <Video size={20} />
-              </button>
-            </div>
-          )}
         </div>
 
         <div className={styles.headerRight}>
+          {canStartCall && (
+            <div className={styles.voiceActions}>
+              <Tooltip content="Start voice call" position="bottom">
+                <button 
+                  className={styles.headerButton} 
+                  onClick={openCall}
+                  aria-label="Start voice call"
+                >
+                  <Phone size={20} />
+                </button>
+              </Tooltip>
+              <Tooltip content="Start video call" position="bottom">
+                <button 
+                  className={styles.headerButton} 
+                  onClick={openCall}
+                  aria-label="Start video call"
+                >
+                  <Video size={20} />
+                </button>
+              </Tooltip>
+              <div className={styles.headerDivider} />
+            </div>
+          )}
           <button 
             className={`${styles.headerButton} ${styles.hideOnMobile}`} 
             title="Pinned Messages" 
@@ -521,7 +581,15 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         ref={messagesContainerRef}
         onScroll={handleMessagesScroll}
       >
-        {messages.length === 0 ? (
+        {useMessageStore((state) => state.isLoading.get(channelId)) ? (
+          <div className={styles.skeletonContainer}>
+            <SkeletonMessage />
+            <SkeletonMessage />
+            <SkeletonMessage />
+            <SkeletonMessage />
+            <SkeletonMessage />
+          </div>
+        ) : messages.length === 0 ? (
           <motion.div
             className={styles.welcome}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -705,10 +773,10 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         onClose={() => setShowReportModal(false)}
         title={reportTarget?.type === 'user' ? 'Report user' : 'Report message'}
       >
-        <div style={{ display: 'grid', gap: 12 }}>
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: 13, opacity: 0.85 }}>Reason</span>
-            <select value={reportReason} onChange={(e) => setReportReason(e.target.value)} style={{ padding: '10px 12px', borderRadius: 8 }}>
+        <div className={styles.reportForm}>
+          <label className={styles.reportLabel}>
+            <span className={styles.reportLabelText}>Reason</span>
+            <Select className={styles.reportSelect} value={reportReason} onChange={(e) => setReportReason(e.target.value)}>
               <option>Spam or scam</option>
               <option>Harassment or bullying</option>
               <option>Hate or abuse</option>
@@ -716,20 +784,20 @@ export function ChatArea({ channelId }: ChatAreaProps) {
               <option>NSFW in safe channel</option>
               <option>Impersonation</option>
               <option>Other</option>
-            </select>
+            </Select>
           </label>
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: 13, opacity: 0.85 }}>Details (optional)</span>
+          <label className={styles.reportLabel}>
+            <span className={styles.reportLabelText}>Details (optional)</span>
             <textarea
+              className={styles.reportTextarea}
               value={reportNotes}
               onChange={(e) => setReportNotes(e.target.value)}
               rows={4}
               maxLength={400}
               placeholder="Add context for moderators"
-              style={{ padding: '10px 12px', borderRadius: 8, resize: 'vertical' }}
             />
           </label>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+          <div className={styles.reportActions}>
             <Button variant="secondary" onClick={() => setShowReportModal(false)}>Cancel</Button>
             <Button variant="primary" onClick={submitReport}>Submit report</Button>
           </div>
@@ -742,14 +810,17 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       >
         <div>
           {getPinnedMessages(channelId).length === 0 ? (
-            <p>No pinned messages for this channel.</p>
+            <div className={styles.pinnedEmpty}>
+              <Pin size={32} className={styles.pinnedEmptyIcon} />
+              <p>No pinned messages in this channel yet.</p>
+            </div>
           ) : (
             getPinnedMessages(channelId).map((p: any) => (
-              <div key={p.id} style={{ padding: 8, borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 600 }}>{p.authorName}</div>
-                  <div>{p.content}</div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(p.pinnedAt).toLocaleString()}</div>
+              <div key={p.id} className={styles.pinnedItem}>
+                <div className={styles.pinnedItemContent}>
+                  <div className={styles.pinnedItemAuthor}>{p.authorName}</div>
+                  <div className={styles.pinnedItemText}>{p.content}</div>
+                  <div className={styles.pinnedItemDate}>{new Date(p.pinnedAt).toLocaleString()}</div>
                 </div>
                 <div>
                   <Button variant="secondary" onClick={() => {
@@ -796,9 +867,9 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         onClose={() => setEditingMessage(null)}
         title="Edit Message"
       >
-        <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
-          <textarea value={editingMessageContent} onChange={(e) => setEditingMessage(editingMessageId, e.currentTarget.value)} style={{ minHeight: 120 }} />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <div className={styles.editModalBody}>
+          <textarea className={styles.editTextarea} value={editingMessageContent} onChange={(e) => setEditingMessage(editingMessageId, e.currentTarget.value)} />
+          <div className={styles.editActions}>
             <Button variant="secondary" onClick={() => setEditingMessage(null)}>Cancel</Button>
             <Button variant="primary" onClick={saveEditedMessage}>Save</Button>
           </div>

@@ -45,7 +45,7 @@
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .createBtn:hover {
@@ -133,7 +133,7 @@
     cursor: pointer;
     padding: 4px;
     border-radius: var(--radius-xs);
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .deleteBtn:hover {
@@ -328,7 +328,7 @@
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .triggerOption:hover,
@@ -371,7 +371,7 @@
     color: white;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .saveBtn:hover:not(:disabled) {

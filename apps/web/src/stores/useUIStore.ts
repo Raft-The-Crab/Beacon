@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type Theme = 'classic' | 'dark' | 'glass' | 'light' | 'oled' | 'neon' | 'midnight' | 'auto'
+export type Theme = 'classic' | 'dark' | 'glass' | 'light' | 'oled' | 'neon' | 'midnight' | 'auto' | 'dracula'
 export type MessageDensity = 'cozy' | 'compact' | 'ultra-compact'
 export type CreateChannelType = 'text' | 'voice' | 'stage' | 'forum' | 'announcement' | 'category'
 export type ChatBubbleStyle = 'reef' | 'jelly' | 'comic' | 'aurora' | 'prism' | 'carbon'
@@ -44,6 +44,17 @@ interface UIState {
   showPinnedMessages: boolean
   pinnedMessagesChannelId: string | null
   pinnedMessagesPanelOpen: boolean
+  
+  // Bot Modal state
+  showBotModal: boolean
+  botModalData: {
+    id: string
+    token: string
+    applicationId: string
+    title: string
+    customId: string
+    components: any[]
+  } | null
 
   // Member list panel
   showMemberList: boolean
@@ -88,6 +99,7 @@ interface UIState {
   setShowAuditLog: (show: boolean, guildId?: string) => void
   setShowPinnedMessages: (show: boolean, channelId?: string) => void
   setPinnedMessagesPanelOpen: (open: boolean) => void
+  setShowBotModal: (show: boolean, data?: UIState['botModalData']) => void
   toggleMemberList: () => void
   setShowMemberList: (show: boolean) => void
   setShowKeyboardShortcuts: (show: boolean) => void
@@ -138,6 +150,8 @@ export const useUIStore = create<UIState>()(
       showQuickSwitcher: false,
       editingMessageId: null,
       editingMessageContent: '',
+      showBotModal: false,
+      botModalData: null,
 
       setCurrentChannel: (channelId) =>
         set({ currentChannelId: channelId }),
@@ -286,6 +300,7 @@ export const useUIStore = create<UIState>()(
       setShowKeyboardShortcuts: (show) => set({ showKeyboardShortcuts: show }),
       setShowQuickSwitcher: (show) => set({ showQuickSwitcher: show }),
       setEditingMessage: (id, content) => set({ editingMessageId: id, editingMessageContent: content || '' }),
+      setShowBotModal: (show, data) => set({ showBotModal: show, botModalData: data || null }),
 
       syncTheme: () => {
         const stored = localStorage.getItem('beacon:theme') as Theme | null

@@ -33,6 +33,10 @@ export interface TableData {
 export class TableBuilder {
   private data: TableData = { columns: [], rows: [] }
 
+  static create(): TableBuilder {
+    return new TableBuilder()
+  }
+
   setTitle(title: string): this {
     this.data.title = title
     return this
@@ -69,8 +73,18 @@ export class TableBuilder {
   }
 
   build(): TableData {
+    return this.toJSON()
+  }
+
+  toJSON(): TableData {
     if (this.data.columns.length === 0) throw new Error('TableBuilder: At least one column is required.')
     if (this.data.rows.length === 0) throw new Error('TableBuilder: At least one row is required.')
     return { striped: false, ...this.data, columns: [...this.data.columns], rows: [...this.data.rows] }
+  }
+
+  clone(): TableBuilder {
+    const cloned = new TableBuilder()
+    cloned.data = JSON.parse(JSON.stringify(this.data))
+    return cloned
   }
 }

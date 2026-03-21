@@ -214,11 +214,11 @@ export function getRoleTemplate(id: string): RoleTemplate | undefined {
  * Search role templates
  */
 export function searchRoleTemplates(query: string): RoleTemplate[] {
-  const lowerQuery = query.toLowerCase()
+  const lowerQuery = String(query || '').toLowerCase()
   return ROLE_TEMPLATES.filter(
     (template) =>
-      template.name.toLowerCase().includes(lowerQuery) ||
-      template.description.toLowerCase().includes(lowerQuery)
+      String(template.name || '').toLowerCase().includes(lowerQuery) ||
+      String(template.description || '').toLowerCase().includes(lowerQuery)
   )
 }
 

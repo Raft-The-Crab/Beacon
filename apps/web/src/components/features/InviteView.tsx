@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Copy, Check, Share2, Shield, Zap, Globe } from 'lucide-react'
 import { useServerStore } from '../../stores/useServerStore'
 import { useToast } from '../ui'
@@ -146,7 +146,7 @@ export function InviteView() {
                         <div className={styles.vanityIcon}><Globe size={20} /></div>
                         <div className={styles.vanityInfo}>
                             <div className={styles.vanityLabel}>Vanity URL Active</div>
-                            <div className={styles.vanityValue}>{currentServer.vanityUrl}</div>
+                            <div className={styles.vanityValue}>{currentServer.vanityURL}</div>
                         </div>
                     </div>
                 ) : (

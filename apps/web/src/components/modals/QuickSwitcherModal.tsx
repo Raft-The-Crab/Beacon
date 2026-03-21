@@ -1,5 +1,5 @@
-﻿import { useState } from 'react'
-import { Search, MessageSquare, Hash, User } from 'lucide-react'
+import { useState } from 'react'
+import { Search, MessageSquare, Hash, User as UserIcon } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import styles from '../../styles/modules/modals/QuickSwitcherModal.module.css'
 import { useDMStore } from '../../stores/useDMStore'
@@ -21,29 +21,29 @@ export function QuickSwitcherModal({ isOpen, onClose }: QuickSwitcherModalProps)
 
     const results = (() => {
         if (!query.trim()) return []
-        const q = query.toLowerCase()
+        const q = String(query || '').toLowerCase()
 
         const res: any[] = []
 
         // Match DMs
         channels.forEach(ch => {
             const name = ch.participants.find(p => p.id !== user?.id)?.username || ch.participants[0]?.username || 'Unknown'
-            if (name.toLowerCase().includes(q)) {
+            if (String(name).toLowerCase().includes(q)) {
                 res.push({ type: 'dm', id: ch.id, name, icon: <MessageSquare size={16} /> })
             }
         })
 
         // Match Server Channels
         currentServer?.channels?.forEach(ch => {
-            if (ch.name.toLowerCase().includes(q)) {
+            if (String(ch.name || '').toLowerCase().includes(q)) {
                 res.push({ type: 'channel', id: ch.id, name: ch.name, icon: <Hash size={16} /> })
             }
         })
 
         // Match Friends
         friends.forEach(f => {
-            if (f.username.toLowerCase().includes(q)) {
-                res.push({ type: 'friend', id: f.id, name: f.username, icon: <User size={16} /> })
+            if (String(f.username || '').toLowerCase().includes(q)) {
+                res.push({ type: 'friend', id: f.id, name: f.username, icon: <UserIcon size={16} /> })
             }
         })
 

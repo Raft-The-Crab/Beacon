@@ -1,8 +1,9 @@
 import { Router, Response } from 'express'
+import type { Message } from 'beacon-sdk'
 import { MessageModel } from '../db'
 import { authenticate, AuthRequest } from '../middleware/auth'
 import { sanitizeMessage } from '../utils/sanitize'
-import type { PaginatedResponse, MessageSearchQuery } from '@beacon/types'
+import type { PaginatedResponse, MessageSearchQuery } from 'beacon-sdk'
 
 const router = Router()
 

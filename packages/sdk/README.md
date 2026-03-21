@@ -1,138 +1,77 @@
 # beacon-sdk
 
-Official JavaScript and TypeScript SDK for Beacon.
+The official, ultra-fast TypeScript SDK for the Beacon platform. Designed for building robust bots, rich integrations, and high-performance gateway clients.
 
-Production version documented here: 1.2.0.
+## 🚀 Key Features
 
-## Install
+- **Fluent Builders**: Create Embeds, Buttons, Select Menus, and Modals with a clean, chainable API.
+- **Unified Gateway**: Seamless WebSocket handling with automatic reconnection and event dispatching.
+- **Type Safety**: Built from the ground up with TypeScript for a rock-solid developer experience.
+- **Rich Interactions**: Native support for Slash Commands, Message Components, and Modal Submissions.
+
+## 📦 Installation
 
 ```bash
 npm install beacon-sdk
 ```
 
-## Quick Start
+## 🛠 Quick Start
 
-```ts
-import { BeaconClient } from 'beacon-sdk'
-import 'dotenv/config'
+```typescript
+import { BeaconClient, EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'beacon-sdk';
 
 const client = new BeaconClient({
-  token: process.env.BOT_TOKEN,
-  apiUrl: process.env.BEACON_API_URL,
-  wsUrl: process.env.BEACON_GATEWAY_URL,
-  reconnect: true,
-  reconnectAttempts: 10,
-  reconnectDelay: 2000,
-})
+  token: 'YOUR_BOT_TOKEN',
+  intents: ['GUILDS', 'GUILD_MESSAGES', 'MESSAGE_CONTENT']
+});
 
 client.on('ready', () => {
-  console.log('online as', client.user?.username)
-})
+  console.log(`Logged in as ${client.user.tag}!`);
+});
 
-client.on('messageCreate', async (msg) => {
-  if (msg.author.bot) return
-  if (msg.content === '!ping') await msg.reply('Pong')
-})
+client.on('messageCreate', async (message) => {
+  if (message.content === '!ping') {
+    const embed = new EmbedBuilder()
+      .setTitle('Beacon SDK v2.5.0')
+      .setDescription('Stability, performance, and developer-first design.')
+      .setColor('#5865F2')
+      .setTimestamp();
 
-client.login()
+    const row = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setLabel('Documentation')
+          .setStyle(ButtonStyle.Link)
+          .setURL('https://beacon.qzz.io/docs')
+      );
+
+    await message.reply({ embeds: [embed], components: [row] });
+  }
+});
+
+client.login();
 ```
 
-## Runtime URLs
+## 📊 Interaction Builders
 
-- API: https://api.beacon.qzz.io/api
-- Railway API: https://beacon-v1-api.up.railway.app/api
-- Gateway: wss://gateway.beacon.qzz.io
+```typescript
+import { CommandBuilder, ApplicationCommandOptionType } from 'beacon-sdk';
 
-## Main Exports
-
-- BeaconClient
-- BotFramework
-- AuthAPI
-- MessagesAPI
-- ServersAPI
-- ChannelsAPI
-- UsersAPI
-- RolesAPI
-- PresenceAPI
-- VoiceAPI
-- NotificationsAPI
-- WebhooksAPI
-- InvitesAPI
-
-## API Usage Examples
-
-### Messages
-
-```ts
-await client.messages.send(channelId, { content: 'hello' })
-await client.messages.edit(channelId, messageId, { content: 'edited' })
-await client.messages.delete(channelId, messageId)
+const pingCommand = new CommandBuilder()
+  .setName('ping')
+  .setDescription('Replies with Pong!')
+  .addOption({
+    name: 'ephemeral',
+    description: 'Whether to show the response only to you',
+    type: ApplicationCommandOptionType.Boolean,
+    required: false
+  });
 ```
 
-### Servers and channels
+## 🔒 Security
 
-```ts
-const guild = await client.servers.get(guildId)
-const channel = await client.channels.get(channelId)
-```
+Beacon SDK uses high-entropy token systems and supports signed requests. All outgoing payloads are validated against internal schemas to ensure platform compatibility.
 
-### Users and roles
+## 📄 License
 
-```ts
-const me = await client.users.getMe()
-await client.roles.create(guildId, { name: 'Moderator' })
-```
-
-### Presence and voice
-
-```ts
-await client.presence.update({ status: 'online' })
-await client.voice.join(channelId)
-```
-
-## New in 1.2.0
-
-### NotificationsAPI
-
-```ts
-const list = await client.notifications.getAll({ limit: 25 })
-const unread = await client.notifications.getUnreadCount()
-await client.notifications.markAllRead()
-```
-
-### WebhooksAPI
-
-```ts
-const hook = await client.webhooks.create(channelId, { name: 'DeployBot' })
-await client.webhooks.execute(hook.id, hook.token, {
-  content: 'Build completed',
-})
-```
-
-### InvitesAPI
-
-```ts
-const invite = await client.invites.create(channelId, { maxUses: 5 })
-await client.invites.accept(invite.code)
-```
-
-## Error Handling
-
-```ts
-try {
-  await client.messages.send(channelId, { content: 'test' })
-} catch (error) {
-  console.error('request failed', error)
-}
-```
-
-## Production Notes
-
-- Keep tokens in environment variables.
-- Restrict gateway intents to only what your app needs.
-- Use reconnect settings in unstable network environments.
-- Prefer typed SDK APIs over raw fetch calls for auth and retry consistency.
-
-## License
-
-MIT
+MIT © Beacon Team

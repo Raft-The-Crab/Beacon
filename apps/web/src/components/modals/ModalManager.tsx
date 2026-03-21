@@ -14,6 +14,8 @@ import WebhooksManager from './WebhooksManager'
 import GroupDMModal from '../features/GroupDMModal'
 import { PinnedMessages } from '../features/PinnedMessages'
 import { QuickSwitcherModal } from './QuickSwitcherModal'
+import { BotModal } from './BotModal'
+import { voiceManager } from '../../services/voiceManager'
 
 interface ModalContextType {
   openModal: (modalName: string, props?: any) => void
@@ -72,6 +74,7 @@ export function ModalManager({ children }: ModalManagerProps) {
     ui.setShowAuditLog(false)
     ui.setShowPinnedMessages(false)
     ui.setShowQuickSwitcher(false)
+    ui.setShowBotModal(false)
   }
 
   const isModalOpen = (modalName: string) => {
@@ -155,7 +158,10 @@ export function ModalManager({ children }: ModalManagerProps) {
                 { id: '1', username: 'Alex', isMuted: false, isVideoOn: true, isSpeaking: true },
                 { id: '2', username: 'Sarah', isMuted: true, isVideoOn: false, isSpeaking: false }
               ]}
-              onEndCall={() => ui.setShowVoiceChannel(false)}
+              onEndCall={() => {
+                void voiceManager.leaveChannel()
+                ui.setShowVoiceChannel(false)
+              }}
               onToggleMute={() => { }}
               onToggleVideo={() => { }}
               onToggleScreenShare={() => { }}
@@ -222,6 +228,8 @@ export function ModalManager({ children }: ModalManagerProps) {
           onClose={() => ui.setShowQuickSwitcher(false)}
         />
       )}
+      
+      {ui.showBotModal && <BotModal />}
     </ModalContext.Provider>
   )
 }

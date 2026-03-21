@@ -24,7 +24,7 @@ function normalizeProxyTarget(rawValue: string | undefined, fallback: string): s
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const apiProxyTarget = normalizeProxyTarget(env.VITE_BACKEND_URL, 'http://localhost:8080')
-  const gatewayProxyTarget = normalizeProxyTarget(env.VITE_GATEWAY_URL, 'http://localhost:4001')
+  const gatewayProxyTarget = normalizeProxyTarget(env.VITE_GATEWAY_URL, 'http://localhost:8080')
   const workspaceRoot = searchForWorkspaceRoot(process.cwd())
   const reactPlugin = react({
     jsxRuntime: 'automatic',
@@ -39,12 +39,11 @@ export default defineConfig(({ mode }) => {
 
   resolve: {
     alias: {
-      '@beacon/types': path.resolve(__dirname, '../../packages/types/src'),
-      'beacon-sdk': path.resolve(__dirname, '../../packages/sdk/src'),
+      'beacon-types': path.resolve(__dirname, '../../packages/types/src'),
+      'beacon.js': path.resolve(__dirname, '../../packages/sdk/src'),
       '@': path.resolve(__dirname, './src'),
     },
   },
-
   server: {
     port: 5173,
     host: true,
@@ -94,6 +93,7 @@ export default defineConfig(({ mode }) => {
     reportCompressedSize: true,
     
     rollupOptions: {
+      external: ['stream', 'opusscript', 'wrtc', 'child_process', 'crypto', 'zlib'],
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) {
@@ -142,7 +142,7 @@ export default defineConfig(({ mode }) => {
       'framer-motion',
       'lucide-react',
     ],
-    exclude: ['@beacon/types', 'beacon-sdk'],
+    exclude: ['beacon-types', 'beacon.js'],
   },
 
   esbuild: {
@@ -153,7 +153,7 @@ export default defineConfig(({ mode }) => {
 
   define: {
     global: 'globalThis',
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '2.0.0'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
 }

@@ -3,9 +3,11 @@
  * auto-reconnect with exponential backoff, session resume, and heartbeat.
  */
 
-import { EventEmitter } from 'events';
-import WebSocket from 'ws';
+import EventEmitter from 'eventemitter3';
+import WebSocket from 'isomorphic-ws';
 import { resolveApiClientGatewayUrl } from './connection';
+
+export type ConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
 
 export interface GatewayOptions {
   token: string;
@@ -68,6 +70,18 @@ export class Gateway extends EventEmitter {
   private maxReconnectAttempts = 10;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
+  private _connectionState: ConnectionState = 'idle';
+  private _lastHeartbeatSent = 0;
+  private _latency = -1;
+
+  /** Current connection state */
+  get connectionState(): ConnectionState { return this._connectionState; }
+
+  /** Whether the gateway is currently connected and operational */
+  get isConnected(): boolean { return this._connectionState === 'connected'; }
+
+  /** Heartbeat round-trip time in ms (-1 if not yet measured) */
+  get latency(): number { return this._latency; }
 
   constructor(options: GatewayOptions) {
     super();
@@ -80,6 +94,7 @@ export class Gateway extends EventEmitter {
     if (this.destroyed) return;
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) return;
 
+    this._setConnectionState(this.reconnectAttempts > 0 ? 'reconnecting' : 'connecting');
     this.emit('debug', `[Gateway] Connecting to ${this.url}`);
     this.ws = new WebSocket(this.url);
 
@@ -101,6 +116,7 @@ export class Gateway extends EventEmitter {
       const reasonStr = reason.toString();
       this.emit('debug', `[Gateway] Closed: ${code} ${reasonStr}`);
       this.cleanup();
+      this._setConnectionState('disconnected');
       this.emit('disconnect', { code, reason: reasonStr });
 
       // Reconnectable close codes
@@ -133,7 +149,8 @@ export class Gateway extends EventEmitter {
 
       case OPCodes.HEARTBEAT_ACK:
         this.heartbeatAcked = true;
-        this.emit('debug', '[Gateway] Heartbeat ACK received');
+        this._latency = Date.now() - this._lastHeartbeatSent;
+        this.emit('debug', `[Gateway] Heartbeat ACK received (latency: ${this._latency}ms)`);
         break;
 
       case OPCodes.HEARTBEAT:
@@ -159,8 +176,10 @@ export class Gateway extends EventEmitter {
       case OPCodes.DISPATCH:
         if (packet.t === 'READY') {
           this.sessionId = packet.d.session_id;
+          this._setConnectionState('connected');
           this.emit('ready', packet.d);
         } else if (packet.t === 'RESUMED') {
+          this._setConnectionState('connected');
           this.emit('debug', '[Gateway] Session resumed successfully');
         }
         this.emit('packet', packet);
@@ -216,6 +235,7 @@ export class Gateway extends EventEmitter {
   }
 
   private sendHeartbeat() {
+    this._lastHeartbeatSent = Date.now();
     this.send({ op: OPCodes.HEARTBEAT, d: this.sequence });
   }
 
@@ -231,7 +251,11 @@ export class Gateway extends EventEmitter {
       return;
     }
 
-    const delay = Math.min(500 * 2 ** this.reconnectAttempts, 30000);
+    const baseDelay = Math.min(500 * 2 ** this.reconnectAttempts, 30000);
+    // Add jitter (up to 20% randomization) to prevent thundering herd
+    const jitter = baseDelay * 0.2 * Math.random();
+    const delay = Math.floor(baseDelay + jitter);
+    
     this.reconnectAttempts++;
     this.emit('debug', `[Gateway] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
 
@@ -263,10 +287,20 @@ export class Gateway extends EventEmitter {
   disconnect() {
     this.destroyed = true;
     this.cleanup();
+    this._setConnectionState('disconnected');
     if (this.ws) {
       this.ws.close(1000, 'Client disconnect');
       this.ws = null;
     }
+  }
+
+  private _setConnectionState(state: ConnectionState) {
+    const prev = this._connectionState;
+    if (prev === state) return;
+    this._connectionState = state;
+    this.emit('connectionStateChange', { from: prev, to: state });
+    if (state === 'reconnecting') this.emit('reconnecting');
+    if (state === 'connected' && prev === 'reconnecting') this.emit('reconnected');
   }
 
   updatePresence(status: 'online' | 'idle' | 'dnd' | 'invisible', activities: any[] = []) {

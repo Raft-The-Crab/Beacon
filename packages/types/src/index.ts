@@ -86,7 +86,19 @@ export interface MusicMetadata {
   platform: 'spotify' | 'youtube' | 'unknown'
 }
 
-export type UserBadge = 'owner' | 'admin' | 'moderator' | 'beacon_plus' | 'bot' | 'early_supporter' | 'bug_hunter' | 'server_owner' | 'verified'
+export type UserBadge =
+  | 'staff'
+  | 'verified_developer'
+  | 'early_supporter'
+  | 'beacon_plus'
+  | 'bug_hunter'
+  | 'moderator'
+  | 'owner'
+  | 'admin'
+  | 'bot'
+  | 'server_owner'
+  | 'verified'
+  | string
 
 export interface User {
   id: string
@@ -114,6 +126,34 @@ export interface User {
   createdAt?: string
 }
 
+export interface RawUser {
+  id: string
+  username: string
+  display_name?: string | null
+  discriminator: string
+  avatar: string | null
+  email: string
+  status: PresenceStatus
+  custom_status: string | null
+  status_text?: string
+  status_emoji?: string
+  status_music?: string
+  status_music_metadata?: MusicMetadata
+  theme?: string
+  bio?: string | null
+  banner?: string | null
+  developer_mode?: boolean
+  is_beacon_plus?: boolean
+  badges?: UserBadge[]
+  bot?: boolean
+  two_factor_enabled?: boolean
+  avatar_decoration_id?: string | null
+  profile_effect_id?: string | null
+  global_name?: string | null
+  created_at?: string
+  accent_color?: number | null
+}
+
 export type ServerTag = 'gaming' | 'music' | 'entertainment' | 'education' | 'science' | 'technology' | 'art' | 'community' | 'anime' | 'memes' | 'programming' | 'sports' | 'fashion' | 'food' | 'travel' | 'business' | 'finance' | 'politics' | 'news' | 'other'
 
 export interface Guild {
@@ -121,16 +161,42 @@ export interface Guild {
   name: string
   icon: string | null
   banner: string | null
+  splash?: string | null
   ownerId: string
   createdAt: string
   memberCount?: number
   members?: User[]
   channels?: Channel[]
+  roles?: Role[]
   boostCount?: number
   boostLevel?: number
   vanityUrl?: string | null
   description?: string | null
+  features?: string[]
   tags?: ServerTag[]
+}
+
+export interface RawGuild {
+  id: string
+  name: string
+  icon: string | null
+  banner: string | null
+  splash?: string | null
+  owner_id: string
+  created_at: string
+  member_count?: number
+  members?: RawUser[]
+  channels?: RawChannel[]
+  roles?: RawRole[]
+  boost_count?: number
+  boost_level?: number
+  vanity_url?: string | null
+  description?: string | null
+  features?: string[]
+  tags?: ServerTag[]
+  settings?: any
+  approximate_member_count?: number
+  approximate_presence_count?: number
 }
 
 // Server is an alias for Guild
@@ -159,6 +225,33 @@ export interface Channel {
   topic?: string
   nsfw: boolean
   slowmode: number
+  permissionOverwrites?: RawPermissionOverwrite[]
+}
+
+export interface RawChannel {
+  id: string
+  guild_id?: string
+  name: string
+  type: number
+  position: number
+  parent_id?: string | null
+  topic?: string | null
+  nsfw: boolean
+  slowmode_delay: number
+  permission_overwrites?: RawPermissionOverwrite[]
+}
+
+export interface RawPermissionOverwrite {
+  id: string
+  type: number // 0 for role, 1 for member
+  allow: string
+  deny: string
+}
+
+export interface FetchMessagesOptions {
+  limit?: number;
+  before?: string;
+  after?: string;
 }
 
 export interface Message {
@@ -168,10 +261,72 @@ export interface Message {
   content: string
   attachments: Attachment[]
   embeds: Embed[]
+  components?: MessageComponent[]
   mentions: string[]
   replyTo?: string
   editedAt?: string
   createdAt: string
+  nonce?: string
+  pinned?: boolean
+  flags?: number
+}
+
+export interface RawMessage {
+  id: string
+  channel_id: string
+  guild_id?: string
+  author_id?: string
+  author: RawUser
+  member?: RawMember
+  content: string
+  timestamp: string
+  edited_timestamp?: string | null
+  mentions: RawUser[]
+  attachments: RawAttachment[]
+  embeds: any[]
+  reactions?: RawReaction[]
+  pinned: boolean
+  webhook_id?: string
+  referenced_message?: RawMessage | null
+  nonce?: string
+  flags?: number
+}
+
+export interface RawAttachment {
+  id: string
+  filename: string
+  size: number
+  url: string
+  content_type?: string
+}
+
+export interface RawReaction {
+  count: number
+  me: boolean
+  emoji: { id: string | null; name: string | null; animated?: boolean }
+}
+
+/** Represents an Action Row or nested component in a message. */
+export interface MessageComponent {
+  type: number
+  components?: MessageComponent[]
+  custom_id?: string
+  customId?: string
+  label?: string
+  style?: number
+  url?: string
+  disabled?: boolean
+  placeholder?: string
+  min_values?: number
+  max_values?: number
+  options?: SelectMenuOptionData[]
+}
+
+export interface SelectMenuOptionData {
+  label: string
+  value: string
+  description?: string
+  default?: boolean
 }
 
 export interface MessageReaction {
@@ -197,6 +352,7 @@ export interface Embed {
   title?: string
   description?: string
   color?: number
+  author?: { name: string; icon_url?: string; url?: string }
   image?: { url: string }
   thumbnail?: { url: string }
   fields?: { name: string; value: string; inline?: boolean }[]
@@ -214,6 +370,28 @@ export interface Role {
   permissions: string
   hoist?: boolean
   mentionable?: boolean
+}
+
+export interface RawRole {
+  id: string
+  guild_id?: string
+  name: string
+  color: number
+  icon?: string
+  position: number
+  permissions: string
+  hoist: boolean
+  managed: boolean
+  mentionable: boolean
+}
+
+export interface RawMember {
+  user: RawUser
+  nick?: string | null
+  roles: string[]
+  joined_at: string
+  deaf: boolean
+  mute: boolean
 }
 
 export type Permission =
@@ -362,8 +540,93 @@ export interface MessageSearchResult {
 }
 
 // ============================================================================
+// Invite Types
+// ============================================================================
+
+export interface Invite {
+  code: string
+  guildId: string
+  channelId: string
+  inviterId?: string
+  maxAge?: number
+  maxUses?: number
+  uses?: number
+  temporary?: boolean
+  createdAt: string
+  expiresAt?: string | null
+}
+
+// ============================================================================
+// Audit Log Types
+// ============================================================================
+
+export interface AuditLogEntry {
+  id: string
+  guildId: string
+  userId: string
+  targetId?: string
+  actionType: number
+  reason?: string
+  changes?: { key: string; old?: any; new?: any }[]
+  createdAt: string
+}
+
+// ============================================================================
+// Scheduled Event Types
+// ============================================================================
+
+export interface ScheduledEvent {
+  id: string
+  guildId: string
+  channelId?: string
+  name: string
+  description?: string
+  scheduledStartTime: string
+  scheduledEndTime?: string
+  status: 'SCHEDULED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+  entityType: 'STAGE_INSTANCE' | 'VOICE' | 'EXTERNAL'
+  entityMetadata?: { location?: string }
+  creatorId?: string
+  userCount?: number
+}
+
+// ============================================================================
+// Webhook Types
+// ============================================================================
+
+export interface Webhook {
+  id: string
+  guildId: string
+  channelId: string
+  name: string
+  avatar?: string | null
+  token?: string
+  type: 'incoming' | 'channel_follower'
+  createdAt: string
+}
+
+// ============================================================================
 // Bot & Interaction Types
 // ============================================================================
+export enum ApplicationCommandType {
+  CHAT_INPUT = 1,
+  USER = 2,
+  MESSAGE = 3,
+}
+
+export enum ApplicationCommandOptionType {
+  SUB_COMMAND = 1,
+  SUB_COMMAND_GROUP = 2,
+  STRING = 3,
+  INTEGER = 4,
+  BOOLEAN = 5,
+  USER = 6,
+  CHANNEL = 7,
+  ROLE = 8,
+  MENTIONABLE = 9,
+  NUMBER = 10,
+  ATTACHMENT = 11,
+}
 
 export enum InteractionType {
   PING = 1,
@@ -380,11 +643,40 @@ export interface Interaction {
   data?: any
   guildId?: string
   channelId?: string
-  member?: Member
+  member?: RawMember
   user?: User
   token: string
   version: number
   message?: Message
+}
+
+export interface InteractionOption {
+  name: string
+  type: number
+  value?: string | number | boolean
+  options?: InteractionOption[]
+}
+
+export interface RawInteraction {
+  id: string
+  application_id: string
+  type: number
+  data?: {
+    id: string
+    name: string
+    type: ApplicationCommandType
+    options?: InteractionOption[]
+    resolved?: any // For user/channel/role options
+    custom_id?: string
+    component_type?: number
+    values?: string[]
+  }
+  guild_id?: string
+  channel_id: string
+  member?: RawMember
+  user?: RawUser
+  token: string
+  version: number
 }
 
 export enum InteractionResponseType {
@@ -409,3 +701,4 @@ export interface InteractionResponse {
     attachments?: Attachment[]
   }
 }
+

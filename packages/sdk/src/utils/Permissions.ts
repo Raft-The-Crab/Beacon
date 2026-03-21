@@ -49,7 +49,7 @@ export const PermissionFlags = {
 export type PermissionFlagValues = typeof PermissionFlags[keyof typeof PermissionFlags];
 
 export class Permissions {
-  private bitfield: bigint;
+  public bitfield: bigint;
 
   constructor(permissions: bigint | bigint[] | PermissionFlagValues[]) {
     if (Array.isArray(permissions)) {

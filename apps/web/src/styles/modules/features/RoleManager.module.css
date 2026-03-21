@@ -46,7 +46,7 @@
   cursor: pointer;
   transition: all var(--transition-fast);
   margin-bottom: 2px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .roleItem:hover {
@@ -241,7 +241,7 @@
   cursor: pointer;
   transition: all var(--transition-fast);
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .permissionItem:hover {

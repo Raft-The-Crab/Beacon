@@ -42,7 +42,7 @@
 
 .modal {
   background: var(--bg-panel);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
   width: min(100%, 1000px);
   max-width: 95%;
@@ -125,6 +125,10 @@
   flex: 1;
   min-height: 0;
 }
+  
+.noScroll {
+  overflow: hidden;
+}
 
 .noPadding {
   padding: 0;
@@ -190,7 +194,8 @@
   .modal {
     width: 100%;
     max-width: 100%;
-    max-height: 100dvh;
+    max-height: calc(100dvh - 20px);
+    margin-top: auto;
     border-radius: 20px 20px 0 0;
   }
 

@@ -49,7 +49,7 @@ class ActivitySyncService {
         const { updateActivities } = useAuthStore.getState();
 
         if (!data) {
-            this.currentActivities = this.currentActivities.filter(a => a.name.toLowerCase() !== 'spotify');
+            this.currentActivities = this.currentActivities.filter(a => String(a.name || '').toLowerCase() !== 'spotify');
         } else {
             const spotifyActivity: UserActivity = {
                 type: 'listening',
@@ -65,7 +65,7 @@ class ActivitySyncService {
 
             // Replace existing spotify activity
             this.currentActivities = [
-                ...this.currentActivities.filter(a => a.name.toLowerCase() !== 'spotify'),
+                ...this.currentActivities.filter(a => String(a.name || '').toLowerCase() !== 'spotify'),
                 spotifyActivity
             ];
         }

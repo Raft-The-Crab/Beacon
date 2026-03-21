@@ -52,7 +52,7 @@ export const SelectDropdown = React.forwardRef<
 
     const filteredOptions = searchable
       ? options.filter((opt) =>
-          opt.label.toLowerCase().includes(searchQuery.toLowerCase()),
+          String(opt.label || '').toLowerCase().includes(searchQuery.toLowerCase()),
         )
       : options
 

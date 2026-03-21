@@ -1,7 +1,8 @@
-﻿import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import styles from '../../styles/modules/modals/AuditLogModal.module.css';
 import { apiClient } from '../../services/apiClient';
-import { Spinner } from '../ui';
+import { Spinner, Select } from '../ui';
+import { FileText, RefreshCw, X, User, ShieldAlert } from 'lucide-react';
 
 interface AuditEntry {
   id: string;
@@ -81,17 +82,20 @@ export function AuditLogModal({ guildId, guildName, onClose, embedded }: Props) 
   const content = (
     <div className={embedded ? styles.embeddedRoot : styles.modal} onClick={(e) => e.stopPropagation()}>
       <div className={styles.header}>
-        <div>
-          <h2>Audit Log</h2>
-          {guildName && <p className={styles.guildName}>{guildName}</p>}
+        <div className={styles.headerTitleContainer}>
+          <FileText size={20} className={styles.headerIcon} />
+          <div>
+            <h2>Audit Log</h2>
+            {guildName && <p className={styles.guildName}>{guildName}</p>}
+          </div>
         </div>
         {!embedded && (
-          <button className={styles.closeBtn} onClick={onClose}>✕</button>
+          <button className={styles.closeBtn} onClick={onClose}><X size={18} /></button>
         )}
       </div>
 
       <div className={styles.toolbar}>
-        <select
+        <Select
           className={styles.filterSelect}
           value={filter}
           onChange={(e) => setFilter(e.target.value === '' ? '' : Number(e.target.value))}
@@ -100,8 +104,10 @@ export function AuditLogModal({ guildId, guildName, onClose, embedded }: Props) 
           {Object.entries(ACTION_NAMES).map(([code, name]) => (
             <option key={code} value={code}>{name}</option>
           ))}
-        </select>
-        <button className={styles.refreshBtn} onClick={loadLogs}>↻ Refresh</button>
+        </Select>
+        <button className={styles.refreshBtn} onClick={loadLogs}>
+          <RefreshCw size={14} style={{ marginRight: 6 }} /> Refresh
+        </button>
       </div>
 
       <div className={styles.list}>
@@ -109,6 +115,7 @@ export function AuditLogModal({ guildId, guildName, onClose, embedded }: Props) 
           <div className={styles.center}><Spinner size="lg" /></div>
         ) : filtered.length === 0 ? (
           <div className={styles.center}>
+            <ShieldAlert size={48} style={{ opacity: 0.1, marginBottom: 16 }} />
             <p>No audit log entries found</p>
           </div>
         ) : (

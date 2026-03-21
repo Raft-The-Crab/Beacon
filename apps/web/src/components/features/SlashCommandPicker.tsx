@@ -1,192 +1,95 @@
-﻿import { useEffect, useRef, useState, useCallback } from 'react'
-import { Zap, Hash, Image, Smile, Gift } from 'lucide-react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { Terminal, Command } from 'lucide-react'
+import { useInteractionStore } from '../../stores/useInteractionStore'
 import styles from '../../styles/modules/features/SlashCommandPicker.module.css'
 
-export interface SlashCommand {
-  name: string
-  description: string
-  usage?: string
-  category: 'chat' | 'media' | 'fun'
-  icon: React.ReactNode
-  onSelect?: (command: SlashCommand) => void
-}
-
-const BUILT_IN_COMMANDS: SlashCommand[] = [
-  // Chat
-  { name: 'me', description: 'Perform an action (italic text)', usage: '/me <action>', category: 'chat', icon: <Smile size={16} /> },
-  { name: 'spoiler', description: 'Mark text as a spoiler', usage: '/spoiler <text>', category: 'chat', icon: <Hash size={16} /> },
-  { name: 'shrug', description: 'Append ¯\\_(ツ)_/¯ to message', category: 'chat', icon: <Smile size={16} /> },
-  { name: 'tableflip', description: '(╯°□°）╯︵ ┻━┻', category: 'chat', icon: <Smile size={16} /> },
-  { name: 'unflip', description: '┬─┬ ノ( ゜-゜ノ)', category: 'chat', icon: <Smile size={16} /> },
-  // Media
-  { name: 'gif', description: 'Search and send a GIF', usage: '/gif <search>', category: 'media', icon: <Image size={16} /> },
-  // Fun
-  { name: 'roll', description: 'Roll a die (default d6)', usage: '/roll [sides]', category: 'fun', icon: <Gift size={16} /> },
-  { name: 'flip', description: 'Flip a coin', category: 'fun', icon: <Gift size={16} /> },
-  { name: 'rps', description: 'Rock, paper, scissors', category: 'fun', icon: <Gift size={16} /> },
-]
-
-const CATEGORY_LABELS: Record<string, string> = {
-  chat: 'CHAT',
-  media: 'MEDIA',
-  fun: 'FUN',
-}
-
-const CATEGORY_COLORS: Record<string, string> = {
-  chat: 'var(--beacon-brand)',
-  media: '#7289da',
-  fun: '#f04747',
-}
-
 interface SlashCommandPickerProps {
-  query: string
-  onSelect: (command: SlashCommand) => void
-  onClose: () => void
-  anchorRef: React.RefObject<HTMLElement>
-  extraCommands?: SlashCommand[]
+    query: string
+    guildId?: string
+    onSelect: (command: any) => void
+    onClose: () => void
 }
 
-export function SlashCommandPicker({
-  query,
-  onSelect,
-  onClose,
-  anchorRef,
-  extraCommands = [],
-}: SlashCommandPickerProps) {
-  const [selectedIdx, setSelectedIdx] = useState(0)
-  const listRef = useRef<HTMLDivElement>(null)
+export function SlashCommandPicker({ query, guildId, onSelect, onClose }: SlashCommandPickerProps) {
+    const { commands, fetchCommands } = useInteractionStore()
+    const [selectedIndex, setSelectedIndex] = useState(0)
+    const listRef = useRef<HTMLDivElement>(null)
 
-  const allCommands = [...BUILT_IN_COMMANDS, ...extraCommands]
+    useEffect(() => {
+        fetchCommands(guildId)
+    }, [guildId, fetchCommands])
 
-  const filtered = query.trim()
-    ? allCommands.filter(
-      c =>
-        c.name.toLowerCase().startsWith(query.toLowerCase()) ||
-        c.description.toLowerCase().includes(query.toLowerCase())
-    )
-    : allCommands
+    const filtered = useMemo(() => {
+        const lowerSearch = String(query || '').toLowerCase().replace(/^\//, '')
+        return commands.filter(cmd => 
+            String(cmd.name || '').toLowerCase().includes(lowerSearch) || 
+            String(cmd.description || '').toLowerCase().includes(lowerSearch)
+        ).slice(0, 10)
+    }, [commands, query])
 
-  // Group by category
-  const grouped: Record<string, SlashCommand[]> = {}
-  for (const cmd of filtered) {
-    if (!grouped[cmd.category]) grouped[cmd.category] = []
-    grouped[cmd.category].push(cmd)
-  }
+    useEffect(() => {
+        setSelectedIndex(0)
+    }, [query])
 
-  // Flat index for keyboard nav
-  const flat = filtered
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (filtered.length === 0) return
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setSelectedIdx(i => Math.min(i + 1, flat.length - 1))
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setSelectedIdx(i => Math.max(i - 1, 0))
-      } else if (e.key === 'Enter' || e.key === 'Tab') {
-        e.preventDefault()
-        if (flat[selectedIdx]) {
-          onSelect(flat[selectedIdx])
+            if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                setSelectedIndex(prev => (prev + 1) % filtered.length)
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                setSelectedIndex(prev => (prev - 1 + filtered.length) % filtered.length)
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
+                e.preventDefault()
+                if (filtered[selectedIndex]) {
+                    onSelect(filtered[selectedIndex])
+                }
+            } else if (e.key === 'Escape') {
+                e.preventDefault()
+                onClose()
+            }
         }
-      } else if (e.key === 'Escape') {
-        e.preventDefault()
-        onClose()
-      }
-    },
-    [flat, selectedIdx, onSelect, onClose]
-  )
 
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [filtered, selectedIndex, onSelect, onClose])
 
-  // Scroll selected into view
-  useEffect(() => {
-    const el = listRef.current?.querySelector(`[data-idx="${selectedIdx}"]`) as HTMLElement | null
-    el?.scrollIntoView({ block: 'nearest' })
-  }, [selectedIdx])
+    if (filtered.length === 0) return null
 
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (
-        listRef.current &&
-        !listRef.current.contains(e.target as Node) &&
-        anchorRef.current &&
-        !anchorRef.current.contains(e.target as Node)
-      ) {
-        onClose()
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [anchorRef, onClose])
-
-  if (filtered.length === 0) {
     return (
-      <div className={styles.picker}>
-        <div className={styles.empty}>
-          <Zap size={20} />
-          <span>No commands match <strong>/{query}</strong></span>
-        </div>
-      </div>
-    )
-  }
-
-  let flatIdx = 0
-
-  return (
-    <div className={styles.picker} ref={listRef}>
-      <div className={styles.header}>
-        <Zap size={13} className={styles.headerIcon} />
-        <span>SLASH COMMANDS</span>
-      </div>
-      <div className={styles.list}>
-        {Object.entries(grouped).map(([cat, cmds]) => (
-          <div key={cat} className={styles.group}>
-            <div
-              className={styles.groupLabel}
-              style={{ color: CATEGORY_COLORS[cat] }}
-            >
-              {CATEGORY_LABELS[cat] || cat.toUpperCase()}
+        <div className={styles.picker}>
+            <div className={styles.header}>
+                <Terminal size={14} className={styles.headerIcon} />
+                <span>SLASH COMMANDS</span>
             </div>
-            {cmds.map(cmd => {
-              const idx = flatIdx++
-              return (
-                <div
-                  key={cmd.name}
-                  data-idx={idx}
-                  className={`${styles.item} ${idx === selectedIdx ? styles.selected : ''}`}
-                  onMouseEnter={() => setSelectedIdx(idx)}
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    onSelect(cmd)
-                  }}
-                >
-                  <span className={styles.itemIcon}>{cmd.icon}</span>
-                  <div className={styles.itemContent}>
-                    <span className={styles.itemName}>/{cmd.name}</span>
-                    <span className={styles.itemDesc}>{cmd.description}</span>
-                  </div>
-                  {cmd.usage && (
-                    <span className={styles.itemUsage}>{cmd.usage}</span>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        ))}
-      </div>
-      <div className={styles.footer}>
-        <span><kbd>↑↓</kbd> Navigate</span>
-        <span><kbd>↵</kbd> Select</span>
-        <span><kbd>Tab</kbd> Complete</span>
-        <span><kbd>Esc</kbd> Dismiss</span>
-      </div>
-    </div>
-  )
+            <div className={styles.list} ref={listRef}>
+                {filtered.map((cmd, index) => (
+                    <div
+                        key={cmd.name}
+                        className={`${styles.item} ${index === selectedIndex ? styles.selected : ''}`}
+                        onClick={() => onSelect(cmd)}
+                        onMouseEnter={() => setSelectedIndex(index)}
+                    >
+                        <div className={styles.itemIcon}>
+                            <Command size={16} />
+                        </div>
+                        <div className={styles.itemContent}>
+                            <div className={styles.itemName}>/{cmd.name}</div>
+                            <div className={styles.itemDesc}>{cmd.description}</div>
+                        </div>
+                        {cmd.usage && (
+                            <div className={styles.itemUsage}>{cmd.usage}</div>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <div className={styles.footer}>
+                <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+                <span><kbd>↵</kbd> select</span>
+                <span><kbd>esc</kbd> dismiss</span>
+            </div>
+        </div>
+    )
 }
-
-export { BUILT_IN_COMMANDS }

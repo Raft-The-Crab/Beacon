@@ -190,7 +190,7 @@
 }
 
 .channels::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .channels::-webkit-scrollbar-track {
@@ -277,13 +277,17 @@
   color: var(--text-secondary);
   width: 100%;
   text-align: left;
-  transition: all 0.2s var(--ease-out);
-  border: 1px solid transparent;
+  transition: all 0.2s var(--ease-out), transform 0.1s ease;
+  border: 1px solid rgba(255, 255, 255, 0.03);
   position: relative;
   overflow: hidden;
   background: transparent;
   cursor: pointer;
   min-width: 0;
+}
+
+.channel:active {
+  transform: scale(0.97);
 }
 
 .channel>span {
@@ -370,11 +374,11 @@
   left: -2px;
   top: 50%;
   transform: translateY(-50%);
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--text-primary);
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
   animation: unreadPulse 2s ease-in-out infinite;
 }
 
@@ -514,7 +518,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
   color: var(--text-muted);
   transition: all 0.15s;
   cursor: pointer;

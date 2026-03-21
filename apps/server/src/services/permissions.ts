@@ -7,7 +7,7 @@ export class PermissionService {
   static async hasPermission(
     userId: string,
     guildId: string,
-    permission: PermissionBit
+    permission: bigint
   ): Promise<boolean> {
     // Check cache first
     const cacheKey = `perms:${userId}:${guildId}`

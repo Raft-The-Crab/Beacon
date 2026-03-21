@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../../services/apiClient';
-import { Button, Input, useToast } from '../ui';
+import { Button, Input, Select, useToast } from '../ui';
+import { Webhook as WebhookIcon, Hash, Copy, Edit2, Trash2, Plus, Info, AlertTriangle } from 'lucide-react';
 import styles from '../../styles/modules/modals/WebhooksManager.module.css';
 
 interface Webhook {
@@ -123,7 +124,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
     <div className={styles.modal}>
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <span className={styles.headerIcon}>🔗</span>
+          <WebhookIcon size={24} className={styles.headerIcon} color="var(--beacon-brand)" />
           <h2>Webhooks</h2>
         </div>
         {!embedded && (
@@ -137,7 +138,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
 
       {error && (
         <div className={styles.error}>
-          <span>⚠️</span> {error}
+          <AlertTriangle size={18} /> {error}
           <button className={styles.errorClose} onClick={() => setError('')}>✕</button>
         </div>
       )}
@@ -152,7 +153,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
           <>
             {webhooks.length === 0 && !creating && (
               <div className={styles.empty}>
-                <span className={styles.emptyIcon}>🔗</span>
+                <WebhookIcon size={48} className={styles.emptyIcon} style={{ opacity: 0.2, marginBottom: 16 }} />
                 <p>No webhooks yet. Create one to get started.</p>
               </div>
             )}
@@ -162,7 +163,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
                 <div className={styles.webhookAvatar}>
                   {wh.avatarUrl
                     ? <img src={wh.avatarUrl} alt={wh.name} />
-                    : <span>🤖</span>
+                    : <WebhookIcon size={24} color="#7c3aed" />
                   }
                 </div>
 
@@ -176,7 +177,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
                       maxLength={80}
                       autoFocus
                     />
-                    <select
+                    <Select
                       className={styles.editSelect}
                       value={editChannel}
                       onChange={e => setEditChannel(e.target.value)}
@@ -184,7 +185,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
                       {textChannels.map(c => (
                         <option key={c.id} value={c.id}>#{c.name}</option>
                       ))}
-                    </select>
+                    </Select>
                     <div className={styles.editActions}>
                       <button
                         className={styles.saveBtn}
@@ -218,7 +219,8 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
                         onClick={() => copyUrl(wh)}
                         title="Copy webhook URL"
                       >
-                        {copiedId === wh.id ? '✅ Copied' : '📋 Copy URL'}
+                        {copiedId === wh.id ? '✅' : <Copy size={16} />}
+                        {copiedId === wh.id ? 'Copied' : 'Copy URL'}
                       </button>
                       <Button
                         variant="secondary"
@@ -226,7 +228,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
                         onClick={() => startEdit(wh)}
                         title="Edit webhook"
                       >
-                        ✏️
+                        <Edit2 size={16} />
                       </Button>
                       <Button
                         variant="secondary"
@@ -235,7 +237,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
                         disabled={deletingId === wh.id}
                         title="Delete webhook"
                       >
-                        {deletingId === wh.id ? '…' : '🗑️'}
+                        {deletingId === wh.id ? '…' : <Trash2 size={16} />}
                       </Button>
                     </div>
                   </>
@@ -260,7 +262,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
                   </div>
                   <div className={styles.field}>
                     <label className={styles.label}>Channel</label>
-                    <select
+                    <Select
                       className={styles.select}
                       value={newChannel}
                       onChange={e => setNewChannel(e.target.value)}
@@ -272,7 +274,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
                           <option key={c.id} value={c.id}>#{c.name}</option>
                         ))
                       }
-                    </select>
+                    </Select>
                   </div>
                 </div>
                 <div className={styles.createActions}>
@@ -300,7 +302,7 @@ const WebhooksManager: React.FC<WebhooksManagerProps> = ({ guildId, channels = [
       <div className={styles.footer}>
         {!creating && (
           <Button variant="primary" onClick={() => setCreating(true)}>
-            + New Webhook
+            <Plus size={18} style={{ marginRight: 8 }} /> New Webhook
           </Button>
         )}
         <Button variant="secondary" onClick={onClose}>Done</Button>

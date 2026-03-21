@@ -8,6 +8,7 @@ import { prisma } from '../db';
 import { redis } from '../services/redis';
 import { randomBytes } from 'crypto';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { InteractionController } from '../controllers/interaction.controller';
 
 const router = Router();
 
@@ -102,7 +103,7 @@ router.post('/execute/:id/:token', async (req, res) => {
 
 // List Channel Webhooks
 router.get('/channels/:channelId', authenticate, async (req, res) => {
-  const userId = req.user?.id;
+  const userId = (req as any).user?.id;
   const { channelId } = req.params;
 
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
@@ -125,5 +126,17 @@ router.get('/channels/:channelId', authenticate, async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// --- SDK INTERACTION WEBHOOKS ---
+// These are used by SDK bots to send follow-up messages or edit/delete original interaction responses.
+
+// Edit original interaction response
+router.patch('/:applicationId/:token/messages/@original', InteractionController.handleEditOriginal);
+
+// Delete original interaction response
+router.delete('/:applicationId/:token/messages/@original', InteractionController.handleDeleteOriginal);
+
+// Send follow-up message
+router.post('/:applicationId/:token', InteractionController.handleFollowUp);
 
 export default router;

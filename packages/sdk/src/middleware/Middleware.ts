@@ -61,7 +61,7 @@ export function loggerMiddleware(
 /** Ignore events from specific guild IDs. */
 export function guildAllowlistMiddleware(allowedGuildIds: string[]): MiddlewareFn {
   const set = new Set(allowedGuildIds);
-  return async (event, payload, next) => {
+  return async (_event, payload, next) => {
     const guildId: string | undefined = payload?.guildId ?? payload?.guild_id;
     if (guildId && !set.has(guildId)) return; // drop
     await next();
@@ -71,7 +71,7 @@ export function guildAllowlistMiddleware(allowedGuildIds: string[]): MiddlewareF
 /** Block events coming from specific user IDs (e.g. bots the bot shouldn't respond to). */
 export function userBlocklistMiddleware(blockedUserIds: string[]): MiddlewareFn {
   const set = new Set(blockedUserIds);
-  return async (event, payload, next) => {
+  return async (_event, payload, next) => {
     const userId: string | undefined =
       payload?.author?.id ?? payload?.userId ?? payload?.user?.id;
     if (userId && set.has(userId)) return;

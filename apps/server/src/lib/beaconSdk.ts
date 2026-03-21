@@ -1,5 +1,5 @@
 import { BeaconClient, resolveApiClientBaseUrl, resolveApiClientGatewayUrl } from 'beacon-sdk'
-import type { Client } from 'beacon-sdk'
+import { Client } from 'beacon-sdk'
 
 export interface BeaconSdkServerConfig {
   apiUrl: string
@@ -21,14 +21,9 @@ export function resolveServerSdkConfig(): BeaconSdkServerConfig {
 export function createServerBeaconClient(token?: string): BeaconClient {
   const cfg = resolveServerSdkConfig()
   return new BeaconClient({
-    apiUrl: cfg.apiUrl,
-    wsUrl: cfg.wsUrl,
+    apiURL: cfg.apiUrl,
+    gatewayURL: cfg.wsUrl,
     token,
-    reconnect: true,
-    reconnectAttempts: 10,
-    reconnectDelay: 2000,
-    requestTimeout: 20000,
-    userAgent: 'BeaconServerSDK/1.0',
   })
 }
 

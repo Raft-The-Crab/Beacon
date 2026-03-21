@@ -20,10 +20,13 @@ export function MentionPicker({ query, members, onSelect, onClose }: MentionPick
     const [selectedIndex, setSelectedIndex] = useState(0)
     const listRef = useRef<HTMLDivElement>(null)
 
-    const filtered = members.filter(m =>
-        m.username.toLowerCase().includes(query.toLowerCase()) ||
-        m.displayName?.toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 8)
+    const filtered = members.filter(m => {
+        const lowerSearch = String(query || '').toLowerCase()
+        const lowerUsername = String(m.username || '').toLowerCase()
+        const lowerDisplayName = String(m.displayName || '').toLowerCase()
+        
+        return lowerUsername.includes(lowerSearch) || lowerDisplayName.includes(lowerSearch)
+    }).slice(0, 8)
 
     useEffect(() => {
         setSelectedIndex(0)

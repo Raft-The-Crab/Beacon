@@ -32,6 +32,10 @@ export interface CardData {
 export class CardBuilder {
   private data: CardData = { fields: [] }
 
+  static create(): CardBuilder {
+    return new CardBuilder()
+  }
+
   setTitle(title: string): this {
     this.data.title = title
     return this
@@ -86,9 +90,19 @@ export class CardBuilder {
   }
 
   build(): CardData {
+    return this.toJSON()
+  }
+
+  toJSON(): CardData {
     if (!this.data.title && !this.data.description && this.data.fields.length === 0) {
       throw new Error('CardBuilder: Card must have at least a title, description, or one field.')
     }
     return { ...this.data, fields: [...this.data.fields] }
+  }
+
+  clone(): CardBuilder {
+    const cloned = new CardBuilder()
+    cloned.data = JSON.parse(JSON.stringify(this.data))
+    return cloned
   }
 }

@@ -14,7 +14,8 @@ interface InteractionStore {
     loading: boolean
     error: string | null
     fetchCommands: (guildId?: string) => Promise<void>
-    executeCommand: (channelId: string, name: string, args: string) => Promise<boolean>
+    executeCommand: (channelId: string, name: string, args: string, applicationId?: string) => Promise<boolean>
+    getAutocompleteChoices: (channelId: string, name: string, focusedOption: string, value: string) => Promise<any[]>
 }
 
 export const useInteractionStore = create<InteractionStore>((set) => ({
@@ -52,20 +53,41 @@ export const useInteractionStore = create<InteractionStore>((set) => ({
         }
     },
 
-    executeCommand: async (channelId, name, args) => {
+    executeCommand: async (channelId, name, args, applicationId) => {
         try {
             const res = await apiClient.executeInteraction({
                 type: 2, // APPLICATION_COMMAND
                 channelId,
+                applicationId,
                 data: {
                     name,
-                    options: [{ name: 'input', value: args }] // Simplified arg passing
+                    options: [{ name: 'input', value: args }]
                 }
             })
             return res.success
         } catch (err) {
             console.error('Failed to execute command:', err)
             return false
+        }
+    },
+
+    getAutocompleteChoices: async (channelId, name, focusedOption, value) => {
+        try {
+            const res = await apiClient.executeInteraction({
+                type: 4, // APPLICATION_COMMAND_AUTOCOMPLETE
+                channelId,
+                data: {
+                    name,
+                    options: [{ name: focusedOption, value, focused: true }]
+                }
+            })
+            if (res.success && res.data?.type === 8) {
+                return res.data.data.choices || []
+            }
+            return []
+        } catch (err) {
+            console.error('Autocomplete failed:', err)
+            return []
         }
     }
 }))

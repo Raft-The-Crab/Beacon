@@ -134,7 +134,7 @@
   color: var(--beacon-brand);
   background: rgba(88, 101, 242, 0.15);
   padding: 2px 8px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
   min-width: 45px;
   text-align: center;
   letter-spacing: 0.02em;

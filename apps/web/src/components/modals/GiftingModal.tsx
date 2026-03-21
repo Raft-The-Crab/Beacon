@@ -64,9 +64,9 @@ export function GiftingModal({ item, onClose }: GiftingModalProps) {
         }
 
         setResults(mappedFriends.filter((friend: any) => {
-            const tag = `${friend.username}#${friend.discriminator}`.toLowerCase()
+            const tag = `${friend.username || ''}#${friend.discriminator || '0000'}`.toLowerCase()
             const displayName = String(friend.displayName || '').toLowerCase()
-            return friend.username.toLowerCase().includes(query) || displayName.includes(query) || tag.includes(query)
+            return String(friend.username || '').toLowerCase().includes(query) || displayName.includes(query) || tag.includes(query)
         }))
     }
 

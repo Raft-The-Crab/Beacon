@@ -32,7 +32,7 @@ router.post('/upload', authenticate as any, uploadLimiter, async (req: AuthReque
     const fileSizeMB = file.size / 1024 / 1024
 
     // Dynamic Limits: Check Beacon+ status
-    let maxLimitMB = 50
+    let maxLimitMB = 10
     try {
       if (prisma) {
         const user = await prisma.user.findUnique({ where: { id: userId }, select: { isBeaconPlus: true } })

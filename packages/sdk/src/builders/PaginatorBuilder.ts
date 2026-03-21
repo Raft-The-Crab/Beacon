@@ -27,6 +27,10 @@ export interface PaginatorData {
 export class PaginatorBuilder {
   private data: PaginatorData = { pages: [], customId: '' }
 
+  static create(): PaginatorBuilder {
+    return new PaginatorBuilder()
+  }
+
   setCustomId(id: string): this {
     this.data.customId = id
     return this
@@ -58,8 +62,18 @@ export class PaginatorBuilder {
   }
 
   build(): PaginatorData {
+    return this.toJSON()
+  }
+
+  toJSON(): PaginatorData {
     if (!this.data.customId) throw new Error('PaginatorBuilder: customId is required.')
     if (this.data.pages.length < 2) throw new Error('PaginatorBuilder: At least 2 pages required.')
     return { showPageCount: true, loopPages: false, timeout: 300_000, ...this.data, pages: [...this.data.pages] }
+  }
+
+  clone(): PaginatorBuilder {
+    const cloned = new PaginatorBuilder()
+    cloned.data = JSON.parse(JSON.stringify(this.data))
+    return cloned
   }
 }

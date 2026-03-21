@@ -36,8 +36,8 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
     req.user = payload
     next()
-  } catch (err) {
-    console.error(`[AUTH] DB Check Error:`, err);
-    res.status(503).json({ error: 'Authentication service unavailable. Check the database connection.' });
+  } catch (err: any) {
+    console.error(`[AUTH] Database query failed in middleware for user ${payload.id}: ${err.stack || err.message}`);
+    res.status(503).json({ error: 'Authentication service unavailable. Please try again soon.' });
   }
 }

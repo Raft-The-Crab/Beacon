@@ -7,6 +7,7 @@ import { Permissions, hasPermission, computePermissions } from '../utils/permiss
 import { serializeBigInt } from '../utils/serializeBigInt';
 import { generateInviteCode, generateShortId } from '../utils/id';
 import { z } from 'zod';
+import { logger } from '../services/logger';
 
 const CreateGuildSchema = z.object({
     name: z.string().min(2).max(100),
@@ -18,6 +19,24 @@ const CreateRoleSchema = z.object({
     name: z.string().min(1).max(100),
     color: z.string().optional().nullable(),
     permissions: z.union([z.string(), z.number()]).optional()
+});
+
+const UpdateGuildSchema = z.object({
+    name: z.string().min(2).max(100).optional(),
+    icon: z.string().url().optional().nullable(),
+    banner: z.string().url().optional().nullable(),
+    description: z.string().max(300).optional().nullable()
+});
+
+const UpdateRoleSchema = z.object({
+    name: z.string().min(1).max(100).optional(),
+    color: z.string().optional().nullable(),
+    permissions: z.union([z.string(), z.number()]).optional(),
+    position: z.number().int().min(0).optional()
+});
+
+const UpdateVanityUrlSchema = z.object({
+    vanityUrl: z.string().regex(/^Beacon-[a-zA-Z0-9-]+\.inv$/)
 });
 
 // Local stub — SocketService will be wired via gateway when available
@@ -51,13 +70,13 @@ export class GuildController {
                 return res.status(409).json({ error: `A server named "${name}" already exists. Please choose a different name.` });
             }
 
-            console.log(`[GUILD_CREATE] Starting guild creation for user: ${userId}`);
+            logger.info(`Starting guild creation for user: ${userId}`);
             const newGuild = await prisma.$transaction(async (tx: any) => {
                 const guildId = generateShortId('g', 12);
                 const generalTextChannelId = generateShortId('c', 12);
                 const generalVoiceChannelId = generateShortId('c', 12);
 
-                console.log(`[GUILD_CREATE] Step 1: Creating guild...`);
+                logger.debug(`GUILD_CREATE Step 1: Creating guild...`);
                 const guild = await tx.guild.create({
                     data: {
                         id: guildId,
@@ -68,18 +87,18 @@ export class GuildController {
                         ownerId: userId
                     }
                 });
-                console.log(`[GUILD_CREATE] Step 1: OK - Guild ID: ${guild.id}`);
+                logger.debug(`GUILD_CREATE Step 1: OK - Guild ID: ${guild.id}`);
 
-                console.log(`[GUILD_CREATE] Step 2: Creating default channels...`);
+                logger.debug(`GUILD_CREATE Step 2: Creating default channels...`);
                 await tx.channel.createMany({
                     data: [
                         { id: generalTextChannelId, name: 'general', type: 'TEXT', guildId: guild.id, position: 0 },
                         { id: generalVoiceChannelId, name: 'General', type: 'VOICE', guildId: guild.id, position: 1 }
                     ]
                 });
-                console.log(`[GUILD_CREATE] Step 2: OK`);
+                logger.debug(`GUILD_CREATE Step 2: OK`);
 
-                console.log(`[GUILD_CREATE] Step 3: Creating @everyone role...`);
+                logger.debug(`GUILD_CREATE Step 3: Creating @everyone role...`);
                 const everyoneRole = await tx.role.create({
                     data: {
                         name: '@everyone',
@@ -88,9 +107,9 @@ export class GuildController {
                         permissions: BigInt(0)
                     }
                 });
-                console.log(`[GUILD_CREATE] Step 3: OK - Role ID: ${everyoneRole.id}`);
+                logger.debug(`GUILD_CREATE Step 3: OK - Role ID: ${everyoneRole.id}`);
 
-                console.log(`[GUILD_CREATE] Step 4: Adding owner to guild...`);
+                logger.debug(`GUILD_CREATE Step 4: Adding owner to guild...`);
                 await tx.guildMember.create({
                     data: {
                         userId,
@@ -100,7 +119,7 @@ export class GuildController {
                         }
                     }
                 });
-                console.log(`[GUILD_CREATE] Step 4: OK`);
+                logger.debug(`GUILD_CREATE Step 4: OK`);
 
                 const fullGuild = await tx.guild.findUnique({
                     where: { id: guild.id },
@@ -126,7 +145,7 @@ export class GuildController {
                             nickname: 'Beacon Bot',
                             roles: everyoneRole ? { connect: [{ id: everyoneRole.id }] } : undefined
                         }
-                    }).catch(e => console.warn(`[GUILD_CREATE] Background bot add failed:`, e.message));
+                    }).catch(e => logger.warn(`GUILD_CREATE Background bot add failed: ` + e.message));
                 }
             }).catch(() => { });
 
@@ -135,8 +154,8 @@ export class GuildController {
             const serializedGuild = serializeBigInt(newGuild);
 
             res.status(201).json(serializedGuild);
-        } catch (error) {
-            console.error('Create Guild Error:', error);
+        } catch (error: any) {
+            logger.error('Create Guild Error: ' + error.message);
             res.status(500).json({ error: 'Failed to create guild' });
         }
     }
@@ -146,31 +165,38 @@ export class GuildController {
             const userId = req.user?.id;
             if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-            const memberships = await prisma.guildMember.findMany({
-                where: { userId },
-                include: {
-                    guild: {
-                        include: {
-                            _count: {
-                                select: { members: true }
+            const cacheKey = CacheService.genKey('user', userId, 'guilds');
+
+            const guilds = await CacheService.wrap(cacheKey, async () => {
+                const memberships = await prisma.guildMember.findMany({
+                    where: { userId },
+                    include: {
+                        guild: {
+                            include: {
+                                _count: {
+                                    select: { members: true }
+                                }
                             }
-                        }
-                    },
-                    roles: true
-                }
-            });
+                        },
+                        roles: true
+                    }
+                });
 
-            const guilds = memberships.map((m: any) => ({
-                ...m.guild,
-                memberCount: m.guild._count.members,
-                roles: m.roles
-            }));
+                return memberships
+                    .map((m: any) => {
+                        if (!m.guild) return null;
+                        return {
+                            ...m.guild,
+                            memberCount: m.guild._count?.members || 0,
+                            roles: m.roles || []
+                        };
+                    })
+                    .filter((g: any) => g !== null);
+            }, 300);
 
-            const serializedGuilds = serializeBigInt(guilds);
-
-            res.json(serializedGuilds);
-        } catch (error) {
-            console.error('[GET_MEMBER_GUILDS]', error);
+            res.json(serializeBigInt(guilds));
+        } catch (error: any) {
+            logger.error('[GET_MEMBER_GUILDS] Error: ' + error.message);
             res.status(500).json({ error: 'Failed to fetch guilds' });
         }
     }
@@ -178,7 +204,8 @@ export class GuildController {
     static async updateGuild(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const { name, icon, banner, description } = req.body;
+            const validated = UpdateGuildSchema.parse(req.body);
+            const { name, icon, banner, description } = validated;
             const userId = req.user?.id;
 
             const guild = await prisma.guild.update({
@@ -186,7 +213,7 @@ export class GuildController {
                 data: { name, icon, banner, description }
             });
 
-            await CacheService.del(`guild:${id}`);
+            await CacheService.del(CacheService.genKey('guild', id));
             await AuditLogService.log(id as string, userId as string, AuditLogAction.GUILD_UPDATE, { name });
             SocketService.emitToRoom(id as string, 'GUILD_UPDATE', { guild });
             res.json(guild);
@@ -231,7 +258,7 @@ export class GuildController {
                 },
             });
 
-            await CacheService.del(`guild:${id}`);
+            await CacheService.del(CacheService.genKey('guild', id));
             await AuditLogService.log(id as string, userId, AuditLogAction.GUILD_UPDATE, {
                 verifiedBefore: guild.verified,
                 verifiedAfter: updated.verified,
@@ -243,8 +270,8 @@ export class GuildController {
             });
 
             return res.json(updated);
-        } catch (error) {
-            console.error('Update verification status error:', error);
+        } catch (error: any) {
+            logger.error('Update verification status error: ' + error.message);
             return res.status(500).json({ error: 'Failed to update verification status' });
         }
     }
@@ -309,8 +336,8 @@ export class GuildController {
             }));
 
             res.json(formattedGuilds);
-        } catch (error) {
-            console.error('Discovery Error:', error);
+        } catch (error: any) {
+            logger.error('Discovery Error: ' + error.message);
             res.status(500).json({ error: 'Failed to fetch discovery guilds' });
         }
     }
@@ -319,52 +346,51 @@ export class GuildController {
         try {
             const { id } = req.params as { id: string };
 
-            // Try cache first
-            const cached = await CacheService.get(`guild:${id}`);
-            if (cached) {
-                res.json(cached);
-                return;
-            }
+            const cacheKey = CacheService.genKey('guild', id);
 
-            const guild = await prisma.guild.findUnique({
-                where: { id },
-                include: {
-                    channels: {
-                        orderBy: [
-                            { position: 'asc' },
-                            { createdAt: 'asc' }
-                        ],
-                        take: 200
-                    },
-                    roles: { orderBy: { position: 'desc' }, take: 100 },
-                    members: {
-                        take: 100,
-                        include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    username: true,
-                                    avatar: true,
-                                    status: true,
-                                    customStatus: true
-                                }
-                            },
-                            roles: true
+            const guild = await CacheService.wrap(cacheKey, async () => {
+                const g = await (prisma.guild as any).findUnique({
+                    where: { id },
+                    include: {
+                        channels: {
+                            orderBy: [
+                                { position: 'asc' },
+                                { createdAt: 'asc' }
+                            ],
+                            take: 200
+                        },
+                        roles: { orderBy: { position: 'desc' }, take: 100 },
+                        members: {
+                            take: 100,
+                            include: {
+                                user: {
+                                    select: {
+                                        id: true,
+                                        username: true,
+                                        globalName: true,
+                                        accountTier: true,
+                                        avatar: true,
+                                        status: true,
+                                        customStatus: true
+                                    }
+                                },
+                                roles: true
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            if (!guild) {
+                if (!g) throw new Error('NOT_FOUND');
+                return g;
+            }, 300);
+
+            res.json(serializeBigInt(guild));
+        } catch (error: any) {
+            logger.error(`[GET_GUILD] Error fetching guild ${req.params.id}: ${error.stack || error.message}`);
+            if (error.message === 'NOT_FOUND') {
                 res.status(404).json({ error: 'Guild not found' });
                 return;
             }
-
-            const serializedGuild = serializeBigInt(guild);
-
-            await CacheService.set(`guild:${id}`, serializedGuild, 300); // 5 min cache
-            res.json(serializedGuild);
-        } catch (error) {
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
@@ -401,6 +427,7 @@ export class GuildController {
 
             const serializedRole = serializeBigInt(role);
 
+            await CacheService.del(CacheService.genKey('guild', guildId));
             SocketService.emitToRoom(guildId, 'GUILD_ROLE_CREATE', { guildId, role: serializedRole });
             res.json(serializedRole);
         } catch (error) {
@@ -411,7 +438,8 @@ export class GuildController {
     static async updateRole(req: Request, res: Response) {
         try {
             const { guildId, roleId } = req.params as { guildId: string, roleId: string };
-            const { name, color, permissions, position } = req.body as { name?: string, color?: string, permissions?: string | number, position?: number };
+            const validated = UpdateRoleSchema.parse(req.body);
+            const { name, color, permissions, position } = validated;
 
             const role = await prisma.role.update({
                 where: { id: roleId },
@@ -502,8 +530,8 @@ export class GuildController {
 
             // Permit invite generation for members; role-gated moderation can still revoke/manage invites elsewhere.
 
-            // Create invite with unique code
-            const code = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+            // Create invite with unique code (centralized utility for consistency)
+            const code = generateInviteCode(12);
             const expiresAt = new Date();
             expiresAt.setDate(expiresAt.getDate() + 7);
 
@@ -517,7 +545,7 @@ export class GuildController {
             });
 
             // Clear cache
-            await CacheService.del(`guild:${guildId}:invites`);
+            await CacheService.del(CacheService.genKey('guild', guildId, 'invites'));
 
             res.json(invite);
         } catch (error) {
@@ -533,9 +561,15 @@ export class GuildController {
             const BOOST_COST = 1000;
 
             const result = await prisma.$transaction(async (tx: any) => {
-                // 1. Check wallet
-                const wallet = await tx.beacoinWallet.findUnique({ where: { userId } });
-                if (!wallet || wallet.balance < BOOST_COST) {
+                // 1. Check/Create wallet
+                let wallet = await tx.beacoinWallet.findUnique({ where: { userId } });
+                if (!wallet) {
+                    wallet = await tx.beacoinWallet.create({
+                        data: { userId, balance: 0 }
+                    });
+                }
+                
+                if (wallet.balance < BOOST_COST) {
                     throw new Error('INSUFFICIENT_FUNDS');
                 }
 
@@ -552,7 +586,7 @@ export class GuildController {
                         fromUserId: userId,
                         amount: BOOST_COST,
                         type: 'SPEND',
-                        description: `Server Boost for Guild ${id}`,
+                        reason: `Server Boost for Guild ${id}`,
                     } as any
                 });
 
@@ -564,17 +598,31 @@ export class GuildController {
                     }
                 });
 
-                // 5. Calculate level (Simple: 1 boost = 1 level for prototyping, 10 boosts = Level 10 Max)
-                const newLevel = Math.min(Math.floor(guild.boostCount), 10);
-                await tx.guild.update({
-                    where: { id },
-                    data: { boostLevel: newLevel }
-                });
+                // 5. Calculate level based on expanded tiers
+                // Level 1: 2, Level 2: 7, Level 3: 14, Level 4: 25, Level 5: 45, Level 6: 70, Level 7: 100
+                // Level 11: 180, Level 15: 250 (Max)
+                let newLevel = 0;
+                if (guild.boostCount >= 250) newLevel = 15;
+                else if (guild.boostCount >= 180) newLevel = 11;
+                else if (guild.boostCount >= 100) newLevel = 7;
+                else if (guild.boostCount >= 70) newLevel = 6;
+                else if (guild.boostCount >= 45) newLevel = 5;
+                else if (guild.boostCount >= 25) newLevel = 4;
+                else if (guild.boostCount >= 14) newLevel = 3;
+                else if (guild.boostCount >= 7) newLevel = 2;
+                else if (guild.boostCount >= 2) newLevel = 1;
 
-                return { guild, newLevel };
+                if (newLevel !== guild.boostLevel) {
+                    await tx.guild.update({
+                        where: { id },
+                        data: { boostLevel: newLevel }
+                    });
+                }
+
+                return { guild: { ...guild, boostLevel: newLevel }, newLevel };
             });
 
-            await CacheService.del(`guild:${id}`);
+            await CacheService.del(CacheService.genKey('guild', id));
             SocketService.emitToRoom(id as string, 'GUILD_BOOST', { guildId: id, ...result });
             res.json(result);
         } catch (error: any) {
@@ -590,7 +638,8 @@ export class GuildController {
     static async updateVanityUrl(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const { vanityUrl } = req.body;
+            const validated = UpdateVanityUrlSchema.parse(req.body);
+            const { vanityUrl } = validated;
             const userId = req.user?.id;
 
             // Check if user is owner
@@ -621,7 +670,7 @@ export class GuildController {
                 }
             });
 
-            await CacheService.del(`guild:${id}`);
+            await CacheService.del(CacheService.genKey('guild', id));
             res.json(updated);
         } catch (error) {
             res.status(500).json({ error: 'Failed to set vanity URL' });
@@ -636,7 +685,7 @@ export class GuildController {
                 return res.status(401).json({ error: 'Unauthorized' });
             }
 
-            const guild = await prisma.guild.findUnique({
+            const guild: any = await (prisma.guild as any).findUnique({
                 where: { id: guildId },
                 include: {
                     channels: {
@@ -654,6 +703,8 @@ export class GuildController {
                                 select: {
                                     id: true,
                                     username: true,
+                                    globalName: true,
+                                    accountTier: true,
                                     avatar: true,
                                     status: true,
                                     discriminator: true,
@@ -677,7 +728,8 @@ export class GuildController {
                     userId_guildId: {
                         userId,
                         guildId,
-                    }
+                        roles: { some: { name: '@everyone' } }
+                    } as any
                 }
             });
 
@@ -693,9 +745,10 @@ export class GuildController {
                 });
             }
 
-            await CacheService.del(`guild:${guildId}`);
+            await CacheService.del(CacheService.genKey('guild', guildId));
+            await CacheService.del(CacheService.genKey('user', userId, 'guilds'));
 
-            const updatedGuild = await prisma.guild.findUnique({
+            const updatedGuild = await (prisma.guild as any).findUnique({
                 where: { id: guildId },
                 include: {
                     channels: {
@@ -713,6 +766,8 @@ export class GuildController {
                                 select: {
                                     id: true,
                                     username: true,
+                                    globalName: true,
+                                    accountTier: true,
                                     avatar: true,
                                     status: true,
                                     discriminator: true,
@@ -768,7 +823,8 @@ export class GuildController {
                 where: { userId_guildId: { userId, guildId } }
             });
 
-            await CacheService.del(`guild:${guildId}`);
+            await CacheService.del(CacheService.genKey('guild', guildId));
+            await CacheService.del(CacheService.genKey('user', userId, 'guilds'));
             SocketService.emitToRoom(guildId, 'GUILD_MEMBER_REMOVE', { guildId, userId });
 
             res.json({ success: true });
@@ -859,6 +915,44 @@ export class GuildController {
             res.json(member);
         } catch (error) {
             res.status(500).json({ error: 'Failed to update member' });
+        }
+    }
+
+    static async addMemberRole(req: Request, res: Response) {
+        try {
+            const { guildId, userId, roleId } = req.params;
+
+            const member = await prisma.guildMember.update({
+                where: { userId_guildId: { userId, guildId } },
+                data: {
+                    roles: { connect: [{ id: roleId }] }
+                },
+                include: { user: true, roles: true }
+            });
+
+            SocketService.emitToRoom(guildId, 'GUILD_MEMBER_UPDATE', { guildId, member });
+            res.json(member);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to add role to member' });
+        }
+    }
+
+    static async removeMemberRole(req: Request, res: Response) {
+        try {
+            const { guildId, userId, roleId } = req.params;
+
+            const member = await prisma.guildMember.update({
+                where: { userId_guildId: { userId, guildId } },
+                data: {
+                    roles: { disconnect: [{ id: roleId }] }
+                },
+                include: { user: true, roles: true }
+            });
+
+            SocketService.emitToRoom(guildId, 'GUILD_MEMBER_UPDATE', { guildId, member });
+            res.json(member);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to remove role from member' });
         }
     }
 
@@ -1240,7 +1334,8 @@ export class GuildController {
                 data: { uses: { increment: 1 } },
             });
 
-            await CacheService.del(`guild:${guildId}`);
+            await CacheService.del(CacheService.genKey('guild', guildId));
+            await CacheService.del(CacheService.genKey('user', userId, 'guilds'));
 
             const updatedGuild = await prisma.guild.findUnique({
                 where: { id: guildId },

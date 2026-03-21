@@ -3,14 +3,16 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
   id                 String          @id @default(cuid())
   email              String          @unique
   username           String
+  globalName         String?
   displayName        String?
   password           String
   avatar             String?
@@ -23,10 +25,12 @@ model User {
   twoFactorSecret    String?
   publicKey          String?
   deviceSalt         String?
+  lastIp             String?
   theme              String          @default("auto")
   accentColor        String?
   developerMode      Boolean         @default(false)
   badges             String[]        @default([])
+  accountTier        AccountTier     @default(FREE)
   isBeaconPlus       Boolean         @default(false)
   beaconPlusSince    DateTime?
   beacoins           Int             @default(0)
@@ -35,6 +39,13 @@ model User {
   bot                Boolean         @default(false)
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
+  passwordResetToken String?         @unique
+  passwordResetExpires DateTime?
+  isVerified         Boolean         @default(false)
+  verificationCode   String?
+  verificationExpires DateTime?
+  loginAttempts      Int             @default(0)
+  lockoutUntil       DateTime?
   applications       Application[]
   auditLogs          AuditLog[]
   blockedBy          Block[]         @relation("BlockedUsers")
@@ -79,8 +90,8 @@ model Friendship {
   user      User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, friendId])
-  @@index([userId])
-  @@index([friendId])
+  @@index([userId, status])
+  @@index([friendId, status])
 }
 
 model Block {
@@ -101,6 +112,7 @@ model Guild {
   banner      String?
   description String?
   verified    Boolean          @default(false)
+  settings    Json             @default("{}")
   tags        String[]         @default([])
   ownerId     String
   inviteCode  String?          @unique @default(cuid())
@@ -163,11 +175,13 @@ model AuditLog {
   targetType String?
   changes    Json?
   reason     String?
+  fingerprint Json?
   createdAt  DateTime @default(now())
   guild      Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id])
 
-  @@index([guildId])
+  @@index([guildId, createdAt])
+  @@index([userId])
 }
 
 model Channel {
@@ -381,6 +395,10 @@ model VoiceState {
   suppress  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([guildId])
+  @@index([userId])
+  @@index([channelId])
 }
 
 model Attachment {
@@ -507,6 +525,10 @@ model BeacoinTransaction {
   toUserId   String?
   createdAt  DateTime      @default(now())
   wallet     BeacoinWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+  @@index([fromUserId])
+  @@index([toUserId])
 }
 
 model UserPremium {
@@ -600,6 +622,12 @@ enum NotificationType {
   BOT_RESPONSE
   SCHEDULED_EVENT
   BOOST
+}
+
+enum AccountTier {
+  FREE
+  BEACON_PLUS
+  ADMIN
 }
 
 enum PresenceStatus {

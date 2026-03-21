@@ -41,7 +41,7 @@
   height: 40px;
   padding: 0 16px;
   background: var(--bg-hover);
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.03);
   border-radius: var(--radius-xl);
   color: var(--text-primary);
   font-size: 14px;
@@ -68,7 +68,7 @@
   margin-bottom: 2px;
   border-radius: var(--radius-xl);
   color: var(--text-secondary);
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.03);
   cursor: pointer;
   transition: all var(--transition-fast);
   position: relative;

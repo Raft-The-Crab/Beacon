@@ -3,24 +3,30 @@
  * Caching, commands, interactions, rate limits, presence
  */
 
-import { EventEmitter } from 'events';
-import { Gateway, GatewayOptions, Intents, DEFAULT_INTENTS } from './gateway';
+import EventEmitter from 'eventemitter3';
+import { IntentCalculator } from './utils/IntentCalculator';
+import { Gateway, GatewayOptions, Intents, DEFAULT_INTENTS, type ConnectionState } from './gateway';
 import { RestClient } from './rest/RestClient';
-import { Collection } from './structures/Collection';
+import { Collector, type CollectorOptions } from './structures/Collector';
+import { VoiceStateCollector, type VoiceStateCollectorOptions } from './structures/VoiceStateCollector';
 import { InteractionContext } from './structures/InteractionContext';
-import { Collector, CollectorOptions } from './structures/Collector';
+import { MessageBuilder } from './builders/MessageBuilder';
 import { CommandBuilder } from './builders/CommandBuilder';
-import type { RawGuild, RawChannel, RawUser, RawMessage, RawInteraction } from './structures/Message';
+import type { RawGuild, RawChannel, RawMessage, Embed } from './types/index';
 import { Guild } from './structures/Guild';
 import { Channel } from './structures/Channel';
 import { User } from './structures/User';
+import type { RawInteraction } from './types/index';
 import { Message } from './structures/Message';
 import { GuildManager } from './managers/GuildManager';
 import { ChannelManager } from './managers/ChannelManager';
 import { MemberManager } from './managers/MemberManager';
+import { UserManager } from './managers/UserManager';
 import { PresenceManager } from './managers/PresenceManager';
+import { InviteManager } from './managers/InviteManager';
+import { TTLCache } from './cache/TTLCache';
 import { resolveApiClientBaseUrl, resolveApiClientGatewayUrl } from './connection';
-import { CommandRegistry, CommandDefinition, CommandHandler as RegistryCommandHandler, AutocompleteContext } from './registry/CommandRegistry';
+import { CommandRegistry, CommandDefinition, AutocompleteContext } from './registry/CommandRegistry';
 import { MiddlewarePipeline } from './middleware/Middleware';
 
 export interface ClientOptions {
@@ -37,12 +43,6 @@ export interface ClientOptions {
 
 export type CommandHandler = (ctx: InteractionContext) => void | Promise<void>;
 
-/** Plugin interface — add functionality to the client via .use() */
-export interface Plugin {
-  name: string;
-  setup(client: Client): void | Promise<void>;
-  teardown?(client: Client): void | Promise<void>;
-}
 
 import { VoiceManager } from './voice/VoiceManager';
 
@@ -50,19 +50,22 @@ export class Client extends EventEmitter {
   public readonly token: string;
   public readonly rest: RestClient;
   public readonly Intents = Intents;
+  public readonly IntentCalculator = IntentCalculator;
   public readonly voice: VoiceManager;
 
   // Managers
   public readonly guildManager: GuildManager;
   public readonly channelManager: ChannelManager;
   public readonly memberManager: MemberManager;
+  public readonly userManager: UserManager;
+  public readonly invites: InviteManager;
   public readonly presences: PresenceManager;
 
-  // Caches (Bounded limits to protect memory footprints natively)
-  public guilds: Collection<string, Guild> = new Collection<string, Guild>().setMaxSize(100);
-  public channels: Collection<string, Channel> = new Collection<string, Channel>().setMaxSize(500);
-  public users: Collection<string, User> = new Collection<string, User>().setMaxSize(1000);
-  public messages: Collection<string, Message> = new Collection<string, Message>().setMaxSize(2000);
+  // Caches (Standardized TTLCache for performance & safety)
+  public guilds: TTLCache<string, Guild> = new TTLCache<string, Guild>(3600000, 100);
+  public channels: TTLCache<string, Channel> = new TTLCache<string, Channel>(3600000, 500);
+  public users: TTLCache<string, User> = new TTLCache<string, User>(3600000, 1000);
+  public messages: TTLCache<string, Message> = new TTLCache<string, Message>(600000, 2000);
 
   public user: User | null = null;
   public applicationId: string | null = null;
@@ -76,6 +79,15 @@ export class Client extends EventEmitter {
   public readonly middleware = new MiddlewarePipeline();
   private _plugins: Map<string, Plugin> = new Map();
   private _ready = false;
+
+  /** Current gateway connection state */
+  get connectionState(): ConnectionState { return this._gateway.connectionState; }
+
+  /** Whether the gateway is connected and operational */
+  get isConnected(): boolean { return this._gateway.isConnected; }
+
+  /** Heartbeat round-trip latency in ms (-1 if not measured) */
+  get latency(): number { return this._gateway.latency; }
 
   constructor(options: ClientOptions) {
     super();
@@ -101,6 +113,8 @@ export class Client extends EventEmitter {
     this.guildManager = new GuildManager(this.rest);
     this.channelManager = new ChannelManager(this.rest);
     this.memberManager = new MemberManager(this.rest);
+    this.userManager = new UserManager(this.rest);
+    this.invites = new InviteManager(this);
     this.presences = new PresenceManager();
 
     if (options.debug) {
@@ -108,6 +122,68 @@ export class Client extends EventEmitter {
     }
 
     this._setupGatewayEvents();
+  }
+
+  /**
+   * Gets mutual friends and guilds with a user
+   * @param userId The ID of the user
+   */
+  public async getMutuals(userId: string): Promise<{ friends: User[]; guilds: Guild[] }> {
+    const response = await (this.rest as any).request('GET', `/users/${userId}/mutuals`);
+    if (!response.success) throw new Error(response.error?.message || 'Failed to fetch mutuals');
+
+    return {
+      friends: response.data.friends.map((u: any) => new User(this, u)),
+      guilds: response.data.guilds.map((g: any) => new Guild(this, g))
+    };
+  }
+
+  /**
+   * Fetch a user by ID. Checks cache first, falls back to REST API.
+   * @param userId The user's ID
+   * @param force If true, bypass cache and always fetch from API
+   */
+  async fetchUser(userId: string, force = false): Promise<User> {
+    if (!force) {
+      const cached = this.users.get(userId);
+      if (cached) return cached;
+    }
+    const raw = await this.rest.getUser(userId);
+    const user = new User(this, raw);
+    this.users.set(user.id, user);
+    return user;
+  }
+
+  /**
+   * Fetch a guild by ID. Checks cache first, falls back to REST API.
+   * @param guildId The guild's ID
+   * @param force If true, bypass cache and always fetch from API
+   */
+  async fetchGuild(guildId: string, force = false): Promise<Guild> {
+    if (!force) {
+      const cached = this.guilds.get(guildId);
+      if (cached) return cached;
+    }
+    const raw = await this.rest.getGuild(guildId);
+    const guild = new Guild(this, raw);
+    this.guilds.set(guild.id, guild);
+    return guild;
+  }
+
+  /**
+   * Fetch a channel by ID. Checks cache first, falls back to REST API.
+   * @param channelId The channel's ID
+   * @param force If true, bypass cache and always fetch from API
+   */
+  async fetchChannel(channelId: string, force = false): Promise<Channel> {
+    if (!force) {
+      const cached = this.channels.get(channelId);
+      if (cached) return cached;
+    }
+    const raw = await this.rest.getChannel(channelId);
+    const channel = new Channel(this, raw);
+    this.channels.set(channel.id, channel);
+    return channel;
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -120,6 +196,12 @@ export class Client extends EventEmitter {
       this._ready = true;
       this.emit('ready');
     });
+
+    // Forward connection lifecycle events
+    this._gateway.on('reconnecting', () => this.emit('reconnecting'));
+    this._gateway.on('reconnected', () => this.emit('reconnected'));
+    this._gateway.on('disconnect', (data: any) => this.emit('disconnect', data));
+    this._gateway.on('connectionStateChange', (data: any) => this.emit('connectionStateChange', data));
 
     this._gateway.on('messageCreate', (rawMsg: RawMessage) => {
       const msg = new Message(this, rawMsg);
@@ -280,6 +362,34 @@ export class Client extends EventEmitter {
   }
 
   // ─────────────────────────────────────────────────────────────
+  // Event Promisification (Wait For)
+  // ─────────────────────────────────────────────────────────────
+  /**
+   * Promisify event listeners directly. Useful for sequencial logic.
+   * @param event The gateway event name to listen for
+   * @param filter A function that must return true to resolve the promise
+   * @param timeoutMs How long to wait before throwing a timeout error
+   */
+  waitFor(event: string, filter: (...args: any[]) => boolean = () => true, timeoutMs: number = 60000): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.off(event, listener);
+        reject(new Error(`Timeout of ${timeoutMs}ms exceeded while waiting for event: ${event}`));
+      }, timeoutMs);
+
+      const listener = (...args: any[]) => {
+        if (filter(...args)) {
+          clearTimeout(timer);
+          this.off(event, listener);
+          resolve(args);
+        }
+      };
+
+      this.on(event, listener);
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // Login / logout
   // ─────────────────────────────────────────────────────────────
   async login(token?: string): Promise<this> {
@@ -343,14 +453,116 @@ export class Client extends EventEmitter {
   // ─────────────────────────────────────────────────────────────
   // Message helpers
   // ─────────────────────────────────────────────────────────────
-  async sendMessage(channelId: string, content: string | { content?: string; embeds?: any[]; reply_to?: string }) {
-    return this.rest.createMessage(channelId, content);
+  /**
+   * Send a message to a channel. Supports string content, raw objects, or MessageBuilder.
+   */
+  async sendMessage(channelId: string, content: string | MessageBuilder | { content?: string; embeds?: any[]; components?: any[] } | any) {
+    let payload: any;
+    if (typeof content === 'string') {
+      payload = { content };
+    } else if (content instanceof MessageBuilder) {
+      payload = content.toJSON();
+    } else if (typeof content === 'object' && content !== null && 'toJSON' in (content as any)) {
+      payload = (content as any).toJSON();
+    } else {
+      payload = content;
+    }
+
+    // Standardize embeds and components
+    if (payload.embeds) {
+      payload.embeds = payload.embeds.map((e: any) => 
+        typeof e === 'object' && e !== null && 'toJSON' in e ? e.toJSON() : e
+      );
+    }
+    if (payload.components) {
+      payload.components = payload.components.map((c: any) => 
+        typeof c === 'object' && c !== null && 'toJSON' in c ? c.toJSON() : c
+      );
+    }
+
+    return this.rest.createMessage(channelId, payload);
   }
 
-  async editMessage(channelId: string, messageId: string, content: string | { content?: string; embeds?: any[] }) {
-    return this.rest.request('PATCH', `/channels/${channelId}/messages/${messageId}`,
-      typeof content === 'string' ? { content } : content
-    );
+  /**
+   * Send a typing indicator to a channel.
+   */
+  async sendTyping(channelId: string) {
+    return this.rest.request('POST', `/channels/${channelId}/typing`);
+  }
+
+  /**
+   * Edit an existing message.
+   */
+  async editMessage(channelId: string, messageId: string, content: string | MessageBuilder | { content?: string; embeds?: any[]; components?: any[] } | any) {
+    let payload: any;
+    if (typeof content === 'string') {
+      payload = { content };
+    } else if (content instanceof MessageBuilder) {
+      payload = content.toJSON();
+    } else if (typeof content === 'object' && content !== null && 'toJSON' in (content as any)) {
+      payload = (content as any).toJSON();
+    } else {
+      payload = content;
+    }
+
+    // Standardize embeds and components
+    if (payload.embeds) {
+      payload.embeds = payload.embeds.map((e: any) => 
+        typeof e === 'object' && e !== null && 'toJSON' in e ? e.toJSON() : e
+      );
+    }
+    if (payload.components) {
+      payload.components = payload.components.map((c: any) => 
+        typeof c === 'object' && c !== null && 'toJSON' in c ? c.toJSON() : c
+      );
+    }
+
+    return this.rest.request('PATCH', `/channels/${channelId}/messages/${messageId}`, payload);
+  }
+
+  /**
+   * Upload an attachment to a channel.
+   * @param channelId Target channel ID
+   * @param file File Buffer, Blob, or Stream
+   * @param filename Display name for the file
+   * @param options Additional message options (content, embeds, etc)
+   */
+  async uploadAttachment(
+    channelId: string,
+    file: Buffer | Blob | ReadableStream,
+    filename: string,
+    options: { content?: string; embeds?: any[]; flags?: number } = {}
+  ) {
+    return this.rest.uploadFile(channelId, file, filename, options);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Interaction response helpers
+  // ─────────────────────────────────────────────────────────────
+  /**
+   * Respond to an interaction.
+   * @param interactionId The interaction ID
+   * @param interactionToken The interaction token
+   * @param data Response payload (type and data)
+   */
+  async createInteractionResponse(interactionId: string, interactionToken: string, data: any) {
+    return this.rest.request('POST', `/interactions/${interactionId}/${interactionToken}/callback`, data);
+  }
+
+  /**
+   * Edit the original response to an interaction.
+   */
+  async editOriginalInteractionResponse(interactionToken: string, data: any) {
+    if (!this.applicationId) throw new Error('Client not ready: applicationId is missing');
+    return this.rest.request('PATCH', `/webhooks/${this.applicationId}/${interactionToken}/messages/@original`, data);
+  }
+
+  /**
+   * Create a follow-up message for an interaction.
+   */
+  async createFollowupMessage(interactionToken: string, data: any) {
+    if (!this.applicationId) throw new Error('Client not ready: applicationId is missing');
+    return this.rest.request('POST', `/webhooks/${this.applicationId}/${interactionToken}`, data);
   }
 
   async deleteMessage(channelId: string, messageId: string) {
@@ -367,6 +579,71 @@ export class Client extends EventEmitter {
 
   async getPinnedMessages(channelId: string) {
     return this.rest.request('GET', `/channels/${channelId}/pins`);
+  }
+
+  /**
+   * Fetch messages from a channel.
+   * @param channelId The channel ID
+   * @param options Pagination options (limit, before, after)
+   */
+  async fetchMessages(channelId: string, options: { limit?: number; before?: string; after?: string } = {}) {
+    const raw = await this.rest.getChannelMessages(channelId, options);
+    return raw.map((r: any) => new Message(this, r));
+  }
+
+  /**
+   * Create a new channel in a guild.
+   * @param guildId The guild ID
+   * @param data Channel creation data (name, type, topic, etc.)
+   */
+  async createChannel(guildId: string, data: { name: string; type?: number; topic?: string; parent_id?: string; nsfw?: boolean; position?: number }) {
+    const raw = await this.rest.createGuildChannel(guildId, data);
+    const channel = new Channel(this, raw);
+    this.channels.set(channel.id, channel);
+    return channel;
+  }
+
+  /**
+   * Delete a channel.
+   * @param channelId The channel ID
+   */
+  async deleteChannel(channelId: string) {
+    await this.rest.deleteChannel(channelId);
+    this.channels.delete(channelId);
+  }
+
+  /**
+   * Fetch a member from a guild.
+   * @param guildId The guild ID
+   * @param userId The user ID
+   */
+  async fetchMember(guildId: string, userId: string) {
+    // Member structures are often nested, but we can have a memberManager or just use rest
+    const raw = await this.rest.getGuildMember(guildId, userId);
+    // Note: Member structure needs the client and raw data
+    // For now, returning the raw or a generic object if Member class isn't fully ready to be instantiated here
+    // But we have Member.ts, so let's import it if needed.
+    return raw; 
+  }
+
+  /**
+   * Add a role to a member.
+   * @param guildId The guild ID
+   * @param userId The user ID
+   * @param roleId The role ID
+   */
+  async addRoleToMember(guildId: string, userId: string, roleId: string) {
+    return this.rest.request('PUT', `/guilds/${guildId}/members/${userId}/roles/${roleId}`);
+  }
+
+  /**
+   * Remove a role from a member.
+   * @param guildId The guild ID
+   * @param userId The user ID
+   * @param roleId The role ID
+   */
+  async removeRoleFromMember(guildId: string, userId: string, roleId: string) {
+    return this.rest.request('DELETE', `/guilds/${guildId}/members/${userId}/roles/${roleId}`);
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -400,6 +677,11 @@ export class Client extends EventEmitter {
     const collector = this.createMessageCollector(channelId, { max: 1, ...options });
     const results = await collector.await();
     return results[0] ?? null;
+  }
+
+  /** Collect voice state updates */
+  createVoiceStateCollector(options: VoiceStateCollectorOptions = {}): VoiceStateCollector {
+    return new VoiceStateCollector(this, options);
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -470,4 +752,11 @@ export class Client extends EventEmitter {
     this.middleware.clear();
     this.destroy();
   }
+}
+
+/** Plugin interface — add functionality to the client via .use() */
+export interface Plugin {
+  name: string;
+  setup(client: Client): void | Promise<void>;
+  teardown?(client: Client): void | Promise<void>;
 }

@@ -5,7 +5,7 @@
   background: var(--bg-surface-elevated, var(--bg-primary));
   min-width: 0;
   position: relative;
-  overflow: visible;
+  overflow: hidden; /* Ensure nothing leaks out */
   transition: all 0.2s var(--ease-out);
 }
 
@@ -63,7 +63,20 @@
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+}
+
+.voiceActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.headerDivider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-sep);
+  margin: 0 4px;
 }
 
 .headerButton {
@@ -76,7 +89,7 @@
   background: transparent;
   border: none;
   padding: 6px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
   width: 32px;
   height: 32px;
   position: relative;
@@ -111,7 +124,7 @@
   width: 180px;
   background: rgba(0, 0, 0, 0.3);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
   padding: 0 32px 0 12px;
   font-size: 14px;
   color: var(--text-primary);
@@ -158,12 +171,12 @@
 
 .messages {
   flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  padding: 0 4px 12px 4px;
   position: relative;
   z-index: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px; /* Extra space for input area overlap protection */
 }
 
 .welcome {
@@ -340,6 +353,178 @@
   font-size: 11px;
   color: var(--text-muted);
   line-height: 1.2;
+}
+
+/* ── Report Modal ── */
+.reportForm {
+  display: grid;
+  gap: 14px;
+}
+
+.reportLabel {
+  display: grid;
+  gap: 6px;
+}
+
+.reportLabelText {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.reportSelect {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-default, rgba(255,255,255,0.1));
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 5l3 3 3-3' stroke='%2399aab5' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.reportSelect:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.reportSelect:focus {
+  border-color: var(--beacon-brand);
+  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
+}
+
+.reportSelect option {
+  background: #2b2d31;
+  color: var(--text-primary);
+  padding: 8px;
+}
+
+.reportTextarea {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-default, rgba(255,255,255,0.1));
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  min-height: 80px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.reportTextarea::placeholder {
+  color: var(--text-muted);
+}
+
+.reportTextarea:focus {
+  border-color: var(--beacon-brand);
+  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
+}
+
+.reportActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+/* ── Edit Message Modal ── */
+.editModalBody {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.editTextarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-default, rgba(255,255,255,0.1));
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.editTextarea:focus {
+  border-color: var(--beacon-brand);
+  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ── Pinned Messages Modal ── */
+.pinnedEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px;
+  gap: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.pinnedEmptyIcon {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.pinnedItem {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border-sep, rgba(255,255,255,0.05));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.1s;
+}
+
+.pinnedItem:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pinnedItemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.pinnedItemAuthor {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.pinnedItemText {
+  font-size: 13px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pinnedItemDate {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Tablet ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */

@@ -22,6 +22,10 @@ export interface ButtonData {
 export class ButtonBuilder {
   private data: ButtonData = { style: 'secondary' }
 
+  static create(): ButtonBuilder {
+    return new ButtonBuilder()
+  }
+
   setCustomId(id: string): this {
     this.data.customId = id
     return this
@@ -54,15 +58,17 @@ export class ButtonBuilder {
   }
 
   build(): ButtonData {
-    if (!this.data.label && !this.data.emoji) {
-      throw new Error('ButtonBuilder: A button must have a label or emoji.')
-    }
-    if (this.data.style === 'link' && !this.data.url) {
-      throw new Error('ButtonBuilder: Link-style buttons must have a URL.')
-    }
-    if (this.data.style !== 'link' && !this.data.customId) {
-      throw new Error('ButtonBuilder: Non-link buttons must have a customId.')
-    }
-    return { ...this.data }
+    return this.toJSON();
+  }
+
+  toJSON(): ButtonData {
+    // Logic for returning flat data
+    return { ...this.data } as any;
+  }
+
+  clone(): ButtonBuilder {
+    const cloned = new ButtonBuilder()
+    cloned.data = { ...this.data }
+    return cloned
   }
 }

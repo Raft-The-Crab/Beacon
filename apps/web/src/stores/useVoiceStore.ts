@@ -8,7 +8,9 @@ export interface VoiceState {
   selfDeaf: boolean;
   selfVideo: boolean;
   selfStream: boolean;
+  selfScreen: boolean;
   speaking: boolean;
+  isBeaconPlus?: boolean;
   position?: { x: number; y: number; z: number };
   audioLevel?: number;
 }
@@ -31,9 +33,14 @@ interface VoiceStore {
   setSelfMute: (muted: boolean) => void
   setSelfDeaf: (deafened: boolean) => void
   setSelfVideo: (video: boolean) => void
+  setSelfScreen: (screen: boolean) => void
 
   bandwidthMode: 'low' | 'balanced' | 'high'
+  videoQuality: '480p' | '720p' | '1080p' | '1440p' | '4k'
+  frameRate: 15 | 30 | 60
   setBandwidthMode: (mode: 'low' | 'balanced' | 'high') => void
+  setVideoQuality: (quality: '480p' | '720p' | '1080p' | '1440p' | '4k') => void
+  setFrameRate: (rate: 15 | 30 | 60) => void
 
   typingUsers: Set<string>
   addTypingUser: (userId: string) => void
@@ -50,6 +57,8 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
   connectedVoiceChannelId: null,
   currentVoiceState: null,
   bandwidthMode: 'balanced',
+  videoQuality: '720p',
+  frameRate: 30,
   typingUsers: new Set(),
 
   setUserId: (userId: string | null) => set({ userId }),
@@ -92,7 +101,14 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
       currentVoiceState: state.currentVoiceState ? { ...state.currentVoiceState, selfVideo: video } : null
     })),
 
+  setSelfScreen: (screen) =>
+    set(state => ({
+      currentVoiceState: state.currentVoiceState ? { ...state.currentVoiceState, selfScreen: screen } : null
+    })),
+
   setBandwidthMode: (mode) => set({ bandwidthMode: mode }),
+  setVideoQuality: (quality) => set({ videoQuality: quality }),
+  setFrameRate: (rate) => set({ frameRate: rate }),
 
   addTypingUser: (userId) =>
     set((state) => {
@@ -125,6 +141,11 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
     set((state) => {
       const vs = state.voiceUsers.get(userId)
       if (!vs) return state
+      
+      // Throttle: Only update if change is significant (> 1%)
+      const currentLevel = vs.audioLevel || 0
+      if (Math.abs(currentLevel - level) < 0.01) return state
+
       const newVoiceUsers = new Map(state.voiceUsers)
       newVoiceUsers.set(userId, { ...vs, audioLevel: level })
       return { voiceUsers: newVoiceUsers }

@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Search, X, Hash, Calendar, User, ArrowUp, ArrowDown, Filter } from 'lucide-react'
 import styles from '../../styles/modules/features/MessageSearch.module.css'
 
@@ -31,9 +31,9 @@ export function MessageSearch({ isOpen, onClose, onJumpToMessage }: MessageSearc
 
   const results = query.length > 0
     ? DEMO_RESULTS.filter(r =>
-      r.content.toLowerCase().includes(query.toLowerCase()) ||
-      r.authorName.toLowerCase().includes(query.toLowerCase()) ||
-      r.channelName.toLowerCase().includes(query.toLowerCase())
+      String(r.content || '').toLowerCase().includes(query.toLowerCase()) ||
+      String(r.authorName || '').toLowerCase().includes(query.toLowerCase()) ||
+      String(r.channelName || '').toLowerCase().includes(query.toLowerCase())
     )
     : []
 

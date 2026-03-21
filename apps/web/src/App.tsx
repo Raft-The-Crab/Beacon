@@ -1,9 +1,9 @@
-﻿import React, { Suspense, lazy, useEffect } from 'react'
+import React, { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { MainLayout } from './components/layout/MainLayout'
-import { Modal, ToastContainer, useToast } from './components/ui'
+import { Modal, ToastContainer, useToast, CommandPalette } from './components/ui'
 import { wsClient, WebSocketEvent } from './services'
 import { apiClient } from './services/apiClient'
 import { useMessageStore } from './stores/useMessageStore'
@@ -23,13 +23,15 @@ import { HelmetProvider } from 'react-helmet-async'
 import { ModalManager } from './components/modals'
 import { KeyboardShortcutsPanel } from './components/ui/KeyboardShortcutsPanel'
 import { isAndroid } from './utils/platform'
+import { ServerBoosting } from './components/features/ServerBoosting'
+import { ServerInviteModal } from './components/modals/ServerInviteModal'
 
 import { ContextMenuProvider } from './components/ui/ContextMenu'
 import { VersionCheck } from './components/utils/VersionCheck'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import './styles/globals.css'
 import './styles/themes.css'
-import './styles/discord-utils.css'
+import './styles/beacon-utils.css'
 
 // Route-level lazy loading for better startup performance
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })))
@@ -61,6 +63,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then(m => ({ 
 const Discovery = lazy(() => import('./pages/Discovery').then(m => ({ default: m.Discovery })))
 const CommunityHub = lazy(() => import('./pages/CommunityHub').then(m => ({ default: m.CommunityHub })))
 const AppDirectory = lazy(() => import('./pages/AppDirectory').then(m => ({ default: m.AppDirectory })))
+const VerificationPage = lazy(() => import('./pages/VerificationPage').then(m => ({ default: m.VerificationPage })))
 
 function RouteFallback() {
   return (
@@ -102,6 +105,10 @@ export function App() {
   const setPresence = usePresenceStore((s) => s.setPresence)
   const addNotification = useNotificationStore((s) => s.addNotification)
   const fetchNotifications = useNotificationStore((s) => s.fetchNotifications)
+  const currentServer = useServerStore(s => s.currentServer)
+
+  const [globalBoostOpen, setGlobalBoostOpen] = React.useState(false)
+  const [globalInviteOpen, setGlobalInviteOpen] = React.useState(false)
 
   const isMobilePlatform = isAndroid()
 
@@ -116,31 +123,61 @@ export function App() {
   const checkSession = useAuthStore(s => s.checkSession)
   const user = useAuthStore(s => s.user)
   const isAuthenticated = useAuthStore(s => s.isAuthenticated)
+  const verificationRequired = useAuthStore(s => s.verificationRequired)
   const isAuthLoading = useAuthStore(s => s.isLoading)
+  const navigate = useNavigate()
   const setVoiceUserId = useVoiceStore((s) => s.setUserId)
   const hasAdminAccess = Boolean(user && (user.developerMode || user.badges?.includes('admin') || user.badges?.includes('owner')))
 
+  useEffect(() => {
+    const handleOpenBoost = () => setGlobalBoostOpen(true)
+    const handleOpenInvite = () => setGlobalInviteOpen(true)
+    window.addEventListener('open-server-boost', handleOpenBoost)
+    window.addEventListener('open-server-invite', handleOpenInvite)
+    return () => {
+      window.removeEventListener('open-server-boost', handleOpenBoost)
+      window.removeEventListener('open-server-invite', handleOpenInvite)
+    }
+  }, [])
+
   // Hydrate auth state from token/cookie on initial mount.
   useEffect(() => {
-    checkSession().catch(err => console.error('Session hydration failed', err))
-  }, [checkSession])
+    // Only run session check once on mount
+    void checkSession().catch(err => console.error('Session hydration failed', err))
+  }, []) // Removed checkSession from deps as it's stable and we only want mount-check
+
+  useEffect(() => {
+    if (verificationRequired) {
+      navigate('/verify')
+    }
+  }, [verificationRequired, navigate])
 
   // Initial Data Fetch (Eager Loading for zero lag)
+  // We use references for functions to avoid dependency loops if stores re-render
+  const eagerLoadRef = React.useRef({
+    servers: eagerLoadServers,
+    friends: eagerLoadFriends,
+    channels: eagerLoadChannels,
+    wallet: fetchWallet,
+    notifications: fetchNotifications
+  })
+
   useEffect(() => {
     if (user?.id) {
+      const { servers, friends, channels, wallet, notifications } = eagerLoadRef.current
       // Parallel eager loading
       Promise.all([
-        eagerLoadServers(),
-        eagerLoadFriends(),
-        eagerLoadChannels(),
-        fetchWallet(),
-        fetchNotifications(),
+        servers(),
+        friends(),
+        channels(),
+        wallet(),
+        notifications(),
       ]).catch(err => console.error('Initial eager load failed', err))
 
       // Start Activity Sync Service
       activitySync.start();
     }
-  }, [user?.id, eagerLoadServers, eagerLoadFriends, eagerLoadChannels, fetchWallet, fetchNotifications])
+  }, [user?.id]) // Only depends on user.id to trigger once per session
 
   useEffect(() => {
     setVoiceUserId(user?.id || null)
@@ -315,6 +352,7 @@ export function App() {
                   <Route path="/welcome" element={<MobileSplash />} />
                   <Route path="/landing" element={<LandingPage />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/verify" element={<VerificationPage />} />
 
                   {/* Public informational routes */}
                   <Route path="/terms" element={<Terms />} />
@@ -363,8 +401,22 @@ export function App() {
                   </Routes>
                 </Suspense>
                 <ToastContainer toasts={toasts} onRemove={remove} />
+                <CommandPalette />
                 <KeyboardShortcutsPanel />
                 <VersionCheck />
+
+                {/* Global Modals */}
+                <Modal isOpen={globalBoostOpen} onClose={() => setGlobalBoostOpen(false)} size="md" noPadding={true}>
+                  <ServerBoosting onClose={() => setGlobalBoostOpen(false)} />
+                </Modal>
+                {currentServer && (
+                  <ServerInviteModal
+                    isOpen={globalInviteOpen}
+                    onClose={() => setGlobalInviteOpen(false)}
+                    serverId={currentServer.id}
+                    serverName={currentServer.name}
+                  />
+                )}
               </ModalManager>
             </ContextMenuProvider>
           </ErrorBoundary>

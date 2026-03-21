@@ -47,7 +47,7 @@ export function RoleColorPicker({ value, onChange, className }: RoleColorPickerP
                   type="button"
                   className={cn(
                     'h-8 w-8 rounded-lg border transition hover:scale-105',
-                    value.toLowerCase() === color.toLowerCase()
+                    String(value || '').toLowerCase() === String(color || '').toLowerCase()
                       ? 'border-white ring-2 ring-indigo-400/70'
                       : 'border-white/20',
                   )}

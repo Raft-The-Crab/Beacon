@@ -11,7 +11,7 @@ import { Tooltip } from '../ui/Tooltip'
 import { CurrentUserProfileCard } from './CurrentUserProfileCard'
 import styles from '../../styles/modules/features/CurrentUserControls.module.css'
 
-const THEMES = ['dark', 'midnight', 'oled', 'light', 'neon'] as const
+const THEMES = ['dark', 'midnight', 'dracula', 'oled', 'light', 'neon'] as const
 
 interface ProfileNote {
     text?: string

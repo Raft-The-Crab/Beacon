@@ -1,6 +1,6 @@
 // Main client
-export { BeaconClient } from './BeaconClient'
-export { BotFramework, pingCommand, helpCommand, announceCommand } from './bot'
+export { Client as BeaconClient } from '../client'
+export { BotFramework } from './bot'
 
 // API modules
 export { AuthAPI } from './api/AuthAPI'

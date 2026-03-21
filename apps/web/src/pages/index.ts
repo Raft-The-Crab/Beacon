@@ -22,3 +22,4 @@ export { BeaconPlusStore } from './BeaconPlusStore';
 export { SafetyHub } from './SafetyHub';
 export { PartnerPortal } from './PartnerPortal';
 export { AdminDashboard } from './AdminDashboard';
+export { VerificationPage } from './VerificationPage';

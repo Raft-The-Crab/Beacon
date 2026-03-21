@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Copy, Check, Link, Clock, Users, RefreshCw, X } from 'lucide-react'
+import { Select } from '../ui'
 import styles from '../../styles/modules/modals/ServerInviteModal.module.css'
 
 interface ServerInviteModalProps {
@@ -99,7 +100,7 @@ export function ServerInviteModal({ serverName, isOpen, onClose }: ServerInviteM
                                     <Clock size={14} />
                                     Expire after
                                 </label>
-                                <select
+                                <Select
                                     className={styles.select}
                                     value={expiry}
                                     onChange={e => setExpiry(e.target.value)}
@@ -107,7 +108,7 @@ export function ServerInviteModal({ serverName, isOpen, onClose }: ServerInviteM
                                     {EXPIRY_OPTIONS.map(o => (
                                         <option key={o.value} value={o.value}>{o.label}</option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
 
                             <div className={styles.settingRow}>
@@ -115,7 +116,7 @@ export function ServerInviteModal({ serverName, isOpen, onClose }: ServerInviteM
                                     <Users size={14} />
                                     Max uses
                                 </label>
-                                <select
+                                <Select
                                     className={styles.select}
                                     value={maxUses}
                                     onChange={e => setMaxUses(Number(e.target.value))}
@@ -123,7 +124,7 @@ export function ServerInviteModal({ serverName, isOpen, onClose }: ServerInviteM
                                     {MAX_USES_OPTIONS.map(o => (
                                         <option key={o.value} value={o.value}>{o.label}</option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
 
                             <button className={styles.regenerateBtn} onClick={handleRegenerate}>

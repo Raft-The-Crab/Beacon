@@ -39,17 +39,26 @@ class FileUploadService {
   }
 
   async uploadFile(file: File, options: UploadOptions = {}): Promise<UploadedFile> {
+    const { useAuthStore } = await import('../stores/useAuthStore')
+    const user = useAuthStore.getState().user
+    const isPremium = Boolean(user?.isBeaconPlus || (Array.isArray(user?.badges) && user.badges.some((b: any) => String(b || '').toLowerCase() === 'beacon_plus')))
+    
+    const standardLimit = 10 * 1024 * 1024 // 10MB
+    const premiumLimit = 500 * 1024 * 1024 // 500MB
+    const effectiveLimit = isPremium ? premiumLimit : standardLimit
+
     const {
-      maxSize = 105 * 1024 * 1024, // 105MB default
+      maxSize = effectiveLimit,
       allowedTypes = ['image/*', 'video/*', 'audio/*', 'application/pdf', 'text/*', 'application/*'],
       compress = true,
       maxWidth = 1920,
       maxHeight = 1080,
     } = options
-
+ 
     // Validate file size
     if (file.size > maxSize) {
-      throw new Error(`File size exceeds ${maxSize / 1024 / 1024}MB limit`)
+      const limitLabel = maxSize >= 1024 * 1024 * 1024 ? `${(maxSize / (1024*1024*1024)).toFixed(1)}GB` : `${(maxSize / (1024*1024)).toFixed(0)}MB`
+      throw new Error(`File size (${(file.size / (1024*1024)).toFixed(1)}MB) exceeds the ${limitLabel} limit. ${!isPremium ? 'Upgrade to Beacon+ for 500MB uploads!' : ''}`)
     }
 
     // Validate file type

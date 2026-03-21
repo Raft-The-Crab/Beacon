@@ -1,10 +1,11 @@
-﻿import { useState, useEffect } from 'react'
-import { MessageCircle, UserPlus, UserX, Loader2, Crown, Sparkles, CalendarClock } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { MessageCircle, UserPlus, UserX, Loader2, Users, Shield, MoreHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useUserListStore } from '../../stores/useUserListStore'
 import { useDMStore } from '../../stores/useDMStore'
-import { Button, Modal, useToast } from '../ui'
+import { Button, Modal, useToast, Tooltip } from '../ui'
 import { Avatar } from '../ui/Avatar'
 import { UserBadges, BotTag } from '../ui/UserBadges'
 import { useProfileArtStore, type ProfileArt } from '../../stores/useProfileArtStore'
@@ -27,6 +28,7 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [profileNote, setProfileNote] = useState<any>(null)
+  const [mutuals, setMutuals] = useState<{ friends: any[], guilds: any[] }>({ friends: [], guilds: [] })
   const [error, setError] = useState<string | null>(null)
   const [friendsReady, setFriendsReady] = useState(false)
   const [sendingFriendRequest, setSendingFriendRequest] = useState(false)
@@ -37,7 +39,7 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
     const targetId = user?.id || userId
     if (friend?.id && targetId && friend.id === targetId) return true
     if (friend?.username && user?.username) {
-      const sameUser = friend.username.toLowerCase() === user.username.toLowerCase()
+      const sameUser = String(friend.username || '').toLowerCase() === String(user.username || '').toLowerCase()
       const sameDiscriminator = String(friend.discriminator || '0000') === String(user.discriminator || '0000')
       if (sameUser && sameDiscriminator) return true
     }
@@ -55,7 +57,7 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
     if (!value) return 'Unknown'
     const parsed = new Date(value)
     if (Number.isNaN(parsed.getTime())) return 'Unknown'
-    return parsed.toLocaleDateString()
+    return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
   const frameArt = user?.avatarDecorationId ? arts.find((a: ProfileArt) => a.id === user.avatarDecorationId) : null
@@ -64,34 +66,30 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
     : user?.profileEffectId === 'effect-cyber-static'
       ? styles.effectCyber
       : ''
-  const relationshipLabel = isSelf
-    ? 'You'
-    : isBlocked
-      ? 'Blocked'
-      : isFriend
-        ? 'Friend'
-        : pendingRequestSent
-          ? 'Pending Request'
-          : 'Not Connected'
-  const badgeCount = Array.isArray(user?.badges) ? user.badges.length : 0
-  const profileEffectLabel = user?.profileEffectId
-    ? user.profileEffectId.replace(/^effect-/, '').replace(/-/g, ' ')
-    : 'None'
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUser = async (isSilent = false) => {
       if (!userId) return
 
-      setLoading(true)
+      if (!isSilent) setLoading(true)
       setError(null)
 
       try {
         const response = await apiClient.request('GET', `/users/${userId}`)
         if (response.success && response.data) {
-          setUser({
+          const userData = {
             ...response.data,
             joinedAt: response.data.createdAt || new Date().toISOString(),
-          })
+          }
+          setUser(userData)
+
+          // Fetch mutuals if not self
+          if (!isSelf) {
+            const mutualsRes = await apiClient.request('GET', `/users/${userId}/mutuals`)
+            if (mutualsRes.success) {
+              setMutuals(mutualsRes.data)
+            }
+          }
 
           const noteRes = await apiClient.request('GET', `/notes/profile/${userId}`)
           if (noteRes.success && noteRes.data?.note) {
@@ -99,13 +97,13 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
           } else {
             setProfileNote(null)
           }
-        } else {
+        } else if (!isSilent) {
           setError('User not found')
         }
       } catch (err) {
-        setError('Failed to load user profile')
+        if (!isSilent) setError('Failed to load user profile')
       } finally {
-        setLoading(false)
+        if (!isSilent) setLoading(false)
       }
     }
 
@@ -114,8 +112,12 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
       setFriendsReady(false)
       setPendingRequestSent(false)
       void fetchFriends().finally(() => setFriendsReady(true))
+
+      // Real-time status/music sync
+      const interval = setInterval(() => fetchUser(true), 10000)
+      return () => clearInterval(interval)
     }
-  }, [userId, isOpen, fetchFriends])
+  }, [userId, isOpen, fetchFriends, isSelf])
 
   const handleAddFriend = async () => {
     if (!user || sendingFriendRequest || pendingRequestSent || isFriend) return
@@ -244,124 +246,188 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
     )
   }
 
+  const resolveBannerUrl = (banner?: string | null) => {
+    if (!banner) return null
+    if (banner.startsWith('http') || banner.startsWith('https') || banner.startsWith('data:') || banner.startsWith('/')) return banner
+    return `/art/banners/${banner}.png`
+  }
+
+  const bannerUrl = resolveBannerUrl(user.banner)
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md" noPadding hideHeader transparent>
       <div className={`${styles.container} ${profileEffectClass}`}>
-        {/* Banner */}
+        {/* Banner Area */}
         <div
           className={styles.banner}
           style={
-            user.banner
-              ? { backgroundImage: `url(${user.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-              : { background: 'linear-gradient(135deg, #0f766e 0%, #06b6d4 48%, #f59e0b 100%)' }
+            bannerUrl
+              ? { 
+                  backgroundImage: `url(${bannerUrl})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }
+              : { background: 'linear-gradient(135deg, var(--beacon-brand) 0%, #7c3aed 50%, #f59e0b 100%)' }
           }
-        />
-        <div className={styles.profileCard}>
-          {profileNote && (profileNote.text || profileNote.musicMetadata?.title) && (
-            <div className={styles.topNoteBubble}>
-              <div className={styles.noteEmoji}>{profileNote.emoji || '✨'}</div>
-              <div className={styles.noteContent}>
-                {profileNote.text && <p className={styles.noteText}>{profileNote.text}</p>}
-                {profileNote.musicMetadata?.title && (
-                  <p className={styles.noteMusic}>Listening to {profileNote.musicMetadata.title}</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className={styles.profileHeader}>
-            <div className={styles.avatarWrapper}>
-              <Avatar
-                src={user.avatar && !user.avatar.includes('dicebear') ? user.avatar : undefined}
-                username={user.username}
-                status={user.status as any}
-                size="lg"
-                frameUrl={frameArt?.imageUrl}
-                frameGradient={!frameArt?.imageUrl ? frameArt?.preview : undefined}
-              />
-              <div className={`${styles.statusBadge} ${user.status || 'offline'}`} />
-            </div>
-          </div>
-
-          <div className={styles.info}>
-            <div className={styles.identityStack}>
-              <h1 className={styles.username}>
-                {user.displayName || user.username}
-                {user.bot && <BotTag />}
-              </h1>
-              <p className={styles.handle}>@{user.username}{user.discriminator ? `#${user.discriminator}` : ''}</p>
-            </div>
-            <UserBadges badges={user.badges} isBot={user.bot} size="md" />
-            <div className={styles.pillRow}>
-              <span className={styles.metaPill}>{relationshipLabel}</span>
-              <span className={styles.metaPill}>{user.isBeaconPlus ? 'Beacon+' : 'Standard'}</span>
-              <span className={styles.metaPill}>{user.status || 'offline'}</span>
-            </div>
-            {user.customStatus && <p className={styles.customStatus}>{user.customStatus}</p>}
-          </div>
-
-          {canUseSocialActions && (
-            <div className={styles.actions}>
-              <Button variant="primary" onClick={handleMessage} fullWidth>
-                <MessageCircle size={18} />
-                {openingDm ? 'Opening...' : 'Message'}
-              </Button>
-              {!user.bot && (
-                <div className={styles.buttonGroup}>
-                  {(isFriend || canSendFriendRequest) && (
-                    <Button
-                      variant={isFriend ? 'secondary' : 'primary'}
-                      onClick={isFriend ? handleRemoveFriend : handleAddFriend}
-                      fullWidth
-                    >
-                      {isFriend ? <UserX size={18} /> : <UserPlus size={18} />}
-                      {isFriend ? 'Remove Friend' : sendingFriendRequest ? 'Sending...' : 'Add Friend'}
-                    </Button>
-                  )}
-                  {!isFriend && pendingRequestSent && (
-                    <Button variant="secondary" fullWidth>
-                      Pending Request
-                    </Button>
-                  )}
-                  <Button
-                    variant={isBlocked ? 'danger' : 'secondary'}
-                    onClick={handleToggleBlock}
-                    fullWidth
-                  >
-                    <UserX size={18} />
-                    {isBlocked ? 'Unblock' : 'Block'}
-                  </Button>
-                </div>
-              )}
-            </div>
+        >
+          <div className={styles.bannerOverlay} />
+          {user.profileEffectId && (
+            <img 
+              src={`/effects/${user.profileEffectId}.gif`} 
+              className={styles.profileEffect} 
+              alt="" 
+            />
           )}
         </div>
 
-        <div className={styles.body}>
-          <div className={styles.summaryGrid}>
-            <div className={styles.summaryCard}>
-              <span><Crown size={12} /> Membership</span>
-              <strong>{user.isBeaconPlus ? 'Beacon+ Active' : 'Free Member'}</strong>
-            </div>
-            <div className={styles.summaryCard}>
-              <span><Sparkles size={12} /> Profile Effect</span>
-              <strong>{profileEffectLabel}</strong>
-            </div>
-            <div className={styles.summaryCardWide}>
-              <span><Sparkles size={12} /> Badges</span>
-              <strong>{badgeCount > 0 ? `${badgeCount} equipped` : 'No badges yet'}</strong>
-            </div>
+        <div className={styles.profileHeader}>
+          <div className={styles.avatarWrapper}>
+            <Avatar
+              src={user.avatar && !user.avatar.includes('dicebear') ? user.avatar : undefined}
+              username={user.username}
+              status={user.status as any}
+              size="lg"
+              frameUrl={frameArt?.imageUrl}
+              frameGradient={!frameArt?.imageUrl ? frameArt?.preview : undefined}
+            />
           </div>
 
-          <div className={styles.section}>
-            <h3>ABOUT</h3>
-            <p>{user.bio || 'No bio set yet.'}</p>
+          <div className={styles.headerActions}>
+            {canUseSocialActions && (
+              <>
+                {(isFriend || canSendFriendRequest) && (
+                  <Tooltip content={isFriend ? 'Remove Friend' : 'Add Friend'}>
+                    <Button
+                      variant={isFriend ? 'danger' : 'primary'}
+                      onClick={isFriend ? handleRemoveFriend : handleAddFriend}
+                      size="sm"
+                      className={styles.socialBtn}
+                    >
+                      {isFriend ? <UserX size={20} /> : <UserPlus size={20} />}
+                    </Button>
+                  </Tooltip>
+                )}
+                <Tooltip content={isBlocked ? 'Unblock' : 'Block'}>
+                  <Button
+                    variant={isBlocked ? 'danger' : 'secondary'}
+                    onClick={handleToggleBlock}
+                    size="sm"
+                    className={styles.socialBtn}
+                  >
+                    <MoreHorizontal size={20} />
+                  </Button>
+                </Tooltip>
+              </>
+            )}
           </div>
+        </div>
 
-          <div className={styles.section}>
-            <h3>BEACON MEMBER SINCE</h3>
-            <p className={styles.memberSinceRow}><CalendarClock size={14} /> {formatSafeDate(user.joinedAt)}</p>
+        {/* Scrollable Content */}
+        <div className={styles.scrollArea}>
+          <motion.div 
+            className={styles.identitySection}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div style={{ position: 'absolute', top: 12, right: 16 }}>
+              <UserBadges badges={user.badges} isBot={user.bot} size="sm" />
+            </div>
+            
+            <h1 className={styles.username}>
+              {user.displayName || user.username}
+              {user.bot && <BotTag />}
+            </h1>
+            <p className={styles.handle}>@{user.username}{user.discriminator ? `#${user.discriminator}` : ''}</p>
+            
+            {user.customStatus && (
+              <div className={styles.statusText}>{user.customStatus}</div>
+            )}
+          </motion.div>
+
+          <motion.div 
+            className={styles.sectionCard}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h3 className={styles.sectionHeader}>ABOUT ME</h3>
+            <p className={styles.bioText}>{user.bio || 'No bio provided.'}</p>
+          </motion.div>
+
+          {!isSelf && (mutuals.friends.length > 0 || mutuals.guilds.length > 0) && (
+            <motion.div 
+              className={styles.sectionCard}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <h3 className={styles.sectionHeader}>MUTUALS</h3>
+              <div style={{ display: 'flex', gap: '24px' }}>
+                {mutuals.friends.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Users size={18} color="rgba(255,255,255,0.4)" />
+                    <span style={{ fontSize: '14px', fontWeight: 600 }}>{mutuals.friends.length} Friends</span>
+                  </div>
+                )}
+                {mutuals.guilds.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Shield size={18} color="rgba(255,255,255,0.4)" />
+                    <span style={{ fontSize: '14px', fontWeight: 600 }}>{mutuals.guilds.length} Servers</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {(profileNote?.text || profileNote?.musicMetadata?.title) && (
+            <motion.div 
+              className={styles.sectionCard}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <h3 className={styles.sectionHeader}>ACTIVITY</h3>
+              {profileNote.text && (
+                <div style={{ marginBottom: profileNote.musicMetadata?.title ? '16px' : '0' }}>
+                  <p className={styles.bioText}>
+                    <span style={{ marginRight: '8px', fontSize: '1.2em' }}>{profileNote.emoji || '✨'}</span>
+                    {profileNote.text}
+                  </p>
+                </div>
+              )}
+              {profileNote.musicMetadata?.title && (
+                <div className={styles.activityCard}>
+                  <p className={styles.sectionHeader} style={{ fontSize: '10px', marginBottom: '10px' }}>SPOTIFY</p>
+                  <div className={styles.musicActivity}>
+                    <div className={styles.musicArt}>
+                      <img 
+                        src={profileNote.musicMetadata.coverArt || '/ui/music-placeholder.png'} 
+                        alt=""
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => (e.currentTarget.src = 'https://cdn-icons-png.flaticon.com/512/3844/3844724.png')}
+                      />
+                    </div>
+                    <div className={styles.musicDetails}>
+                      <span className={styles.musicTitle}>{profileNote.musicMetadata.title}</span>
+                      <span className={styles.musicArtist}>{profileNote.musicMetadata.artist || 'Unknown Artist'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          <div className={styles.metaSection}>
+            <span className={styles.metaLabel}>MEMBER SINCE</span>
+            <span className={styles.metaValue}>{formatSafeDate(user.joinedAt)}</span>
           </div>
+        </div>
+
+        <div className={styles.actionFooter}>
+          <Button variant="primary" onClick={handleMessage} className={styles.fullWidthMessageBtn}>
+            {openingDm ? 'Opening...' : 'Send Message'}
+          </Button>
         </div>
       </div>
     </Modal>

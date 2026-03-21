@@ -1,9 +1,11 @@
-﻿import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Send, Plus, Smile, Volume2, Image as ImageIcon, X, File, Sparkles, Reply } from 'lucide-react'
 import { Button, Tooltip, EmojiPicker, GifPicker, useToast } from '../ui'
 import { StickerPicker } from './StickerPicker'
 import { fileUploadService, type UploadedFile } from '../../services/fileUpload'
 import { MentionPicker } from './MentionPicker'
+import { SlashCommandPicker } from './SlashCommandPicker'
+import { useInteractionStore } from '../../stores/useInteractionStore'
 import { useServerStore } from '../../stores/useServerStore'
 import { useMessageStore } from '../../stores/useMessageStore'
 import { useUIStore } from '../../stores/useUIStore'
@@ -43,9 +45,6 @@ export function MessageInput({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showStickerPicker, setShowStickerPicker] = useState(false)
   const [showGifPicker, setShowGifPicker] = useState(false)
-  const [_showScheduleModal, _setShowScheduleModal] = useState(false)
-  const [scheduledAt, setScheduledAt] = useState('')
-  const [scheduledTime, setScheduledTime] = useState('')
   const [attachments, setAttachments] = useState<UploadedFile[]>([])
   const [uploading, setUploading] = useState(false)
   const [keyboardOffset, setKeyboardOffset] = useState(0)
@@ -54,6 +53,10 @@ export function MessageInput({
   const [showMentionPicker, setShowMentionPicker] = useState(false)
   const [mentionQuery, setMentionQuery] = useState('')
   const [members, setMembers] = useState<any[]>([])
+
+  // Slash command state
+  const [showSlashCommandPicker, setShowSlashCommandPicker] = useState(false)
+  const [slashCommandQuery, setSlashCommandQuery] = useState('')
 
   const { currentServerId } = useServerStore()
 
@@ -99,14 +102,14 @@ export function MessageInput({
     e.currentTarget.style.height = 'auto'
     e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 200)}px`
 
-    // Mention detection: show picker when text ends with "@" + query
+    // Mention detection
     const lastAtPos = text.lastIndexOf('@')
     if (lastAtPos !== -1 && !text.slice(lastAtPos).includes(' ')) {
       const query = text.slice(lastAtPos + 1)
       setMentionQuery(query)
       setShowMentionPicker(true)
+      setShowSlashCommandPicker(false)
 
-      // Fetch members if not already fetching
       if (members.length === 0 && currentServerId) {
         apiClient.getGuildMembers(currentServerId).then(res => {
           if (res.success && res.data) setMembers(res.data)
@@ -115,6 +118,16 @@ export function MessageInput({
     } else {
       setShowMentionPicker(false)
       setMentionQuery('')
+
+      // Slash command detection
+      if (text.startsWith('/')) {
+        const query = text.slice(1).split(' ')[0]
+        setSlashCommandQuery(query)
+        setShowSlashCommandPicker(true)
+      } else {
+        setShowSlashCommandPicker(false)
+        setSlashCommandQuery('')
+      }
     }
 
     // Typing indicator
@@ -135,15 +148,23 @@ export function MessageInput({
 
   const handleSend = () => {
     if (message.trim() || attachments.length > 0) {
-      const scheduleIso = (scheduledAt && scheduledTime)
-        ? new Date(`${scheduledAt}T${scheduledTime}`).toISOString()
-        : undefined;
+      // Handle Slash Command Execution
+      if (message.startsWith('/') && !message.includes('\n')) {
+        const parts = message.slice(1).split(' ')
+        const cmdName = parts[0]
+        const args = parts.slice(1).join(' ')
+        
+        useInteractionStore.getState().executeCommand(useUIStore.getState().currentChannelId || '', cmdName, args)
+        
+        setMessage('')
+        setAttachments([])
+        if (textareaRef.current) textareaRef.current.style.height = 'auto'
+        return
+      }
 
-      onSendMessage(message.trim(), undefined, attachments, scheduleIso)
+      onSendMessage(message.trim(), undefined, attachments)
       setMessage('')
       setAttachments([])
-      setScheduledAt('')
-      setScheduledTime('')
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto'
       }
@@ -153,6 +174,7 @@ export function MessageInput({
       setShowStickerPicker(false)
       setShowGifPicker(false)
       setShowMentionPicker(false)
+      setShowSlashCommandPicker(false)
     }
   }
 
@@ -178,38 +200,43 @@ export function MessageInput({
     }
   }, [message])
 
+  const handleSlashCommandSelect = useCallback((cmd: any) => {
+    setMessage(`/${cmd.name} `)
+    setShowSlashCommandPicker(false)
+    setTimeout(() => {
+      textareaRef.current?.focus()
+    }, 0)
+  }, [])
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Escape') {
       setShowEmojiPicker(false)
       setShowStickerPicker(false)
       setShowGifPicker(false)
       setShowMentionPicker(false)
+      setShowSlashCommandPicker(false)
       return
     }
 
-    // If either picker is open, let it consume navigation keys
-    if (showMentionPicker && ['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) {
+    if ((showMentionPicker || showSlashCommandPicker) && ['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key)) {
       if (e.key !== 'Escape') e.preventDefault()
       if (e.key === 'Escape') {
         setShowMentionPicker(false)
+        setShowSlashCommandPicker(false)
       }
       return
     }
-    if (e.key === 'ArrowUp' && message === '' && !showMentionPicker) {
+
+    if (e.key === 'ArrowUp' && message === '' && !showMentionPicker && !showSlashCommandPicker) {
       e.preventDefault()
-      // Find the last message sent by the current user in this channel
       const channelMessages = useMessageStore.getState().messages.get(useUIStore.getState().currentChannelId || '') || []
       const lastUserMsg = [...channelMessages].reverse().find(m => m.authorId === 'current-user')
       if (lastUserMsg) {
-        // We need a way to trigger editing from here. 
-        // Typically this would be a store action or a prop callback.
-        // For now, let's assume ChatArea handles the actual editing state, 
-        // but we can at least signal it or use a global store if available.
-        // Since useMessageStore is already imported (implied), we can use a custom hook or action.
         useUIStore.getState().setEditingMessage(lastUserMsg.id, lastUserMsg.content)
       }
       return
     }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -243,12 +270,9 @@ export function MessageInput({
 
     setUploading(true)
     try {
-      const uploaded = await fileUploadService.uploadMultiple(Array.from(files), {
-        maxSize: 105 * 1024 * 1024, // 105MB
-      })
+      const uploaded = await fileUploadService.uploadMultiple(Array.from(files))
       setAttachments([...attachments, ...uploaded])
     } catch (error) {
-      console.error('Upload failed:', error)
       show(error instanceof Error ? error.message : 'Upload failed', 'error')
     } finally {
       setUploading(false)
@@ -261,11 +285,10 @@ export function MessageInput({
 
     const imageFiles: File[] = []
     for (let i = 0; i < items.length; i++) {
-      const item = items[i]
-      if (item.type.startsWith('image/')) {
-        const file = item.getAsFile()
-        if (file) imageFiles.push(file)
-      }
+        if (items[i].type.startsWith('image/')) {
+            const file = items[i].getAsFile()
+            if (file) imageFiles.push(file)
+        }
     }
 
     if (imageFiles.length > 0) {
@@ -275,7 +298,6 @@ export function MessageInput({
         const uploaded = await fileUploadService.uploadMultiple(imageFiles)
         setAttachments([...attachments, ...uploaded])
       } catch (error) {
-        console.error('Upload failed:', error)
         show(error instanceof Error ? error.message : 'Upload failed', 'error')
       } finally {
         setUploading(false)
@@ -288,12 +310,7 @@ export function MessageInput({
   }
 
   return (
-    <div
-      className={styles.inputContainer}
-      ref={containerRef}
-      style={{ '--keyboard-offset': `${keyboardOffset}px` } as React.CSSProperties}
-    >
-      {/* Reply preview bar */}
+    <div className={styles.inputContainer} ref={containerRef} style={{ '--keyboard-offset': `${keyboardOffset}px` } as any}>
       {replyingTo && (
         <div className={styles.replyPreview}>
           <div className={styles.replyBar} />
@@ -302,9 +319,7 @@ export function MessageInput({
             Replying to <span className={styles.replyAuthor}>{replyingTo.authorName}</span>
             {replyingTo.content.substring(0, 80)}{replyingTo.content.length > 80 ? '...' : ''}
           </span>
-          <button className={styles.replyClose} onClick={onCancelReply}>
-            <X size={14} />
-          </button>
+          <button className={styles.replyClose} onClick={onCancelReply}><X size={14} /></button>
         </div>
       )}
 
@@ -312,172 +327,88 @@ export function MessageInput({
         <div className={styles.attachmentPreview}>
           {attachments.map((attachment, index) => (
             <div key={index} className={styles.attachmentItem}>
-              {(attachment.type || '').startsWith('image/') ? (
-                <img src={attachment.url} alt={attachment.filename} className={styles.attachmentImage} />
+              {attachment.type?.startsWith('image/') ? (
+                <img src={attachment.url} alt="" className={styles.attachmentImage} />
               ) : (
-                <div className={styles.attachmentFile}>
-                  <File size={24} />
-                  <span className={styles.attachmentName}>{attachment.filename}</span>
-                </div>
+                <div className={styles.attachmentFile}><File size={24} /><span>{attachment.filename}</span></div>
               )}
-              <button
-                className={styles.removeAttachment}
-                onClick={() => removeAttachment(index)}
-              >
-                <X size={16} />
-              </button>
+              <button className={styles.removeAttachment} onClick={() => removeAttachment(index)}><X size={16} /></button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Mention Picker */}
       {showMentionPicker && (
         <MentionPicker
           query={mentionQuery}
-          members={members.map(m => ({
-            id: m.user.id,
-            username: m.user.username,
-            displayName: m.nickname,
-            avatar: m.user.avatar
-          }))}
+          members={members.map(m => ({ id: m.user.id, username: m.user.username, displayName: m.nickname, avatar: m.user.avatar }))}
           onSelect={handleMentionSelect}
           onClose={() => setShowMentionPicker(false)}
         />
       )}
 
+      {showSlashCommandPicker && (
+        <SlashCommandPicker
+          query={slashCommandQuery}
+          guildId={currentServerId || undefined}
+          onSelect={handleSlashCommandSelect}
+          onClose={() => setShowSlashCommandPicker(false)}
+        />
+      )}
+
       <div className={styles.inputWrapper}>
         <Tooltip content="Add files" position="top">
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            aria-label="Add files"
-          >
+          <button type="button" className={styles.iconButton} onClick={() => fileInputRef.current?.click()} disabled={uploading}>
             <Plus size={20} />
           </button>
         </Tooltip>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          onClick={(e) => { (e.currentTarget as HTMLInputElement).value = '' }}
-          onChange={handleFileSelect}
-          style={{ display: 'none' }}
-          accept="*/*"
-        />
+        <input ref={fileInputRef} type="file" multiple onChange={handleFileSelect} style={{ display: 'none' }} />
 
-        <textarea
-          ref={textareaRef}
-          className={styles.textarea}
-          placeholder={uploading ? 'Uploading...' : placeholder}
-          value={message}
-          onChange={handleInput}
-          onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
-          rows={1}
-          disabled={uploading}
-          maxLength={MAX_MESSAGE_LENGTH}
-        />
+        <div className={styles.textareaWrapper}>
+          <textarea
+            ref={textareaRef}
+            className={styles.textarea}
+            placeholder={uploading ? 'Uploading...' : placeholder}
+            value={message}
+            onChange={handleInput}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            rows={1}
+            disabled={uploading}
+            maxLength={MAX_MESSAGE_LENGTH}
+          />
+        </div>
 
         <div className={styles.actions}>
           <div className={styles.pickerWrapper}>
-            <Tooltip content="Add GIF" position="top">
-              <button
-                type="button"
-                ref={gifButtonRef}
-                className={styles.iconButton}
-                onClick={() => {
-                  setShowGifPicker(!showGifPicker)
-                  setShowEmojiPicker(false)
-                }}
-                aria-label="Add GIF"
-              >
-                <ImageIcon size={20} />
-              </button>
+            <Tooltip content="GIF" position="top">
+              <button type="button" ref={gifButtonRef} className={styles.iconButton} onClick={() => setShowGifPicker(!showGifPicker)}><ImageIcon size={20} /></button>
             </Tooltip>
-            {showGifPicker && (
-              <GifPicker
-                onSelect={handleGifSelect}
-                onClose={() => setShowGifPicker(false)}
-                anchorElement={gifButtonRef.current}
-              />
-            )}
+            {showGifPicker && <GifPicker onSelect={handleGifSelect} onClose={() => setShowGifPicker(false)} anchorElement={gifButtonRef.current} />}
           </div>
 
           <div className={styles.pickerWrapper}>
-            <Tooltip content="Add emoji" position="top">
-              <button
-                type="button"
-                ref={emojiButtonRef}
-                className={styles.iconButton}
-                onClick={() => {
-                  setShowEmojiPicker(!showEmojiPicker)
-                  setShowGifPicker(false)
-                }}
-                aria-label="Add emoji"
-              >
-                <Smile size={20} />
-              </button>
+            <Tooltip content="Emoji" position="top">
+              <button type="button" ref={emojiButtonRef} className={styles.iconButton} onClick={() => setShowEmojiPicker(!showEmojiPicker)}><Smile size={20} /></button>
             </Tooltip>
-            {showEmojiPicker && (
-              <EmojiPicker
-                onSelect={handleEmojiSelect}
-                onClose={() => setShowEmojiPicker(false)}
-                anchorElement={emojiButtonRef.current}
-              />
-            )}
+            {showEmojiPicker && <EmojiPicker onSelect={handleEmojiSelect} onClose={() => setShowEmojiPicker(false)} anchorElement={emojiButtonRef.current} />}
           </div>
 
-          <div className={styles.pickerWrapper}>
-            <Tooltip content="Add sticker" position="top">
-              <button
-                type="button"
-                className={styles.iconButton}
-                onClick={() => {
-                  setShowStickerPicker(!showStickerPicker)
-                  setShowEmojiPicker(false)
-                  setShowGifPicker(false)
-                }}
-                aria-label="Add sticker"
-              >
-                <Sparkles size={20} />
-              </button>
-            </Tooltip>
-            {showStickerPicker && (
-              <StickerPicker
-                isOpen={showStickerPicker}
-                onClose={() => setShowStickerPicker(false)}
-                onStickerSelect={(emoji) => handleEmojiSelect(emoji)}
-                onSuperReaction={() => { }}
-              />
-            )}
-          </div>
+          <Tooltip content="Sticker" position="top">
+            <button type="button" className={`${styles.iconButton} ${styles.magicButton}`} onClick={() => setShowStickerPicker(!showStickerPicker)}><Sparkles size={20} /></button>
+          </Tooltip>
+          {showStickerPicker && <StickerPicker isOpen={true} onClose={() => setShowStickerPicker(false)} onStickerSelect={handleEmojiSelect} onSuperReaction={() => {}} />}
 
           {onVoiceClick && (
-            <Tooltip content="Send voice message" position="top">
-              <button type="button" className={styles.iconButton} onClick={onVoiceClick} aria-label="Send voice message">
+            <Tooltip content="Voice Message" position="top">
+              <button type="button" className={styles.iconButton} onClick={onVoiceClick}>
                 <Volume2 size={20} />
               </button>
             </Tooltip>
           )}
 
-          {message.length >= 1600 && (
-            <span className={`${styles.charCount} ${message.length >= MAX_MESSAGE_LENGTH ? styles.charCountLimit : ''}`}>
-              {message.length}/{MAX_MESSAGE_LENGTH}
-            </span>
-          )}
-
-          <Button
-            variant="primary"
-            size="md"
-            onClick={handleSend}
-            disabled={!message.trim() && attachments.length === 0}
-            loading={uploading}
-            className={styles.sendButton}
-          >
+          <Button variant="primary" size="md" onClick={handleSend} disabled={!message.trim() && attachments.length === 0} loading={uploading} className={styles.sendButton}>
             <Send size={18} />
           </Button>
         </div>

@@ -3,7 +3,7 @@
  */
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { getMe, updateMe, getUser, getMyGuilds, getMyFriends, deleteMe, updateE2EEKeys, getE2EEKeys, updateEmail, updatePassword, enable2FA, verify2FA } from '../controllers/user.controller';
+import { getMe, updateMe, getUser, getMyGuilds, getMyFriends, deleteMe, updateE2EEKeys, getE2EEKeys, updateEmail, updatePassword, enable2FA, verify2FA, getMutuals } from '../controllers/user.controller';
 import { cacheResponse } from '../middleware/performance';
 
 const router = Router();
@@ -27,5 +27,6 @@ router.post('/me/2fa/verify', verify2FA);
 // Other users (public profile)
 router.get('/:userId', cacheResponse(300), getUser);
 router.get('/:userId/e2ee', cacheResponse(300), getE2EEKeys);
+router.get('/:userId/mutuals', getMutuals);
 
 export default router;

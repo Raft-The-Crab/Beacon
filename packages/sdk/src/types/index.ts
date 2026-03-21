@@ -1,4 +1,5 @@
 // Beacon Type Definitions
+export * from './channels';
 
 // ============================================================================
 // WebSocket Protocol Types
@@ -37,10 +38,10 @@ export type WSEventType =
   | 'GUILD_CREATE'
   | 'GUILD_UPDATE'
   | 'GUILD_DELETE'
-  | 'MEMBER_ADD'
   | 'MEMBER_REMOVE'
   | 'MEMBER_UPDATE'
   | 'ERROR'
+  | 'WEBRTC_SIGNAL'
 
 export interface WSPayload<T = any> {
   op: WSOpCode
@@ -72,55 +73,30 @@ export interface WSErrorPayload {
 }
 
 // ============================================================================
-// Core Domain Types
+// Core Domain Types & Structures
 // ============================================================================
 
-export type PresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible'
+import { User, RawUser, PresenceStatus } from '../structures/User';
+import { Guild } from '../structures/Guild';
+import { Message, Attachment, Embed } from '../structures/Message';
+import { RawGuildMember } from '../structures/GuildMember';
 
-export interface MusicMetadata {
-  url: string
-  start: number
-  duration: 15 | 30
-  title: string
-  artist: string
-  platform: 'spotify' | 'youtube' | 'unknown'
-}
+export * from '../structures/User';
+export * from '../structures/Guild';
+export * from '../structures/Channel';
+export * from '../structures/Message';
+export * from '../structures/GuildMember';
 
-export interface User {
-  id: string
-  username: string
-  discriminator: string
-  avatar: string | null
-  email: string
-  status: PresenceStatus
-  customStatus: string | null
-  statusText?: string
-  statusEmoji?: string
-  statusMusic?: string
-  statusMusicMetadata?: MusicMetadata
-  theme?: string
-  bio?: string | null
-  banner?: string | null
-  developerMode?: boolean
-}
+// Re-export common aliases
+export type Server = Guild;
 
-export interface Guild {
+export interface ServerFolder {
   id: string
   name: string
-  icon: string | null
-  banner: string | null
-  ownerId: string
-  createdAt: string
-  memberCount?: number
-  members?: User[]
-  channels?: Channel[]
-  boostCount?: number
-  boostLevel?: number
-  vanityUrl?: string | null
+  guildIds: string[]
+  color?: string
+  position: number
 }
-
-// Server is an alias for Guild
-export type Server = Guild
 
 export interface Presence {
   userId: string
@@ -135,29 +111,38 @@ export interface Presence {
   lastSeen?: string
 }
 
-export interface Channel {
+export interface RawPermissionOverwrite {
   id: string
-  guildId: string
-  name: string
-  type: 'text' | 'voice' | 'category' | 'stage'
-  position: number
-  parentId?: string
-  topic?: string
-  nsfw: boolean
-  slowmode: number
+  type: number // 0 for role, 1 for member
+  allow: string
+  deny: string
 }
 
-export interface Message {
+export interface FetchMessagesOptions {
+  limit?: number;
+  before?: string;
+  after?: string;
+}
+
+export interface RawAttachment {
   id: string
-  channelId: string
-  authorId: string
-  content: string
-  attachments: Attachment[]
-  embeds: Embed[]
-  mentions: string[]
-  replyTo?: string
-  editedAt?: string
-  createdAt: string
+  filename: string
+  size: number
+  url: string
+  content_type?: string
+}
+
+export interface RawReaction {
+  count: number
+  me: boolean
+  emoji: { id: string | null; name: string | null; animated?: boolean }
+}
+
+export interface SelectMenuOptionData {
+  label: string
+  value: string
+  description?: string
+  default?: boolean
 }
 
 export interface MessageReaction {
@@ -168,26 +153,6 @@ export interface MessageReaction {
 // Extend Message with optional runtime fields used by clients
 export interface MessageWithExtras extends Message {
   reactions?: MessageReaction[]
-  pinned?: boolean
-}
-
-export interface Attachment {
-  id: string
-  filename: string
-  size: number
-  url: string
-  contentType: string
-}
-
-export interface Embed {
-  title?: string
-  description?: string
-  color?: number
-  image?: { url: string }
-  thumbnail?: { url: string }
-  fields?: { name: string; value: string; inline?: boolean }[]
-  footer?: { text: string }
-  timestamp?: string
 }
 
 export interface Role {
@@ -200,6 +165,19 @@ export interface Role {
   permissions: string
   hoist?: boolean
   mentionable?: boolean
+}
+
+export interface RawRole {
+  id: string
+  guild_id?: string
+  name: string
+  color: number
+  icon?: string
+  position: number
+  permissions: string
+  hoist: boolean
+  managed: boolean
+  mentionable: boolean
 }
 
 export type Permission =
@@ -229,14 +207,6 @@ export type Permission =
   | 'MOVE_MEMBERS'
   | 'USE_VOICE_ACTIVITY'
   | 'PRIORITY_SPEAKER'
-
-export interface Member {
-  userId: string
-  guildId: string
-  nick?: string
-  roles: string[]
-  joinedAt: string
-}
 
 export interface VoiceState {
   userId: string
@@ -279,30 +249,40 @@ export interface PaginatedResponse<T> {
 // Permission System
 // ============================================================================
 
-export enum PermissionBit {
-  ADMINISTRATOR = 1 << 0,
-  MANAGE_SERVER = 1 << 1,
-  MANAGE_ROLES = 1 << 2,
-  MANAGE_CHANNELS = 1 << 3,
-  KICK_MEMBERS = 1 << 4,
-  BAN_MEMBERS = 1 << 5,
-  CREATE_INVITE = 1 << 6,
-  MANAGE_NICKNAMES = 1 << 7,
-  MANAGE_MESSAGES = 1 << 8,
-  SEND_MESSAGES = 1 << 9,
-  EMBED_LINKS = 1 << 10,
-  ATTACH_FILES = 1 << 11,
-  ADD_REACTIONS = 1 << 12,
-  USE_EXTERNAL_EMOJIS = 1 << 13,
-  MENTION_EVERYONE = 1 << 14,
-  MANAGE_WEBHOOKS = 1 << 15,
-  VIEW_CHANNELS = 1 << 16,
-  CONNECT_VOICE = 1 << 17,
-  SPEAK_VOICE = 1 << 18,
-  MUTE_MEMBERS = 1 << 19,
-  DEAFEN_MEMBERS = 1 << 20,
-  MOVE_MEMBERS = 1 << 21,
-}
+export const PermissionBit = {
+  ADMINISTRATOR: 1n << 0n,
+  MANAGE_SERVER: 1n << 1n,
+  MANAGE_ROLES: 1n << 2n,
+  MANAGE_CHANNELS: 1n << 3n,
+  KICK_MEMBERS: 1n << 4n,
+  BAN_MEMBERS: 1n << 5n,
+  CREATE_INVITE: 1n << 6n,
+  CHANGE_NICKNAME: 1n << 7n,
+  MANAGE_NICKNAMES: 1n << 8n,
+  MANAGE_MESSAGES: 1n << 9n,
+  SEND_MESSAGES: 1n << 10n,
+  EMBED_LINKS: 1n << 11n,
+  ATTACH_FILES: 1n << 12n,
+  ADD_REACTIONS: 1n << 13n,
+  USE_EXTERNAL_EMOJIS: 1n << 14n,
+  MENTION_EVERYONE: 1n << 15n,
+  MANAGE_WEBHOOKS: 1n << 16n,
+  VIEW_CHANNELS: 1n << 17n,
+  SEND_TTS_MESSAGES: 1n << 18n,
+  CONNECT_VOICE: 1n << 19n,
+  SPEAK_VOICE: 1n << 20n,
+  MUTE_MEMBERS: 1n << 21n,
+  DEAFEN_MEMBERS: 1n << 22n,
+  MOVE_MEMBERS: 1n << 23n,
+  USE_VOICE_ACTIVITY: 1n << 24n,
+  PRIORITY_SPEAKER: 1n << 25n,
+  STREAM: 1n << 26n,
+  VIEW_AUDIT_LOG: 1n << 27n,
+  READ_MESSAGE_HISTORY: 1n << 28n,
+  MODERATE_MEMBERS: 1n << 29n,
+} as const;
+
+export type PermissionBitType = typeof PermissionBit[keyof typeof PermissionBit];
 
 // ============================================================================
 // Moderation Types
@@ -335,4 +315,167 @@ export interface MessageSearchResult {
   messages: Message[]
   total: number
   hasMore: boolean
+}
+
+// ============================================================================
+// Invite Types
+// ============================================================================
+
+export interface Invite {
+  code: string
+  guildId: string
+  channelId: string
+  inviterId?: string
+  maxAge?: number
+  maxUses?: number
+  uses?: number
+  temporary?: boolean
+  createdAt: string
+  expiresAt?: string | null
+}
+
+// ============================================================================
+// Audit Log Types
+// ============================================================================
+
+export interface AuditLogEntry {
+  id: string
+  guildId: string
+  userId: string
+  targetId?: string
+  actionType: number
+  reason?: string
+  changes?: { key: string; old?: any; new?: any }[]
+  createdAt: string
+}
+
+// ============================================================================
+// Scheduled Event Types
+// ============================================================================
+
+export interface ScheduledEvent {
+  id: string
+  guildId: string
+  channelId?: string
+  name: string
+  description?: string
+  scheduledStartTime: string
+  scheduledEndTime?: string
+  status: 'SCHEDULED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+  entityType: 'STAGE_INSTANCE' | 'VOICE' | 'EXTERNAL'
+  entityMetadata?: { location?: string }
+  creatorId?: string
+  userCount?: number
+}
+
+// ============================================================================
+// Webhook Types
+// ============================================================================
+
+export interface Webhook {
+  id: string
+  guildId: string
+  channelId: string
+  name: string
+  avatar?: string | null
+  token?: string
+  type: 'incoming' | 'channel_follower'
+  createdAt: string
+}
+
+// ============================================================================
+// Bot & Interaction Types
+// ============================================================================
+export enum ApplicationCommandType {
+  CHAT_INPUT = 1,
+  USER = 2,
+  MESSAGE = 3,
+}
+
+export enum ApplicationCommandOptionType {
+  SUB_COMMAND = 1,
+  SUB_COMMAND_GROUP = 2,
+  STRING = 3,
+  INTEGER = 4,
+  BOOLEAN = 5,
+  USER = 6,
+  CHANNEL = 7,
+  ROLE = 8,
+  MENTIONABLE = 9,
+  NUMBER = 10,
+  ATTACHMENT = 11,
+}
+
+export enum InteractionType {
+  PING = 1,
+  APPLICATION_COMMAND = 2,
+  MESSAGE_COMPONENT = 3,
+  APPLICATION_COMMAND_AUTOCOMPLETE = 4,
+  MODAL_SUBMIT = 5,
+}
+
+export interface Interaction {
+  id: string
+  applicationId: string
+  type: InteractionType
+  data?: any
+  guildId?: string
+  channelId?: string
+  member?: RawGuildMember
+  user?: User
+  token: string
+  version: number
+  message?: Message
+}
+
+export interface InteractionOption {
+  name: string
+  type: number
+  value?: string | number | boolean
+  options?: InteractionOption[]
+}
+
+export interface RawInteraction {
+  id: string
+  application_id: string
+  type: number
+  data?: {
+    id: string
+    name: string
+    type: ApplicationCommandType
+    options?: InteractionOption[]
+    resolved?: any // For user/channel/role options
+    custom_id?: string
+    component_type?: number
+    values?: string[]
+  }
+  guild_id?: string
+  channel_id: string
+  member?: RawGuildMember
+  user?: RawUser
+  token: string
+  version: number
+}
+
+export enum InteractionResponseType {
+  PONG = 1,
+  CHANNEL_MESSAGE_WITH_SOURCE = 4,
+  DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5,
+  DEFERRED_UPDATE_MESSAGE = 6,
+  UPDATE_MESSAGE = 7,
+  APPLICATION_COMMAND_AUTOCOMPLETE_RESULT = 8,
+  MODAL = 9,
+}
+
+export interface InteractionResponse {
+  type: InteractionResponseType
+  data?: {
+    tts?: boolean
+    content?: string
+    embeds?: Embed[]
+    allowed_mentions?: any
+    flags?: number
+    components?: any[]
+    attachments?: Attachment[]
+  }
 }
