@@ -15,7 +15,8 @@
     "start:clawcloud": "node server-clawcloud.js",
     "test": "node --test tests/*.test.js",
     "lint": "eslint src --ext ts",
-    "prisma:generate": "node scripts/prisma-generate-retry.cjs"
+    "prisma:generate": "node scripts/prisma-generate-retry.cjs",
+    "prisma:generate:direct": "prisma generate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1000.0",

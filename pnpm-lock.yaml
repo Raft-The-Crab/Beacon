@@ -93,9 +93,6 @@ importers:
 
   apps/desktop:
     dependencies:
-      '@beacon/types':
-        specifier: file:../../packages/types
-        version: link:../../packages/types
       '@tauri-apps/api':
         specifier: ^2.0.0
         version: 2.10.1
@@ -112,9 +109,6 @@ importers:
 
   apps/mobile:
     dependencies:
-      '@beacon/types':
-        specifier: file:../../packages/types
-        version: link:../../packages/types
       '@capacitor/android':
         specifier: ^7.0.0
         version: 7.5.0(@capacitor/core@7.5.0)
@@ -422,8 +416,6 @@ importers:
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
-
-  packages/types: {}
 
 packages:
 
