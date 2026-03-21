@@ -1,6 +1,6 @@
 {
   "name": "beacon-sdk",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "type": "module",
   "description": "Official TypeScript SDK for the Beacon platform, bots, apps, gateway clients, and rich interactions",
   "main": "./dist/index.js",
@@ -64,7 +64,6 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "beacon-types": "file:../types",
     "axios": "^1.6.0",
     "eventemitter3": "^5.0.4",
     "isomorphic-ws": "^5.0.0",

@@ -2,7 +2,7 @@
  * beacon-sdk — Official Bot SDK for Beacon
  */
 
-// Core types (Consolidated)
+// Core types (Consolidated — includes all beacon-types definitions)
 export * from './types/index';
 
 // SDK API Client (Consolidated)

@@ -403,9 +403,6 @@ importers:
       axios:
         specifier: ^1.6.0
         version: 1.13.5
-      beacon-types:
-        specifier: file:../types
-        version: link:../types
       eventemitter3:
         specifier: ^5.0.4
         version: 5.0.4

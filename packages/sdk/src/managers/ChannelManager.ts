@@ -3,7 +3,7 @@ import { Channel } from '../structures/Channel';
 import { Message } from '../structures/Message';
 import { Collection } from '../structures/Collection';
 import { TTLCache } from '../cache/TTLCache';
-import type { FetchMessagesOptions } from 'beacon-types';
+import type { FetchMessagesOptions } from '../types/index';
 
 export interface CreateChannelOptions {
     name: string;
