@@ -39,7 +39,6 @@ export default defineConfig(({ mode }) => {
 
   resolve: {
     alias: {
-      'beacon-types': path.resolve(__dirname, '../../packages/types/src'),
       'beacon.js': path.resolve(__dirname, '../../packages/sdk/src'),
       'stream': path.resolve(__dirname, '../../packages/sdk/src/stubs/stream.ts'),
       'opusscript': path.resolve(__dirname, '../../packages/sdk/src/stubs/opusscript.ts'),
@@ -144,7 +143,7 @@ export default defineConfig(({ mode }) => {
       'framer-motion',
       'lucide-react',
     ],
-    exclude: ['beacon-types', 'beacon.js'],
+    exclude: ['beacon.js'],
   },
 
   esbuild: {

@@ -1,4 +1,4 @@
-import { PermissionBit } from '@beacon/types'
+import { PermissionBit } from 'beacon-sdk'
 import { prisma, redis } from '../db'
 
 export class PermissionService {

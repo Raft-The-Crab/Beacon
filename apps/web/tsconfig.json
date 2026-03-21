@@ -19,8 +19,6 @@
     "baseUrl": ".",
     "paths": {
       "beacon.js": ["../../packages/sdk/src/index.ts"],
-      "beacon.js/*": ["../../packages/sdk/src/*"],
-      "beacon-types": ["../../packages/types/src/index.ts"],
       "@beacon/*": ["../../packages/*/src/index.ts"],
       "@/*": ["./src/*"]
     }
