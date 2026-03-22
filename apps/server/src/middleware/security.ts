@@ -258,6 +258,7 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
   if (
     path.endsWith('/api/auth/login') ||
     path.endsWith('/api/auth/register') ||
+    path.endsWith('/api/auth/resend-verification') ||
     path.endsWith('/api/auth/mfa/verify') ||
     path.endsWith('/api/auth/refresh') ||
     path.endsWith('/api/csrf-token') ||
