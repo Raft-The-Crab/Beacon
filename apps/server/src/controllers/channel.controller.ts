@@ -5,6 +5,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../db';
 import { publishGatewayEvent } from '../services/gatewayPublisher';
 import { generateInviteCode, generateShortId } from '../utils/id';
+import { Permissions, hasPermission, computePermissions } from '../utils/permissions';
 
 export async function createChannel(req: Request, res: Response) {
   const userId = req.user?.id;
@@ -16,14 +17,26 @@ export async function createChannel(req: Request, res: Response) {
     // Check if user is owner or has MANAGE_CHANNELS
     const guild = await prisma.guild.findUnique({
       where: { id: guildId },
-      include: { members: { where: { userId } } }
+      include: { 
+        members: { 
+          where: { userId },
+          include: { roles: true }
+        },
+        roles: true
+      }
     });
 
     if (!guild) return res.status(404).json({ error: 'Guild not found' });
-    // For now, allow owner or anyone if we haven't strictly enforced perm bits here
-    if (guild.ownerId !== userId) {
-      // Basic check for MVP, in production we'd check permission bits
-      // return res.status(403).json({ error: 'Insufficient permissions' });
+
+    // Enforce permissions: Check if owner or has MANAGE_CHANNELS bits
+    const member = guild.members[0];
+    const isOwner = guild.ownerId === userId;
+    // @everyone permissions are already in guild.roles if it's not a specific member role
+    const permissions = member ? computePermissions(member.roles as any) : BigInt(0);
+    const canManage = hasPermission(permissions, Permissions.MANAGE_CHANNELS);
+
+    if (!isOwner && !canManage) {
+      return res.status(403).json({ error: 'You do not have permission to manage channels in this server.' });
     }
 
     const channel = await prisma.channel.create({
@@ -132,6 +145,7 @@ export async function createChannelInvite(req: Request, res: Response) {
       data: {
         code,
         guildId: channel.guildId || '',
+        channelId: channel.id,
         inviterId: userId,
         maxUses,
         uses: 0,

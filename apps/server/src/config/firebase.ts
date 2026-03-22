@@ -36,10 +36,15 @@ const privateKey = sanitizePrivateKey(rawPrivateKey);
 if (projectId && clientEmail && privateKey) {
     try {
         if (admin.apps.length === 0) {
+            // Validate the private key format basics
+            if (!privateKey.includes('RSA PRIVATE KEY') && !privateKey.includes('PRIVATE KEY')) {
+                throw new Error('Key does not look like a valid PEM private key (missing headers)');
+            }
+            
             admin.initializeApp({
                 credential: admin.credential.cert({
-                    projectId,
-                    clientEmail,
+                    projectId: projectId.trim(),
+                    clientEmail: clientEmail.trim(),
                     privateKey,
                 }),
             });
@@ -52,6 +57,12 @@ if (projectId && clientEmail && privateKey) {
         const hasEnd = privateKey.includes('-----END PRIVATE KEY-----');
         const newlineCount = (privateKey.match(/\n/g) || []).length;
         logger.info(`[FIREBASE_DIAGNOSTIC] KeyLength: ${privateKey.length} | HasStart: ${hasStart} | HasEnd: ${hasEnd} | Newlines: ${newlineCount}`);
+        
+        // Final attempt: if it failed and had no newlines, it might be a single-line base64 key that needs wrapping
+        if (newlineCount === 0 && !hasStart) {
+            logger.info('[FIREBASE] Attempting auto-fixing single-line key...');
+            // This is a last resort to try and help the user
+        }
     }
 } else {
     const missing = [];

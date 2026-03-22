@@ -500,6 +500,10 @@ class RedisService {
     return await this.safe(() => this.client.hget(key, field), null, 'hget');
   }
 
+  async hmget(key: string, ...fields: string[]) {
+    return await this.safe(() => this.client.hmget(key, ...fields), [], 'hmget');
+  }
+
   async hgetall(key: string) {
     return await this.safe(() => this.client.hgetall(key), {}, 'hgetall');
   }

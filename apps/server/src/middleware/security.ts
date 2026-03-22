@@ -364,7 +364,14 @@ export function getFingerprint(req: Request) {
     ip: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown',
     ua: req.headers['user-agent'] || 'unknown',
     lang: req.headers['accept-language'] || 'unknown',
-    host: req.headers.host || 'unknown',
-    ts: Date.now()
+    host: req.headers.host || 'unknown'
   }
+}
+
+/** Generate a stable hash from a fingerprint for session hardening */
+export function hashFingerprint(req: Request): string {
+  const fp = getFingerprint(req)
+  // We exclude timestamp and host to keep it stable for the session duration
+  const raw = `${fp.ip}|${fp.ua}|${fp.lang}`
+  return crypto.createHash('sha256').update(raw).digest('hex')
 }

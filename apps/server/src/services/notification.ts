@@ -1,5 +1,11 @@
 import nodemailer from 'nodemailer';
 import { logger } from './logger';
+import dns from 'dns';
+
+// Force IPv4 first for all connections in this process to avoid ENETUNREACH on IPv6-only/misconfigured hosts
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const MAX_RETRIES = 3;
 const RETRY_BASE_DELAY = 1000; // ms
@@ -72,28 +78,50 @@ export class NotificationService {
     }
   }
 
-  /** Verify SMTP connection on first use */
+  /** Verify SMTP connection on first use with automatic port failover */
   static async ensureConnection() {
     if (this._verified) return;
     const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
-    const port = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10);
+    const initialPort = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10);
     const user = process.env.EMAIL_USER || process.env.SMTP_USER;
 
     if (!user || !(process.env.EMAIL_PASS || process.env.SMTP_PASS)) {
-      logger.warn(`[EMAIL] No credentials configured for ${host}:${port} — running in dry-run mode`);
+      logger.warn(`[EMAIL] No credentials configured for ${host}:${initialPort} — running in dry-run mode`);
       return;
     }
 
-    try {
-      logger.info(`[EMAIL] Attempting to verify SMTP at ${host}:${port}...`);
-      await this.transporter.verify();
-      this._verified = true;
-      logger.success(`[EMAIL] SMTP connection verified successfully for ${user} at ${host}`);
-    } catch (err: any) {
-      logger.error(`[EMAIL] SMTP verification failed for ${host}:${port}: ${err.message}`);
-      if (err.code === 'EAUTH') {
-        logger.error('[EMAIL] Authentication failed — If using Gmail, make sure to use an APP PASSWORD.');
+    const tryConnect = async (port: number): Promise<boolean> => {
+      try {
+        logger.info(`[EMAIL] Attempting to verify SMTP at ${host}:${port}...`);
+        
+        // Re-create transporter for the specific port if needed
+        if (port !== initialPort) {
+          (this as any).transporter = (nodemailer.createTransport as any)({
+            ...((this as any).transporter.options),
+            port,
+            secure: port === 465
+          });
+        }
+
+        await this.transporter.verify();
+        this._verified = true;
+        logger.success(`[EMAIL] SMTP connection verified successfully for ${user} at ${host}:${port}`);
+        return true;
+      } catch (err: any) {
+        logger.error(`[EMAIL] SMTP verification failed for ${host}:${port}: ${err.message}`);
+        return false;
       }
+    };
+
+    const success = await tryConnect(initialPort);
+    
+    // If initial port failed and was 465, try 587 as fallback
+    if (!success && initialPort === 465) {
+      logger.info('[EMAIL] Port 465 failed, attempting fallback to 587 (STARTTLS)...');
+      await tryConnect(587);
+    } else if (!success && initialPort === 587) {
+      logger.info('[EMAIL] Port 587 failed, attempting fallback to 465 (SSL)...');
+      await tryConnect(465);
     }
   }
 

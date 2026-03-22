@@ -154,6 +154,7 @@
 
     .mainContent {
         border-radius: 0;
+        min-width: 0;
         padding-bottom: calc(60px + env(safe-area-inset-bottom));
         box-sizing: border-box;
     }

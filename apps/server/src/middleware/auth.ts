@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from 'express'
 import { AuthService } from '../services/auth'
 import { prisma } from '../db'
+import { hashFingerprint } from './security'
+import { logger } from '../services/logger'
 
-export interface AuthRequest extends Request<any, any, any, any> {
-  user?: { id: string }
+export type AuthRequest = Request & {
+  user: { id: string; fph?: string; [key: string]: any }
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -15,7 +17,19 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
-  const payload = AuthService.verifyToken(token) as { id: string } | null
+  const payload = AuthService.verifyToken(token) as { id: string, fph?: string } | null
+
+  // Triple-check Fingerprint for Session Hardening
+  if (payload?.fph) {
+    const sidSig = req.cookies?.sid_sig;
+    const currentFpHash = hashFingerprint(req);
+
+    if (sidSig !== payload.fph || currentFpHash !== payload.fph) {
+      logger.warn(`[AUTH] Session hijack attempt blocked for User ${payload.id}: Fingerprint mismatch.`);
+      // If there's a mismatch, we reject the session
+      return res.status(401).json({ error: 'Session binding error (Fingerprint mismatch)' });
+    }
+  }
 
   // Support for Bot Tokens
   if (!payload && token.startsWith('beacon/bot_')) {

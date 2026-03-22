@@ -301,7 +301,7 @@ model Message {
   replies     Message[]    @relation("MessageReplies")
   thread      Thread?      @relation(fields: [threadId], references: [id])
 
-  @@index([channelId])
+  @@index([channelId, createdAt])
   @@index([authorId])
   @@index([createdAt])
 }

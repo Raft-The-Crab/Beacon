@@ -103,7 +103,14 @@ router.get('/:id/bot', localAuthenticate, async (req: AuthRequest, res: Response
 
 router.patch('/:id/bot', localAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const userId = req.user?.id
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
         const { id } = req.params
+        const app = await prisma.application.findUnique({ where: { id } })
+        if (!app) return res.status(404).json({ error: 'Application not found' })
+        if (app.ownerId !== userId) return res.status(403).json({ error: 'Unauthorized' })
+
         const bot = await AppsService.updateBot(id, req.body)
         res.json(bot)
     } catch (error) {
@@ -113,7 +120,14 @@ router.patch('/:id/bot', localAuthenticate, async (req: AuthRequest, res: Respon
 
 router.post('/:id/bot/token', localAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const userId = req.user?.id
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
         const { id } = req.params
+        const app = await prisma.application.findUnique({ where: { id } })
+        if (!app) return res.status(404).json({ error: 'Application not found' })
+        if (app.ownerId !== userId) return res.status(403).json({ error: 'Unauthorized' })
+
         const bot = await AppsService.regenerateBotToken(id)
         res.json({ token: bot.token })
     } catch (error) {
@@ -123,7 +137,14 @@ router.post('/:id/bot/token', localAuthenticate, async (req: AuthRequest, res: R
 
 router.delete('/:id/bot', localAuthenticate, async (req: AuthRequest, res: Response) => {
     try {
+        const userId = req.user?.id
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
         const { id } = req.params
+        const app = await prisma.application.findUnique({ where: { id } })
+        if (!app) return res.status(404).json({ error: 'Application not found' })
+        if (app.ownerId !== userId) return res.status(403).json({ error: 'Unauthorized' })
+
         await AppsService.deleteBot(id)
         res.status(204).end()
     } catch (error) {

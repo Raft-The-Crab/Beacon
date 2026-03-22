@@ -190,57 +190,64 @@ router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: AuthRequest
       return res.status(400).json({ error: 'Insufficient Beacoins' })
     }
 
-    // Check if user already has an active subscription
-    const currentPremium = await db.userPremium.findUnique({ where: { userId } })
-    const now = new Date()
-    const activeSubscription = currentPremium?.expiresAt && currentPremium.expiresAt > now
+    // Execute atomic transaction
+    const { finalExpiresAt, transaction } = await db.$transaction(async (tx) => {
+      // 1. Double check balance inside tx for strict safety
+      const txWallet = await tx.beacoinWallet.findUnique({ where: { userId } })
+      if (!txWallet || txWallet.balance < cost) throw new Error('Insufficient balance (Race condition avoided)')
 
-    // Determine new expiration
-    const startFrom = activeSubscription ? new Date(currentPremium.expiresAt) : new Date()
-    const expiresAt = new Date(startFrom)
-    expiresAt.setMonth(expiresAt.getMonth() + (tier === 'yearly' ? 12 : 1))
+      // 2. Determine new expiration
+      const currentPremium = await tx.userPremium.findUnique({ where: { userId } })
+      const now = new Date()
+      const activeSubscription = currentPremium?.expiresAt && currentPremium.expiresAt > now
+      const startFrom = activeSubscription ? new Date(currentPremium.expiresAt) : now
+      const expiresAt = new Date(startFrom)
+      expiresAt.setMonth(expiresAt.getMonth() + (tier === 'yearly' ? 12 : 1))
 
-    // Deduct coins
-    await db.beacoinWallet.update({
-      where: { userId },
-      data: { balance: { decrement: cost } },
-    })
+      // 3. Deduct coins
+      await tx.beacoinWallet.update({
+        where: { userId },
+        data: { balance: { decrement: cost } },
+      })
 
-    // Record transaction
-    const transaction = await db.beacoinTransaction.create({
-      data: {
-        walletId: wallet.id,
-        fromUserId: userId,
-        toUserId: userId,
-        amount: cost,
-        type: 'SPEND' as BeacoinTxType,
-        reason: `Beacon+ ${tier} subscription`,
-      },
-    })
+      // 4. Record transaction
+      const txRecord = await tx.beacoinTransaction.create({
+        data: {
+          walletId: txWallet.id,
+          fromUserId: userId,
+          toUserId: userId,
+          amount: cost,
+          type: 'SPEND' as BeacoinTxType,
+          reason: `Beacon+ ${tier} subscription (Manual purchase)`,
+        },
+      })
 
-    // Update user to mark as Beacon+ subscriber
-    await db.user.update({
-      where: { id: userId },
-      data: {
-        isBeaconPlus: true,
-        beaconPlusSince: new Date(),
-      },
-    })
+      // 5. Update user to mark as Beacon+ subscriber
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          isBeaconPlus: true,
+          beaconPlusSince: now,
+        },
+      })
 
-    // Upsert UserPremium
-    await db.userPremium.upsert({
-      where: { userId },
-      create: {
-        userId,
-        tier: PremiumTier.PREMIUM,
-        expiresAt,
-        purchasedWith: cost,
-      },
-      update: {
-        tier: PremiumTier.PREMIUM,
-        expiresAt,
-        purchasedWith: cost,
-      }
+      // 6. Upsert UserPremium
+      await tx.userPremium.upsert({
+        where: { userId },
+        create: {
+          userId,
+          tier: PremiumTier.PREMIUM,
+          expiresAt,
+          purchasedWith: cost,
+        },
+        update: {
+          tier: PremiumTier.PREMIUM,
+          expiresAt,
+          purchasedWith: cost,
+        }
+      })
+
+      return { finalExpiresAt: expiresAt, transaction: txRecord }
     })
 
     res.json({
@@ -248,7 +255,7 @@ router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: AuthRequest
       cost,
       appliedCoupon: promoResult.code,
       discountPercent: promoResult.discountPercent,
-      expiresAt,
+      expiresAt: finalExpiresAt,
       transaction: {
         id: transaction.id,
         type: 'spend',
@@ -257,9 +264,9 @@ router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: AuthRequest
         timestamp: transaction.createdAt,
       },
     })
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Internal server error' })
+  } catch (err: any) {
+    console.error('[BEACOIN] Subscription error:', err)
+    res.status(500).json({ error: err.message || 'Internal server error' })
   }
 })
 

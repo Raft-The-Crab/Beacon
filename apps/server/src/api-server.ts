@@ -152,7 +152,7 @@ export class BeaconServer {
                     upgradeInsecureRequests: [],
                 },
             },
-            crossOriginOpenerPolicy: { policy: "unsafe-none" },
+            crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
             crossOriginResourcePolicy: { policy: "cross-origin" },
             hsts: process.env.NODE_ENV === 'production' ? {
                 maxAge: 31536000,
@@ -178,6 +178,25 @@ export class BeaconServer {
         this.app.use(ipBlockMiddleware);
         this.app.use('/api/', generalLimiter);
         this.app.use(responseWrapper);
+        
+        // v3: Cloudinary HTTPS rewriting middleware — fixes legacy insecure URLs in database
+        this.app.use((_req, res, next) => {
+            const originalSend = res.send;
+            res.send = function(body) {
+                if (typeof body === 'string' && body.includes('http://res.cloudinary.com')) {
+                    body = body.replace(/http:\/\/res\.cloudinary\.com/g, 'https://res.cloudinary.com');
+                } else if (body && typeof body === 'object' && !Buffer.isBuffer(body)) {
+                    // For JSON responses already parsed
+                    let bodyStr = JSON.stringify(body);
+                    if (bodyStr.includes('http://res.cloudinary.com')) {
+                        bodyStr = bodyStr.replace(/http:\/\/res\.cloudinary\.com/g, 'https://res.cloudinary.com');
+                        return originalSend.call(this, JSON.parse(bodyStr));
+                    }
+                }
+                return originalSend.call(this, body);
+            };
+            next();
+        });
 
         // Parse cookies BEFORE body parsers for CSRF validation
         this.app.use(cookieParser());

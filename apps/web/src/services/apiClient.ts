@@ -457,6 +457,14 @@ class ApiClient {
         return this.request('POST', '/interactions', data);
     }
 
+    async updateBot(applicationId: string, data: { name?: string; avatar?: string; description?: string }) {
+        return this.request('PATCH', `/applications/${applicationId}/bot`, data);
+    }
+
+    async regenerateBotToken(applicationId: string) {
+        return this.request('POST', `/applications/${applicationId}/bot/token`);
+    }
+
 
 
 }

@@ -458,7 +458,7 @@ export async function updateEmail(req: Request, res: Response) {
 }
 
 const UpdatePasswordSchema = z.object({
-  oldPassword: z.string().min(1, 'Current password is required'),
+  oldPassword: z.string().optional(),
   newPassword: z.string().min(8, 'New password must be at least 8 characters')
 });
 
@@ -468,10 +468,17 @@ export async function updatePassword(req: Request, res: Response) {
   try {
     const { oldPassword, newPassword } = UpdatePasswordSchema.parse(req.body);
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.password === undefined) return res.status(404).json({ error: 'User not found' });
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
-    if (!isMatch) return res.status(401).json({ error: 'Invalid current password' });
+    const hasExistingPassword = !!user.password && user.password.length > 0;
+    
+    if (hasExistingPassword) {
+      if (!oldPassword) {
+        return res.status(400).json({ error: 'Current password is required to set a new one' });
+      }
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) return res.status(401).json({ error: 'Invalid current password' });
+    }
 
     const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await prisma.user.update({

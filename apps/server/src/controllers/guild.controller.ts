@@ -727,9 +727,8 @@ export class GuildController {
                 where: {
                     userId_guildId: {
                         userId,
-                        guildId,
-                        roles: { some: { name: '@everyone' } }
-                    } as any
+                        guildId
+                    }
                 }
             });
 

@@ -152,17 +152,34 @@ export class AuthService {
     if (!prisma) throw new Error('Database not available')
 
     const identifier = data.identifier.trim()
-    const user = await prisma.user.findFirst({
-        where: {
-            OR: [
-                { email: { equals: identifier, mode: 'insensitive' } },
-                { username: { equals: identifier, mode: 'insensitive' } }
-            ]
+    let user;
+
+    // Handle username#discriminator format
+    if (identifier.includes('#')) {
+      const [username, discriminator] = identifier.split('#');
+      logger.info(`[AUTH] Attempting login with discriminator: ${username}#${discriminator}`);
+      user = await prisma.user.findUnique({
+        where: { 
+          username_discriminator: { 
+            username: username.trim(), 
+            discriminator: discriminator.trim() 
+          } 
         }
-    })
+      });
+    } else {
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: { equals: identifier, mode: 'insensitive' } },
+            { username: { equals: identifier, mode: 'insensitive' } }
+          ]
+        }
+      });
+    }
 
     if (!user) {
-      throw new Error('Invalid credentials')
+      logger.warn(`[AUTH] Login failed: User not found for identifier "${identifier}"`);
+      throw new Error('Invalid credentials');
     }
 
     // Guard: password-less accounts (Google login) cannot use credential login
@@ -215,21 +232,23 @@ export class AuthService {
     return jwt.sign({ id: userId, type: 'refresh' }, JWT_SECRET, { expiresIn: '30d' })
   }
 
-  static generateToken(userId: string) {
-    return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: '7d' })
+  static generateToken(userId: string, fingerprintHash?: string) {
+    const payload: any = { id: userId };
+    if (fingerprintHash) payload.fph = fingerprintHash;
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
   }
 
   /** Generate both access and refresh tokens in one call */
-  static generateTokenPair(userId: string) {
+  static generateTokenPair(userId: string, fingerprintHash?: string) {
     return {
-      accessToken: this.generateToken(userId),
+      accessToken: this.generateToken(userId, fingerprintHash),
       refreshToken: this.generateRefreshToken(userId)
     }
   }
 
   static verifyToken(token: string) {
     try {
-      return jwt.verify(token, JWT_SECRET) as { id: string }
+      return jwt.verify(token, JWT_SECRET) as { id: string, fph?: string }
     } catch (err) {
       return null
     }
@@ -247,6 +266,7 @@ export class AuthService {
     const { password, twoFactorSecret, ...safeUser } = user
     return {
       ...safeUser,
+      hasPassword: !!password,
       theme: safeUser.theme || 'dark', // Prevent frontend crashes on null theme
       badges: normalizeUserBadges(safeUser.badges, safeUser.isBeaconPlus),
     }

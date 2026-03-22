@@ -7,6 +7,7 @@ export interface Bot {
     token?: string // Only returned on creation/regeneration
     applicationId: string
     ownerId: string
+    description?: string
     createdAt: string
 }
 
@@ -17,6 +18,7 @@ const normalizeBot = (payload: any, applicationId: string, fallbackName: string 
     token: payload?.token,
     applicationId: payload?.applicationId || applicationId,
     ownerId: payload?.ownerId || '',
+    description: payload?.description || payload?.bio,
     createdAt: payload?.createdAt || new Date().toISOString(),
 })
 
@@ -44,7 +46,7 @@ export const botsApi = {
         return app.bot ? [normalizeBot(app.bot, applicationId, app.name || 'Beacon Bot')] : []
     },
 
-    update: async (applicationId: string, data: Partial<{ name: string; avatar: string }>) => {
+    update: async (applicationId: string, data: Partial<{ name: string; avatar: string; description: string }>) => {
         const res = await apiClient.request('PATCH', `/applications/${applicationId}/bot`, data)
         if (!res.success || !res.data) {
             throw new Error(res.error || 'Failed to update bot')

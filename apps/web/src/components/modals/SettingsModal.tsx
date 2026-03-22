@@ -529,14 +529,19 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                             </div>
                             {!showEmailForm && <Button variant="secondary" size="sm" onClick={() => setShowEmailForm(true)}>Change Email</Button>}
                         </div>
-
                         <div className={styles.securityItem}>
                             <div className={styles.securityInfo}>
                                 <h3>Password</h3>
-                                <p className={styles.muted}>Keep your account secure with a strong password.</p>
+                                <p className={styles.muted}>
+                                    {(user as any)?.hasPassword 
+                                        ? 'Keep your account secure with a strong password.' 
+                                        : 'Account currently uses social login. Set a password to enable credential sign-in.'}
+                                </p>
                                 {showPasswordForm && (
                                     <div className={styles.inlineForm}>
-                                        <Input label="Current Password" type="password" value={oldPassword} onChange={(e: any) => setOldPassword(e.target.value)} />
+                                        {(user as any)?.hasPassword && (
+                                            <Input label="Current Password" type="password" value={oldPassword} onChange={(e: any) => setOldPassword(e.target.value)} />
+                                        )}
                                         <Input label="New Password" type="password" value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} />
                                         <Input label="Confirm New Password" type="password" value={confirmPassword} onChange={(e: any) => setConfirmPassword(e.target.value)} />
                                         <div className={styles.formActions}>
@@ -549,7 +554,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
                             {!showPasswordForm && (
                                 <Button variant="secondary" size="sm" onClick={() => setShowPasswordForm(true)}>
                                     <Lock size={16} />
-                                    Change Password
+                                    {(user as any)?.hasPassword ? 'Change Password' : 'Set Password'}
                                 </Button>
                             )}
                         </div>

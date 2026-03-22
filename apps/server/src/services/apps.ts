@@ -128,19 +128,32 @@ export class AppsService {
         })
     }
 
-    static async updateBot(applicationId: string, data: { name?: string; avatar?: string }) {
+    static async updateBot(applicationId: string, data: { name?: string; avatar?: string; description?: string }) {
         const bot = await prisma.bot.findUnique({
             where: { applicationId }
         })
         if (!bot) throw new Error('Bot not found')
 
-        // Update the backing user details
+        // 1. Update the Application record
+        if (data.name !== undefined || data.avatar !== undefined || data.description !== undefined) {
+            await prisma.application.update({
+                where: { id: applicationId },
+                data: {
+                    name: data.name,
+                    icon: data.avatar,
+                    description: data.description
+                }
+            })
+        }
+
+        // 2. Update the backing User record
         return await prisma.user.update({
             where: { id: bot.userId },
             data: {
                 username: data.name ? data.name.slice(0, 32) : undefined,
                 displayName: data.name,
-                avatar: data.avatar
+                avatar: data.avatar,
+                bio: data.description
             }
         })
     }

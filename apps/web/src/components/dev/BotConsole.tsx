@@ -27,6 +27,7 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
     const [editingBot, setEditingBot] = useState<BotModel | null>(null)
     const [editName, setEditName] = useState('')
     const [editAvatar, setEditAvatar] = useState('')
+    const [editDescription, setEditDescription] = useState('')
     const [updating, setUpdating] = useState(false)
     
     const myServers = useServerStore(state => state.servers || [])
@@ -182,7 +183,8 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
         try {
             const updated = await botsApi.update(applicationId, {
                 name: editName,
-                avatar: editAvatar || undefined
+                avatar: editAvatar || undefined,
+                description: editDescription || undefined
             })
             setBots(bots.map(b => b.id === updated.id ? updated : b))
             setEditingBot(null)
@@ -309,6 +311,7 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                                     setEditingBot(bot)
                                     setEditName(bot.name)
                                     setEditAvatar(bot.avatar || '')
+                                    setEditDescription(bot.description || '')
                                 }}
                                 title="Edit Bot"
                             >
@@ -373,6 +376,16 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                                     value={editAvatar} 
                                     onChange={e => setEditAvatar(e.target.value)}
                                     placeholder="https://..."
+                                />
+                            </div>
+                            <div className={styles.field}>
+                                <label>Description</label>
+                                <textarea 
+                                    value={editDescription} 
+                                    onChange={e => setEditDescription(e.target.value)}
+                                    placeholder="What does your bot do?"
+                                    className={styles.textarea}
+                                    rows={3}
                                 />
                             </div>
                             <div className={styles.actions}>
