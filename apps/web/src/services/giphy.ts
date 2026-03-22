@@ -16,10 +16,14 @@ export interface GiphySearchResponse {
     pagination: { total_count: number; count: number; offset: number }
 }
 
-const GIPHY_CONFIGURED_KEY =
-    import.meta.env.VITE_GIPHY_API_KEY ||
-    ''
 const GIPHY_API_BASE = 'https://api.giphy.com/v1/gifs'
+
+const getApiKey = (tier: GiphyUsageTier): string => {
+    if (tier === 'beacon_plus') {
+        return import.meta.env.VITE_GIPHY_API_KEY_PLUS || import.meta.env.VITE_GIPHY_API_KEY || '';
+    }
+    return import.meta.env.VITE_GIPHY_API_KEY_FREE || import.meta.env.VITE_GIPHY_API_KEY || '';
+};
 const GIPHY_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
 const GIPHY_RATE_LIMIT_FREE = 100
 const GIPHY_RATE_LIMIT_BEACON_PLUS = 240
@@ -113,7 +117,7 @@ class GifService {
     async searchGifs(query: string, limit = 20, offset = 0, options: GiphyRequestOptions = {}): Promise<GiphySearchResponse> {
         const tier = options.tier || 'free'
         const params = new URLSearchParams({
-            api_key: GIPHY_CONFIGURED_KEY,
+            api_key: getApiKey(tier),
             q: query,
             limit: limit.toString(),
             offset: offset.toString(),
@@ -127,7 +131,7 @@ class GifService {
     async getTrending(limit = 20, offset = 0, options: GiphyRequestOptions = {}): Promise<GiphySearchResponse> {
         const tier = options.tier || 'free'
         const params = new URLSearchParams({
-            api_key: GIPHY_CONFIGURED_KEY,
+            api_key: getApiKey(tier),
             limit: limit.toString(),
             offset: offset.toString(),
             rating: 'g'
