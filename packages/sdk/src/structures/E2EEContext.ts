@@ -20,9 +20,8 @@ export class E2EEContext {
         privateKey: privateKey.toString('base64')
       };
     } else {
-      // Browser - X25519 support in subtle crypto is limited in some browsers, 
-      // but we use crypto-browserify as a polyfill in the vite config.
-      const crypto = (await import(/* @vite-ignore */ 'crypto')).default || await import(/* @vite-ignore */ 'crypto');
+      // Browser - NO vite-ignore here so the alias works!
+      const crypto = (await import('crypto')).default || await import('crypto');
       const { publicKey, privateKey } = (crypto as any).generateKeyPairSync('x25519', {
         publicKeyEncoding: { type: 'spki', format: 'der' },
         privateKeyEncoding: { type: 'pkcs8', format: 'der' }
@@ -38,8 +37,8 @@ export class E2EEContext {
     if (typeof window === 'undefined') {
       return await import(/* @vite-ignore */ 'node:crypto');
     }
-    // In browser, we expect 'crypto' to be polyfilled or available globally
-    return (await import(/* @vite-ignore */ 'crypto')).default || await import(/* @vite-ignore */ 'crypto');
+    // Browser - NO vite-ignore here!
+    return (await import('crypto')).default || await import('crypto');
   }
 
   public async encrypt(content: string, recipientPublicKeyBase64: string, privateKeyBase64: string): Promise<string> {
