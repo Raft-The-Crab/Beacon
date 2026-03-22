@@ -45,7 +45,10 @@ export default defineConfig(({ mode }) => {
         'opusscript': path.resolve(__dirname, '../../packages/sdk/src/stubs/opusscript.ts'),
         '@': path.resolve(__dirname, './src'),
         'crypto': 'crypto-browserify',
+        'node:crypto': 'crypto-browserify',
         'buffer': 'buffer',
+        'node:buffer': 'buffer',
+        'process': 'process/browser',
       },
     },
 
