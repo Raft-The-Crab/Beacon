@@ -274,8 +274,16 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
   // Enforce CSRF for mutation requests — require both header and cookie to match.
    if (!token || !cookieToken || token !== cookieToken) {
     const origin = req.headers.origin || 'no-origin'
-    console.warn(`[CSRF] 403 Forbidden | Method: ${req.method} | Path: ${req.path} | Origin: ${origin} | Header: ${!!token} | Cookie: ${!!cookieToken} | Match: ${token === cookieToken}`)
-    res.status(403).json({ error: 'Invalid CSRF token' })
+    const referer = req.headers.referer || 'no-referer'
+    console.warn(`[CSRF] 403 Forbidden | Method: ${req.method} | Path: ${req.path} | Origin: ${origin} | Referer: ${referer} | Header: ${!!token} | Cookie: ${!!cookieToken} | Match: ${token === cookieToken}`)
+    res.status(403).json({ 
+      error: 'Invalid CSRF token', 
+      debug: { 
+        origin, 
+        method: req.method,
+        path: req.path
+      } 
+    })
     return
   }
 

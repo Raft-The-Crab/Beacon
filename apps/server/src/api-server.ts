@@ -84,17 +84,31 @@ export class BeaconServer {
         this.app.use(requestId);
         
         // CORS Configuration
-        // Always allow *.pages.dev for dynamic frontend deploys
-        const cfPagesRegex = /\.pages\.dev$/i;
+        // Dynamic origin detection for Cloudflare and custom domains.
+        // This ensures that new subdomains on .qzz.io or .pages.dev work automatically.
+        const allowedOrigins = (process.env.CORS_ORIGIN || '').split(',').map(o => o.trim().toLowerCase()).filter(Boolean);
+        const dynamicDomainRegex = /\.(qzz\.io|pages\.dev)$/i;
+
         this.app.use(cors({
             origin: (origin, callback) => {
                 if (!origin) return callback(null, true);
                 const normalized = origin.toLowerCase().trim();
-                if (
-                    normalized === 'http://localhost:5173' ||
-                    normalized === 'http://127.0.0.1:5173' ||
-                    cfPagesRegex.test(normalized)
-                ) {
+                
+                // 1. Check explicit list from .env
+                const isAllowedExplicitly = allowedOrigins.includes(normalized);
+                
+                // 2. Check dynamic domains (*.qzz.io, *.pages.dev)
+                const isDynamicAllowed = dynamicDomainRegex.test(normalized) || 
+                                       normalized.endsWith('.qzz.io') || 
+                                       normalized.endsWith('.pages.dev');
+                
+                // 3. Check localhost for development
+                const isLocal = normalized === 'http://localhost:5173' || 
+                               normalized === 'http://127.0.0.1:5173' ||
+                               normalized.startsWith('http://localhost:') ||
+                               normalized.startsWith('http://127.0.0.1:');
+
+                if (isAllowedExplicitly || isDynamicAllowed || isLocal) {
                     logger.success(`[CORS] \u2705 Allowed: ${origin}`);
                     callback(null, true);
                 } else {
@@ -111,7 +125,7 @@ export class BeaconServer {
             credentials: true,
             methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token', 'x-request-id', 'accept', 'x-client-version', 'x-requested-with'],
-            exposedHeaders: ['x-request-id'],
+            exposedHeaders: ['x-request-id', 'x-csrf-token'],
             maxAge: 86400 // Cache preflight for 24 hours
         }));
 
@@ -126,13 +140,13 @@ export class BeaconServer {
             contentSecurityPolicy: {
                 directives: {
                     defaultSrc: ["'self'"],
-                    scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://*.qzz.io'],
+                    scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://*.qzz.io', 'https://*.firebaseapp.com', 'https://*.googleapis.com'],
                     styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://*.qzz.io'],
                     fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
-                    imgSrc: ["'self'", 'data:', 'https:', 'blob:', 'https://*.qzz.io', 'https://*.railway.app'],
-                    mediaSrc: ["'self'", 'blob:', 'https:', 'https://*.qzz.io', 'https://*.railway.app'],
-                    connectSrc: ["'self'", 'wss:', 'https:', 'http://localhost:*', 'ws://localhost:*', 'https://*.qzz.io', 'https://*.railway.app'],
-                    frameSrc: ["'self'", 'https://*.qzz.io'],
+                    imgSrc: ["'self'", 'data:', 'https:', 'blob:', 'https://*.qzz.io', 'https://*.railway.app', 'https://*.cloudinary.com'],
+                    mediaSrc: ["'self'", 'blob:', 'https:', 'https://*.qzz.io', 'https://*.railway.app', 'https://*.cloudinary.com'],
+                    connectSrc: ["'self'", 'wss:', 'https:', 'http://localhost:*', 'ws://localhost:*', 'https://*.qzz.io', 'https://*.railway.app', 'https://*.firebaseio.com', 'https://*.googleapis.com'],
+                    frameSrc: ["'self'", 'https://*.qzz.io', 'https://*.firebaseapp.com'],
                     objectSrc: ["'none'"],
                     upgradeInsecureRequests: [],
                 },
@@ -144,6 +158,7 @@ export class BeaconServer {
                 includeSubDomains: true,
                 preload: true
             } : false,
+            referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
             xContentTypeOptions: true,
             xFrameOptions: { action: 'deny' },
             permittedCrossDomainPolicies: { permittedPolicies: 'none' },
@@ -151,7 +166,7 @@ export class BeaconServer {
 
         // v3: Permissions-Policy — restrict sensitive browser APIs
         this.app.use((_req: any, res: express.Response, next: express.NextFunction) => {
-            res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()');
+            res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=()');
             next();
         });
 
