@@ -28,6 +28,8 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
     const [editName, setEditName] = useState('')
     const [editAvatar, setEditAvatar] = useState('')
     const [editDescription, setEditDescription] = useState('')
+    const [editBanner, setEditBanner] = useState('')
+    const [editAccentColor, setEditAccentColor] = useState('')
     const [updating, setUpdating] = useState(false)
     
     const myServers = useServerStore(state => state.servers || [])
@@ -184,7 +186,9 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
             const updated = await botsApi.update(applicationId, {
                 name: editName,
                 avatar: editAvatar || undefined,
-                description: editDescription || undefined
+                description: editDescription || undefined,
+                banner: editBanner || undefined,
+                accentColor: editAccentColor || undefined
             })
             setBots(bots.map(b => b.id === updated.id ? updated : b))
             setEditingBot(null)
@@ -312,6 +316,8 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                                     setEditName(bot.name)
                                     setEditAvatar(bot.avatar || '')
                                     setEditDescription(bot.description || '')
+                                    setEditBanner(bot.banner || '')
+                                    setEditAccentColor(bot.accentColor || '')
                                 }}
                                 title="Edit Bot"
                             >
@@ -386,6 +392,24 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                                     placeholder="What does your bot do?"
                                     className={styles.textarea}
                                     rows={3}
+                                />
+                            </div>
+                            <div className={styles.field}>
+                                <label>Banner URL</label>
+                                <input 
+                                    type="text" 
+                                    value={editBanner} 
+                                    onChange={e => setEditBanner(e.target.value)}
+                                    placeholder="https://..."
+                                />
+                            </div>
+                            <div className={styles.field}>
+                                <label>Accent Color (Hex)</label>
+                                <input 
+                                    type="text" 
+                                    value={editAccentColor} 
+                                    onChange={e => setEditAccentColor(e.target.value)}
+                                    placeholder="#5865f2"
                                 />
                             </div>
                             <div className={styles.actions}>

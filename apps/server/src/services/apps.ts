@@ -128,7 +128,7 @@ export class AppsService {
         })
     }
 
-    static async updateBot(applicationId: string, data: { name?: string; avatar?: string; description?: string }) {
+    static async updateBot(applicationId: string, data: { name?: string; avatar?: string; description?: string; banner?: string; accentColor?: string }) {
         const bot = await prisma.bot.findUnique({
             where: { applicationId }
         })
@@ -153,7 +153,9 @@ export class AppsService {
                 username: data.name ? data.name.slice(0, 32) : undefined,
                 displayName: data.name,
                 avatar: data.avatar,
-                bio: data.description
+                bio: data.description,
+                banner: data.banner,
+                accentColor: data.accentColor
             }
         })
     }

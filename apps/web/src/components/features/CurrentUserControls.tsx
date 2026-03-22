@@ -72,7 +72,7 @@ export function CurrentUserControls() {
         }
     }, [])
 
-    if (!isAuthenticated) return null
+    if (!isAuthenticated || !user) return null
 
     return (
         <div className={styles.userArea}>

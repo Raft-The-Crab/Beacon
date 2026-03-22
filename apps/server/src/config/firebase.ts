@@ -16,19 +16,24 @@ function sanitizePrivateKey(key: string | undefined): string | null {
         sanitized = sanitized.slice(1, -1);
     }
 
-    // 2. Handle escaped newlines (e.g., actual characters \ and n)
+    // 2. Handle escaped newlines (both literal \n and actual newlines)
+    // Some platforms pass it as "line1\nline2" while others pass it as "line1\\nline2"
     sanitized = sanitized.replace(/\\n/g, '\n');
 
-    // 3. Ensure it has the headers if they are missing but the key content is there
-    // Note: Some platforms strip them or they get lost in copy-paste
-    if (!sanitized.includes('-----BEGIN PRIVATE KEY-----')) {
-        sanitized = `-----BEGIN PRIVATE KEY-----\n${sanitized}`;
-    }
-    if (!sanitized.includes('-----END PRIVATE KEY-----')) {
-        sanitized = `${sanitized}\n-----END PRIVATE KEY-----\n`;
-    }
+    // 3. Robust PEM reconstruction
+    // If it's a single line (no newlines) but has headers, it might be smashed together
+    const header = '-----BEGIN PRIVATE KEY-----';
+    const footer = '-----END PRIVATE KEY-----';
+    
+    // Remove headers/footers temporarily to clean the core base64 content
+    let core = sanitized
+        .replace(header, '')
+        .replace(footer, '')
+        .replace(/\s+/g, ''); // Remove ALL whitespace/newlines from the base64 part
 
-    return sanitized;
+    // Reconstruct with standard 64-char wrapping if possible, or just keep it as one block
+    // Firebase Admin SDK is usually okay with a single-line base64 string between headers
+    return `${header}\n${core}\n${footer}\n`;
 }
 
 const privateKey = sanitizePrivateKey(rawPrivateKey);

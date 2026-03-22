@@ -275,19 +275,22 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
   const cookieToken = req.cookies?.[CSRF_COOKIE]
 
   // Enforce CSRF for mutation requests — require both header and cookie to match.
-   if (!token || !cookieToken || token !== cookieToken) {
+  if (!token || !cookieToken || token !== cookieToken) {
     const origin = req.headers.origin || 'no-origin'
     const referer = req.headers.referer || 'no-referer'
-    console.warn(`[CSRF] 403 Forbidden | Method: ${req.method} | Path: ${req.path} | Origin: ${origin} | Referer: ${referer} | Header: ${!!token} | Cookie: ${!!cookieToken} | Match: ${token === cookieToken}`)
-    res.status(403).json({ 
-      error: 'Invalid CSRF token', 
+    
+    // LOGGING: include whether it's a mismatch or missing
+    console.warn(`[CSRF] 403 Forbidden | Method: ${req.method} | Path: ${req.path} | Origin: ${origin} | Referer: ${referer} | Header: ${token ? 'present' : 'missing'} | Cookie: ${cookieToken ? 'present' : 'missing'} | Match: ${token === cookieToken}`)
+    
+    return res.status(403).json({ 
+      error: 'Invalid or missing CSRF token. Please refresh the page and try again.', 
       debug: { 
         origin, 
         method: req.method,
-        path: req.path
+        path: req.path,
+        refreshRequired: true // Hint to front-end to retry
       } 
     })
-    return
   }
 
   next()
@@ -371,7 +374,9 @@ export function getFingerprint(req: Request) {
 /** Generate a stable hash from a fingerprint for session hardening */
 export function hashFingerprint(req: Request): string {
   const fp = getFingerprint(req)
-  // We exclude timestamp and host to keep it stable for the session duration
-  const raw = `${fp.ip}|${fp.ua}|${fp.lang}`
+  // v3.1 modification: We exclude IP from the stable hash by default to support
+  // mobile users switching networks (e.g. WiFi -> 5G). 
+  // We still bind to User-Agent and Language to prevent basic replay/hijacks.
+  const raw = `${fp.ua}|${fp.lang}`
   return crypto.createHash('sha256').update(raw).digest('hex')
 }
