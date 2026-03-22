@@ -50,7 +50,7 @@ router.get('/test-email', async (req, res) => {
 router.get('/csrf-token', (req, res) => {
   const token = generateCSRFToken()
   const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1'
-   const isProduction = process.env.NODE_ENV === 'production'
+  const isProduction = process.env.NODE_ENV === 'production' || !!process.env.RAILWAY_ENVIRONMENT_NAME;
   res.cookie('csrf_token', token, {
     httpOnly: false,
     secure: isProduction,

@@ -128,9 +128,9 @@ export function CelebrationAnimation() {
 
       {/* Epic Title Reveal */}
       <motion.div
-        initial={{ scale: 2, filter: 'blur(20px)', opacity: 0, y: -100 }}
+        initial={{ scale: 3, filter: 'blur(30px)', opacity: 0, y: -200 }}
         animate={{ scale: 1, filter: 'blur(0px)', opacity: 1, y: -50 }}
-        transition={{ type: 'spring', damping: 12, stiffness: 100, delay: 0.2 }}
+        transition={{ type: 'spring', damping: 10, stiffness: 150, delay: 0.2 }}
         className={styles.rewardLabel}
         style={{ position: 'absolute', top: '50%', width: '100%', textAlign: 'center', pointerEvents: 'none', zIndex: 100 }}
       >

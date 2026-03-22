@@ -247,6 +247,7 @@ export class AuthService {
     const { password, twoFactorSecret, ...safeUser } = user
     return {
       ...safeUser,
+      theme: safeUser.theme || 'dark', // Prevent frontend crashes on null theme
       badges: normalizeUserBadges(safeUser.badges, safeUser.isBeaconPlus),
     }
   }

@@ -26,21 +26,6 @@ export function Login() {
   const [username, setUsername] = useState('')
   const [profilePreview, setProfilePreview] = useState<{ avatar: string | null; username: string } | null>(null)
 
-  const continueAsGuest = () => {
-    const guestUser = {
-      id: `guest-${Date.now()}`,
-      username: 'Guest User',
-      discriminator: '0000',
-      avatar: null,
-      email: 'guest@local.beacon',
-      status: 'online' as const,
-      customStatus: 'Offline Mode',
-    }
-
-    setUser(guestUser as any)
-    showToast('Entered offline mode (backend not required)', 'info')
-    navigate('/channels/@me')
-  }
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -190,7 +175,14 @@ export function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, staggerChildren: 0.1 }}
+            className={styles.formContent}
+          >
           {mfaRequired ? (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Input
               label="Verification Code"
               placeholder="000000"
@@ -202,9 +194,11 @@ export function Login() {
               required
               autoFocus
             />
+            </motion.div>
           ) : (
             <>
               {!isLogin && !isForgotPassword && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Input
               label="Username"
               placeholder="Choose a username"
@@ -214,8 +208,10 @@ export function Login() {
               icon={<User size={18} />}
               required
             />
+            </motion.div>
           )}
 
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Input
             label="Email"
             type="email"
@@ -229,8 +225,10 @@ export function Login() {
             onChange={(e) => setEmail(e.currentTarget.value)}
             required
           />
+          </motion.div>
 
               {!isForgotPassword && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 <Input
                   label="Password"
                   type="password"
@@ -240,9 +238,11 @@ export function Login() {
                   onChange={(e) => setPassword(e.currentTarget.value)}
                   required
                 />
+                </motion.div>
               )}
             </>
           )}
+          </motion.div>
 
           {isLogin && !isForgotPassword && !mfaRequired && (
             <div className={styles.forgotPassword}>

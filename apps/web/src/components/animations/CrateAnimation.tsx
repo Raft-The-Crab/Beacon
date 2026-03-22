@@ -103,11 +103,12 @@ export function CrateAnimation({ isOpen, onComplete, reward }: CrateAnimationPro
               ? { y: 0, scale: 1, rotateX: 0, rotateY: 0 }
               : phase === 'shaking'
               ? {
-                  y: [0, -20, 20, -20, 20, -10, 10, -5, 5, 0],
-                  x: [0, -15, 15, -15, 15, -10, 10, -5, 5, 0],
-                  rotateX: [0, -10, 10, -15, 15, -10, 10, 0],
-                  rotateY: [0, -15, 15, -20, 20, -10, 10, 0],
-                  scale: [1, 1.05, 1.1, 1.15, 1.2, 1.25], // Bulge before burst
+                  y: [0, -25, 25, -25, 30, -15, 15, -10, 10, -5, 5, 0],
+                  x: [0, -20, 20, -30, 30, -20, 20, -10, 10, -5, 5, 0],
+                  rotateX: [0, -15, 15, -25, 25, -15, 15, -10, 10, 0],
+                  rotateY: [0, -20, 20, -30, 30, -20, 20, -10, 10, 0],
+                  scale: [1, 1.05, 1.05, 1.1, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35],
+                  filter: ['brightness(1)', 'brightness(1.5)', 'brightness(1)', 'brightness(2)', 'brightness(1)'],
                 }
               : phase === 'bursting'
               ? { scale: 1.5, opacity: 0, filter: 'brightness(3)' }

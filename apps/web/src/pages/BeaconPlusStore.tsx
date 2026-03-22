@@ -462,7 +462,13 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
                                 const effectiveItemPrice = getEffectivePrice(item.price)
 
                                 return (
-                                    <div key={item.id} className={styles.cosmeticCard} style={{ '--accent': accentColor } as any}>
+                                    <motion.div 
+                                      key={item.id} 
+                                      className={styles.cosmeticCard} 
+                                      style={{ '--accent': accentColor } as any}
+                                      whileHover={{ scale: 1.02, y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
+                                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                                    >
                                         <div className={styles.cosmeticPreview} style={{ background: activeTab === 'themes' ? `linear-gradient(135deg, rgba(10, 14, 24, 0.96), ${accentColor}22)` : activeTab === 'effects' ? `radial-gradient(circle at center, ${accentColor}20, transparent)` : 'transparent' }}>
                                             {activeTab === 'themes' ? (
                                                 <div style={{ width: '100%', height: '100%', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: 'white', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
@@ -513,7 +519,7 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
                                                 )}
                                             </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 )
                             })}
                         </div>
@@ -525,9 +531,21 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
             {gifting && <GiftingModal item={gifting} onClose={() => setGifting(null)} />}
 
             {/* Purchase Confirmation Dialog */}
+            <AnimatePresence>
             {showPurchaseConfirm && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-                    <div style={{ background: 'var(--bg-secondary)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 'var(--radius-xl)', padding: '32px', maxWidth: 400, width: '90%', textAlign: 'center' }}>
+                <motion.div 
+                  initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+                  animate={{ opacity: 1, backdropFilter: 'blur(4px)' }}
+                  exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+                  style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}
+                >
+                    <motion.div 
+                      initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                      exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                      style={{ background: 'var(--bg-secondary)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 'var(--radius-xl)', padding: '32px', maxWidth: 400, width: '90%', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}
+                    >
                         <Crown size={48} style={{ color: 'var(--beacon-brand)', marginBottom: 16 }} />
                         <h2 style={{ margin: '0 0 8px', fontWeight: 700 }}>Confirm Purchase</h2>
                         <p style={{ color: 'var(--text-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
@@ -537,9 +555,11 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
                             <Button variant="ghost" onClick={() => setShowPurchaseConfirm(false)}>Cancel</Button>
                             <Button variant="primary" onClick={confirmPurchasePlus}>Confirm Purchase</Button>
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
             )}
+            </AnimatePresence>
         </div>
     )
 }
+

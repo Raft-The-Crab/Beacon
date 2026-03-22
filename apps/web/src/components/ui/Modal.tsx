@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { motion } from 'framer-motion'
 import styles from '../../styles/modules/ui/Modal.module.css'
 
 interface ModalProps {
@@ -113,14 +114,19 @@ export function Modal({
   if (!mounted) return null
 
   const modalContent = (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       className={`${styles.overlay} ${isClosing ? styles.closing : ''}`}
       onClick={handleBackdropClick}
-      ref={focusRef}
+      ref={focusRef as any}
     >
-      <div
+      <motion.div
+        initial={{ scale: 0.96, opacity: 0, y: 15 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 350, damping: 25 }}
         className={`${styles.modal} ${styles[size]} ${transparent ? styles.transparent : ''} ${className}`}
-        ref={modalRef}
+        ref={modalRef as any}
       >
         {!hideHeader && title && (
           <div className={styles.header}>
@@ -137,8 +143,8 @@ export function Modal({
         <div className={`${styles.content} ${noPadding ? styles.noPadding : ''} ${!scrollable ? styles.noScroll : ''}`}>
           {children}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 
   return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null
