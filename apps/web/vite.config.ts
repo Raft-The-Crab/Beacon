@@ -37,14 +37,21 @@ export default defineConfig(({ mode }) => {
     tailwindPlugin,
   ],
 
-  resolve: {
     alias: {
       'beacon-sdk': path.resolve(__dirname, '../../packages/sdk/src'),
       'beacon.js': path.resolve(__dirname, '../../packages/sdk/src'),
       'stream': path.resolve(__dirname, '../../packages/sdk/src/stubs/stream.ts'),
       'opusscript': path.resolve(__dirname, '../../packages/sdk/src/stubs/opusscript.ts'),
       '@': path.resolve(__dirname, './src'),
+      'crypto': 'crypto-browserify',
+      'buffer': 'buffer',
     },
+  },
+  define: {
+    global: 'globalThis',
+    'process.env': {},
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '3.0.3'),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
   server: {
     port: 5173,
