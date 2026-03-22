@@ -325,16 +325,24 @@ export let server: any;
 
 // v3: Safe instantiation with global error capture
 try {
+    console.log('>>> [BOOT] Starting BeaconServer...');
     logger.info('[Boot] Initializing BeaconServer instance...');
+    
     const instance = new BeaconServer();
     
     // Assign to exported variables
     app = instance.app;
     server = instance.server;
     
+    console.log('>>> [BOOT] Server instance created. Calling listen()...');
     logger.info('[Boot] Internal routes mounted, starting listener...');
-    instance.listen().catch(err => {
+    
+    instance.listen().then(() => {
+        console.log('>>> [BOOT] Server is now listening!');
+    }).catch(err => {
+        console.error('>>> [BOOT] FATAL: listen() failed', err);
         logger.error(`[Fatal] Listen failed during startup: ${err.message}`);
+        if (err.stack) console.error(err.stack);
         process.exit(1);
     });
 } catch (err: any) {
@@ -342,5 +350,6 @@ try {
     console.error('!!! FATAL STARTUP ERROR: UNABLE TO BOOT SERVER');
     console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     console.error(err);
+    if (err.stack) console.error(err.stack);
     process.exit(1);
 }
