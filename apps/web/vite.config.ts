@@ -32,138 +32,135 @@ export default defineConfig(({ mode }) => {
   const tailwindPlugin = tailwindcss() as any
 
   return {
-  plugins: [
-    reactPlugin,
-    tailwindPlugin,
-  ],
-
-    alias: {
-      'beacon-sdk': path.resolve(__dirname, '../../packages/sdk/src'),
-      'beacon.js': path.resolve(__dirname, '../../packages/sdk/src'),
-      'stream': path.resolve(__dirname, '../../packages/sdk/src/stubs/stream.ts'),
-      'opusscript': path.resolve(__dirname, '../../packages/sdk/src/stubs/opusscript.ts'),
-      '@': path.resolve(__dirname, './src'),
-      'crypto': 'crypto-browserify',
-      'buffer': 'buffer',
-    },
-  },
-  define: {
-    global: 'globalThis',
-    'process.env': {},
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '3.0.3'),
-    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
-  },
-  server: {
-    port: 5173,
-    host: true,
-    fs: {
-      allow: [workspaceRoot, path.resolve(__dirname, '../../assets')],
-    },
-    allowedHosts: [
-      'localhost',
-      '127.0.0.1',
-      'beacon.qzz.io',
-      'www.beacon.qzz.io',
-      '.devtunnels.ms',
-      '.asse.devtunnels.ms',
+    plugins: [
+      reactPlugin,
+      tailwindPlugin,
     ],
-    strictPort: true,
-    hmr: {
-      overlay: true,
-    },
-    proxy: {
-      '/api': {
-        target: apiProxyTarget,
-        changeOrigin: true,
-        timeout: 10000,
+
+    resolve: {
+      alias: {
+        'beacon-sdk': path.resolve(__dirname, '../../packages/sdk/src'),
+        'beacon.js': path.resolve(__dirname, '../../packages/sdk/src'),
+        'stream': path.resolve(__dirname, '../../packages/sdk/src/stubs/stream.ts'),
+        'opusscript': path.resolve(__dirname, '../../packages/sdk/src/stubs/opusscript.ts'),
+        '@': path.resolve(__dirname, './src'),
+        'crypto': 'crypto-browserify',
+        'buffer': 'buffer',
       },
-      '/gateway': {
-        target: gatewayProxyTarget,
-        ws: true,
-        changeOrigin: true,
-      }
-    }
-  },
+    },
 
-  preview: {
-    port: 4173,
-    host: true,
-  },
+    define: {
+      global: 'globalThis',
+      'process.env': {},
+      __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '3.0.3'),
+      __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    },
 
-  build: {
-    target: 'esnext',
-    outDir: 'dist',
-    assetsDir: 'assets',
-    minify: 'esbuild',
-    sourcemap: false,
-    chunkSizeWarningLimit: 600,
-    assetsInlineLimit: 4096,
-    cssCodeSplit: true,
-    reportCompressedSize: true,
-    
-    rollupOptions: {
-      external: ['wrtc'],
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) {
-            return 'react-vendor';
-          }
-          if (id.includes('node_modules/react-router')) {
-            return 'router-vendor';
-          }
-          if (id.includes('node_modules/zustand')) {
-            return 'state-vendor';
-          }
-          if (id.includes('node_modules/lucide-react')) {
-            return 'ui-vendor';
-          }
-          if (id.includes('node_modules/react-virtuoso')) {
-            return 'list-vendor';
-          }
-          if (id.includes('/pages/ServerSettings')) {
-            return 'page-server-settings';
-          }
-          if (id.includes('/pages/Quests') || id.includes('/stores/useQuestStore')) {
-            return 'page-quests';
-          }
-          if (id.includes('/components/settings')) {
-            return 'settings-components';
-          }
+    server: {
+      port: 5173,
+      host: true,
+      fs: {
+        allow: [workspaceRoot, path.resolve(__dirname, '../../assets')],
+      },
+      allowedHosts: [
+        'localhost',
+        '127.0.0.1',
+        'beacon.qzz.io',
+        'www.beacon.qzz.io',
+        '.devtunnels.ms',
+        '.asse.devtunnels.ms',
+      ],
+      strictPort: true,
+      hmr: {
+        overlay: true,
+      },
+      proxy: {
+        '/api': {
+          target: apiProxyTarget,
+          changeOrigin: true,
+          timeout: 10000,
         },
-        chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+        '/gateway': {
+          target: gatewayProxyTarget,
+          ws: true,
+          changeOrigin: true,
+        }
+      }
+    },
+
+    preview: {
+      port: 4173,
+      host: true,
+    },
+
+    build: {
+      target: 'esnext',
+      outDir: 'dist',
+      assetsDir: 'assets',
+      minify: 'esbuild',
+      sourcemap: false,
+      chunkSizeWarningLimit: 600,
+      assetsInlineLimit: 4096,
+      cssCodeSplit: true,
+      reportCompressedSize: true,
+      
+      rollupOptions: {
+        external: ['wrtc'],
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) {
+              return 'react-vendor';
+            }
+            if (id.includes('node_modules/react-router')) {
+              return 'router-vendor';
+            }
+            if (id.includes('node_modules/zustand')) {
+              return 'state-vendor';
+            }
+            if (id.includes('node_modules/lucide-react')) {
+              return 'ui-vendor';
+            }
+            if (id.includes('node_modules/react-virtuoso')) {
+              return 'list-vendor';
+            }
+            if (id.includes('/pages/ServerSettings')) {
+              return 'page-server-settings';
+            }
+            if (id.includes('/pages/Quests') || id.includes('/stores/useQuestStore')) {
+              return 'page-quests';
+            }
+            if (id.includes('/components/settings')) {
+              return 'settings-components';
+            }
+          },
+          chunkFileNames: 'assets/js/[name]-[hash].js',
+          entryFileNames: 'assets/js/[name]-[hash].js',
+          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+        },
+      },
+      
+      commonjsOptions: {
+        include: [/node_modules/],
+        transformMixedEsModules: true,
       },
     },
-    
-    commonjsOptions: {
-      include: [/node_modules/],
-      transformMixedEsModules: true,
+
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        'zustand',
+        'framer-motion',
+        'lucide-react',
+      ],
+      exclude: ['beacon.js'],
     },
-  },
 
-  optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      'react-router-dom',
-      'zustand',
-      'framer-motion',
-      'lucide-react',
-    ],
-    exclude: ['beacon.js'],
-  },
-
-  esbuild: {
-    logOverride: { 'this-is-undefined-in-esm': 'silent' },
-    legalComments: 'none',
-    treeShaking: true,
-  },
-
-  define: {
-    global: 'globalThis',
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '3.0.2'),
-    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
-  },
-}
+    esbuild: {
+      logOverride: { 'this-is-undefined-in-esm': 'silent' },
+      legalComments: 'none',
+      treeShaking: true,
+    },
+  }
 })
