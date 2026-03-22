@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Hash, Megaphone, MessageSquare, Radio, Volume2 } from 'lucide-react'
 import { Modal, Button, Input } from '../ui'
 import { useUIStore } from '../../stores/useUIStore'
@@ -88,10 +88,10 @@ export function CreateChannelModal({ isOpen, onClose }: CreateChannelModalProps)
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create Channel">
+    <Modal isOpen={isOpen} onClose={onClose} title={type === 'category' ? 'Create Category' : 'Create Channel'}>
       <div className={styles.container}>
         <div className={styles.typeSelector}>
-          <p className={styles.label}>CHANNEL TYPE</p>
+          <p className={styles.label}>{type === 'category' ? 'CATEGORY TYPE' : 'CHANNEL TYPE'}</p>
           {channelTypeOptions.map((option) => (
             <button
               key={option.key}
@@ -111,8 +111,8 @@ export function CreateChannelModal({ isOpen, onClose }: CreateChannelModalProps)
         </div>
 
         <Input
-          label="CHANNEL NAME"
-          placeholder="new-channel"
+          label={type === 'category' ? 'CATEGORY NAME' : 'CHANNEL NAME'}
+          placeholder={type === 'category' ? 'New Category' : 'new-channel'}
           value={channelName}
           onChange={(e) => setChannelName(e.currentTarget.value)}
           icon={type === 'category' ? <Hash size={18} /> : type === 'voice' || type === 'stage' ? <Volume2 size={18} /> : type === 'announcement' ? <Megaphone size={18} /> : <Hash size={18} />}
@@ -128,7 +128,7 @@ export function CreateChannelModal({ isOpen, onClose }: CreateChannelModalProps)
         <div className={styles.footer}>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button variant="primary" onClick={handleCreate} disabled={!channelName.trim() || isLoading}>
-            {isLoading ? 'Creating...' : 'Create Channel'}
+            {isLoading ? 'Creating...' : type === 'category' ? 'Create Category' : 'Create Channel'}
           </Button>
         </div>
       </div>

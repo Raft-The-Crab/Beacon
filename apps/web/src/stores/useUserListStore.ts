@@ -29,19 +29,22 @@ export interface Friend extends User {
 
 interface UserListState {
   friends: Friend[]
+  pendingRequests: any[]
   blockedUsers: string[]
   currentUser: User | null
   users: Map<string, User>
 
   fetchFriends: () => Promise<void>;
+  fetchPendingRequests: () => Promise<void>;
+  fetchBlockedUsers: () => Promise<void>;
   eagerLoad: () => Promise<void>;
   setCurrentUser: (user: User) => void
   addFriend: (friend: Friend) => void
   removeFriend: (userId: string) => void
   updateFriendStatus: (userId: string, status: PresenceStatus) => void
 
-  blockUser: (userId: string) => void
-  unblockUser: (userId: string) => void
+  blockUser: (userId: string) => Promise<void>
+  unblockUser: (userId: string) => Promise<void>
   isBlocked: (userId: string) => boolean
 
   addUser: (user: User) => void
@@ -51,6 +54,7 @@ interface UserListState {
 
 export const useUserListStore = create<UserListState>((set, get) => ({
   friends: [],
+  pendingRequests: [],
   blockedUsers: [],
   currentUser: null,
   users: new Map(),
@@ -80,6 +84,16 @@ export const useUserListStore = create<UserListState>((set, get) => ({
       })
     } catch (e) {
       console.error('Failed to fetch friends', e)
+    }
+  },
+
+  fetchPendingRequests: async () => {
+    try {
+      const { data } = await api.get('/friends/pending')
+      const pendingList = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+      set({ pendingRequests: pendingList })
+    } catch (e) {
+      console.error('Failed to fetch pending requests', e)
     }
   },
 
@@ -149,18 +163,41 @@ export const useUserListStore = create<UserListState>((set, get) => ({
       }
     }),
 
-  blockUser: (userId) =>
-    set((state) => {
-      if (state.blockedUsers.includes(userId)) return state
-      return {
-        blockedUsers: [...state.blockedUsers, userId],
-      }
-    }),
+  fetchBlockedUsers: async () => {
+    try {
+      const { data } = await api.get('/users/me/blocked')
+      const blockedList = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+      set({ blockedUsers: blockedList.map((u: any) => u.id) })
+    } catch (e) {
+      console.error('Failed to fetch blocked users', e)
+    }
+  },
 
-  unblockUser: (userId) =>
-    set((state) => ({
-      blockedUsers: state.blockedUsers.filter((id) => id !== userId),
-    })),
+  blockUser: async (userId) => {
+    try {
+      await api.post('/users/block', { targetId: userId })
+      set((state) => {
+        if (state.blockedUsers.includes(userId)) return state
+        return {
+          blockedUsers: [...state.blockedUsers, userId],
+          friends: state.friends.filter(f => f.id !== userId)
+        }
+      })
+    } catch (e) {
+      console.error('Failed to block user', e)
+    }
+  },
+
+  unblockUser: async (userId) => {
+    try {
+      await api.post('/users/unblock', { targetId: userId })
+      set((state) => ({
+        blockedUsers: state.blockedUsers.filter((id) => id !== userId),
+      }))
+    } catch (e) {
+      console.error('Failed to unblock user', e)
+    }
+  },
 
   isBlocked: (userId) => {
     return get().blockedUsers.includes(userId)

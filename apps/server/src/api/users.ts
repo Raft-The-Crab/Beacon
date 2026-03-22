@@ -3,7 +3,7 @@
  */
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { getMe, updateMe, getUser, getMyGuilds, getMyFriends, deleteMe, updateE2EEKeys, getE2EEKeys, updateEmail, updatePassword, enable2FA, verify2FA, getMutuals } from '../controllers/user.controller';
+import { getMe, updateMe, getUser, getMyGuilds, getMyFriends, deleteMe, updateE2EEKeys, getE2EEKeys, updateEmail, updatePassword, enable2FA, verify2FA, getMutuals, blockUser, unblockUser, getBlockedUsers } from '../controllers/user.controller';
 import { cacheResponse } from '../middleware/performance';
 
 const router = Router();
@@ -28,5 +28,10 @@ router.post('/me/2fa/verify', verify2FA);
 router.get('/:userId', cacheResponse(300), getUser);
 router.get('/:userId/e2ee', cacheResponse(300), getE2EEKeys);
 router.get('/:userId/mutuals', getMutuals);
+
+// Blocking
+router.get('/me/blocked', getBlockedUsers);
+router.post('/block', blockUser);
+router.post('/unblock', unblockUser);
 
 export default router;

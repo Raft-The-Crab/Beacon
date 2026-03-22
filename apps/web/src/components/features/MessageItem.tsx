@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Smile, Edit, Trash2, File, Pin, Shield, Languages, Flag, Download } from 'lucide-react'
+import { Smile, Edit, Trash2, File, Pin, Shield, Languages, Flag, Download, Check, CheckCheck } from 'lucide-react'
 import type { UserBadge } from 'beacon-sdk'
 import { Avatar, Tooltip, EmojiPicker, ImageLightbox, Select } from '../ui'
 import { BotTag } from '../ui/UserBadges'
@@ -8,7 +8,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { useUIStore } from '../../stores/useUIStore'
 import { MarkdownRenderer } from '../ui/MarkdownRenderer'
 import { useProfileArtStore } from '../../stores/useProfileArtStore'
-import { UserPopoverCard } from './UserPopoverCard'
+// import { UserPopoverCard } from './UserPopoverCard'
 import { resolveAssetUrl } from '../../config/endpoints'
 import styles from '../../styles/modules/features/MessageItem.module.css'
 
@@ -168,6 +168,8 @@ export const MessageItem = React.memo(function MessageItem({
   const { arts, equippedFrame } = useProfileArtStore()
   const chatBubbleStyle = useUIStore((state) => state.chatBubbleStyle)
   const chatBubbleIntensity = useUIStore((state) => state.chatBubbleIntensity)
+  const setSelectedUser = useUIStore((state) => state.setSelectedUser)
+  const setShowUserProfile = useUIStore((state) => state.setShowUserProfile)
   const hasBeaconPlus = Boolean(authorIsBeaconPlus)
   const isSelf = !!user && (authorId === user.id || authorId === 'current-user')
   const displayAuthorName = isSelf ? (user?.username || authorName) : authorName
@@ -218,15 +220,23 @@ export const MessageItem = React.memo(function MessageItem({
       onMouseEnter={() => {/* Trigger chromatic aberration in CSS */ }}
     >
       {!isContinuing ? (
-        <Avatar
-          src={displayAuthorAvatar}
-          alt={displayAuthorName}
-          size="md"
-          status={displayAuthorStatus as any}
-          username={displayAuthorName}
-          frameUrl={frameArt?.imageUrl}
-          frameGradient={!frameArt?.imageUrl ? frameArt?.preview : undefined}
-        />
+        <div
+          onClick={() => {
+            setSelectedUser(moderationUserId || authorId || '')
+            setShowUserProfile(true)
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          <Avatar
+            src={displayAuthorAvatar}
+            alt={displayAuthorName}
+            size="md"
+            status={displayAuthorStatus as any}
+            username={displayAuthorName}
+            frameUrl={frameArt?.imageUrl}
+            frameGradient={!frameArt?.imageUrl ? frameArt?.preview : undefined}
+          />
+        </div>
       ) : (
         <div className={styles.continueTime}>{timestamp}</div>
       )}
@@ -234,24 +244,16 @@ export const MessageItem = React.memo(function MessageItem({
       <div className={`${styles.content} ${bubbleClass}`}>
         {!isContinuing && (
           <div className={styles.header}>
-            <UserPopoverCard
-              userId={moderationUserId}
-              username={displayAuthorName}
-              displayName={authorDisplayName}
-              avatar={displayAuthorAvatar}
-              banner={authorBanner}
-              status={displayAuthorStatus as any}
-              customStatus={authorCustomStatus || (isSelf ? (user?.statusText || user?.customStatus || undefined) : undefined) || undefined}
-              badges={authorBadges || (isSelf ? user?.badges : undefined)}
-              isBot={isBot}
-              bio={authorBio || (isSelf ? user?.bio || undefined : 'A Beacon user exploring the cosmos.')}
-              joinedAt={authorJoinedAt}
-              roles={authorRoles && authorRoles.length > 0 ? authorRoles : isSelf ? [{ name: 'You', color: '#5865f2' }] : []}
-              avatarDecorationId={authorAvatarDecorationId || (isSelf ? user?.avatarDecorationId : undefined)}
-              enableModerationActions
+            <span
+              className={styles.author}
+              onClick={() => {
+                setSelectedUser(moderationUserId || authorId || '')
+                setShowUserProfile(true)
+              }}
+              style={{ cursor: 'pointer' }}
             >
-              <span className={styles.author}>{displayAuthorName}</span>
-            </UserPopoverCard>
+              {displayAuthorName}
+            </span>
             {isBot && <BotTag />}
             <span className={styles.time}>{timestamp}</span>
             {isPinned && (
@@ -262,7 +264,13 @@ export const MessageItem = React.memo(function MessageItem({
             )}
             {isSelf && (
               <span className={`${styles.ownStatus} ${ownStatusClass}`} title={`Status: ${status}`}>
-                {status === 'sending' ? '•' : status === 'sent' ? '✓' : '✓✓'}
+                {status === 'sending' ? (
+                  <span className={styles.sendingDot}>•</span>
+                ) : status === 'sent' ? (
+                  <Check size={14} className={styles.statusIcon} />
+                ) : (
+                  <CheckCheck size={14} className={styles.statusIcon} />
+                )}
               </span>
             )}
             {isEncrypted && (

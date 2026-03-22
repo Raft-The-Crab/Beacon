@@ -619,3 +619,84 @@ export async function getMutuals(req: Request, res: Response) {
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
+
+// -- BLOCKING --
+export async function blockUser(req: Request, res: Response) {
+  const userId = req.user?.id;
+  const { targetId } = req.body;
+
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!targetId) return res.status(400).json({ error: 'Target user ID is required' });
+  if (userId === targetId) return res.status(400).json({ error: 'You cannot block yourself' });
+
+  try {
+    const existing = await prisma.block.findUnique({
+      where: { userId_blockedId: { userId, blockedId: targetId } }
+    });
+
+    if (existing) return res.json({ success: true, message: 'User already blocked' });
+
+    await prisma.$transaction([
+      prisma.block.create({
+        data: { userId, blockedId: targetId }
+      }),
+      // Remove friendship if exists
+      prisma.friendship.deleteMany({
+        where: {
+          OR: [
+            { userId, friendId: targetId },
+            { userId: targetId, friendId: userId }
+          ]
+        }
+      })
+    ]);
+
+    await CacheService.del(`user:${userId}`);
+    return res.json({ success: true, message: 'User blocked' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function unblockUser(req: Request, res: Response) {
+  const userId = req.user?.id;
+  const { targetId } = req.body;
+
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!targetId) return res.status(400).json({ error: 'Target user ID is required' });
+
+  try {
+    await prisma.block.deleteMany({
+      where: { userId, blockedId: targetId }
+    });
+    return res.json({ success: true, message: 'User unblocked' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function getBlockedUsers(req: Request, res: Response) {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const blocked = await prisma.block.findMany({
+      where: { userId },
+      include: {
+        blocked: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            discriminator: true,
+            avatar: true
+          }
+        }
+      }
+    });
+
+    return res.json(blocked.map(b => b.blocked));
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}

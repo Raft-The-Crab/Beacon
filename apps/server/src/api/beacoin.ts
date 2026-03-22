@@ -190,6 +190,16 @@ router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: AuthRequest
       return res.status(400).json({ error: 'Insufficient Beacoins' })
     }
 
+    // Check if user already has an active subscription
+    const currentPremium = await db.userPremium.findUnique({ where: { userId } })
+    const now = new Date()
+    const activeSubscription = currentPremium?.expiresAt && currentPremium.expiresAt > now
+
+    // Determine new expiration
+    const startFrom = activeSubscription ? new Date(currentPremium.expiresAt) : new Date()
+    const expiresAt = new Date(startFrom)
+    expiresAt.setMonth(expiresAt.getMonth() + (tier === 'yearly' ? 12 : 1))
+
     // Deduct coins
     await db.beacoinWallet.update({
       where: { userId },
@@ -209,9 +219,6 @@ router.post('/users/@me/beacoin/subscribe', requireAuth, async (req: AuthRequest
     })
 
     // Update user to mark as Beacon+ subscriber
-    const expiresAt = new Date()
-    expiresAt.setMonth(expiresAt.getMonth() + (tier === 'yearly' ? 12 : 1))
-
     await db.user.update({
       where: { id: userId },
       data: {

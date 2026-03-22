@@ -80,7 +80,14 @@ export const sendGift = async (req: AuthRequest, res: Response) => {
                     }
                 });
             } else if (type === 'SUBSCRIPTION') {
-                const expiresAt = new Date()
+                // Check if recipient already has an active subscription
+                const currentPremium = await tx.userPremium.findUnique({ where: { userId: recipientId } })
+                const now = new Date()
+                const activeSubscription = currentPremium?.expiresAt && currentPremium.expiresAt > now
+
+                // Determine new expiration
+                const startFrom = activeSubscription ? new Date(currentPremium.expiresAt) : new Date()
+                const expiresAt = new Date(startFrom)
                 expiresAt.setMonth(expiresAt.getMonth() + (subscriptionTier === 'yearly' ? 12 : 1))
 
                 await tx.user.update({

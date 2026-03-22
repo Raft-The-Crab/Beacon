@@ -285,37 +285,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const response = await apiClient.updateUser(updates as any);
       if (response.success && response.data) {
-        set({ user: decorateSystemUser(response.data as User) as any });
+        set((state) => ({ 
+          user: decorateSystemUser({ ...(state.user as any), ...(response.data as any) }) as any 
+        }));
         if (updates.theme) get().setTheme(updates.theme);
       }
     } catch (err) {
-      console.error(err);
+      console.error('[AuthStore] UpdateProfile failed:', err);
     }
   },
 
   updateStatus: async (update) => {
     try {
-      const { user } = get()
-      if (!user) return
-
-      const newStatus = {
-        ...user,
-        ...update
-      }
-
-      await get().updateProfile(update)
-      set({ user: newStatus as any })
+      await get().updateProfile(update);
     } catch (err) {
-      console.error('Failed to update status:', err)
+      console.error('[AuthStore] UpdateStatus failed:', err);
     }
   },
 
   updateActivities: async (activities) => {
-    const { user } = get()
-    if (!user) return
-    const newStatus = { ...user, activities }
-    await get().updateProfile({ activities })
-    set({ user: newStatus as any })
+    try {
+      await get().updateProfile({ activities });
+    } catch (err) {
+      console.error('[AuthStore] UpdateActivities failed:', err);
+    }
   },
 
   setUser: (user) => set({ user: decorateSystemUser(user) as any, isAuthenticated: !!user }),

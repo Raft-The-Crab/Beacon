@@ -91,8 +91,8 @@ const isLocal = typeof window !== 'undefined' && isLocalDevHost(window.location.
 const envApiUrl = (import.meta as any).env?.VITE_BACKEND_URL
 const envWsUrl = (import.meta as any).env?.VITE_GATEWAY_URL
 
-const configuredApiUrl = (envApiUrl && envApiUrl.startsWith('http')) ? envApiUrl : '/api'
-const configuredWsUrl = (envWsUrl && envWsUrl.startsWith('ws')) ? envWsUrl : '/gateway'
+const configuredApiUrl = isLocal ? ((import.meta as any).env?.VITE_BACKEND_URL || '/api') : '/api'
+const configuredWsUrl = isLocal ? ((import.meta as any).env?.VITE_GATEWAY_URL || '/gateway') : '/gateway'
 
 export const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl)
 export const WS_BASE_URL = resolveWebSocketUrl(configuredWsUrl, configuredApiUrl)

@@ -58,27 +58,41 @@ export class NotificationService {
 
   private static _verified = false;
 
-  private static get fromAddress() {
-    if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
-    const alias = process.env.EMAIL_FROM_ALIAS || 'Beacon';
-    const user = process.env.EMAIL_USER || process.env.SMTP_USER;
-    if (user) return `"${alias}" <${user}>`;
-    return `"${alias}" <noreply@beacon.qzz.io>`;
+  private static getFromAddress(aliasType: 'support' | 'noreply' = 'noreply') {
+    const supportLabel = process.env.EMAIL_FROM_NAME || 'Beacon Support';
+    const noreplyLabel = process.env.EMAIL_NOREPLY_NAME || 'Beacon Platform';
+    
+    if (aliasType === 'support') {
+      const addr = process.env.EMAIL_SUPPORT_ADDRESS || 'support@beacon.qzz.io';
+      return `"${supportLabel}" <${addr}>`;
+    } else {
+      const addr = process.env.EMAIL_NOREPLY_ADDRESS || 'noreply@beacon.qzz.io';
+      return `"${noreplyLabel}" <${addr}>`;
+    }
   }
 
   /** Verify SMTP connection on first use */
   static async ensureConnection() {
     if (this._verified) return;
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      logger.warn('[EMAIL] No credentials configured — running in dry-run mode');
+    const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
+    const port = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10);
+    const user = process.env.EMAIL_USER || process.env.SMTP_USER;
+
+    if (!user || !(process.env.EMAIL_PASS || process.env.SMTP_PASS)) {
+      logger.warn(`[EMAIL] No credentials configured for ${host}:${port} — running in dry-run mode`);
       return;
     }
+
     try {
+      logger.info(`[EMAIL] Attempting to verify SMTP at ${host}:${port}...`);
       await this.transporter.verify();
       this._verified = true;
-      logger.success('[EMAIL] SMTP connection verified successfully');
+      logger.success(`[EMAIL] SMTP connection verified successfully for ${user} at ${host}`);
     } catch (err: any) {
-      logger.error(`[EMAIL] SMTP verification failed: ${err.message}`);
+      logger.error(`[EMAIL] SMTP verification failed for ${host}:${port}: ${err.message}`);
+      if (err.code === 'EAUTH') {
+        logger.error('[EMAIL] Authentication failed — If using Gmail, make sure to use an APP PASSWORD.');
+      }
     }
   }
 
@@ -124,7 +138,7 @@ export class NotificationService {
 
   static async sendVerificationCode(email: string, code: string) {
     return this.sendWithRetry({
-      from: this.fromAddress,
+      from: this.getFromAddress('noreply'),
       to: email,
       subject: 'Verify Your Beacon Account',
       html: emailLayout('Verify Your Email', `
@@ -145,7 +159,7 @@ export class NotificationService {
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/reset-password?token=${token}`;
 
     return this.sendWithRetry({
-      from: this.fromAddress,
+      from: this.getFromAddress('noreply'),
       to: email,
       subject: 'Reset Your Beacon Password',
       html: emailLayout('Reset Your Password', `
@@ -167,7 +181,7 @@ export class NotificationService {
 
   static async sendWelcomeEmail(email: string, username: string) {
     return this.sendWithRetry({
-      from: this.fromAddress,
+      from: this.getFromAddress('noreply'),
       to: email,
       subject: 'Welcome to Beacon! 🎉',
       html: emailLayout(`Welcome, ${username}!`, `
@@ -194,7 +208,7 @@ export class NotificationService {
 
   static async sendSecurityAlert(email: string, reason: string) {
     return this.sendWithRetry({
-      from: this.fromAddress,
+      from: this.getFromAddress('support'),
       to: email,
       subject: '⚠️ Beacon Security Alert',
       html: emailLayout('Security Alert', `
@@ -217,7 +231,7 @@ export class NotificationService {
 
   static async sendBackupNotice(email: string) {
     return this.sendWithRetry({
-      from: this.fromAddress,
+      from: this.getFromAddress('noreply'),
       to: email,
       subject: 'Your Beacon Server Backup is Ready',
       html: emailLayout('Backup Complete', `
@@ -233,7 +247,7 @@ export class NotificationService {
 
   static async sendSystemUpdateNotice(email: string, version: string, releaseNotes: string) {
     return this.sendWithRetry({
-      from: this.fromAddress,
+      from: this.getFromAddress('noreply'),
       to: email,
       subject: `Beacon ${version} is Live! 🚀`,
       html: emailLayout(`What's new in Beacon ${version}`, `

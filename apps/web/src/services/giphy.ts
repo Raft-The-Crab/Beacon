@@ -18,7 +18,7 @@ export interface GiphySearchResponse {
 
 const GIPHY_CONFIGURED_KEY =
     import.meta.env.VITE_GIPHY_API_KEY ||
-    'cw66S06W1tJ69tTSOsh9S8Q0S77vS3N4'
+    ''
 const GIPHY_API_BASE = 'https://api.giphy.com/v1/gifs'
 const GIPHY_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000
 const GIPHY_RATE_LIMIT_FREE = 100

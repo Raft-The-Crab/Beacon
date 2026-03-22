@@ -103,7 +103,13 @@ class VoiceManagerClass {
     };
   }
 
+  private lastSyncTime = 0;
   private syncLocalVoiceState(partial: Partial<VoiceState>) {
+    const now = Date.now();
+    // Throttle store synchronization to 500ms unless it's a critical channel change
+    if (now - this.lastSyncTime < 500 && partial.channelId === undefined) return;
+    this.lastSyncTime = now;
+
     const store = useVoiceStore.getState();
     const userId = store.userId;
 

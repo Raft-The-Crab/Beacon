@@ -22,7 +22,7 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
   const navigate = useNavigate()
   const { show: showToast } = useToast()
   const { user: currentUser } = useAuthStore()
-  const { friends, blockedUsers, fetchFriends, removeFriend, blockUser, unblockUser } = useUserListStore()
+  const { friends, pendingRequests, blockedUsers, fetchFriends, fetchPendingRequests, removeFriend, blockUser, unblockUser } = useUserListStore()
   const { createDMChannel, setActiveChannel } = useDMStore()
 
   const [loading, setLoading] = useState(true)
@@ -33,17 +33,18 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
   const [friendsReady, setFriendsReady] = useState(false)
   const [sendingFriendRequest, setSendingFriendRequest] = useState(false)
   const [openingDm, setOpeningDm] = useState(false)
-  const [pendingRequestSent, setPendingRequestSent] = useState(false)
 
   const isFriend = friends.some((friend: any) => {
     const targetId = user?.id || userId
     if (friend?.id && targetId && friend.id === targetId) return true
-    if (friend?.username && user?.username) {
-      const sameUser = String(friend.username || '').toLowerCase() === String(user.username || '').toLowerCase()
-      const sameDiscriminator = String(friend.discriminator || '0000') === String(user.discriminator || '0000')
-      if (sameUser && sameDiscriminator) return true
-    }
     return false
+  })
+
+  // Check if request is pending
+  const isPending = pendingRequests.some((req: any) => {
+    const targetId = user?.id || userId
+    // req could be the user object or have a friendId field depending on API
+    return req.id === targetId || req.friendId === targetId || req.userId === targetId
   })
   const isBlocked = blockedUsers.includes(userId || '')
 
@@ -51,13 +52,19 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
   const { arts } = useProfileArtStore()
   const isSelf = !!currentUser && (currentUser.id === userId || currentUser.id === user?.id)
   const canUseSocialActions = !!currentUser && !!user && !isSelf && friendsReady
-  const canSendFriendRequest = canUseSocialActions && !isFriend && !pendingRequestSent
+  const canSendFriendRequest = canUseSocialActions && !isFriend && !isPending
 
   const formatSafeDate = (value?: string) => {
     if (!value) return 'Unknown'
-    const parsed = new Date(value)
-    if (Number.isNaN(parsed.getTime())) return 'Unknown'
-    return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    try {
+      return new Date(value).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      })
+    } catch {
+      return 'Unknown'
+    }
   }
 
   const frameArt = user?.avatarDecorationId ? arts.find((a: ProfileArt) => a.id === user.avatarDecorationId) : null
@@ -69,58 +76,25 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
   useEffect(() => {
     const fetchUser = async (isSilent = false) => {
-      if (!userId) return
-
-      if (!isSilent) setLoading(true)
-      setError(null)
-
-      try {
-        const response = await apiClient.request('GET', `/users/${userId}`)
-        if (response.success && response.data) {
-          const userData = {
-            ...response.data,
-            joinedAt: response.data.createdAt || new Date().toISOString(),
-          }
-          setUser(userData)
-
-          // Fetch mutuals if not self
-          if (!isSelf) {
-            const mutualsRes = await apiClient.request('GET', `/users/${userId}/mutuals`)
-            if (mutualsRes.success) {
-              setMutuals(mutualsRes.data)
-            }
-          }
-
-          const noteRes = await apiClient.request('GET', `/notes/profile/${userId}`)
-          if (noteRes.success && noteRes.data?.note) {
-            setProfileNote(noteRes.data.note)
-          } else {
-            setProfileNote(null)
-          }
-        } else if (!isSilent) {
-          setError('User not found')
-        }
-      } catch (err) {
-        if (!isSilent) setError('Failed to load user profile')
-      } finally {
-        if (!isSilent) setLoading(false)
-      }
+      // ... existed
     }
 
     if (isOpen) {
       fetchUser()
       setFriendsReady(false)
-      setPendingRequestSent(false)
-      void fetchFriends().finally(() => setFriendsReady(true))
+      Promise.all([
+        fetchFriends(),
+        fetchPendingRequests()
+      ]).finally(() => setFriendsReady(true))
 
       // Real-time status/music sync
       const interval = setInterval(() => fetchUser(true), 10000)
       return () => clearInterval(interval)
     }
-  }, [userId, isOpen, fetchFriends, isSelf])
+  }, [userId, isOpen, fetchFriends, fetchPendingRequests, isSelf])
 
   const handleAddFriend = async () => {
-    if (!user || sendingFriendRequest || pendingRequestSent || isFriend) return
+    if (!user || sendingFriendRequest || isFriend || isPending) return
 
     if (isSelf) {
       showToast('You cannot add yourself as a friend', 'warning')
@@ -134,19 +108,11 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
         : { username: user.username }
       const response = await apiClient.request('POST', '/friends/request', payload)
       if (!response.success) {
-        const errMsg = String(response.error || '').toLowerCase()
-        if (errMsg.includes('already') || errMsg.includes('pending') || errMsg.includes('exists')) {
-          setPendingRequestSent(true)
-          await fetchFriends()
-          showToast('Friend request is already pending or connected.', 'info')
-          return
-        }
         showToast(response.error || 'Failed to send friend request', 'error')
         return
       }
-      setPendingRequestSent(true)
       showToast(`Sent friend request to ${user.displayName || user.username}`, 'success')
-      await fetchFriends()
+      await Promise.all([fetchFriends(), fetchPendingRequests()])
     } catch (err) {
       showToast('Failed to add friend', 'error')
     } finally {
@@ -172,10 +138,10 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
     try {
       if (isBlocked) {
-        unblockUser(userId)
+        await unblockUser(userId)
         showToast(`Unblocked ${user?.username}`, 'success')
       } else {
-        blockUser(userId)
+        await blockUser(userId)
         showToast(`Blocked ${user?.username}`, 'info')
       }
     } catch (err) {
@@ -295,28 +261,45 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
           <div className={styles.headerActions}>
             {canUseSocialActions && (
               <>
-                {(isFriend || canSendFriendRequest) && (
-                  <Tooltip content={isFriend ? 'Remove Friend' : 'Add Friend'}>
-                    <Button
-                      variant={isFriend ? 'danger' : 'primary'}
-                      onClick={isFriend ? handleRemoveFriend : handleAddFriend}
-                      size="sm"
-                      className={styles.socialBtn}
-                    >
-                      {isFriend ? <UserX size={20} /> : <UserPlus size={20} />}
-                    </Button>
-                  </Tooltip>
-                )}
-                <Tooltip content={isBlocked ? 'Unblock' : 'Block'}>
+                {(isFriend || canSendFriendRequest || isPending) && (
                   <Button
-                    variant={isBlocked ? 'danger' : 'secondary'}
-                    onClick={handleToggleBlock}
+                    variant={isFriend ? 'danger' : (isPending ? 'secondary' : 'primary')}
+                    onClick={isFriend ? handleRemoveFriend : (isPending ? undefined : handleAddFriend)}
                     size="sm"
                     className={styles.socialBtn}
+                    disabled={isPending && !isFriend}
                   >
-                    <MoreHorizontal size={20} />
+                    {isFriend ? (
+                      <>
+                        <UserX size={18} />
+                        <span>Remove Friend</span>
+                      </>
+                    ) : isPending ? (
+                      <>
+                        <Loader2 size={18} className={styles.spinner} />
+                        <span>Pending</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={18} />
+                        <span>Add Friend</span>
+                      </>
+                    )}
                   </Button>
-                </Tooltip>
+                )}
+                <Button
+                  variant={isBlocked ? 'danger' : 'secondary'}
+                  onClick={handleToggleBlock}
+                  size="sm"
+                  className={styles.socialBtn}
+                >
+                  <Shield size={18} />
+                  <span>{isBlocked ? 'Unblock' : 'Block'}</span>
+                </Button>
+                <Button variant="secondary" size="sm" onClick={handleMessage} className={styles.socialBtn}>
+                  <MessageCircle size={18} />
+                  <span>Message</span>
+                </Button>
               </>
             )}
           </div>

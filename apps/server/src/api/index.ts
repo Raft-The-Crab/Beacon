@@ -33,6 +33,20 @@ router.get('/version', (req, res) => {
   res.json({ version: '2.0.0', codename: 'Beacon V2', status: 'healthy', environment: process.env.NODE_ENV || 'development', timestamp: new Date().toISOString() })
 })
 
+router.get('/test-email', async (req, res) => {
+  const email = req.query.to as string || process.env.EMAIL_USER || process.env.SMTP_USER;
+  if (!email) return res.status(400).json({ error: 'No recipient email provided' });
+
+  const { NotificationService } = await import('../services/notification');
+  const success = await NotificationService.sendVerificationCode(email, 'TEST-1234');
+  
+  if (success) {
+    res.json({ success: true, message: `Test email sent to ${email}. Check your inbox and backend logs.` });
+  } else {
+    res.status(500).json({ success: false, error: 'Failed to send test email. Check backend logs for SMTP errors.' });
+  }
+});
+
 router.get('/csrf-token', (req, res) => {
   const token = generateCSRFToken()
   const isLocalhost = req.hostname === 'localhost' || req.hostname === '127.0.0.1'
