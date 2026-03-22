@@ -11,6 +11,14 @@ import compression from 'compression';
 http.globalAgent.maxSockets = 500;
 
 // Internal Imports
+import { logger } from './services/logger';
+
+// v3: Pre-flight environment check
+const isRailway = !!(process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_SERVICE_ID);
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+logger.info(`[Pre-flight] Railway detected: ${isRailway} | Env: ${process.env.NODE_ENV || 'unknown'}`);
+
 import { WebSocketServer } from 'ws';
 import { connectMongo, prisma, redis } from './db';
 import { moderationService } from './services/moderation';
@@ -26,7 +34,6 @@ import { requestId } from './middleware/requestId';
 import { getHealth } from './api/health';
 import { gracefulShutdown } from './services/gracefulShutdown';
 import { SystemAuditService, AuditAction } from './services/systemAudit';
-import { logger } from './services/logger';
 import './config/firebase';
 
 const profile = getProfile(
@@ -262,6 +269,10 @@ export class BeaconServer {
         return new Promise((resolve) => {
             const onError = (err: any) => {
                 if (err.code === 'EADDRINUSE') {
+                    if (isRailway) {
+                        logger.error(`[Fatal] Port ${this.port} is already in use on Railway. Cannot bind. Exiting.`);
+                        process.exit(1);
+                    }
                     logger.warn(`⚠️ Port ${this.port} already in use, trying ${this.port + 1}...`);
                     this.port++;
                     this.server.listen(this.port, '0.0.0.0');
