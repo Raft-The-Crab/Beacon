@@ -38,7 +38,7 @@ function emailLayout(title: string, body: string): string {
 }
 
 export class NotificationService {
-  private static transporter = nodemailer.createTransport({
+  private static transporter = (nodemailer.createTransport as any)({
     host: process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10),
     secure: process.env.EMAIL_SECURE 
@@ -55,7 +55,7 @@ export class NotificationService {
     greetingTimeout: 10000,
     socketTimeout: 15000,
     family: 4, // Force IPv4 to avoid ENETUNREACH on IPv6-only/poorly configured hosts
-  } as any);
+  });
 
   private static _verified = false;
 
