@@ -43,7 +43,7 @@ export class E2EEContext {
   }
 
   public async encrypt(content: string, recipientPublicKeyBase64: string, privateKeyBase64: string): Promise<string> {
-    const crypto = await E2EEContext.getCrypto();
+    const crypto: any = await E2EEContext.getCrypto();
     const privKey = crypto.createPrivateKey({
       key: Buffer.from(privateKeyBase64, 'base64'),
       format: 'der',
@@ -66,12 +66,12 @@ export class E2EEContext {
     let encrypted = cipher.update(content, 'utf8', 'base64');
     encrypted += cipher.final('base64');
     
-    const authTag = cipher.getAuthTag().toString('base64');
+    const authTag = (cipher as any).getAuthTag().toString('base64');
     return `${iv.toString('base64')}:${authTag}:${encrypted}`;
   }
 
   public async decrypt(encryptedData: string, senderPublicKeyBase64: string, privateKeyBase64: string): Promise<string> {
-    const crypto = await E2EEContext.getCrypto();
+    const crypto: any = await E2EEContext.getCrypto();
     const [ivBase64, authTagBase64, contentBase64] = encryptedData.split(':');
     if (!ivBase64 || !authTagBase64 || !contentBase64) return encryptedData;
 
@@ -97,7 +97,7 @@ export class E2EEContext {
       Buffer.from(ivBase64, 'base64')
     );
     
-    decipher.setAuthTag(Buffer.from(authTagBase64, 'base64'));
+    (decipher as any).setAuthTag(Buffer.from(authTagBase64, 'base64'));
 
     let decrypted = decipher.update(contentBase64, 'base64', 'utf8');
     decrypted += decipher.final('utf8');
