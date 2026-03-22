@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => {
         'node:crypto': 'crypto-browserify',
         'buffer': 'buffer',
         'node:buffer': 'buffer',
-        'process': 'process/browser',
+        'process': 'process',
       },
     },
 

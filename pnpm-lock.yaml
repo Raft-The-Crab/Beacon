@@ -84,9 +84,18 @@ importers:
       '@types/multer':
         specifier: ^2.0.0
         version: 2.0.0
+      buffer:
+        specifier: ^6.0.3
+        version: 6.0.3
+      crypto-browserify:
+        specifier: ^3.12.1
+        version: 3.12.1
       prisma:
         specifier: ^7.5.0
         version: 7.5.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+      process:
+        specifier: ^0.11.10
+        version: 0.11.10
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
