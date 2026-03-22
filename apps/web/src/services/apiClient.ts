@@ -156,7 +156,17 @@ class ApiClient {
                 body: data ? JSON.stringify(data) : undefined,
             });
 
-            const json = await res.json().catch(() => ({}));
+            const text = await res.text();
+            let json: any = {};
+            try {
+                json = JSON.parse(text);
+            } catch (e) {
+                if (text.trim().startsWith('<!DOCTYPE')) {
+                    console.error(`[API] Expected JSON but received HTML from ${method} ${endpoint}. This usually means the path is incorrect or hitting a 404 page.`);
+                } else {
+                    console.error(`[API] Failed to parse JSON response from ${method} ${endpoint}:`, text.slice(0, 100));
+                }
+            }
 
             // Handle CSRF failures with recovery
             if (
