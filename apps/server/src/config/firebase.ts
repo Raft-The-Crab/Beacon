@@ -28,10 +28,12 @@ if (projectId && clientEmail && privateKey) {
   }
 } else {
   const missing = [];
-  if (!projectId) missing.push('PROJECT_ID');
-  if (!clientEmail) missing.push('CLIENT_EMAIL');
-  if (!privateKey) missing.push('PRIVATE_KEY');
-  logger.warn(`[FIREBASE] Configuration missing (${missing.join(', ')}). Google Login will be disabled.`);
+  if (!projectId) missing.push('FIREBASE_PROJECT_ID');
+  if (!clientEmail) missing.push('FIREBASE_CLIENT_EMAIL');
+  if (!privateKey) missing.push('FIREBASE_PRIVATE_KEY');
+  
+  logger.warn(`[FIREBASE] Configuration missing critical variables: ${missing.join(', ')}`);
+  logger.warn('[FIREBASE] Google Login and Firebase features will remain disabled until these are set in Railway.');
 }
 
 export { admin };
