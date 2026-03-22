@@ -66,6 +66,7 @@ export class BeaconServer {
         this.app = express();
         this.server = http.createServer(this.app);
         this.port = Number(process.env.PORT || 8080);
+        console.log(`>>> [BOOT] Port detected: ${process.env.PORT || 'none (defaulting to 8080)'}`);
         this._bootStart = Date.now();
         this.configureMiddleware();
         this.mountRoutes();
