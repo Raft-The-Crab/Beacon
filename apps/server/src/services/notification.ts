@@ -44,24 +44,31 @@ function emailLayout(title: string, body: string): string {
 }
 
 export class NotificationService {
-  private static transporter = (nodemailer.createTransport as any)({
-    host: process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10),
-    secure: process.env.EMAIL_SECURE 
-      ? process.env.EMAIL_SECURE !== 'false' 
-      : (process.env.EMAIL_PORT === '465' || process.env.SMTP_PORT === '465'),
-    auth: {
-      user: process.env.EMAIL_USER || process.env.SMTP_USER,
-      pass: process.env.EMAIL_PASS || process.env.SMTP_PASS,
-    },
-    pool: true,
-    maxConnections: 3,
-    maxMessages: 50,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-    family: 4, // Force IPv4 to avoid ENETUNREACH on IPv6-only/poorly configured hosts
-  });
+  private static createTransporter(port: number) {
+    const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
+    const user = process.env.EMAIL_USER || process.env.SMTP_USER;
+    const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465, // SSL for 465, STARTTLS for others
+      auth: { user, pass },
+      pool: true,
+      maxConnections: 3,
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        // Do not fail on invalid certs in dev/testing, but keep it strict in prod if possible
+        rejectUnauthorized: process.env.NODE_ENV === 'production',
+      },
+    });
+  }
+
+  private static transporter = NotificationService.createTransporter(
+    parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10)
+  );
 
   private static _verified = false;
 
@@ -78,51 +85,50 @@ export class NotificationService {
     }
   }
 
-  /** Verify SMTP connection on first use with automatic port failover */
+  /** Verify SMTP connection with automatic port failover and detailed diagnostics */
   static async ensureConnection() {
     if (this._verified) return;
+    
     const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
     const initialPort = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10);
     const user = process.env.EMAIL_USER || process.env.SMTP_USER;
+    const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
 
-    if (!user || !(process.env.EMAIL_PASS || process.env.SMTP_PASS)) {
-      logger.warn(`[EMAIL] No credentials configured for ${host}:${initialPort} — running in dry-run mode`);
+    if (!user || !pass) {
+      logger.warn(`[EMAIL] Missing credentials for ${host}:${initialPort}. Running in DRY-RUN mode.`);
       return;
     }
 
     const tryConnect = async (port: number): Promise<boolean> => {
       try {
-        logger.info(`[EMAIL] Attempting to verify SMTP at ${host}:${port}...`);
+        logger.info(`[EMAIL] Testing SMTP: ${user}@${host}:${port} (SSL: ${port === 465})...`);
+        const testTransporter = NotificationService.createTransporter(port);
+        await testTransporter.verify();
         
-        // Re-create transporter for the specific port if needed
-        if (port !== initialPort) {
-          (this as any).transporter = (nodemailer.createTransport as any)({
-            ...((this as any).transporter.options),
-            port,
-            secure: port === 465
-          });
-        }
-
-        await this.transporter.verify();
+        // Success! Bind this transporter
+        this.transporter = testTransporter;
         this._verified = true;
-        logger.success(`[EMAIL] SMTP connection verified successfully for ${user} at ${host}:${port}`);
+        logger.success(`[EMAIL] SMTP verified: ${host}:${port}`);
         return true;
       } catch (err: any) {
-        logger.error(`[EMAIL] SMTP verification failed for ${host}:${port}: ${err.message}`);
+        let hint = '';
+        if (err.responseCode === 535) {
+          hint = ' -> ERROR: Invalid credentials. IF USING GMAIL, YOU MUST USE AN APP PASSWORD.';
+        } else if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED') {
+          hint = ` -> ERROR: Port ${port} is blocked or unreachable.`;
+        }
+
+        logger.error(`[EMAIL] Failed at ${host}:${port}: ${err.message}${hint}`);
         return false;
       }
     };
 
-    const success = await tryConnect(initialPort);
-    
-    // If initial port failed and was 465, try 587 as fallback
-    if (!success && initialPort === 465) {
-      logger.info('[EMAIL] Port 465 failed, attempting fallback to 587 (STARTTLS)...');
-      await tryConnect(587);
-    } else if (!success && initialPort === 587) {
-      logger.info('[EMAIL] Port 587 failed, attempting fallback to 465 (SSL)...');
-      await tryConnect(465);
-    }
+    if (await tryConnect(initialPort)) return;
+
+    // Fallback logic
+    const fallbackPort = initialPort === 465 ? 587 : 465;
+    logger.warn(`[EMAIL] Initial port ${initialPort} failed. Trying fallback port ${fallbackPort}...`);
+    await tryConnect(fallbackPort);
   }
 
   private static async sendWithRetry(mailOptions: nodemailer.SendMailOptions, dryRunMeta?: Record<string, string>): Promise<boolean> {

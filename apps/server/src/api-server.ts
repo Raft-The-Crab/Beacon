@@ -235,7 +235,7 @@ export class BeaconServer {
     }
 
     private async initializeDatabases() {
-        logger.info('[Startup] Non-blocking Database Initialization Initiated...');
+        logger.info('[Startup] Non-blocking Database & SMTP Initialization Initiated...');
         try { await connectMongo(); } catch (e) { logger.warn('⚠️ MongoDB connection failed', e); }
         
         if (prisma) {
@@ -249,6 +249,12 @@ export class BeaconServer {
         if (redis.isEnabled) {
             redis.connect().catch((err: any) => logger.warn(`⚠️ Redis connection failed: ${err.message}`));
         }
+
+        // v3.1: Proactively verify SMTP connection at boot
+        const { NotificationService } = await import('./services/notification');
+        NotificationService.ensureConnection().catch(err => {
+            logger.error(`❌ SMTP Initialization Error: ${err.message}`);
+        });
     }
 
     private startWatchdogs() {
