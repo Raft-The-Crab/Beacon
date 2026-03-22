@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
 
   resolve: {
     alias: {
+      'beacon-sdk': path.resolve(__dirname, '../../packages/sdk/src'),
       'beacon.js': path.resolve(__dirname, '../../packages/sdk/src'),
       'stream': path.resolve(__dirname, '../../packages/sdk/src/stubs/stream.ts'),
       'opusscript': path.resolve(__dirname, '../../packages/sdk/src/stubs/opusscript.ts'),
