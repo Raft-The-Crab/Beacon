@@ -88,8 +88,11 @@ export function resolveAssetUrl(url?: string | null): string {
 
 const isLocal = typeof window !== 'undefined' && isLocalDevHost(window.location.hostname)
 
-const configuredApiUrl = (import.meta as any).env?.VITE_BACKEND_URL || '/api'
-const configuredWsUrl = (import.meta as any).env?.VITE_GATEWAY_URL || '/gateway'
+const envApiUrl = (import.meta as any).env?.VITE_BACKEND_URL
+const envWsUrl = (import.meta as any).env?.VITE_GATEWAY_URL
+
+const configuredApiUrl = (envApiUrl && envApiUrl.startsWith('http')) ? envApiUrl : '/api'
+const configuredWsUrl = (envWsUrl && envWsUrl.startsWith('ws')) ? envWsUrl : '/gateway'
 
 export const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl)
 export const WS_BASE_URL = resolveWebSocketUrl(configuredWsUrl, configuredApiUrl)
