@@ -88,8 +88,8 @@ export function resolveAssetUrl(url?: string | null): string {
 
 const isLocal = typeof window !== 'undefined' && isLocalDevHost(window.location.hostname)
 
-const configuredApiUrl = (import.meta as any).env?.VITE_BACKEND_URL || (isLocal ? '/api' : 'https://beacon-v1-api.up.railway.app/api')
-const configuredWsUrl = (import.meta as any).env?.VITE_GATEWAY_URL || (isLocal ? '/gateway' : 'wss://beacon-v1-api.up.railway.app/gateway')
+const configuredApiUrl = (import.meta as any).env?.VITE_BACKEND_URL || '/api'
+const configuredWsUrl = (import.meta as any).env?.VITE_GATEWAY_URL || '/gateway'
 
 export const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl)
 export const WS_BASE_URL = resolveWebSocketUrl(configuredWsUrl, configuredApiUrl)
