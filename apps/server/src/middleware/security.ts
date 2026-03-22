@@ -8,6 +8,16 @@ type Request = express.Request
 type Response = express.Response
 type NextFunction = express.NextFunction
 
+// Extend Express Request type to include optional user property
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { id?: string; [key: string]: any };
+    }
+  }
+}
+
 // ─── IP Blocklist ────────────────────────────────────────────────────────────
 
 const BLOCKLIST_KEY = 'beacon:blocklist:ips'

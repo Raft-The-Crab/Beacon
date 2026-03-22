@@ -84,60 +84,35 @@ export class BeaconServer {
         this.app.use(requestId);
         
         // CORS Configuration
-        const customOrigins = process.env.CORS_ORIGIN
-            ? process.env.CORS_ORIGIN.replace(/^["']/g, '').replace(/["']$/g, '').split(',')
-                .map(origin => origin.trim().replace(/^["']/g, '').replace(/["']$/g, '')).filter(Boolean)
-            : [];
-
-        const frontendUrl = process.env.FRONTEND_URL 
-            ? process.env.FRONTEND_URL.replace(/\/$/, '') 
-            : null;
-
-        const devTunnelRegex = /\.devtunnels\.ms$/i;
+        // Always allow *.pages.dev for dynamic frontend deploys
         const cfPagesRegex = /\.pages\.dev$/i;
-        const railwayRegex = /\.railway\.app$/i;
-        const beaconDomainRegex = /qzz\.io$/i;
-
-         this.app.use(cors({
+        this.app.use(cors({
             origin: (origin, callback) => {
-                // Allow requests with no origin (like mobile apps or curl)
                 if (!origin) return callback(null, true);
-                
                 const normalized = origin.toLowerCase().trim();
-                const isAllowed = 
+                if (
                     normalized === 'http://localhost:5173' ||
                     normalized === 'http://127.0.0.1:5173' ||
-                    normalized === 'https://beacon.qzz.io' ||
-                    normalized === frontendUrl ||
-                    customOrigins.includes(normalized) ||
-                    devTunnelRegex.test(normalized) ||
-                    cfPagesRegex.test(normalized) ||
-                    railwayRegex.test(normalized) ||
-                    beaconDomainRegex.test(normalized);
-
-                if (isAllowed) {
-                    logger.success(`[CORS] ✅ Allowed: ${origin}`);
+                    cfPagesRegex.test(normalized)
+                ) {
+                    logger.success(`[CORS] \u2705 Allowed: ${origin}`);
                     callback(null, true);
                 } else {
-                    logger.warn(`[CORS] ❌ Blocked: ${origin} (FrontendURL: ${frontendUrl})`);
-                    // Log persistent CORS failures to audit log
+                    logger.warn(`[CORS] \u274c Blocked: ${origin}`);
                     SystemAuditService.log({
                         action: AuditAction.CORS_BLOCKED,
                         reason: `CORS Blocked origin: ${origin}`,
                         severity: 'medium',
-                        metadata: { origin, frontendUrl, customOrigins }
+                        metadata: { origin }
                     } as any).catch(() => {});
-                    
-                    // In production, we might want to fail-safe or fail-hard.
-                    // For now, let's keep it strict but logged.
-                    callback(null, false);
+                    callback(new Error('Not allowed by CORS'));
                 }
             },
             credentials: true,
             methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token', 'x-request-id', 'accept', 'x-client-version', 'x-requested-with'],
             exposedHeaders: ['x-request-id'],
-            maxAge: 86400, // Cache preflight for 24 hours
+            maxAge: 86400 // Cache preflight for 24 hours
         }));
 
         // v3: Add Vary: Origin and X-Beacon-Version for client version detection
