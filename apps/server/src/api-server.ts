@@ -98,9 +98,9 @@ export class BeaconServer {
                 const isAllowedExplicitly = allowedOrigins.includes(normalized);
                 
                 // 2. Check dynamic domains (*.qzz.io, *.pages.dev)
-                const isDynamicAllowed = dynamicDomainRegex.test(normalized) || 
-                                       normalized.endsWith('.qzz.io') || 
-                                       normalized.endsWith('.pages.dev');
+                const isDynamicAllowed = normalized.endsWith('.qzz.io') || 
+                                       normalized.endsWith('.pages.dev') ||
+                                       dynamicDomainRegex.test(normalized);
                 
                 // 3. Check localhost for development
                 const isLocal = normalized === 'http://localhost:5173' || 
@@ -109,10 +109,10 @@ export class BeaconServer {
                                normalized.startsWith('http://127.0.0.1:');
 
                 if (isAllowedExplicitly || isDynamicAllowed || isLocal) {
-                    logger.success(`[CORS] \u2705 Allowed: ${origin}`);
+                    logger.success(`[CORS] \u2705 Allowed origin: ${origin}`);
                     callback(null, true);
                 } else {
-                    logger.warn(`[CORS] \u274c Blocked: ${origin}`);
+                    logger.warn(`[CORS] \u274c Blocked origin: ${origin}`);
                     SystemAuditService.log({
                         action: AuditAction.CORS_BLOCKED,
                         reason: `CORS Blocked origin: ${origin}`,
