@@ -1,6 +1,8 @@
 import { Router, Response, NextFunction } from 'express'
 import { AppsService } from '../services/apps'
 import { AuthService } from '../services/auth'
+import { PermissionService } from '../services/permissions'
+import { PermissionFlags } from 'beacon-sdk'
 import { prisma } from '../db'
 import { AuthRequest } from '../middleware/auth'
 
@@ -126,6 +128,31 @@ router.delete('/:id/bot', localAuthenticate, async (req: AuthRequest, res: Respo
         res.status(204).end()
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete bot' })
+    }
+})
+
+router.post('/:id/bot/join', localAuthenticate, async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.id
+        if (!userId) return res.status(401).json({ error: 'Unauthorized' })
+
+        const { id } = req.params
+        const { guildId } = req.body
+        if (!guildId) return res.status(400).json({ error: 'guildId is required' })
+
+        // 1. Check if user has permission to manage the guild
+        const hasPerm = await PermissionService.hasPermission(userId, guildId, PermissionFlags.MANAGE_GUILD)
+        if (!hasPerm) return res.status(403).json({ error: 'Missing permission: MANAGE_GUILD' })
+
+        const app = await AppsService.getApp(id)
+        if (!app) return res.status(404).json({ error: 'Application not found' })
+        if (app.ownerId !== userId) return res.status(403).json({ error: 'Unauthorized' })
+        if (!app.bot) return res.status(400).json({ error: 'Application has no bot' })
+
+        const member = await AppsService.addBotToGuild(app.bot.userId, guildId)
+        return res.json(member)
+    } catch (error: any) {
+        return res.status(500).json({ error: error?.message || 'Failed to add bot to guild' })
     }
 })
 

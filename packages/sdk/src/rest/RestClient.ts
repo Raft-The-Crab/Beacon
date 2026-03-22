@@ -387,6 +387,10 @@ export class RestClient {
     return this.request('PATCH', '/users/@me', data);
   }
 
+  createDM(userIds: string[]): Promise<RawChannel> {
+    return this.request<RawChannel>('POST', '/dms', { userIds });
+  }
+
   // ─────────────────────────────────────────────────────────────
   // Application Commands
   // ─────────────────────────────────────────────────────────────

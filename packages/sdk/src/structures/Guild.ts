@@ -33,20 +33,27 @@ export interface RawGuild {
   icon: string | null
   banner: string | null
   splash?: string | null
-  owner_id: string
-  created_at: string
+  owner_id?: string
+  ownerId?: string
+  created_at?: string
+  createdAt?: string
   member_count?: number
+  memberCount?: number
   members?: any[]
   channels?: any[]
   roles?: any[]
   boost_count?: number
+  boostCount?: number
   boost_level?: number
+  boostLevel?: number
   vanity_url?: string | null
+  vanityURL?: string | null
   description?: string | null
   features?: string[]
   tags?: ServerTag[]
   settings?: any
   approximate_member_count?: number
+  approximateMemberCount?: number
   approximate_presence_count?: number
 }
 import { RoleManager } from '../managers/RoleManager';
@@ -102,13 +109,13 @@ export class Guild {
         this.icon = data.icon;
         this.banner = data.banner;
         this.splash = data.splash;
-        this.ownerId = data.owner_id;
-        this.memberCount = data.member_count || (data as any).approximate_member_count || 0;
-        this.approximateMemberCount = (data as any).approximate_member_count || this.memberCount;
-        this.vanityURL = data.vanity_url;
+        this.ownerId = data.owner_id || data.ownerId || '';
+        this.memberCount = data.member_count || data.memberCount || data.approximate_member_count || data.approximateMemberCount || 0;
+        this.approximateMemberCount = data.approximate_member_count || data.approximateMemberCount || this.memberCount;
+        this.vanityURL = data.vanity_url || data.vanityURL;
         this.description = data.description;
-        this.boostCount = data.boost_count || 0;
-        this.boostLevel = data.boost_level || 0;
+        this.boostCount = data.boost_count || data.boostCount || 0;
+        this.boostLevel = data.boost_level || data.boostLevel || 0;
         this.features = data.features || [];
         this.tags = data.tags || [];
         this.settings = (data as any).settings ?? {};
@@ -140,15 +147,16 @@ export class Guild {
         // Handle createdAt
         let date: Date;
         try {
-            if (data.created_at && isNaN(Number(data.created_at))) {
-                this.createdAt = data.created_at;
+            const rawDate = data.created_at || data.createdAt;
+            if (rawDate && isNaN(Number(rawDate))) {
+                this.createdAt = rawDate;
             } else {
                 date = new Date(Number((BigInt(this.id) >> 22n) + 1420070400000n));
                 this.createdAt = date.toISOString();
                 this.createdAtDate = date;
             }
         } catch {
-            this.createdAt = data.created_at || new Date().toISOString();
+            this.createdAt = data.created_at || data.createdAt || new Date().toISOString();
             this.createdAtDate = new Date();
         }
     }

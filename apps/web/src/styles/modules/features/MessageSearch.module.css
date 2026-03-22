@@ -1,13 +1,15 @@
 .searchPanel {
     width: 420px;
     height: 100%;
-    background: var(--bg-secondary);
+    background: var(--bg-secondary) !important;
+    background-color: var(--bg-secondary) !important;
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-left: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
     animation: searchSlideIn 0.3s var(--ease-out);
+    color: var(--text-primary);
 }
 
 @keyframes searchSlideIn {

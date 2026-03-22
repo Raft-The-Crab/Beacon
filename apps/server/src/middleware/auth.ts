@@ -17,6 +17,21 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
   const payload = AuthService.verifyToken(token) as { id: string } | null
 
+  // Support for Bot Tokens
+  if (!payload && token.startsWith('beacon/bot_')) {
+    if (prisma) {
+      const bot = await prisma.bot.findUnique({
+        where: { token },
+        select: { userId: true }
+      });
+      if (bot) {
+        req.user = { id: bot.userId }
+        return next()
+      }
+    }
+    return res.status(401).json({ error: 'Invalid bot token' })
+  }
+
   if (!payload) {
     return res.status(401).json({ error: 'Invalid token' })
   }

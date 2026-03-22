@@ -46,6 +46,16 @@ export type CommandHandler = (ctx: InteractionContext) => void | Promise<void>;
 
 import { VoiceManager } from './voice/VoiceManager';
 
+/**
+ * Interface for Beacon SDK plugins.
+ * Plugins can register middleware, commands, and other extensions.
+ */
+export interface BeaconPlugin {
+  name: string;
+  onInstall(client: Client): void | Promise<void>;
+  onTeardown?(client: Client): void | Promise<void>;
+}
+
 export class Client extends EventEmitter {
   public readonly token: string;
   public readonly rest: RestClient;
@@ -77,7 +87,7 @@ export class Client extends EventEmitter {
   public readonly registry = new CommandRegistry();
   /** Gateway event middleware pipeline — intercept/transform/short-circuit events. */
   public readonly middleware = new MiddlewarePipeline();
-  private _plugins: Map<string, Plugin> = new Map();
+  private _plugins: Map<string, BeaconPlugin> = new Map();
   private _ready = false;
   private _readyAt = 0;
 
@@ -148,6 +158,22 @@ export class Client extends EventEmitter {
     }
 
     this._setupGatewayEvents();
+  }
+
+  /**
+   * Installs a plugin into the client.
+   * @param plugin The plugin instance to install
+   */
+  public async installPlugin(plugin: BeaconPlugin): Promise<this> {
+    if (this._plugins.has(plugin.name)) {
+      throw new Error(`Plugin with name "${plugin.name}" is already installed.`);
+    }
+    await plugin.onInstall(this);
+    this._plugins.set(plugin.name, plugin);
+    if (this._gateway.isConnected) {
+        console.debug(`[beacon.js] Plugin "${plugin.name}" installed (hot).`);
+    }
+    return this;
   }
 
   /**
@@ -317,7 +343,25 @@ export class Client extends EventEmitter {
       this.emit('presenceUpdate', presence);
     });
 
-    this._gateway.on('interactionCreate', (raw: RawInteraction) => {
+    // Helper for running middleware and emitting
+    const dispatch = async (event: string, raw: any, wrap: (data: any) => any) => {
+      const allowed = await this.middleware.run(event, raw);
+      if (!allowed) return;
+      this.emit(event, wrap(raw));
+    };
+
+    this._gateway.on('messageCreate', (rawMsg: RawMessage) => {
+        dispatch('messageCreate', rawMsg, (data) => {
+            const msg = new Message(this, data);
+            this.messages.set(msg.id, msg);
+            return msg;
+        });
+    });
+
+    this._gateway.on('interactionCreate', async (raw: RawInteraction) => {
+      const allowed = await this.middleware.run('interactionCreate', raw);
+      if (!allowed) return;
+
       const ctx = new InteractionContext(raw, this.rest);
       this.emit('interactionCreate', ctx);
 
@@ -500,6 +544,25 @@ export class Client extends EventEmitter {
   // Message helpers
   // ─────────────────────────────────────────────────────────────
   /**
+   * Create a DM channel with one or more users.
+   * @param userIds Array of user IDs or a single user ID
+   */
+  async createDM(userIds: string | string[]): Promise<Channel> {
+    const ids = Array.isArray(userIds) ? userIds : [userIds];
+    const raw = await this.rest.createDM(ids);
+    const channel = new Channel(this, raw);
+    this.channels.set(channel.id, channel);
+    return channel;
+  }
+
+  /**
+   * Send a DM to a user. Shortcuts channel creation.
+   */
+  async sendDM(userId: string, content: string | MessageBuilder | any) {
+    const channel = await this.createDM(userId);
+    return this.sendMessage(channel.id, content);
+  }
+  /**
    * Send a message to a channel. Supports string content, raw objects, or MessageBuilder.
    */
   async sendMessage(channelId: string, content: string | MessageBuilder | { content?: string; embeds?: any[]; components?: any[] } | any) {
@@ -516,12 +579,12 @@ export class Client extends EventEmitter {
 
     // Standardize embeds and components
     if (payload.embeds) {
-      payload.embeds = payload.embeds.map((e: any) => 
+      payload.embeds = payload.embeds.map((e: any) =>
         typeof e === 'object' && e !== null && 'toJSON' in e ? e.toJSON() : e
       );
     }
     if (payload.components) {
-      payload.components = payload.components.map((c: any) => 
+      payload.components = payload.components.map((c: any) =>
         typeof c === 'object' && c !== null && 'toJSON' in c ? c.toJSON() : c
       );
     }
@@ -553,12 +616,12 @@ export class Client extends EventEmitter {
 
     // Standardize embeds and components
     if (payload.embeds) {
-      payload.embeds = payload.embeds.map((e: any) => 
+      payload.embeds = payload.embeds.map((e: any) =>
         typeof e === 'object' && e !== null && 'toJSON' in e ? e.toJSON() : e
       );
     }
     if (payload.components) {
-      payload.components = payload.components.map((c: any) => 
+      payload.components = payload.components.map((c: any) =>
         typeof c === 'object' && c !== null && 'toJSON' in c ? c.toJSON() : c
       );
     }
@@ -669,7 +732,7 @@ export class Client extends EventEmitter {
     // Note: Member structure needs the client and raw data
     // For now, returning the raw or a generic object if Member class isn't fully ready to be instantiated here
     // But we have Member.ts, so let's import it if needed.
-    return raw; 
+    return raw;
   }
 
   /**
@@ -753,27 +816,11 @@ export class Client extends EventEmitter {
     this._gateway.updatePresence(status, activities);
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Plugin system
-  // ─────────────────────────────────────────────────────────────
-  /**
-   * Install a plugin. The plugin's `setup()` method is called immediately.
-   * Plugins can add event listeners, register commands, extend the middleware pipeline, etc.
-   */
-  async use(plugin: Plugin): Promise<this> {
-    if (this._plugins.has(plugin.name)) {
-      throw new Error(`Plugin '${plugin.name}' is already installed`);
-    }
-    this._plugins.set(plugin.name, plugin);
-    await Promise.resolve(plugin.setup(this));
-    return this;
-  }
-
-  /** Remove a previously installed plugin. Calls its `teardown()` method if defined. */
+  /** Remove a previously installed plugin. Calls its `onTeardown()` method if defined. */
   async removePlugin(name: string): Promise<boolean> {
     const plugin = this._plugins.get(name);
     if (!plugin) return false;
-    if (plugin.teardown) await Promise.resolve(plugin.teardown(this));
+    if (plugin.onTeardown) await Promise.resolve(plugin.onTeardown(this));
     this._plugins.delete(name);
     return true;
   }
@@ -791,18 +838,11 @@ export class Client extends EventEmitter {
   /** Destroy the client, teardown all plugins, and disconnect the gateway. */
   async destroyAll(): Promise<void> {
     for (const plugin of this._plugins.values()) {
-      if (plugin.teardown) await Promise.resolve(plugin.teardown(this)).catch(() => {});
+      if (plugin.onTeardown) await Promise.resolve(plugin.onTeardown(this)).catch(() => { });
     }
     this._plugins.clear();
     this.registry.destroy();
     this.middleware.clear();
     this.destroy();
   }
-}
-
-/** Plugin interface — add functionality to the client via .use() */
-export interface Plugin {
-  name: string;
-  setup(client: Client): void | Promise<void>;
-  teardown?(client: Client): void | Promise<void>;
 }

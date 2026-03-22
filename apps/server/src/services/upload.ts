@@ -8,6 +8,7 @@ const primaryConfig = {
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true, // Forces all URLs (including 'url' property) to use HTTPS
 };
 
 // Secondary Config (Failover)
@@ -134,7 +135,7 @@ export class FileUploadService {
     }
 
     return {
-      url: result.url,
+      url: result.secure_url, // Always use secure_url for the main url property
       secure_url: result.secure_url,
       public_id: result.public_id,
       format: result.format,

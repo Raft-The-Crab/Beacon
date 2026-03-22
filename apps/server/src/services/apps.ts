@@ -162,4 +162,29 @@ export class AppsService {
             return await tx.application.delete({ where: { id } })
         })
     }
+
+    static async addBotToGuild(botUserId: string, guildId: string) {
+        // 1. Check if bot exists
+        const botUser = await prisma.user.findUnique({ where: { id: botUserId, bot: true } });
+        if (!botUser) throw new Error('Bot not found');
+
+        // 2. Check if guild exists
+        const guild = await prisma.guild.findUnique({ where: { id: guildId } });
+        if (!guild) throw new Error('Guild not found');
+
+        // 3. Check if already a member
+        const existing = await prisma.guildMember.findUnique({
+            where: { userId_guildId: { userId: botUserId, guildId } }
+        });
+        if (existing) return existing;
+
+        // 4. Create membership
+        return await prisma.guildMember.create({
+            data: {
+                guildId,
+                userId: botUserId,
+                nickname: botUser.displayName
+            }
+        });
+    }
 }

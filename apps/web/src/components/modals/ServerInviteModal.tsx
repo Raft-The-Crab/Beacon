@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Copy, Check, Link, Clock, Users, RefreshCw, X } from 'lucide-react'
 import { Select } from '../ui'
+import { apiClient } from '../../services/apiClient'
 import styles from '../../styles/modules/modals/ServerInviteModal.module.css'
+import { useEffect } from 'react'
 
 interface ServerInviteModalProps {
     serverName: string
@@ -30,32 +32,51 @@ const MAX_USES_OPTIONS = [
     { label: '100 uses', value: 100 },
 ]
 
-function generateInviteCode(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    let code = ''
-    for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length))
-    return code
-}
-
-export function ServerInviteModal({ serverName, isOpen, onClose }: ServerInviteModalProps) {
-    const [inviteCode, setInviteCode] = useState(generateInviteCode())
+export function ServerInviteModal({ serverName, serverId, isOpen, onClose }: ServerInviteModalProps) {
+    const [inviteCode, setInviteCode] = useState('')
+    const [loading, setLoading] = useState(false)
     const [copied, setCopied] = useState(false)
     const [expiry, setExpiry] = useState('7d')
     const [maxUses, setMaxUses] = useState(0)
     const [showAdvanced, setShowAdvanced] = useState(false)
 
+    const fetchInvite = async () => {
+        setLoading(true)
+        try {
+            const res = await (apiClient as any).request('POST', `/guilds/${serverId}/invites`, {
+                maxUses: maxUses === 0 ? null : maxUses,
+                // expiry handled by backend default for now, can be extended
+            })
+            if (res.success && res.data?.code) {
+                setInviteCode(res.data.code)
+            }
+        } catch (err) {
+            console.error('Failed to create invite:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Fetch on mount or when serverId or showAdvanced settings change
+    useEffect(() => {
+        if (isOpen && serverId) {
+            fetchInvite()
+        }
+    }, [isOpen, serverId])
+
     if (!isOpen) return null
 
-    const inviteLink = `${window.location.origin}/invite/${inviteCode}`
+    const inviteLink = inviteCode ? `${window.location.origin}/invite/${inviteCode}` : 'Generating...'
 
     const handleCopy = () => {
+        if (!inviteCode) return
         navigator.clipboard.writeText(inviteLink)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
     }
 
     const handleRegenerate = () => {
-        setInviteCode(generateInviteCode())
+        fetchInvite()
         setCopied(false)
     }
 

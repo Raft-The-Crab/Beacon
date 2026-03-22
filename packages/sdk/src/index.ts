@@ -9,8 +9,8 @@ export * from './types/index';
 export { BeaconEventEmitter as SDKEventEmitter } from './sdk/BeaconEventEmitter';
 
 // Core bot client
-export { Client, type Plugin, Client as BeaconClient } from './client';
-export { AIClient, type AIClientOptions } from './enhanced';
+export { Client, type BeaconPlugin, Client as BeaconClient } from './client';
+export { BeaconAIPlugin, type BeaconAIPluginOptions } from './plugins/BeaconAIPlugin';
 
 // Gateway
 export { Intents, DEFAULT_INTENTS, type GatewayOptions, type ConnectionState, type HealthGrade, type GatewaySessionInfo } from './gateway';
@@ -21,6 +21,7 @@ export { resolveApiClientBaseUrl, resolveApiClientGatewayUrl } from './connectio
 
 // Builders
 export * from './builders/index';
+export { ProgressBarBuilder, type ProgressBarOptions } from './builders/ProgressBarBuilder';
 
 // Structures
 export { Collection } from './structures/Collection';

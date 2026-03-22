@@ -391,8 +391,17 @@ export class AuthController {
 
             const { admin } = await import('../config/firebase');
             if (!admin.apps.length) {
-                logger.error('[GOOGLE_LOGIN] Firebase Admin not initialized');
-                return res.status(503).json({ error: 'Google Login is currently unavailable (Firebase not configured).' });
+                const isConfigured = !!(process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY);
+                logger.error(`[GOOGLE_LOGIN] Firebase Admin not initialized (Configured: ${isConfigured})`);
+                
+                const errorMessage = isConfigured 
+                    ? 'Google Login is currently unavailable (Initialization failed). Please check server logs.'
+                    : 'Google Login is currently unavailable (Environment variables missing).';
+
+                return res.status(503).json({ 
+                    error: errorMessage,
+                    code: isConfigured ? 'FIREBASE_INIT_ERROR' : 'FIREBASE_CONFIG_MISSING'
+                });
             }
 
             // 1. Verify ID Token

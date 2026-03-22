@@ -121,8 +121,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           verificationRequired: false,
           verificationEmail: null
         })
-        if (response.data.user.theme) {
-          get().setTheme(response.data.user.theme)
+        // Sync theme if available
+        const userTheme = response.data?.user?.theme;
+        if (userTheme) {
+          get().setTheme(userTheme)
         }
         // Proactively generate keys if not present
         if (!get().encryptionKeys) {
@@ -157,7 +159,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           mfaRequired: false,
           tempUserId: null
         })
-        if (response.data.user.theme) {
+        if (response.data?.user?.theme) {
           get().setTheme(response.data.user.theme)
         }
       } else {
@@ -186,7 +188,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         })
         const keys = await CryptoService.generateKeyPair();
         set({ encryptionKeys: keys });
-        if (response.data.user.theme) {
+        if (response.data?.user?.theme) {
           get().setTheme(response.data.user.theme)
         }
       } else {
@@ -210,7 +212,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response = await apiClient.socialLogin(idToken)
       if (response.success && response.data) {
         set({ user: decorateSystemUser(response.data.user), isAuthenticated: true, isLoading: false })
-        if (response.data.user.theme) {
+        if (response.data?.user?.theme) {
           get().setTheme(response.data.user.theme)
         }
         if (!get().encryptionKeys) {
@@ -270,8 +272,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (response.success && response.data) {
         const userData = response.data as User & { theme?: string }
         set({ user: decorateSystemUser(userData as User) as any, isAuthenticated: true, isLoading: false })
-        if (userData.theme) {
-          get().setTheme(userData.theme)
+        
+        const userTheme = (userData as any)?.theme;
+        if (userTheme) {
+          get().setTheme(userTheme)
         }
       } else {
         set({ user: null, isAuthenticated: false, isLoading: false })

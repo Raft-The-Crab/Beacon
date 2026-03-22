@@ -1,4 +1,5 @@
 import type { Embed } from '../types/index';
+import { ProgressBarBuilder, type ProgressBarOptions } from './ProgressBarBuilder';
 
 /**
  * Builder class for creating Beacon message embeds.
@@ -99,6 +100,27 @@ export class EmbedBuilder {
     if (!this.data.fields) this.data.fields = [];
     this.data.fields.push(...fields);
     return this;
+  }
+
+  /**
+   * Helper to add a progress bar as a field or update the description.
+   * @param name Name of the field.
+   * @param value Current progress value.
+   * @param options Progress bar visual options.
+   * @param inline Whether the field should be inline.
+   */
+  setProgressBar(name: string, value: number, options: ProgressBarOptions = {}, inline?: boolean): this {
+    const bar = new ProgressBarBuilder(options).setValue(value).build();
+    this.addField(name, bar, inline);
+    return this;
+  }
+
+  /**
+   * Adds a field containing a visual progress bar.
+   */
+  addProgressBarField(name: string, value: number, max: number = 100, options: Omit<ProgressBarOptions, 'max'> & { inline?: boolean } = {}): this {
+    const bar = new ProgressBarBuilder({ ...options, max }).setValue(value).build();
+    return this.addField(name, bar, options.inline);
   }
 
   /**

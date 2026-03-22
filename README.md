@@ -1,68 +1,85 @@
-# 📡 Beacon v2.5.0
+# 📡 Beacon — The Evolution of Communication
 
-**The Zero-Barrier, Developer-First Communication Platform**
+**Zero-Barrier. Developer-First. Privacy-Centric.**
 
-Beacon is a next-generation messaging platform where premium communication is free, private, and open to developers. No subscriptions. No paywalls. No data harvesting. Built on modern, secure infrastructure with a thriving bot ecosystem.
-
----
-
-## ⚡ Core Features
-
-### Communication
-- **HD Screen Sharing & Video** — Unlimited HD streaming, file uploads, and voice calls for all users
-- **Earned Premium** — Earn **Beacoin** through activity. Customize with themes, animated banners, and exclusive badges
-- **Friends & Servers** — Build communities with robust permission systems and direct messaging
-- **Persistent Voice** — Always-on voice channels with automatic cleanup and state synchronization (v2.5.0)
-
-### Safety & Moderation
-- **AI Moderation** — Intelligent content filtering powered by ONNX models and SWI-Prolog rules
-- **Security-First** — Hardened CORS for multi-cloud deployments (Railway + Cloudflare), rate limiting, and CSRF protection
-- **Stability** — Null-safe runtime architecture preventing common "toLowerCase" and state-sync regressions
-
-### Developer Features
-- **Unified SDK** — `beacon-sdk`, a single, powerful package for bots, interactions, and gateway clients
-- **REST API** — Full-featured REST API with high performance and type safety
-- **Webhooks** — Event-driven automation for servers and individual users
-
-## 🏗️ Infrastructure
-
-Beacon is built on a resilient, multi-region architecture designed for high availability and low latency. The platform utilizes managed container orchestration and global CDNs to ensure 99.9% uptime.
+Beacon is a next-generation communication platform designed to dismantle the barriers of modern messaging. No subscriptions, no paywalls, and no data harvesting. Just high-performance, secure communication with a world-class developer ecosystem.
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Key Features
 
-Beacon is a high-performance communication platform.
+### 💎 Premium for Everyone
+- **HD Streaming & Video** — Unlimited HD screen sharing and voice calls for all users at no cost.
+- **Earned Identity** — Customize your profile with themes, animated banners, and exclusive badges earned through activity, not credit cards.
+- **Persistent Voice** — Reliable, low-latency voice channels with automatic state synchronization.
 
-**Build with Beacon**: `npm install beacon-sdk`  
-**Join the Platform**: Visit [beacon.qzz.io](https://beacon.qzz.io)
+### 🤖 Intelligent Bot Ecosystem
+- **Universal SDK** — Build anything from simple utility bots to complex AI integrations using `beacon-sdk`.
+- **Bot-to-User DMs** — Bots can now initiate and manage direct messages with users for personalized notifications and interactions.
+- **Seamless Server Invites** — Add bots to your servers with just two clicks, managed via a robust permission system.
+
+### 🛡️ Hardened Security
+- **Secure Cloud Infrastructure** — Multi-cloud deployment (Railway + Cloudflare) with hardened CORS and CSRF protection.
+- **AI-Powered Moderation** — Base-layer content filtering powered by ONNX and semantic rule engines.
+- **Privacy First** — Your data belongs to you. Period.
 
 ---
 
-## 📡 Bot SDK (beacon-sdk)
+## 🏗️ Architecture Overview
 
-The `beacon-sdk` provides everything you need to build on Beacon, including full type definitions, builders, and gateway clients.
-
-### Installation
-
-```bash
-npm install beacon-sdk
+```mermaid
+graph TD
+    User((User)) <--> Web[Frontend - Next.js/Vite]
+    Web <--> API[REST API - Express/Node.js]
+    API <--> DB[(Prisma / PostgreSQL)]
+    API <--> Cache[(Redis)]
+    API <--> Gateway[Real-time Gateway - WebSockets]
+    Gateway <--> Bot((Beacon Bot))
+    Bot <--> SDK[Beacon SDK]
 ```
 
 ---
 
-## 📦 Package Versions
+## 🛠️ Developer Quick Start
 
-| Package | Version | Status |
-|---------|---------|--------|
-| **beacon-sdk** | 2.5.0 | Stable |
+### Install the SDK
+```bash
+npm install beacon-sdk
+```
+
+### Create a simple DM Bot
+```typescript
+import { Client } from 'beacon-sdk';
+
+const client = new Client({ token: 'your_bot_token' });
+
+client.on('ready', () => {
+  console.log('📡 Beacon Bot is live!');
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.content === '!dmme') {
+    // New: Direct sendDM support in SDK v3.0.10+
+    await client.sendDM(message.author.id, 'Hello from the Beacon SDK!');
+  }
+});
+
+client.login();
+```
 
 ---
 
-## 📄 License
-Beacon is proprietary software. SDK is MIT licensed.
+## 📦 Monorepo Structure
+
+- `apps/web`: The core web application (React + Framer Motion).
+- `apps/server`: High-performance Express API and WebSocket gateway.
+- `packages/sdk`: The official `beacon-sdk` for bot development.
+- `packages/types`: Shared TypeScript definitions across the ecosystem.
 
 ---
 
-**Built with ❤️ by the Beacon team**  
-*Beacon v2.5.0 — The future of communication is secure, open, and developer-first.*
+## 📄 License & Proprietary Info
+Beacon is proprietary software. The `beacon-sdk` is licensed under MIT.
+
+**Built with ❤️ by RaftTheCrab**
+*The future of communication is open, secure, and developer-first.*

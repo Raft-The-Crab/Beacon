@@ -1,6 +1,7 @@
-﻿import { useState, useEffect } from 'react'
-import { Plus, RefreshCw, Trash2, Copy, Check, Shield, Zap, Terminal, ExternalLink, AlertTriangle, Info, Bot as BotIcon } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, RefreshCw, Trash2, Copy, Check, Shield, Zap, Terminal, ExternalLink, AlertTriangle, Info, Bot as BotIcon, UserPlus } from 'lucide-react'
 import { botsApi, Bot as BotModel } from '../../api/bots'
+import { useServerStore } from '../../stores/useServerStore'
 import { Button } from '../ui/Button'
 import { useToast } from '../ui/Toast'
 import { apiClient } from '../../services/apiClient'
@@ -21,6 +22,19 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
     const [aiHealthy, setAiHealthy] = useState<boolean | null>(null)
     const [botErrorCount, setBotErrorCount] = useState<number | null>(null)
     const [botUptimeSec, setBotUptimeSec] = useState<number | null>(null)
+    const [invitingBotId, setInvitingBotId] = useState<string | null>(null)
+    const [inviting, setInviting] = useState(false)
+    const [editingBot, setEditingBot] = useState<BotModel | null>(null)
+    const [editName, setEditName] = useState('')
+    const [editAvatar, setEditAvatar] = useState('')
+    const [updating, setUpdating] = useState(false)
+    
+    const myServers = useServerStore(state => state.servers || [])
+    const manageServers = useMemo(() => {
+        // Simple filter: show servers where user could be owner or have permissions (this is client-side only for UX)
+        // In a real app, we'd check permissions bitwise. For now, show all joined servers for convenience.
+        return myServers
+    }, [myServers])
 
     const addLog = (level: 'info' | 'warn' | 'error', message: string) => {
         setLogs(prev => {
@@ -48,10 +62,15 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
             const res = await apiClient.request('GET', '/ai/status')
             const healthy = Boolean(res.success && res.data?.modelStatus === 'reachable')
             setAiHealthy(healthy)
-            addLog(healthy ? 'info' : 'warn', healthy ? 'AI moderation pipeline online' : 'AI moderation pipeline unavailable')
+            if (healthy) {
+                addLog('info', 'System AI Moderation (Official Bot): Online')
+            } else {
+                addLog('warn', 'System AI Moderation (Official Bot): Pipeline Unavailable (Requires internal AI server)')
+                addLog('info', 'Note: This does NOT affect your developer bots.')
+            }
         } catch {
             setAiHealthy(false)
-            addLog('error', 'AI sanity check request failed')
+            addLog('error', 'AI health check request failed')
         }
     }
 
@@ -157,6 +176,47 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
         }
     }
 
+    const handleUpdateBot = async () => {
+        if (!editingBot || !editName.trim()) return
+        setUpdating(true)
+        try {
+            const updated = await botsApi.update(applicationId, {
+                name: editName,
+                avatar: editAvatar || undefined
+            })
+            setBots(bots.map(b => b.id === updated.id ? updated : b))
+            setEditingBot(null)
+            showToast('Bot updated successfully', 'success')
+            addLog('info', `Bot updated: ${updated.name}`)
+        } catch (err: any) {
+            console.error('Failed to update bot', err)
+            showToast(err.message || 'Failed to update bot', 'error')
+            addLog('error', 'Bot update failed')
+        } finally {
+            setUpdating(false)
+        }
+    }
+
+    const handleInviteToGuild = async (guildId: string) => {
+        if (!invitingBotId) return
+        setInviting(true)
+        try {
+            const res = await apiClient.request('POST', `/applications/${applicationId}/bot/join`, { guildId })
+            if (res.success || (res as any).id) {
+                showToast('Bot successfully added to server!', 'success')
+                addLog('info', `Bot invited to guild ${guildId}`)
+            } else {
+                throw new Error((res as any).error || 'Failed to invite bot')
+            }
+        } catch (err: any) {
+            showToast(err.message || 'Failed to invite bot', 'error')
+            addLog('error', `Invitation failed: ${err.message}`)
+        } finally {
+            setInviting(false)
+            setInvitingBotId(null)
+        }
+    }
+
     const copyToken = () => {
         if (lastToken) {
             navigator.clipboard.writeText(lastToken)
@@ -234,7 +294,7 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                     <div key={bot.id} className={styles.botRow}>
                         <div className={styles.botInfo}>
                             <div className={styles.botAvatar}>
-                                {bot.name.charAt(0).toUpperCase()}
+                                {bot.avatar ? <img src={bot.avatar} alt="" /> : bot.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
                                 <div className={styles.botName}>{bot.name}</div>
@@ -242,6 +302,26 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                             </div>
                         </div>
                         <div className={styles.botActions}>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => {
+                                    setEditingBot(bot)
+                                    setEditName(bot.name)
+                                    setEditAvatar(bot.avatar || '')
+                                }}
+                                title="Edit Bot"
+                            >
+                                Edit
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => setInvitingBotId(bot.id)}
+                                title="Invite to Server"
+                            >
+                                <UserPlus size={14} /> Invite
+                            </Button>
                             <Button
                                 variant="secondary"
                                 size="sm"
@@ -270,6 +350,67 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                         <Button variant="secondary" size="sm" style={{ marginTop: 16 }} onClick={() => setCreating(true)}>
                             Initialize Bot
                         </Button>
+                    </div>
+                )}
+
+                {editingBot && (
+                    <div className={styles.editModal}>
+                        <div className={styles.editContent}>
+                            <h4>Edit Bot Branding</h4>
+                            <div className={styles.field}>
+                                <label>Bot Name</label>
+                                <input 
+                                    type="text" 
+                                    value={editName} 
+                                    onChange={e => setEditName(e.target.value)}
+                                    placeholder="Bot Name"
+                                />
+                            </div>
+                            <div className={styles.field}>
+                                <label>Avatar URL</label>
+                                <input 
+                                    type="text" 
+                                    value={editAvatar} 
+                                    onChange={e => setEditAvatar(e.target.value)}
+                                    placeholder="https://..."
+                                />
+                            </div>
+                            <div className={styles.actions}>
+                                <Button variant="ghost" onClick={() => setEditingBot(null)}>Cancel</Button>
+                                <Button variant="primary" onClick={handleUpdateBot} disabled={updating}>
+                                    {updating ? 'Saving...' : 'Save Changes'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {invitingBotId && (
+                    <div className={styles.invitePanel}>
+                        <div className={styles.inviteHeader}>
+                            <h5>Select a server to invite the bot</h5>
+                            <button onClick={() => setInvitingBotId(null)} className={styles.closeInvite}>&times;</button>
+                        </div>
+                        <div className={styles.serverList}>
+                            {manageServers.length === 0 ? (
+                                <p style={{ fontSize: 12, opacity: 0.6, padding: '12px 0' }}>No servers available</p>
+                            ) : (
+                                manageServers.map(s => (
+                                    <button
+                                        key={s.id}
+                                        className={styles.serverItem}
+                                        onClick={() => handleInviteToGuild(s.id)}
+                                        disabled={inviting}
+                                    >
+                                        <div className={styles.serverIcon}>
+                                            {s.icon ? <img src={s.icon} alt="" /> : (s.name.charAt(0))}
+                                        </div>
+                                        <span>{s.name}</span>
+                                        <UserPlus size={14} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+                                    </button>
+                                ))
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
