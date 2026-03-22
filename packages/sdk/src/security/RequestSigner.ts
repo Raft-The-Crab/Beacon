@@ -38,7 +38,7 @@ export class RequestSigner {
         .join('');
     } else {
       // Node.js
-      const nodeCrypto = await import('crypto');
+      const nodeCrypto = await import(/* @vite-ignore */ 'crypto');
       return nodeCrypto.createHmac('sha256', this.secret)
         .update(data)
         .digest('hex');
