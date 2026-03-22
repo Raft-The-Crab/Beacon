@@ -6,7 +6,7 @@ import { validateUsername } from '../middleware/validation'
 import { logger } from './logger'
 import { NotificationService } from './notification'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-me'
+const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret-key-change-me').trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '')
 
 // Validation schemas
 export const RegisterSchema = z.object({

@@ -147,6 +147,7 @@ class ApiClient {
         }
 
         const url = this.baseUrl + endpoint;
+        const requestHeaders = { ...headers };
         
         try {
             const res = await fetch(url, {
@@ -166,6 +167,11 @@ class ApiClient {
                 } else {
                     console.error(`[API] Failed to parse JSON response from ${method} ${endpoint}:`, text.slice(0, 100));
                 }
+            }
+
+            if (res.status === 401) {
+                const authVal = requestHeaders['Authorization'] || 'MISSING';
+                console.warn(`[API] 401 Unauthorized on ${endpoint}. Token found in header: ${authVal !== 'MISSING'}. Header start: ${authVal.slice(0, 15)}...`);
             }
 
             // Handle CSRF failures with recovery

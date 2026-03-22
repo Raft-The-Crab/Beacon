@@ -2,3 +2,4 @@
 # Cloudflare serves existing files automatically.
 # This rule only catches non-existent paths (like /login) for React Router.
 /* /index.html 200
+/index.html /index.html 200
