@@ -318,9 +318,28 @@ export class BeaconServer {
     }
 }
 
-// Ensure compatibility with existing modules trying to import app/server
-const instance = new BeaconServer();
-export const app = instance.app;
-export const server = instance.server;
+// v3: Export variables for external access
+export let app: any;
+export let server: any;
 
-instance.listen();
+// v3: Safe instantiation with global error capture
+try {
+    logger.info('[Boot] Initializing BeaconServer instance...');
+    const instance = new BeaconServer();
+    
+    // Assign to exported variables
+    app = instance.app;
+    server = instance.server;
+    
+    logger.info('[Boot] Internal routes mounted, starting listener...');
+    instance.listen().catch(err => {
+        logger.error(`[Fatal] Listen failed during startup: ${err.message}`);
+        process.exit(1);
+    });
+} catch (err: any) {
+    console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    console.error('!!! FATAL STARTUP ERROR: UNABLE TO BOOT SERVER');
+    console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    console.error(err);
+    process.exit(1);
+}
