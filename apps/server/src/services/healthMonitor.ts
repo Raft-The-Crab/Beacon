@@ -142,7 +142,7 @@ class HealthMonitor {
         // Publish to Redis for dashboard consumption
         try {
             await redis.cache('health:latest', health, 120);
-            await redis.publish('health:status', health);
+            await redis.publish('health:status', JSON.stringify(health));
         } catch { }
 
         // Log warnings

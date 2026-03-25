@@ -3,6 +3,8 @@
   bottom: calc(100% + 12px);
   left: 0;
   width: 250px;
+  min-width: 250px;
+  max-width: calc(100vw - 32px);
   background: rgba(20, 20, 22, 0.85);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
@@ -61,6 +63,8 @@
   gap: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .item:hover, .selected {

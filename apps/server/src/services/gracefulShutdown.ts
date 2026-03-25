@@ -53,7 +53,7 @@ class GracefulShutdownService {
 
         this.register('Redis', async () => {
             try {
-                await redis.publish('cluster:shutdown', { timestamp: Date.now() });
+                await redis.publish('cluster:shutdown', JSON.stringify({ timestamp: Date.now() }));
                 await redis.disconnect();
             } catch { }
         }, 90);
@@ -73,11 +73,11 @@ class GracefulShutdownService {
 
         // Phase 1: Stop accepting new connections (handled by caller)
         try {
-            await redis.publish('cluster:draining', {
+            await redis.publish('cluster:draining', JSON.stringify({
                 reason,
                 timestamp: Date.now(),
                 drainMs: this.drainTimeoutMs,
-            });
+            }));
         } catch { }
 
         // Phase 2: Wait for drain timeout
