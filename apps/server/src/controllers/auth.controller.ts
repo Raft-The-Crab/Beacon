@@ -130,8 +130,45 @@ export class AuthController {
 
             res.json(result);
         } catch (error: any) {
-            // ... (rest of catch logic is already broad enough)
-            throw error;
+            logger.error(`[AUTH] Login error: ${error.message}`);
+
+            if (isDatabaseUnavailable(error)) {
+                return res.status(503).json({ error: 'Authentication service unavailable. Check the database connection.' });
+            }
+
+            // Increment failed login attempts for lockout
+            try {
+                const identifier = req.body?.identifier;
+                if (identifier && prisma) {
+                    const failedUser = await (prisma.user as any).findFirst({
+                        where: {
+                            OR: [
+                                { email: { equals: identifier, mode: 'insensitive' } },
+                                { username: { equals: identifier, mode: 'insensitive' } }
+                            ]
+                        },
+                        select: { id: true, loginAttempts: true }
+                    });
+
+                    if (failedUser) {
+                        const newAttempts = (failedUser.loginAttempts || 0) + 1;
+                        const updateData: any = { loginAttempts: newAttempts };
+
+                        if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+                            updateData.lockoutUntil = new Date(Date.now() + LOCKOUT_DURATION_MIN * 60 * 1000);
+                        }
+
+                        await (prisma.user as any).update({
+                            where: { id: failedUser.id },
+                            data: updateData
+                        });
+                    }
+                }
+            } catch (lockoutErr: any) {
+                logger.warn(`[AUTH] Failed to update lockout counter: ${lockoutErr.message}`);
+            }
+
+            res.status(401).json({ error: error.message || 'Invalid credentials' });
         }
     }
 

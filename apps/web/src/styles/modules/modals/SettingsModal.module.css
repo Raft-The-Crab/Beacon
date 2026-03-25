@@ -2081,4 +2081,152 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ── Responsive: Tablet ── */
+@media (max-width: 768px) {
+    .overlay {
+        padding: 0;
+    }
+
+    .modal {
+        width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+        border: none;
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        flex-direction: row;
+        padding: 12px 8px;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        gap: 4px;
+    }
+
+    .sidebar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .userProfile {
+        display: none;
+    }
+
+    .nav {
+        flex-direction: row;
+        gap: 4px;
+        overflow: visible;
+        padding-bottom: 0;
+    }
+
+    .navGroup {
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+    }
+
+    .navItem {
+        white-space: nowrap;
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+
+    .content {
+        flex: 1;
+        min-height: 0;
+        padding: 16px;
+    }
+
+    .tabContent {
+        padding: 0;
+    }
+
+    .premiumTabContent {
+        padding: 0;
+    }
+
+    .profileHeaderCard {
+        margin-bottom: 56px;
+    }
+
+    .headerAvatarWrap {
+        width: 100px;
+        height: 100px;
+        bottom: -50px;
+        left: 16px;
+    }
+
+    .headerBanner {
+        height: 100px;
+    }
+
+    .closeButton {
+        top: 8px;
+        right: 8px;
+    }
+}
+
+/* ── Responsive: Small Phone ── */
+@media (max-width: 480px) {
+    .modal {
+        border-radius: 0;
+    }
+
+    .sidebar {
+        padding: 8px 6px;
+    }
+
+    .navItem {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+    .content {
+        padding: 12px;
+    }
+
+    .formGroup {
+        margin-bottom: 20px;
+    }
+
+    .profileHeaderCard {
+        margin-bottom: 48px;
+    }
+
+    .headerAvatarWrap {
+        width: 80px;
+        height: 80px;
+        bottom: -40px;
+        left: 12px;
+    }
+
+    .headerBanner {
+        height: 80px;
+    }
+
+    .appearanceSection h3 {
+        font-size: 15px;
+    }
+
+    .themeOptions {
+        flex-wrap: wrap;
+    }
+
+    .colorPresets {
+        flex-wrap: wrap;
+    }
+
+    .densityOptions {
+        flex-direction: column;
+    }
+
+    .bubbleStyleOptions {
+        grid-template-columns: 1fr 1fr;
+    }
+}
 
