@@ -50,6 +50,13 @@
   box-shadow: 0 0 10px rgba(114, 137, 218, 0.1);
 }
 
+.beacon-plus {
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.2), rgba(121, 68, 254, 0.2));
+  color: #5865f2;
+  border-color: rgba(88, 101, 242, 0.3);
+  box-shadow: 0 0 10px rgba(88, 101, 242, 0.2);
+}
+
 /* Sizes */
 .sm {
   padding: 2px 8px;

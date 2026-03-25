@@ -60,6 +60,11 @@ export function MessageInput({
 
   const { currentServerId } = useServerStore()
 
+  // Reset members when server changes
+  useEffect(() => {
+    setMembers([])
+  }, [currentServerId])
+
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -103,14 +108,19 @@ export function MessageInput({
     e.currentTarget.style.height = `${Math.min(e.currentTarget.scrollHeight, 200)}px`
 
     // Mention detection
-    const lastAtPos = text.lastIndexOf('@')
-    if (lastAtPos !== -1 && !text.slice(lastAtPos).includes(' ')) {
-      const query = text.slice(lastAtPos + 1)
+    const cursor = e.currentTarget.selectionStart
+    const textBeforeCursor = text.slice(0, cursor)
+    const lastAtPos = textBeforeCursor.lastIndexOf('@')
+    
+    // Check if @ is followed by characters without spaces up to the cursor
+    if (lastAtPos !== -1 && !textBeforeCursor.slice(lastAtPos).includes(' ')) {
+      const query = textBeforeCursor.slice(lastAtPos + 1)
       setMentionQuery(query)
       setShowMentionPicker(true)
       setShowSlashCommandPicker(false)
 
-      if (members.length === 0 && currentServerId) {
+      // Fetch members if not already cached for THIS server
+      if (currentServerId) {
         apiClient.getGuildMembers(currentServerId).then(res => {
           if (res.success && res.data) setMembers(res.data)
         }).catch(err => console.warn('Failed to fetch members for mention:', err))
@@ -120,7 +130,7 @@ export function MessageInput({
       setMentionQuery('')
 
       // Slash command detection
-      if (text.startsWith('/')) {
+      if (text.startsWith('/') && !text.includes('\n')) {
         const query = text.slice(1).split(' ')[0]
         setSlashCommandQuery(query)
         setShowSlashCommandPicker(true)

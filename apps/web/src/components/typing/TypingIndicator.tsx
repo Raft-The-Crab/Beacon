@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Typing Indicator Component
  */
 
@@ -18,7 +18,7 @@ export const TypingIndicator: React.FC<{ channelId?: string }> = () => {
     const names = typingUserIds.map(id => {
       if (id === 'current-user') return 'You';
       const member = currentServer?.members?.find((m: any) => m.userId === id);
-      return member?.username || id;
+      return member?.displayName || id;
     });
 
     if (names.length === 1) {

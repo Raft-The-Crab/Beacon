@@ -383,7 +383,7 @@ export class RestClient {
     return this.request<RawUser>('GET', `/users/${userId}`);
   }
 
-  modifyCurrentUser(data: { username?: string; avatar?: string }) {
+  modifyCurrentUser(data: { username?: string; avatar?: string; bio?: string; name_design?: Record<string, any> }) {
     return this.request('PATCH', '/users/@me', data);
   }
 

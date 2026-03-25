@@ -23,8 +23,8 @@ function normalizeProxyTarget(rawValue: string | undefined, fallback: string): s
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const apiProxyTarget = normalizeProxyTarget(env.VITE_BACKEND_URL, 'http://localhost:8080')
-  const gatewayProxyTarget = normalizeProxyTarget(env.VITE_GATEWAY_URL, 'http://localhost:8080')
+  const apiProxyTarget = normalizeProxyTarget(env.VITE_BACKEND_URL, 'http://localhost:8000')
+  const gatewayProxyTarget = normalizeProxyTarget(env.VITE_GATEWAY_URL, 'http://localhost:8000')
   const workspaceRoot = searchForWorkspaceRoot(process.cwd())
   const reactPlugin = react({
     jsxRuntime: 'automatic',
@@ -86,6 +86,14 @@ export default defineConfig(({ mode }) => {
         '/gateway': {
           target: gatewayProxyTarget,
           ws: true,
+          changeOrigin: true,
+        },
+        '/uploads': {
+          target: apiProxyTarget.replace(/\/api$/, ''),
+          changeOrigin: true,
+        },
+        '/avatars': {
+          target: apiProxyTarget.replace(/\/api$/, ''),
           changeOrigin: true,
         }
       }

@@ -103,7 +103,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 100%;
+  width: calc(100% - 4px);
+  margin: 0 auto;
   padding: 10px 14px;
   border-radius: var(--radius-xl);
   color: var(--text-secondary);
@@ -275,7 +276,8 @@
   padding: 10px 14px;
   border-radius: var(--radius-xl);
   color: var(--text-secondary);
-  width: 100%;
+  width: calc(100% - 4px);
+  margin-left: 2px;
   text-align: left;
   transition: all 0.2s var(--ease-out), transform 0.1s ease;
   border: 1px solid rgba(255, 255, 255, 0.03);

@@ -453,6 +453,14 @@ class ApiClient {
         return this.request('DELETE', `/guilds/${guildId}/roles/${roleId}`);
     }
 
+    async addMemberRole(guildId: string, userId: string, roleId: string) {
+        return this.request('PUT', `/guilds/${guildId}/members/${userId}/roles/${roleId}`);
+    }
+
+    async removeMemberRole(guildId: string, userId: string, roleId: string) {
+        return this.request('DELETE', `/guilds/${guildId}/members/${userId}/roles/${roleId}`);
+    }
+
     async executeInteraction(data: any) {
         return this.request('POST', '/interactions', data);
     }

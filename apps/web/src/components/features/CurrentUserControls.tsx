@@ -42,8 +42,8 @@ export function CurrentUserControls() {
         return null
     }, [profileNote])
 
-    const username = user?.username || 'Guest'
-    const displayName = (user as any)?.displayName?.trim() || username
+    const username = user?.username || user?.id?.slice(0, 8) || 'User'
+    const displayName = (user as any)?.displayName?.trim() || (user as any)?.globalName?.trim() || username
     const discriminator = user?.discriminator || '0000'
     const voiceLabel = currentVoiceState?.channelId ? 'In Voice' : null
 

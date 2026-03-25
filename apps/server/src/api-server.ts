@@ -23,6 +23,7 @@ import { WebSocketServer } from 'ws';
 import { connectMongo, prisma, redis } from './db';
 import { moderationService } from './services/moderation';
 import { GatewayService } from './services/gateway';
+import { messagePurgeService } from './services/messagePurge';
 import { getProfile } from './utils/autoTune';
 import { sanitizeBody } from './utils/sanitize';
 import { ipBlockMiddleware, generalLimiter, sanitizeHeaders, csrfProtection } from './middleware/security';
@@ -65,8 +66,8 @@ export class BeaconServer {
     constructor() {
         this.app = express();
         this.server = http.createServer(this.app);
-        this.port = Number(process.env.PORT || 8080);
-        console.log(`>>> [BOOT] Port detected: ${process.env.PORT || 'none (defaulting to 8080)'}`);
+        this.port = Number(process.env.PORT || 8000);
+        console.log(`>>> [BOOT] Port detected: ${process.env.PORT || 'none (defaulting to 8000)'}`);
         this._bootStart = Date.now();
         this.configureMiddleware();
         this.mountRoutes();
@@ -319,6 +320,9 @@ export class BeaconServer {
                 // Initialize databases in background POST-binding
                 this.initializeDatabases();
                 this.startWatchdogs();
+
+                // Start message purge worker
+                messagePurgeService.start();
 
                 if (parseEnvBool(process.env.ENABLE_MODERATION, true)) {
                     moderationService.init();

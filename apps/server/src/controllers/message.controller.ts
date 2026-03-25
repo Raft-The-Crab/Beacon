@@ -77,6 +77,7 @@ export async function getMessages(req: Request, res: Response) {
     const messages = await (prisma.message as any).findMany({
       where: {
         channelId,
+        deletedAt: null, // Filter out soft-deleted messages
         ...(before ? { id: { lt: before } } : {}),
         ...(after ? { id: { gt: after } } : {}),
       },
@@ -370,8 +371,18 @@ export async function deleteMessage(req: Request, res: Response) {
     const isAdmin = existing.channel?.guild?.ownerId === userId;
     if (!isOwner && !isAdmin) return res.status(403).json({ error: 'Insufficient permissions' });
 
-    await purgeAttachmentFiles(existing.attachments || [])
-    await prisma.message.delete({ where: { id: messageId } });
+    // Immediate attachment cleanup (as requested)
+    if (existing.attachments && existing.attachments.length > 0) {
+      await purgeAttachmentFiles(existing.attachments);
+      // Remove attachment records from DB immediately to satisfy "completely removed from database"
+      await prisma.attachment.deleteMany({ where: { messageId } });
+    }
+
+    // Soft-delete message (5-day retention starts now)
+    await prisma.message.update({
+      where: { id: messageId },
+      data: { deletedAt: new Date() }
+    });
 
     await publishGatewayEvent('MESSAGE_DELETE', { id: messageId, channelId });
     await redis.del(`channel:${channelId}:messages:first_page`);
@@ -540,9 +551,18 @@ export async function removeReaction(req: Request, res: Response) {
 
   try {
     const decodedEmoji = decodeURIComponent(emoji as string);
+    const targetUserId = req.params.userId || userId;
+
+    if (!targetUserId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
 
     await prisma.reaction.deleteMany({
-      where: { messageId, userId, emoji: decodedEmoji },
+      where: { 
+        messageId, 
+        userId: targetUserId, 
+        emoji: decodedEmoji 
+      },
     });
 
     // Fetch remaining reactions for this message
@@ -567,7 +587,14 @@ export async function removeReaction(req: Request, res: Response) {
       isSuper: r.isSuper,
     }));
 
-    await publishGatewayEvent('MESSAGE_REACTION_REMOVE', { messageId, channelId, userId, emoji: decodedEmoji, reactions });
+    await publishGatewayEvent('MESSAGE_REACTION_REMOVE', { 
+      messageId, 
+      channelId, 
+      userId: targetUserId, 
+      emoji: decodedEmoji, 
+      reactions,
+      removedBy: userId // Track who performed the removal 
+    });
     await redis.del(`channel:${channelId}:messages:first_page`);
 
     return res.status(204).send();

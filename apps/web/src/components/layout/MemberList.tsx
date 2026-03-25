@@ -6,6 +6,7 @@ import { useUIStore } from '../../stores/useUIStore'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { apiClient } from '../../services/apiClient'
 import { Avatar } from '../ui/Avatar'
+import { CustomUsername } from '../ui/CustomUsername'
 import { useToast } from '../ui'
 import styles from '../../styles/modules/layout/MemberList.module.css'
 
@@ -16,7 +17,8 @@ interface NormalizedMember {
   status: string
   customStatus?: string | null
   isBeaconPlus: boolean
-  roles: { name: string; color?: string | null; permissions?: string | number | bigint | null }[]
+  nameDesign?: any
+  roles: { id: string; name: string; color?: string | null; permissions?: string | number | bigint | null; position: number; hoist?: boolean }[]
 }
 
 const STAFF_PERMISSIONS = [
@@ -53,11 +55,14 @@ function normalizeMember(member: any): NormalizedMember | null {
 
   const roles = Array.isArray(member?.roles)
     ? member.roles.map((role: any) => {
-        if (typeof role === 'string') return { name: role, color: null }
+        if (typeof role === 'string') return { id: '', name: role, color: null, position: 0, hoist: false }
         return {
+          id: role?.id || '',
           name: role?.name || 'Role',
           color: role?.color || null,
           permissions: role?.permissions ?? null,
+          position: role?.position ?? 0,
+          hoist: !!role?.hoist
         }
       })
     : []
@@ -69,8 +74,14 @@ function normalizeMember(member: any): NormalizedMember | null {
     status: member?.status || user?.status || 'offline',
     customStatus: member?.customStatus || user?.statusText || user?.customStatus || null,
     isBeaconPlus: Boolean(user?.isBeaconPlus || member?.isBeaconPlus || (Array.isArray(user?.badges) && user.badges.some((b: any) => String(b || '').toLowerCase() === 'beacon_plus'))),
+    nameDesign: user?.nameDesign || member?.nameDesign || null,
     roles,
   }
+}
+
+function getMemberColor(roles: NormalizedMember['roles']) {
+  const sorted = [...roles].sort((a, b) => b.position - a.position)
+  return sorted.find(r => r.color)?.color || 'inherit'
 }
 
 function MemberRow({
@@ -146,6 +157,8 @@ function MemberRow({
 
   useEffect(() => () => clearLongPress(), [])
 
+  const nameColor = getMemberColor(member.roles)
+
   return (
     <div className={styles.memberRowShell}>
       <button
@@ -172,7 +185,12 @@ function MemberRow({
           />
         </div>
         <div className={styles.memberInfo}>
-          <span className={styles.memberName}>{member.username}</span>
+          <CustomUsername 
+            username={member.username} 
+            design={member.nameDesign} 
+            baseColor={nameColor} 
+            className={styles.memberName} 
+          />
           {member.customStatus && (
             <span className={styles.customStatus}>{member.customStatus}</span>
           )}
@@ -248,12 +266,39 @@ export function MemberList() {
   const currentMember = members.find((member) => member.id === user?.id)
   const viewerIsOwner = !!user && ownerId === user.id
   const viewerIsStaff = viewerIsOwner || hasStaffPrivileges(currentMember?.roles || [])
-  const onlineMembers = members.filter((member) => ['online', 'idle', 'dnd'].includes(member.status))
-  const offlineMembers = members.filter((member) => !['online', 'idle', 'dnd'].includes(member.status))
-  const sections = [
-    { label: 'Online', members: onlineMembers },
-    { label: 'Offline', members: offlineMembers },
-  ].filter((section) => section.members.length > 0)
+
+  const sections = useMemo(() => {
+    const groups: Record<string, { label: string; members: NormalizedMember[]; position: number }> = {}
+
+    members.forEach(member => {
+      const isOnline = ['online', 'idle', 'dnd'].includes(member.status)
+      
+      const highestHoisted = [...member.roles]
+        .filter(r => r.hoist)
+        .sort((a, b) => b.position - a.position)[0]
+
+      if (highestHoisted && isOnline) {
+        if (!groups[highestHoisted.id]) {
+          groups[highestHoisted.id] = { label: highestHoisted.name, members: [], position: highestHoisted.position }
+        }
+        groups[highestHoisted.id].members.push(member)
+      } else if (isOnline) {
+        if (!groups['online']) {
+          groups['online'] = { label: 'Online', members: [], position: -1000 }
+        }
+        groups['online'].members.push(member)
+      } else {
+        if (!groups['offline']) {
+          groups['offline'] = { label: 'Offline', members: [], position: -2000 }
+        }
+        groups['offline'].members.push(member)
+      }
+    })
+
+    return Object.values(groups)
+      .sort((a, b) => b.position - a.position)
+      .filter(section => section.members.length > 0)
+  }, [members])
 
   const openProfile = (member: NormalizedMember) => {
     setSelectedUser(member.id)

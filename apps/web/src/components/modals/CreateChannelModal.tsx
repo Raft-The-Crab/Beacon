@@ -119,6 +119,15 @@ export function CreateChannelModal({ isOpen, onClose }: CreateChannelModalProps)
           required
         />
 
+        <div className={styles.privateToggle}>
+          <div className={styles.toggleInfo}>
+            <span className={styles.toggleLabel}>Private Channel</span>
+            <span className={styles.toggleDesc}>Only selected members and roles will be able to view this channel.</span>
+          </div>
+          {/* Using a simple checkbox as a toggle for now */}
+          <input type="checkbox" className={styles.checkbox} />
+        </div>
+
         {error && (
           <div style={{ padding: '12px', background: 'rgba(242, 63, 67, 0.1)', border: '1px solid rgba(242, 63, 67, 0.3)', borderRadius: '8px', color: 'var(--status-error)', fontSize: '14px' }}>
             {error}

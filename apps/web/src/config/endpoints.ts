@@ -77,12 +77,25 @@ export function resolveWebSocketUrl(rawUrl?: string, apiUrl?: string): string {
 
 export function resolveAssetUrl(url?: string | null): string {
   if (!url) return ''
+  
+  // Handle absolute URLs, data URIs, and blobs
   if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
     return url
   }
   
+  // Handle protocol-relative URLs
+  if (url.startsWith('//')) {
+    return `https:${url}`
+  }
+
+  // Handle server-relative URLs
   const base = API_BASE_URL.replace(/\/api$/, '')
   const path = url.startsWith('/') ? url : `/${url}`
+  
+  // If base is empty (local relative path), just return the path
+  if (!base) return path
+  
+  // Return absolute URL relative to API base
   return `${base}${path}`
 }
 

@@ -6,6 +6,7 @@ import { prisma } from '../db';
 import { publishGatewayEvent } from '../services/gatewayPublisher';
 import { generateInviteCode, generateShortId } from '../utils/id';
 import { Permissions, hasPermission, computePermissions } from '../utils/permissions';
+import { serializeBigInt } from '../utils/serializeBigInt';
 
 export async function createChannel(req: Request, res: Response) {
   const userId = req.user?.id;
@@ -52,7 +53,7 @@ export async function createChannel(req: Request, res: Response) {
 
     await publishGatewayEvent('CHANNEL_CREATE', channel);
 
-    return res.status(201).json(channel);
+    return res.status(201).json(serializeBigInt(channel));
   } catch (err) {
     console.error('Create channel error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -67,7 +68,7 @@ export async function getChannel(req: Request, res: Response) {
       include: { guild: true },
     });
     if (!channel) return res.status(404).json({ error: 'Channel not found' });
-    return res.json(channel);
+    return res.json(serializeBigInt(channel));
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }
@@ -100,7 +101,7 @@ export async function updateChannel(req: Request, res: Response) {
 
     await publishGatewayEvent('CHANNEL_UPDATE', updated);
 
-    return res.json(updated);
+    return res.json(serializeBigInt(updated));
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }
@@ -157,7 +158,7 @@ export async function createChannelInvite(req: Request, res: Response) {
       },
     });
 
-    return res.status(201).json(invite);
+    return res.status(201).json(serializeBigInt(invite));
   } catch (err) {
     console.error('createInvite error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -174,7 +175,7 @@ export async function getChannelInvites(req: Request, res: Response) {
         inviter: { select: { id: true, username: true, avatar: true } },
       },
     });
-    return res.json(invites);
+    return res.json(serializeBigInt(invites));
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }

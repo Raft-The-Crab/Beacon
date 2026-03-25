@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 import { useAuthStore, PresenceStatus } from '../../stores/useAuthStore'
 import { getSimulatedFrameForUser, useProfileArtStore } from '../../stores/useProfileArtStore'
 import styles from '../../styles/modules/ui/Avatar.module.css'
@@ -6,7 +6,7 @@ import styles from '../../styles/modules/ui/Avatar.module.css'
 interface AvatarProps {
   src?: string | null
   alt?: string
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'huge'
   status?: PresenceStatus | 'offline'
   onClick?: () => void
   username?: string

@@ -669,6 +669,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                         attachments={msg.attachments}
                         components={msg.components}
                         embeds={msg.embeds}
+                        reactions={msg.reactions}
                         edited={!!msg.editedAt}
                         isPinned={getPinnedMessages(channelId).some((p: any) => p.id === msg.id)}
                         isEncrypted={!!msg.nonce || !!msg.encryptedContent} // Logic for E2EE
@@ -876,7 +877,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         </div>
       </Modal>
 
-      <ToastContainer toasts={toasts} onRemove={() => { }} />
+      <ToastContainer />
 
       <MessageSearch
         isOpen={showSearch}

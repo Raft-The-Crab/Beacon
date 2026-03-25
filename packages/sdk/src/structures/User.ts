@@ -48,6 +48,7 @@ export interface User {
   twoFactorEnabled: boolean
   avatarDecorationId: string | null
   profileEffectId: string | null
+  nameDesign: Record<string, any> | null
   locale: string | null
   createdAt?: string
   tag?: string
@@ -79,6 +80,7 @@ export interface RawUser {
   two_factor_enabled?: boolean
   avatar_decoration_id?: string | null
   profile_effect_id?: string | null
+  name_design?: Record<string, any> | null
   global_name?: string | null
   locale?: string | null
   created_at?: string
@@ -111,6 +113,7 @@ export class User {
     public twoFactorEnabled: boolean;
     public avatarDecorationId: string | null;
     public profileEffectId: string | null;
+    public nameDesign: Record<string, any> | null;
     public locale: string | null;
     
     // Computed properties for compatibility
@@ -144,6 +147,7 @@ export class User {
         this.twoFactorEnabled = !!data.two_factor_enabled;
         this.avatarDecorationId = data.avatar_decoration_id || null;
         this.profileEffectId = data.profile_effect_id || null;
+        this.nameDesign = data.name_design || null;
         this.locale = data.locale || null;
 
         // Initialize computed properties
@@ -160,6 +164,7 @@ export class User {
             date = new Date();
         }
         this.createdAt = data.created_at || date.toISOString();
+        this.createdAtDate = date;
     }
 
     /**

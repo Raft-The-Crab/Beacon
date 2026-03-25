@@ -17,22 +17,37 @@ const BRAND_NAME = 'Beacon';
 function emailLayout(title: string, body: string): string {
   return `
     <!DOCTYPE html>
-    <html lang="en">
-    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-    <body style="margin:0;padding:0;background:#f6f6f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f6;padding:40px 0">
+    <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta name="x-apple-disable-message-reformatting">
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+      <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        @media only screen and (max-width: 600px) {
+          .email-container { width: 100% !important; border-radius: 0 !important; }
+          .email-body { padding: 32px 24px !important; }
+          .email-header { padding: 40px 24px !important; }
+          .email-footer { padding: 32px 24px !important; }
+        }
+      </style>
+    </head>
+    <body style="margin:0;padding:0;background-color:#f3f4f6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:40px 0;">
         <tr><td align="center">
-          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
-            <tr><td style="background:linear-gradient(135deg,${BRAND_COLOR},#7289DA);padding:32px 40px 24px">
-              <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700">${BRAND_NAME}</h1>
+          <table role="presentation" class="email-container" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);border:1px solid #e5e7eb;">
+            <tr><td class="email-header" style="background:linear-gradient(135deg, ${BRAND_COLOR}, #4a54e1);padding:48px 40px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:-0.5px;">${BRAND_NAME}</h1>
             </td></tr>
-            <tr><td style="padding:32px 40px">
-              <h2 style="margin:0 0 16px;color:#2c2f33;font-size:20px;font-weight:600">${title}</h2>
+            <tr><td class="email-body" style="padding:48px 40px;">
+              <h2 style="margin:0 0 24px;color:#111827;font-size:22px;font-weight:600;letter-spacing:-0.3px;">${title}</h2>
               ${body}
             </td></tr>
-            <tr><td style="padding:24px 40px;border-top:1px solid #e8e8e8">
-              <p style="margin:0;font-size:12px;color:#99aab5;text-align:center">
-                &copy; ${new Date().getFullYear()} ${BRAND_NAME} &mdash; Connecting communities across the cosmos
+            <tr><td class="email-footer" style="padding:32px 40px;background-color:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;">
+              <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.6;">
+                &copy; ${new Date().getFullYear()} ${BRAND_NAME}. All rights reserved.<br>
+                <span style="font-size:12px;color:#9ca3af;margin-top:8px;display:block;">This is an automated message, please do not reply.</span>
               </p>
             </td></tr>
           </table>
@@ -47,7 +62,7 @@ export class NotificationService {
   private static createTransporter(port: number) {
     const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
     const user = process.env.EMAIL_USER || process.env.SMTP_USER;
-    const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+    const pass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').replace(/\s+/g, '');
 
     return nodemailer.createTransport({
       host,
@@ -75,7 +90,7 @@ export class NotificationService {
   private static getFromAddress(aliasType: 'support' | 'noreply' = 'noreply') {
     const supportLabel = process.env.EMAIL_FROM_NAME || 'Beacon Support';
     const noreplyLabel = process.env.EMAIL_NOREPLY_NAME || 'Beacon Platform';
-    
+
     if (aliasType === 'support') {
       const addr = process.env.EMAIL_SUPPORT_ADDRESS || 'support@beacon.qzz.io';
       return `"${supportLabel}" <${addr}>`;
@@ -88,11 +103,11 @@ export class NotificationService {
   /** Verify SMTP connection with automatic port failover and detailed diagnostics */
   static async ensureConnection() {
     if (this._verified) return;
-    
+
     const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
     const initialPort = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10);
     const user = process.env.EMAIL_USER || process.env.SMTP_USER;
-    const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+    const pass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').replace(/\s+/g, '');
 
     if (!user || !pass) {
       logger.warn(`[EMAIL] Missing credentials for ${host}:${initialPort}. Running in DRY-RUN mode.`);
@@ -104,7 +119,7 @@ export class NotificationService {
         logger.info(`[EMAIL] Testing SMTP: ${user}@${host}:${port} (SSL: ${port === 465})...`);
         const testTransporter = NotificationService.createTransporter(port);
         await testTransporter.verify();
-        
+
         // Success! Bind this transporter
         this.transporter = testTransporter;
         this._verified = true;
@@ -177,14 +192,16 @@ export class NotificationService {
       to: email,
       subject: 'Verify Your Beacon Account',
       html: emailLayout('Verify Your Email', `
-        <p style="color:#4f545c;font-size:15px;line-height:1.6;margin:0 0 24px">
-          Welcome to Beacon! Use the verification code below to complete your registration.
+        <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 32px;">
+          Welcome to Beacon! To complete your registration and secure your account, please use the verification code below.
         </p>
-        <div style="font-size:36px;font-weight:800;letter-spacing:6px;color:${BRAND_COLOR};padding:24px;background:#f8f9fa;border-radius:8px;text-align:center;margin:0 0 24px;font-family:monospace">
-          ${code}
+        <div style="background-color:#f3f4f6;border:1px solid #e5e7eb;border-radius:12px;padding:32px;text-align:center;margin:0 0 32px;">
+          <span style="font-family:'Courier New',Courier,monospace;font-size:42px;font-weight:700;letter-spacing:12px;color:#111827;display:inline-block;margin-left:12px;">
+            ${code}
+          </span>
         </div>
-        <p style="color:#72767d;font-size:13px;line-height:1.5;margin:0">
-          This code expires in <strong>24 hours</strong>. If you didn't create a Beacon account, you can safely ignore this email.
+        <p style="color:#6b7280;font-size:14px;line-height:1.6;margin:0;">
+          This code expires in <strong>24 hours</strong>. If you didn't attempt to create a Beacon account, you can safely ignore and delete this email.
         </p>
       `),
     }, { 'Verification Code': code });
@@ -198,18 +215,20 @@ export class NotificationService {
       to: email,
       subject: 'Reset Your Beacon Password',
       html: emailLayout('Reset Your Password', `
-        <p style="color:#4f545c;font-size:15px;line-height:1.6;margin:0 0 24px">
-          We received a request to reset the password for your Beacon account. Click the button below to set a new password.
+        <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 32px;">
+          We received a request to reset the password for your Beacon account. Click the button below to choose a new password.
         </p>
-        <div style="text-align:center;margin:0 0 24px">
-          <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;background:${BRAND_COLOR};color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px">
+        <div style="text-align:center;margin:0 0 32px;">
+          <a href="${resetUrl}" style="display:inline-block;padding:16px 36px;background-color:${BRAND_COLOR};color:#ffffff;text-decoration:none;border-radius:10px;font-weight:600;font-size:16px;transition:background-color 0.2s;">
             Reset Password
           </a>
         </div>
-        <p style="color:#72767d;font-size:13px;line-height:1.5;margin:0 0 8px">
-          This link expires in <strong>1 hour</strong>. If the button doesn't work, copy and paste this URL:
+        <p style="color:#6b7280;font-size:14px;line-height:1.6;margin:0 0 8px;">
+          This link expires in <strong>1 hour</strong>. If the button doesn't work, copy and paste this URL into your browser:
         </p>
-        <p style="color:#72767d;font-size:12px;word-break:break-all;margin:0">${resetUrl}</p>
+        <p style="color:#6b7280;font-size:13px;word-break:break-all;margin:0;background-color:#f3f4f6;padding:12px;border-radius:6px;border:1px solid #e5e7eb;">
+          ${resetUrl}
+        </p>
       `),
     }, { 'Reset Token': token, 'Reset URL': resetUrl });
   }
@@ -218,22 +237,21 @@ export class NotificationService {
     return this.sendWithRetry({
       from: this.getFromAddress('noreply'),
       to: email,
-      subject: 'Welcome to Beacon! 🎉',
+      subject: 'Welcome to Beacon!',
       html: emailLayout(`Welcome, ${username}!`, `
-        <p style="color:#4f545c;font-size:15px;line-height:1.6;margin:0 0 16px">
-          Your account has been verified and you're all set to start using Beacon.
+        <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px;">
+          Your account is verified and ready to go.
         </p>
-        <p style="color:#4f545c;font-size:15px;line-height:1.6;margin:0 0 24px">
-          Here's what you can do next:
+        <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 24px;">
+          Here are a few things you can do to get started:
         </p>
-        <ul style="color:#4f545c;font-size:14px;line-height:1.8;padding-left:20px;margin:0 0 24px">
-          <li><strong>Create or join a server</strong> — start your community</li>
-          <li><strong>Customize your profile</strong> — avatar, bio, and more</li>
-          <li><strong>Invite friends</strong> — grow your space</li>
-          <li><strong>Explore bots</strong> — add powerful integrations</li>
+        <ul style="color:#4b5563;font-size:15px;line-height:1.8;padding-left:24px;margin:0 0 32px;">
+          <li><strong>Create or join a server</strong> to start chatting</li>
+          <li><strong>Customize your profile</strong> with an avatar and bio</li>
+          <li><strong>Invite friends</strong> to your space</li>
         </ul>
-        <div style="text-align:center">
-          <a href="${process.env.FRONTEND_URL || 'https://beacon.qzz.io'}" style="display:inline-block;padding:14px 32px;background:${BRAND_COLOR};color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px">
+        <div style="text-align:center;">
+          <a href="${process.env.FRONTEND_URL || 'https://beacon.qzz.io'}" style="display:inline-block;padding:16px 36px;background-color:${BRAND_COLOR};color:#ffffff;text-decoration:none;border-radius:10px;font-weight:600;font-size:16px;">
             Open Beacon
           </a>
         </div>
@@ -245,18 +263,18 @@ export class NotificationService {
     return this.sendWithRetry({
       from: this.getFromAddress('support'),
       to: email,
-      subject: '⚠️ Beacon Security Alert',
+      subject: 'Beacon Security Alert',
       html: emailLayout('Security Alert', `
-        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:16px;margin:0 0 24px">
-          <p style="color:#856404;font-size:14px;line-height:1.5;margin:0">
-            <strong>⚠️ Alert:</strong> ${reason}
+        <div style="background-color:#fef2f2;border:1px solid #f87171;border-radius:10px;padding:20px;margin:0 0 32px;">
+          <p style="color:#991b1b;font-size:15px;line-height:1.6;margin:0;font-weight:500;">
+            <span style="font-size:18px;margin-right:8px;">⚠️</span> ${reason}
           </p>
         </div>
-        <p style="color:#4f545c;font-size:15px;line-height:1.6;margin:0 0 16px">
-          If this was you, no action is needed. If you don't recognize this activity, please change your password immediately and enable two-factor authentication.
+        <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 24px;">
+          If this was you, no further action is needed. If you do not recognize this activity, please secure your account immediately by changing your password.
         </p>
-        <div style="text-align:center">
-          <a href="${process.env.FRONTEND_URL || 'https://beacon.qzz.io'}/settings/security" style="display:inline-block;padding:14px 32px;background:#ed4245;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px">
+        <div style="text-align:center;">
+          <a href="${process.env.FRONTEND_URL || 'https://beacon.qzz.io'}/settings/security" style="display:inline-block;padding:16px 36px;background-color:#ef4444;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:600;font-size:16px;">
             Review Security Settings
           </a>
         </div>
@@ -270,11 +288,11 @@ export class NotificationService {
       to: email,
       subject: 'Your Beacon Server Backup is Ready',
       html: emailLayout('Backup Complete', `
-        <p style="color:#4f545c;font-size:15px;line-height:1.6;margin:0 0 16px">
-          Your server backup has been generated and is ready for download.
+        <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px;">
+          Your server backup has been generated successfully and is ready for download.
         </p>
-        <p style="color:#72767d;font-size:13px;line-height:1.5;margin:0">
-          You can access your backup from your server settings. Backups are retained for 7 days.
+        <p style="color:#6b7280;font-size:14px;line-height:1.6;margin:0;">
+          You can access your backup file directly from your server settings. Please note that backups are retained for 7 days.
         </p>
       `),
     });
@@ -284,16 +302,16 @@ export class NotificationService {
     return this.sendWithRetry({
       from: this.getFromAddress('noreply'),
       to: email,
-      subject: `Beacon ${version} is Live! 🚀`,
+      subject: `Beacon ${version} Update`,
       html: emailLayout(`What's new in Beacon ${version}`, `
-        <p style="color:#4f545c;font-size:15px;line-height:1.6;margin:0 0 16px">
-          We've just released a major update to Beacon.
+        <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 24px;">
+          We've just released a major update to Beacon. Here is a quick look at what's changed:
         </p>
-        <div style="background:#f8f9fa;border:1px solid #e3e5e8;border-radius:8px;padding:16px;margin:0 0 24px;-webkit-font-smoothing: antialiased;">
+        <div style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin:0 0 32px;color:#4b5563;font-size:15px;line-height:1.6;">
           ${releaseNotes}
         </div>
-        <div style="text-align:center">
-          <a href="${process.env.FRONTEND_URL || 'https://beacon.qzz.io'}/updates" style="display:inline-block;padding:14px 32px;background:${BRAND_COLOR};color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px">
+        <div style="text-align:center;">
+          <a href="${process.env.FRONTEND_URL || 'https://beacon.qzz.io'}/updates" style="display:inline-block;padding:16px 36px;background-color:${BRAND_COLOR};color:#ffffff;text-decoration:none;border-radius:10px;font-weight:600;font-size:16px;">
             Read Full Patch Notes
           </a>
         </div>

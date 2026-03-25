@@ -1,0 +1,57 @@
+.customName {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+/* Animations */
+@keyframes rainbow-text {
+    0% { color: #ff0000; }
+    20% { color: #ffff00; }
+    40% { color: #00ff00; }
+    60% { color: #00ffff; }
+    80% { color: #0000ff; }
+    100% { color: #ff00ff; }
+}
+
+.animRainbow {
+    animation: rainbow-text 3s linear infinite;
+}
+
+@keyframes glow-pulse {
+    0%, 100% { text-shadow: 0 0 4px currentColor; }
+    50% { text-shadow: 0 0 12px currentColor, 0 0 20px currentColor; }
+}
+
+.animPulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+.animShimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shimmer 3s infinite;
+}
+
+/* Fonts (Assume they are imported in global or head) */
+.fontMonospace { font-family: 'Fira Code', monospace; }
+.fontSerif { font-family: 'Playfair Display', serif; }
+.fontCursive { font-family: 'Dancing Script', cursive; }
+.fontDisplay { font-family: 'Orbitron', sans-serif; }
+
+/* Glows */
+.glowNeon {
+    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+}
+
+.glowUltra {
+    text-shadow: 0 0 5px #fff, 0 0 10px currentColor, 0 0 15px currentColor, 0 0 20px currentColor;
+}

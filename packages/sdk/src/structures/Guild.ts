@@ -1,5 +1,6 @@
 import type { Client } from '../client';
 import { User } from './User';
+import { GuildMember } from './GuildMember';
 import { Channel } from './Channel';
 
 export type ServerTag = 'gaming' | 'music' | 'entertainment' | 'education' | 'science' | 'technology' | 'art' | 'community' | 'anime' | 'memes' | 'programming' | 'sports' | 'fashion' | 'food' | 'travel' | 'business' | 'finance' | 'politics' | 'news' | 'other'
@@ -13,7 +14,7 @@ export interface Guild {
   ownerId: string
   createdAt?: string
   memberCount: number
-  members: User[]
+  members: GuildMember[]
   channels: Channel[]
   roles: any[]
   boostCount: number
@@ -89,7 +90,7 @@ export class Guild {
     public createdAtDate?: Date;
 
     public roles: any[] = [];
-    public members: User[] = [];
+    public members: GuildMember[] = [];
     public channels: Channel[] = [];
     public emojis: any[] = [];
     
@@ -133,7 +134,7 @@ export class Guild {
             this.channels = data.channels.map(c => new Channel(client, c));
         }
         if (data.members) {
-            this.members = data.members.map(m => new User(client, m));
+            this.members = data.members.map(m => new GuildMember(client, { ...m, guildId: this.id }));
         }
 
         // Initialize computed properties
@@ -175,9 +176,8 @@ export class Guild {
      */
     public async fetchMembers() {
         const raw = await this.client.rest.getGuildMembers(this.id);
-        // GuildMember uses (client, data) and data.guildId
-        this.members = raw.map((m: any) => new User(this.client, m.user));
-        return raw; // Should return GuildMember objects ideally, but User is used for now in this.members
+        this.members = raw.map((m: any) => new GuildMember(this.client, { ...m, guildId: this.id }));
+        return this.members;
     }
 
     /**

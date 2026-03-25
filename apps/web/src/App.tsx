@@ -65,6 +65,8 @@ const Discovery = lazy(() => import('./pages/Discovery').then(m => ({ default: m
 const CommunityHub = lazy(() => import('./pages/CommunityHub').then(m => ({ default: m.CommunityHub })))
 const AppDirectory = lazy(() => import('./pages/AppDirectory').then(m => ({ default: m.AppDirectory })))
 const VerificationPage = lazy(() => import('./pages/VerificationPage').then(m => ({ default: m.VerificationPage })))
+const Updates = lazy(() => import('./pages/Updates').then(m => ({ default: m.Updates })))
+const ResetPassword = lazy(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })))
 
 function RouteFallback() {
   return (
@@ -370,6 +372,7 @@ export function App() {
                   <Route path="/landing" element={<LandingPage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/verify" element={<VerificationPage />} />
+                  <Route path="/auth/reset-password" element={<ResetPassword />} />
 
                   {/* Public informational routes */}
                   <Route path="/terms" element={<Terms />} />
@@ -412,12 +415,13 @@ export function App() {
                                     <Route path="/invite/:code" element={<InvitePage />} />
                   <Route path="/safety-hub" element={<SafetyHub />} />
                   <Route path="/partner" element={<PartnerPortal />} />
+                  <Route path="/updates" element={<Updates />} />
 
                   {/* Redirect everything else to Messaging Home */}
                   <Route path="*" element={<Navigate to={user ? "/channels/@me" : "/"} replace />} />
                   </Routes>
                 </Suspense>
-                <ToastContainer toasts={toasts} onRemove={remove} />
+                <ToastContainer />
                 <CommandPalette />
                 <KeyboardShortcutsPanel />
                 <VersionCheck />

@@ -44,130 +44,44 @@ export function ProfileArtPicker() {
 
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
-                <Palette size={18} />
-                <h3>Profile Art</h3>
-            </div>
 
-            <div className={styles.tabs}>
-                {(['frame', 'chat'] as const).map(t => (
-                    <button
-                        key={t}
-                        className={`${styles.tab} ${tab === t ? styles.tabActive : ''}`}
-                        onClick={() => setTab(t)}
-                    >
-                        {t === 'frame' ? 'Frames' : 'Chat Bubbles'}
-                    </button>
-                ))}
-            </div>
+            {/* Tabs removed to disable chat bubbles for now */}
             {user && (
-                tab === 'frame' ? (
-                    <div className={styles.grid}>
-                        {filteredArts.map(art => (
-                            <button
-                                type="button"
-                                key={art.id}
-                                className={`${styles.artCard} ${isEquipped(art) ? styles.equipped : ''}`}
-                                onClick={() => handleEquip(art)}
-                            >
-                                <div className={styles.preview} style={!art.imageUrl ? { background: art.preview } : undefined}>
-                                    {art.imageUrl && (
-                                        <img
-                                            src={art.imageUrl}
-                                            alt={art.name}
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                            className={art.animation && art.type === 'frame' ? avatarStyles[`anim-${art.animation}`] : ''}
-                                        />
-                                    )}
-                                    {!art.imageUrl && <div style={{ width: '100%', height: '100%', background: art.preview }} />}
-                                    {isEquipped(art) && (
-                                        <div className={styles.equippedBadge}>
-                                            <Check size={14} />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className={styles.artInfo}>
-                                    <span className={styles.artName}>{art.name}</span>
-                                    <span className={styles.artRarity} style={{ color: RARITY_COLORS[art.rarity] }}>
-                                        {art.rarity === 'epic' && <Crown size={10} />}
-                                        {art.rarity.charAt(0).toUpperCase() + art.rarity.slice(1)}
-                                    </span>
-                                </div>
-                                <div className={styles.freeTag}>FREE</div>
-                            </button>
-                        ))}
-                    </div>
-                ) : (
-                    <div>
-                        {!hasBeaconPlus && (
-                            <div className={styles.plusOnlyHint}>
-                                <Lock size={14} />
-                                Chat bubbles are customizable for Beacon+ members only.
-                            </div>
-                        )}
-                        <div className={styles.grid}>
-                            {bubbleOptions.map((bubble) => (
-                                <button
-                                    type="button"
-                                    key={bubble.id}
-                                    className={`${styles.artCard} ${chatBubbleStyle === bubble.id ? styles.equipped : ''} ${!hasBeaconPlus ? styles.locked : ''}`}
-                                    onClick={() => {
-                                        if (!hasBeaconPlus) return
-                                        setChatBubbleStyle(bubble.id)
-                                    }}
-                                    aria-disabled={!hasBeaconPlus}
-                                >
-                                    <div className={`${styles.preview} ${styles[`preview-${bubble.id}`]}`}>
-                                        {chatBubbleStyle === bubble.id && (
-                                            <div className={styles.equippedBadge}>
-                                                <Check size={14} />
-                                            </div>
-                                        )}
-                                        {!hasBeaconPlus && (
-                                            <div className={styles.lockOverlay}>
-                                                <Lock size={18} />
-                                            </div>
-                                        )}
-                                        {/* Art asset not ready yet, relying purely on CSS bubble preview for now */}
+                <div className={styles.grid}>
+                    {filteredArts.map(art => (
+                        <button
+                            type="button"
+                            key={art.id}
+                            className={`${styles.artCard} ${isEquipped(art) ? styles.equipped : ''}`}
+                            onClick={() => handleEquip(art)}
+                        >
+                            <div className={styles.preview} style={!art.imageUrl ? { background: art.preview } : undefined}>
+                                {art.imageUrl && (
+                                    <img
+                                        src={art.imageUrl}
+                                        alt={art.name}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        className={art.animation && art.type === 'frame' ? avatarStyles[`anim-${art.animation}`] : ''}
+                                    />
+                                )}
+                                {!art.imageUrl && <div style={{ width: '100%', height: '100%', background: art.preview }} />}
+                                {isEquipped(art) && (
+                                    <div className={styles.equippedBadge}>
+                                        <Check size={14} />
                                     </div>
-                                    <div className={styles.artInfo}>
-                                        <span className={styles.artName}>{bubble.label}</span>
-                                        <span className={styles.artRarity}>{bubble.copy}</span>
-                                    </div>
-                                    <div className={styles.freeTag}>{hasBeaconPlus ? 'ACTIVE' : 'BEACON+'}</div>
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className={styles.intensitySection}>
-                            <span className={styles.intensityTitle}>Bubble Intensity</span>
-                            <div className={styles.intensityRow}>
-                                {intensityOptions.map((intensity) => (
-                                    <button
-                                        key={intensity}
-                                        type="button"
-                                        className={`${styles.intensityButton} ${chatBubbleIntensity === intensity ? styles.intensityButtonActive : ''}`}
-                                        onClick={() => {
-                                            if (!hasBeaconPlus) return
-                                            setChatBubbleIntensity(intensity)
-                                        }}
-                                        disabled={!hasBeaconPlus}
-                                    >
-                                        {intensity.charAt(0).toUpperCase() + intensity.slice(1)}
-                                    </button>
-                                ))}
+                                )}
                             </div>
-                        </div>
-
-                        <div className={styles.previewPanel}>
-                            <div className={styles.previewPanelTitle}>Live Preview</div>
-                            <div className={`${styles.previewBubble} ${styles[`preview-${chatBubbleStyle}`]} ${styles[`previewIntensity-${chatBubbleIntensity}`]}`}>
-                                <div className={styles.previewAuthor}>{user.username}</div>
-                                <div className={styles.previewText}>This is how your messages will look in chat.</div>
+                            <div className={styles.artInfo}>
+                                <span className={styles.artName}>{art.name}</span>
+                                <span className={styles.artRarity} style={{ color: RARITY_COLORS[art.rarity] }}>
+                                    {art.rarity === 'epic' && <Crown size={10} />}
+                                    {art.rarity.charAt(0).toUpperCase() + art.rarity.slice(1)}
+                                </span>
                             </div>
-                        </div>
-                    </div>
-                )
+                            <div className={styles.freeTag}>FREE</div>
+                        </button>
+                    ))}
+                </div>
             )}
         </div>
     )

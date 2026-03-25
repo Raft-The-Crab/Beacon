@@ -86,11 +86,36 @@
   border-radius: var(--radius-full);
 }
 
-.footer {
-  margin-top: 8px;
+.privateToggle {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.toggleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toggleLabel {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toggleDesc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.checkbox {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
 }
 
 

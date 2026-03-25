@@ -9,6 +9,11 @@ export type PresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible'
 function decorateSystemUser(user: User | null): User | null {
   if (!user) return null
 
+  // Identity failsafe to prevent "Guest" display
+  if (!user.username) {
+    user.username = (user as any).globalName || user.id?.slice(0, 8) || 'User'
+  }
+
   const normalizedBadges = new Set(
     (user.badges || []).map((badge) => {
       switch (badge) {

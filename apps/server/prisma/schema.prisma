@@ -37,6 +37,7 @@ model User {
   beacoins           Int             @default(0)
   profileEffectId    String?
   avatarDecorationId String?
+  nameDesign         Json?           @default("{}")
   bot                Boolean         @default(false)
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
@@ -290,6 +291,7 @@ model Message {
   threadId    String?
   embeds      Json         @default("[]")
   editedAt    DateTime?
+  deletedAt   DateTime?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   attachments Attachment[]

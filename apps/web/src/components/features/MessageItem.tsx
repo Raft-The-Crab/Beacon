@@ -1,9 +1,10 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Smile, Edit, Trash2, File, Pin, Shield, Languages, Flag, Download, Check, CheckCheck } from 'lucide-react'
+import { Smile, Edit, Trash2, File, Pin, Shield, Languages, Flag, Download, Check, Volume2 } from 'lucide-react'
 import type { UserBadge } from 'beacon-sdk'
 import { Avatar, Tooltip, EmojiPicker, ImageLightbox, Select } from '../ui'
 import { BotTag } from '../ui/UserBadges'
+import { CustomUsername } from '../ui/CustomUsername'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useUIStore } from '../../stores/useUIStore'
 import { MarkdownRenderer } from '../ui/MarkdownRenderer'
@@ -34,6 +35,7 @@ interface MessageItemProps {
   authorRoles?: { name: string; color: string }[]
   authorAvatarDecorationId?: string | null
   authorProfileEffectId?: string | null
+  authorNameDesign?: any
   moderationUserId?: string
   content: string
   timestamp: string
@@ -88,6 +90,7 @@ export const MessageItem = React.memo(function MessageItem({
   authorRoles,
   authorAvatarDecorationId,
   authorProfileEffectId,
+  authorNameDesign,
   moderationUserId,
   content,
   timestamp,
@@ -197,11 +200,14 @@ export const MessageItem = React.memo(function MessageItem({
     }
   }
 
-  const effectiveBubbleStyle = resolveBubbleStyle(isSelf ? user?.profileEffectId : authorProfileEffectId) || (isSelf ? chatBubbleStyle : null)
-  const effectiveBubbleIntensity = isSelf ? chatBubbleIntensity : 'medium'
-  const bubbleClass = hasBeaconPlus && effectiveBubbleStyle
-    ? `${styles.plusBubble} ${styles[`plusBubble${effectiveBubbleStyle.charAt(0).toUpperCase()}${effectiveBubbleStyle.slice(1)}`]} ${styles[`plusBubbleIntensity${effectiveBubbleIntensity.charAt(0).toUpperCase()}${effectiveBubbleIntensity.slice(1)}`]}`
-    : ''
+  const authorColor = useMemo(() => {
+    if (!authorRoles || authorRoles.length === 0) return 'inherit'
+    return authorRoles.find(r => r.color && r.color !== '#000000')?.color || 'inherit'
+  }, [authorRoles])
+
+  const effectiveBubbleStyle = null // Disabled per user request
+  const effectiveBubbleIntensity = 'medium'
+  const bubbleClass = '' // Disabled per user request
 
   return (
     <motion.div
@@ -252,7 +258,11 @@ export const MessageItem = React.memo(function MessageItem({
               }}
               style={{ cursor: 'pointer' }}
             >
-              {displayAuthorName}
+              <CustomUsername 
+                username={displayAuthorName} 
+                design={authorNameDesign} 
+                baseColor={authorColor} 
+              />
             </span>
             {isBot && <BotTag />}
             <span className={styles.time}>{timestamp}</span>
@@ -266,10 +276,8 @@ export const MessageItem = React.memo(function MessageItem({
               <span className={`${styles.ownStatus} ${ownStatusClass}`} title={`Status: ${status}`}>
                 {status === 'sending' ? (
                   <span className={styles.sendingDot}>•</span>
-                ) : status === 'sent' ? (
-                  <Check size={14} className={styles.statusIcon} />
                 ) : (
-                  <CheckCheck size={14} className={styles.statusIcon} />
+                  <Check size={14} className={styles.statusIcon} />
                 )}
               </span>
             )}
@@ -366,16 +374,47 @@ export const MessageItem = React.memo(function MessageItem({
                                  /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i.test(lowerUrl) ||
                                  /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i.test(attachment.filename?.toLowerCase() || '')
 
+                  const formatSize = (bytes: number) => {
+                    if (!bytes) return 'Unknown size'
+                    const k = 1024
+                    const sizes = ['B', 'KB', 'MB', 'GB']
+                    const i = Math.floor(Math.log(bytes) / Math.log(k))
+                    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
+                  }
+
+                  const handleDownload = async (e: React.MouseEvent) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (!url) return;
+
+                    try {
+                      // Try direct blob download for better naming/experience
+                      const response = await fetch(url)
+                      if (!response.ok) throw new Error('Fetch failed')
+                      const blob = await response.blob()
+                      const blobUrl = window.URL.createObjectURL(blob)
+                      const link = document.createElement('a')
+                      link.href = blobUrl
+                      link.download = attachment.filename || 'download'
+                      document.body.appendChild(link)
+                      link.click()
+                      document.body.removeChild(link)
+                      window.URL.revokeObjectURL(blobUrl)
+                    } catch (err) {
+                      console.warn('Direct download failed, falling back to window.open:', err)
+                      // Fallback: simple open in new tab (works for cross-origin if CORS fetch fails)
+                      window.open(url, '_blank', 'noopener,noreferrer')
+                    }
+                  }
+
                   const downloadBtn = (
-                    <a
-                      href={url}
-                      download={attachment.filename || 'download'}
+                    <button
                       className={styles.downloadBtn}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={handleDownload}
                       title={`Download ${attachment.filename || 'file'}`}
                     >
                       <Download size={16} />
-                    </a>
+                    </button>
                   )
 
                   if (isImage) {
@@ -411,34 +450,63 @@ export const MessageItem = React.memo(function MessageItem({
                   }
 
                   if (isAudio) {
-                     return (
-                      <div className={styles.mediaWrapper}>
-                        <audio
-                          src={url}
-                          controls
-                          className={styles.audioAttachment}
-                          preload="metadata"
-                        />
-                        {downloadBtn}
+                    return (
+                      <div className={styles.audioAttachmentContainer}>
+                        <div className={styles.audioPlayer}>
+                          <button 
+                            className={styles.audioPlayBtn}
+                            onClick={(e) => {
+                              const audio = e.currentTarget.parentElement?.querySelector('audio');
+                              if (audio) {
+                                if (audio.paused) audio.play();
+                                else audio.pause();
+                              }
+                            }}
+                          >
+                            <Volume2 size={20} />
+                          </button>
+                          <div className={styles.audioInfo}>
+                            <span className={styles.audioName}>{attachment.filename || 'Audio Message'}</span>
+                            <span className={styles.audioMeta}>{formatSize(attachment.size)}</span>
+                          </div>
+                          <audio
+                            src={url}
+                            className={styles.hiddenAudio}
+                            preload="metadata"
+                          />
+                          {downloadBtn}
+                        </div>
                       </div>
                     )
                   }
 
                   return (
                     <div className={styles.fileAttachment}>
-                      <File size={20} />
-                       <a href={url} target="_blank" rel="noopener noreferrer">
-                        {attachment.filename}
-                      </a>
-                      <a
-                        href={url}
-                        download={attachment.filename || 'download'}
+                      <div className={styles.fileIconWrapper}>
+                        <File size={24} />
+                      </div>
+                      <div className={styles.fileInfo}>
+                        <a 
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className={styles.fileName}
+                          onClick={(e) => !url && e.preventDefault()}
+                        >
+                          {attachment.filename || 'Unnamed File'}
+                        </a>
+                        <div className={styles.fileMeta}>
+                          <span>{formatSize(attachment.size)}</span>
+                          {attachment.contentType && <span>&bull; {attachment.contentType.split('/')[1]?.toUpperCase() || attachment.contentType}</span>}
+                        </div>
+                      </div>
+                      <button
                         className={styles.fileDownloadBtn}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={handleDownload}
                         title="Download"
                       >
-                        <Download size={16} />
-                      </a>
+                        <Download size={18} />
+                      </button>
                     </div>
                   )
                 })()}

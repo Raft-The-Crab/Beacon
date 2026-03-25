@@ -216,7 +216,7 @@ export class GuildController {
             await CacheService.del(CacheService.genKey('guild', id));
             await AuditLogService.log(id as string, userId as string, AuditLogAction.GUILD_UPDATE, { name });
             SocketService.emitToRoom(id as string, 'GUILD_UPDATE', { guild });
-            res.json(guild);
+            res.json(serializeBigInt(guild));
         } catch (error) {
             res.status(500).json({ error: 'Failed to update guild' });
         }
@@ -269,7 +269,7 @@ export class GuildController {
                 verified: updated.verified,
             });
 
-            return res.json(updated);
+            return res.json(serializeBigInt(updated));
         } catch (error: any) {
             logger.error('Update verification status error: ' + error.message);
             return res.status(500).json({ error: 'Failed to update verification status' });
@@ -335,7 +335,7 @@ export class GuildController {
                 featured: g._count.members > 10
             }));
 
-            res.json(formattedGuilds);
+            res.json(serializeBigInt(formattedGuilds));
         } catch (error: any) {
             logger.error('Discovery Error: ' + error.message);
             res.status(500).json({ error: 'Failed to fetch discovery guilds' });
@@ -547,7 +547,7 @@ export class GuildController {
             // Clear cache
             await CacheService.del(CacheService.genKey('guild', guildId, 'invites'));
 
-            res.json(invite);
+            res.json(serializeBigInt(invite));
         } catch (error) {
             console.error('Create invite error:', error);
             res.status(500).json({ error: 'Failed to create invite' });
@@ -624,7 +624,7 @@ export class GuildController {
 
             await CacheService.del(CacheService.genKey('guild', id));
             SocketService.emitToRoom(id as string, 'GUILD_BOOST', { guildId: id, ...result });
-            res.json(result);
+            res.json(serializeBigInt(result));
         } catch (error: any) {
             if (error.message === 'INSUFFICIENT_FUNDS') {
                 res.status(400).json({ error: 'Insufficient Beacoins to boost' });
@@ -671,7 +671,7 @@ export class GuildController {
             });
 
             await CacheService.del(CacheService.genKey('guild', id));
-            res.json(updated);
+            res.json(serializeBigInt(updated));
         } catch (error) {
             res.status(500).json({ error: 'Failed to set vanity URL' });
         }

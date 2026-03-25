@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { apiClient } from '../services/apiClient'
 import { api } from '../lib/api'
 
 
@@ -164,33 +165,45 @@ export const useRolesStore = create<RolesStore>((set, get) => ({
   },
 
   assignRole: async (serverId, userId, roleId) => {
-    // API call would go here
-    set((state) => {
-      const serverAssignments = state.assignments[serverId] || []
-      const userAssignment = serverAssignments.find((a) => a.userId === userId)
-      const newAssignments = [...serverAssignments]
+    try {
+      const { success } = await apiClient.addMemberRole(serverId, userId, roleId)
+      if (success) {
+        set((state) => {
+          const serverAssignments = state.assignments[serverId] || []
+          const userAssignment = serverAssignments.find((a) => a.userId === userId)
+          const newAssignments = [...serverAssignments]
 
-      if (userAssignment) {
-        if (!userAssignment.roleIds.includes(roleId)) {
-          userAssignment.roleIds = [...userAssignment.roleIds, roleId]
-        }
-      } else {
-        newAssignments.push({ userId, roleIds: [roleId] })
+          if (userAssignment) {
+            if (!userAssignment.roleIds.includes(roleId)) {
+              userAssignment.roleIds = [...userAssignment.roleIds, roleId]
+            }
+          } else {
+            newAssignments.push({ userId, roleIds: [roleId] })
+          }
+
+          return { assignments: { ...state.assignments, [serverId]: newAssignments } }
+        })
       }
-
-      return { assignments: { ...state.assignments, [serverId]: newAssignments } }
-    })
+    } catch (error) {
+      console.error('Failed to assign role', error)
+    }
   },
 
   removeRole: async (serverId, userId, roleId) => {
-    // API call would go here
-    set((state) => {
-      const serverAssignments = state.assignments[serverId] || []
-      const newAssignments = serverAssignments.map(a =>
-        a.userId === userId ? { ...a, roleIds: a.roleIds.filter(id => id !== roleId) } : a
-      )
-      return { assignments: { ...state.assignments, [serverId]: newAssignments } }
-    })
+    try {
+      const { success } = await apiClient.removeMemberRole(serverId, userId, roleId)
+      if (success) {
+        set((state) => {
+          const serverAssignments = state.assignments[serverId] || []
+          const newAssignments = serverAssignments.map(a =>
+            a.userId === userId ? { ...a, roleIds: a.roleIds.filter(id => id !== roleId) } : a
+          )
+          return { assignments: { ...state.assignments, [serverId]: newAssignments } }
+        })
+      }
+    } catch (error) {
+      console.error('Failed to remove role', error)
+    }
   },
 
   getUserRoles: (serverId: string, userId: string) => {

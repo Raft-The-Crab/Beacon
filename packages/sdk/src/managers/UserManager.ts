@@ -40,8 +40,14 @@ export class UserManager {
     }
 
     /** Edit the current bot/user profile */
-    async editProfile(data: { username?: string; avatar?: string; bio?: string }): Promise<User> {
-        const updated = await this.rest.patch<RawUser>('/users/@me', data);
+    async editProfile(data: { username?: string; avatar?: string; bio?: string; nameDesign?: Record<string, any> }): Promise<User> {
+        const payload = {
+            username: data.username,
+            avatar: data.avatar,
+            bio: data.bio,
+            name_design: data.nameDesign
+        };
+        const updated = await this.rest.patch<RawUser>('/users/@me', payload);
         const user = new User(this.rest.client, updated);
         this.cache.set(user.id, user);
         return user;

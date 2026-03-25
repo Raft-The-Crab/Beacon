@@ -8,6 +8,7 @@ import { useDMStore } from '../../stores/useDMStore'
 import { Button, Modal, useToast, Tooltip } from '../ui'
 import { Avatar } from '../ui/Avatar'
 import { UserBadges, BotTag } from '../ui/UserBadges'
+import { CustomUsername } from '../ui/CustomUsername'
 import { useProfileArtStore, type ProfileArt } from '../../stores/useProfileArtStore'
 import { apiClient } from '../../services/apiClient'
 import styles from '../../styles/modules/modals/UserProfileModal.module.css'
@@ -76,7 +77,30 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
   useEffect(() => {
     const fetchUser = async (isSilent = false) => {
-      // ... existed
+      if (!userId) return
+      if (!isSilent) setLoading(true)
+      
+      try {
+        const [userRes, mutualsRes] = await Promise.all([
+          apiClient.request('GET', `/users/${userId}`),
+          apiClient.request('GET', `/users/${userId}/mutuals`).catch(() => ({ success: true, data: { friends: [], guilds: [] } }))
+        ])
+
+        if (userRes.success) {
+          setUser(userRes.data)
+          setError(null)
+          
+          if (mutualsRes.success) {
+            setMutuals(mutualsRes.data)
+          }
+        } else {
+          setError(userRes.error || 'Failed to load user profile')
+        }
+      } catch (err) {
+        setError('Error connecting to service')
+      } finally {
+        if (!isSilent) setLoading(false)
+      }
     }
 
     if (isOpen) {
@@ -233,7 +257,7 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }
-              : { background: 'linear-gradient(135deg, var(--beacon-brand) 0%, #7c3aed 50%, #f59e0b 100%)' }
+              : { background: user.profileColor || 'linear-gradient(135deg, var(--beacon-brand) 0%, #7c3aed 50%, #f59e0b 100%)' }
           }
         >
           <div className={styles.bannerOverlay} />
@@ -252,7 +276,7 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
               src={user.avatar && !user.avatar.includes('dicebear') ? user.avatar : undefined}
               username={user.username}
               status={user.status as any}
-              size="lg"
+              size="huge"
               frameUrl={frameArt?.imageUrl}
               frameGradient={!frameArt?.imageUrl ? frameArt?.preview : undefined}
             />
@@ -313,15 +337,25 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <div style={{ position: 'absolute', top: 12, right: 16 }}>
-              <UserBadges badges={user.badges} isBot={user.bot} size="sm" />
+            <div className={styles.identityHeader}>
+              <div className={styles.nameHeader}>
+                <h1 className={styles.username}>
+                  <CustomUsername 
+                    username={user.displayName || user.username} 
+                    design={user.nameDesign} 
+                    baseColor={user.roles?.[0]?.color} 
+                  />
+                  {user.bot && <BotTag />}
+                </h1>
+                <p className={styles.handle}>
+                  @{user.username}{user.discriminator ? `#${user.discriminator}` : ''}
+                  {user.pronouns && <span className={styles.metaLabel} style={{ marginLeft: 8, fontSize: 10, opacity: 0.6 }}>{user.pronouns}</span>}
+                </p>
+              </div>
+              <div className={styles.badgeWrapper}>
+                <UserBadges badges={user.badges} isBot={user.bot} size="sm" />
+              </div>
             </div>
-            
-            <h1 className={styles.username}>
-              {user.displayName || user.username}
-              {user.bot && <BotTag />}
-            </h1>
-            <p className={styles.handle}>@{user.username}{user.discriminator ? `#${user.discriminator}` : ''}</p>
             
             {user.customStatus && (
               <div className={styles.statusText}>{user.customStatus}</div>
@@ -403,7 +437,7 @@ export function UserProfileModal({ userId, isOpen, onClose }: UserProfileModalPr
 
           <div className={styles.metaSection}>
             <span className={styles.metaLabel}>MEMBER SINCE</span>
-            <span className={styles.metaValue}>{formatSafeDate(user.joinedAt)}</span>
+            <span className={styles.metaValue}>{formatSafeDate(user.joinedAt || user.createdAt)}</span>
           </div>
         </div>
 

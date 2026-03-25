@@ -1,8 +1,7 @@
-﻿import { useEffect, useState } from 'react'
-import { X, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react'
+import { useEffect } from 'react'
+import { X, AlertCircle, CheckCircle, Info, AlertTriangle, Crown } from 'lucide-react'
+import { useNotificationSystem, ToastType } from '../../stores/useNotificationSystem'
 import styles from '../../styles/modules/ui/Toast.module.css'
-
-export type ToastType = 'success' | 'error' | 'info' | 'warning'
 
 export interface ToastMessage {
   id: string
@@ -16,15 +15,23 @@ const toastIcons: Record<ToastType, React.ReactNode> = {
   error: <AlertCircle size={20} />,
   info: <Info size={20} />,
   warning: <AlertTriangle size={20} />,
+  premium: <Crown size={20} className={styles.premiumIcon} />,
 }
 
-interface ToastComponentProps extends ToastMessage {
+interface ToastComponentProps extends Toast {
   onRemove: (id: string) => void
+}
+
+interface Toast {
+    id: string;
+    message: string;
+    type: ToastType;
+    duration?: number;
 }
 
 function ToastComponent({ id, message, type, duration = 4000, onRemove }: ToastComponentProps) {
   useEffect(() => {
-    if (duration > 0) {
+    if (duration > 0 && duration !== Infinity) {
       const timer = setTimeout(() => onRemove(id), duration)
       return () => clearTimeout(timer)
     }
@@ -41,76 +48,42 @@ function ToastComponent({ id, message, type, duration = 4000, onRemove }: ToastC
       >
         <X size={14} />
       </button>
+      <div className={styles.progress} style={{ animationDuration: `${duration}ms` }} />
     </div>
   )
 }
 
-interface ToastContainerProps {
-  toasts: ToastMessage[]
-  onRemove: (id: string) => void
-}
-
-export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
+export function ToastContainer() {
+  const { toasts, remove } = useNotificationSystem()
+  
   return (
     <div className={styles.container}>
       {toasts.map((toast) => (
         <ToastComponent
           key={toast.id}
           {...toast}
-          onRemove={onRemove}
+          onRemove={remove}
         />
       ))}
     </div>
   )
 }
 
-// Store for managing toasts globally
-let toastId = 0
-let listeners: Set<(toasts: ToastMessage[]) => void> = new Set()
-let toasts: ToastMessage[] = []
-const recentToasts = new Map<string, number>()
-const DEDUP_WINDOW_MS = 2000
-
+/**
+ * Hook for components to trigger toast notifications.
+ * Uses the global useNotificationSystem store for state.
+ */
 export const useToast = () => {
-  const [toastList, setToastList] = useState<ToastMessage[]>([])
+    const { show, remove, toasts } = useNotificationSystem();
 
-  useEffect(() => {
-    listeners.add(setToastList)
-    return () => { listeners.delete(setToastList) }
-  }, [])
-
-  const show = (message: string, type: ToastType = 'info', duration?: number) => {
-    // Deduplicate: skip if same message+type was shown within 2s
-    const dedupKey = `${type}:${message}`
-    const now = Date.now()
-    const lastShown = recentToasts.get(dedupKey)
-    if (lastShown && now - lastShown < DEDUP_WINDOW_MS) return
-    recentToasts.set(dedupKey, now)
-    // Cleanup old entries periodically
-    if (recentToasts.size > 50) {
-      for (const [key, ts] of recentToasts) {
-        if (now - ts > DEDUP_WINDOW_MS) recentToasts.delete(key)
-      }
-    }
-
-    const id = String(toastId++)
-    const newToast: ToastMessage = { id, message, type, duration }
-    toasts = [...toasts, newToast]
-    listeners.forEach(listener => listener(toasts))
-  }
-
-  const remove = (id: string) => {
-    toasts = toasts.filter(t => t.id !== id)
-    listeners.forEach(listener => listener(toasts))
-  }
-
-  return {
-    toasts: toastList,
-    show,
-    remove,
-    success: (msg: string, duration?: number) => show(msg, 'success', duration),
-    error: (msg: string, duration?: number) => show(msg, 'error', duration),
-    info: (msg: string, duration?: number) => show(msg, 'info', duration),
-    warning: (msg: string, duration?: number) => show(msg, 'warning', duration),
-  }
-}
+    return {
+        toasts,
+        show,
+        remove,
+        success: (msg: string, dur?: number) => show(msg, 'success', dur),
+        error: (msg: string, dur?: number) => show(msg, 'error', dur),
+        info: (msg: string, dur?: number) => show(msg, 'info', dur),
+        warning: (msg: string, dur?: number) => show(msg, 'warning', dur),
+        premium: (msg: string, dur?: number) => show(msg, 'premium', dur),
+    };
+};

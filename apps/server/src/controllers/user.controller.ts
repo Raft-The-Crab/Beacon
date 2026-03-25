@@ -52,6 +52,7 @@ export async function getMe(req: Request, res: Response) {
             isBeaconPlus: true,
             avatarDecorationId: true,
             profileEffectId: true,
+            nameDesign: true,
             createdAt: true,
           },
         })
@@ -109,6 +110,7 @@ const UpdateProfileSchema = z.object({
   customStatus: z.string().max(128).optional().nullable(),
   avatarDecorationId: z.string().optional().nullable(),
   profileEffectId: z.string().optional().nullable(),
+  nameDesign: z.record(z.any()).optional().nullable(),
 });
 
 // PATCH /users/me
@@ -141,6 +143,18 @@ export async function updateMe(req: Request, res: Response) {
       }
     }
 
+    // Beacon+ restriction for Display Name
+    if (trimmedDisplayName !== undefined) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { isBeaconPlus: true, displayName: true }
+      });
+      
+      if (user && !user.isBeaconPlus && trimmedDisplayName !== user.displayName) {
+        return res.status(403).json({ error: 'Custom display names require Beacon+' });
+      }
+    }
+
     const updated = await (prisma.user as any).update({
       where: { id: userId },
       data: {
@@ -156,6 +170,7 @@ export async function updateMe(req: Request, res: Response) {
         ...(data.customStatus !== undefined && { customStatus: data.customStatus }),
         ...(data.avatarDecorationId !== undefined && { avatarDecorationId: data.avatarDecorationId }),
         ...(data.profileEffectId !== undefined && { profileEffectId: data.profileEffectId }),
+        ...(data.nameDesign !== undefined && { nameDesign: data.nameDesign || {} }),
       },
       select: {
         id: true,
@@ -176,6 +191,7 @@ export async function updateMe(req: Request, res: Response) {
         isBeaconPlus: true,
         avatarDecorationId: true,
         profileEffectId: true,
+        nameDesign: true,
         createdAt: true,
       },
     });
@@ -193,7 +209,7 @@ export async function updateMe(req: Request, res: Response) {
     await CacheService.del(CacheService.genKey('user', userId, 'me'));
     await CacheService.del(CacheService.genKey('user', userId));
 
-    return res.json(AuthService.sanitizeUser(updated));
+    return res.json(serializeBigInt(AuthService.sanitizeUser(updated)));
   } catch (err: any) {
     console.error('updateMe error:', err);
     if (err?.name === 'ZodError') {
@@ -210,7 +226,7 @@ export async function getUser(req: Request, res: Response) {
 
   try {
     const cached = await CacheService.get(`user:${userId}`);
-    if (cached) return res.json(cached);
+    if (cached) return res.json(serializeBigInt(cached));
 
     let user: any = null
     try {
@@ -232,6 +248,7 @@ export async function getUser(req: Request, res: Response) {
           isBeaconPlus: true,
           avatarDecorationId: true,
           profileEffectId: true,
+          nameDesign: true,
           createdAt: true,
         },
       })
@@ -264,7 +281,7 @@ export async function getUser(req: Request, res: Response) {
 
     const sanitizedUser = AuthService.sanitizeUser(user)
     await CacheService.set(CacheService.genKey('user', userId), sanitizedUser, 600); // 10 min cache
-    return res.json(sanitizedUser);
+    return res.json(serializeBigInt(sanitizedUser));
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }
@@ -300,7 +317,7 @@ export async function getMyGuilds(req: Request, res: Response) {
       }));
     }, 300); // 5 min cache
 
-    return res.json(guilds);
+    return res.json(serializeBigInt(guilds));
   } catch (err) {
     console.error('getMyGuilds error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -365,7 +382,7 @@ export async function getMyFriends(req: Request, res: Response) {
     });
 
     const deduped = Array.from(new Map(enrichedWithPresence.map((entry: any) => [entry.id, entry])).values())
-    return res.json(deduped);
+    return res.json(serializeBigInt(deduped));
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }
@@ -451,7 +468,7 @@ export async function updateEmail(req: Request, res: Response) {
       data: { email },
       select: { id: true, email: true }
     });
-    return res.json(updated);
+    return res.json(serializeBigInt(updated));
   } catch (err) {
     return res.status(500).json({ error: 'Internal server error' });
   }
@@ -491,72 +508,7 @@ export async function updatePassword(req: Request, res: Response) {
   }
 }
 
-export async function enable2FA(req: Request, res: Response) {
-  const userId = req.user?.id;
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
-  try {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    if (user.twoFactorEnabled) return res.status(400).json({ error: '2FA is already enabled' });
-
-    // Generate a real TOTP secret
-    const result = node2fa.generateSecret({
-      name: 'Beacon',
-      account: user.email
-    });
-
-    // Store the secret temporarily (user must verify before it activates)
-    await prisma.user.update({
-      where: { id: userId },
-      data: { twoFactorSecret: result.secret }
-    });
-
-    // Generate QR code as data URL
-    const qrCode = await QRCode.toDataURL(result.uri);
-
-    return res.json({
-      secret: result.secret,
-      qrCode
-    });
-  } catch (err) {
-    console.error('enable2FA error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-}
-
-export async function verify2FA(req: Request, res: Response) {
-  const userId = req.user?.id;
-  const { code } = req.body;
-
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-  if (!code || typeof code !== 'string') return res.status(400).json({ error: 'Verification code is required' });
-
-  try {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    if (!user.twoFactorSecret) return res.status(400).json({ error: '2FA setup not initiated. Call enable2FA first.' });
-
-    // Verify the TOTP token against the stored secret
-    const isValid = node2fa.verifyToken(user.twoFactorSecret, code, 1);
-
-    if (!isValid) {
-      return res.status(400).json({ error: 'Invalid verification code. Please try again.' });
-    }
-
-    // Activate 2FA
-    await prisma.user.update({
-      where: { id: userId },
-      data: { twoFactorEnabled: true }
-    });
-
-    return res.json({ success: true, message: '2FA has been enabled successfully.' });
-  } catch (err) {
-    console.error('verify2FA error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-}
+// 2FA methods removed — centralized in AuthController
 
 export async function getMutuals(req: Request, res: Response) {
   const userId = req.user?.id;
