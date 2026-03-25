@@ -22,7 +22,7 @@ const upload = multer({
 /**
  * Upload a file — QUEUED processing.
  */
-router.post('/upload', authenticate as any, uploadLimiter, async (req: AuthRequest, res: Response) => {
+router.post('/upload', authenticate as any, uploadLimiter as any, async (req: AuthRequest, res: Response) => {
   upload.single('file')(req, res, async (err: any) => {
     if (err) return res.status(400).json({ error: 'Multer error: ' + err.message })
     const file = req.file as Express.Multer.File

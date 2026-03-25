@@ -177,7 +177,7 @@ export class BeaconServer {
         this.app.use(sanitizeHeaders);
         this.app.use(sanitizeBody);
         this.app.use(ipBlockMiddleware);
-        this.app.use('/api/', generalLimiter);
+        this.app.use('/api/', generalLimiter as any);
         this.app.use(responseWrapper);
         
         // v3: Cloudinary HTTPS rewriting middleware — fixes legacy insecure URLs in database
@@ -200,7 +200,7 @@ export class BeaconServer {
         });
 
         // Parse cookies BEFORE body parsers for CSRF validation
-        this.app.use(cookieParser());
+        this.app.use(cookieParser() as any);
         this.app.use(express.json({ limit: profile.jsonLimitMB }));
         this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
         this.app.use(csrfProtection);

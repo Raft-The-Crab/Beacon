@@ -46,7 +46,7 @@ class MessagePurgeService {
                         lt: cutoff,
                         not: null
                     }
-                }
+                } as any
             });
 
             if (result.count > 0) {

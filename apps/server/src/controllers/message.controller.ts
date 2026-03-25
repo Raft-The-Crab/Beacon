@@ -381,7 +381,7 @@ export async function deleteMessage(req: Request, res: Response) {
     // Soft-delete message (5-day retention starts now)
     await prisma.message.update({
       where: { id: messageId },
-      data: { deletedAt: new Date() }
+      data: { deletedAt: new Date() } as any
     });
 
     await publishGatewayEvent('MESSAGE_DELETE', { id: messageId, channelId });
