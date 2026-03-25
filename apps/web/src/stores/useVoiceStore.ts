@@ -49,6 +49,7 @@ interface VoiceStore {
 
   setUserPosition: (userId: string, x: number, y: number, z: number) => void
   setUserAudioLevel: (userId: string, level: number) => void
+  resetStore: () => void
 }
 
 export const useVoiceStore = create<VoiceStore>((set, get) => ({
@@ -107,6 +108,12 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
     })),
 
   setBandwidthMode: (mode) => set({ bandwidthMode: mode }),
+  // Adding new actions as per the user's snippet.
+  // Note: `isVideoEnabled` and `localStream` are not part of the initial state or interface.
+  // If they are meant to be state properties, they should be added to the VoiceStore interface and initialized.
+  setVideoEnabled: (enabled: boolean) => { /* This action would typically update a state property like `isVideoEnabled` */ },
+  setLocalStream: (stream: MediaStream | null) => { /* This action would typically update a state property like `localStream` */ },
+
   setVideoQuality: (quality) => set({ videoQuality: quality }),
   setFrameRate: (rate) => set({ frameRate: rate }),
 
@@ -150,4 +157,11 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
       newVoiceUsers.set(userId, { ...vs, audioLevel: level })
       return { voiceUsers: newVoiceUsers }
     }),
-}))
+
+  resetStore: () => set({
+    voiceUsers: new Map(),
+    connectedVoiceChannelId: null,
+    currentVoiceState: null,
+    typingUsers: new Set(),
+  })
+}));

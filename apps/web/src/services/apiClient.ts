@@ -257,6 +257,7 @@ class ApiClient {
         this.token = null;
         localStorage.removeItem('token');
         localStorage.removeItem('beacon_token');
+        localStorage.removeItem('accessToken');
     }
 
     async getCurrentUser() {
@@ -427,8 +428,8 @@ class ApiClient {
         return this.request('POST', '/users/me/2fa/enable');
     }
 
-    async verify2FA(code: string) {
-        return this.request('POST', '/users/me/2fa/verify', { code });
+    async verify2FA(code: string, secret?: string) {
+        return this.request('POST', '/users/me/2fa/verify', { token: code, secret });
     }
 
     // -- SLASH COMMANDS --

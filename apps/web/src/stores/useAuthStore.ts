@@ -283,9 +283,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           get().setTheme(userTheme)
         }
       } else {
+        localStorage.removeItem('token')
+        localStorage.removeItem('beacon_token')
+        localStorage.removeItem('accessToken')
         set({ user: null, isAuthenticated: false, isLoading: false })
       }
     } catch (err) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('beacon_token')
+      localStorage.removeItem('accessToken')
       set({ user: null, isAuthenticated: false, isLoading: false })
     }
   },

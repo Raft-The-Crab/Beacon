@@ -109,4 +109,43 @@ export class MemberManager {
         this.cache.set(this._cacheKey(guildId, userId), data);
         return data;
     }
+
+    /** Edit a member's properties (bulk) */
+    async edit(guildId: string, userId: string, options: { 
+        nickname?: string | null; 
+        roles?: string[]; 
+        mute?: boolean; 
+        deaf?: boolean; 
+        channelId?: string | null;
+        communicationDisabledUntil?: Date | null;
+    }): Promise<GuildMember> {
+        const payload: any = {};
+        if (options.nickname !== undefined) payload.nickname = options.nickname;
+        if (options.roles !== undefined) payload.roles = options.roles;
+        if (options.mute !== undefined) payload.mute = options.mute;
+        if (options.deaf !== undefined) payload.deaf = options.deaf;
+        if (options.channelId !== undefined) payload.channel_id = options.channelId;
+        if (options.communicationDisabledUntil !== undefined) {
+            payload.communication_disabled_until = options.communicationDisabledUntil?.toISOString() || null;
+        }
+
+        const data = await this.rest.patch(`/guilds/${guildId}/members/${userId}`, payload);
+        this.cache.set(this._cacheKey(guildId, userId), data);
+        return data;
+    }
+
+    /** Mute a member in voice */
+    async setMute(guildId: string, userId: string, mute: boolean): Promise<GuildMember> {
+        return this.edit(guildId, userId, { mute });
+    }
+
+    /** Deafen a member in voice */
+    async setDeaf(guildId: string, userId: string, deaf: boolean): Promise<GuildMember> {
+        return this.edit(guildId, userId, { deaf });
+    }
+
+    /** Move a member to another voice channel, or disconnect them if null */
+    async setVoiceChannel(guildId: string, userId: string, channelId: string | null): Promise<GuildMember> {
+        return this.edit(guildId, userId, { channelId });
+    }
 }

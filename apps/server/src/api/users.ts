@@ -22,6 +22,12 @@ router.patch('/me/e2ee', updateE2EEKeys);
 router.post('/me/email', updateEmail);
 router.post('/me/password', updatePassword);
 
+// 2FA Mapping (Mismatched in frontend)
+import { AuthController } from '../controllers/auth.controller';
+router.post('/me/2fa/enable', authenticate, AuthController.setup2FA);
+router.post('/me/2fa/verify', authenticate, AuthController.verify2FA);
+router.post('/me/2fa/disable', authenticate, AuthController.disable2FA);
+
 // Other users (public profile)
 router.get('/:userId', cacheResponse(300), getUser);
 router.get('/:userId/e2ee', cacheResponse(300), getE2EEKeys);

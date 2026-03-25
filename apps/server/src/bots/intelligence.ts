@@ -146,6 +146,23 @@ Guidelines:
         if (t.includes('bad') || t.includes('wrong') || t.includes('sad')) return 'negative';
         return 'neutral';
     }
+
+    // ─── Proactive Methods ──────────────────────────────
+
+    async sendSecurityAlert(userId: string, reason: string) {
+        const { SystemBotService } = await import('../services/systemBot.js');
+        return SystemBotService.notifySecurityAlert(userId, reason);
+    }
+
+    async sendWelcome(userId: string, username: string) {
+        const { SystemBotService } = await import('../services/systemBot.js');
+        return SystemBotService.notifyWelcome(userId, username);
+    }
+
+    async sendRandomTip(userId: string) {
+        const { SystemBotService } = await import('../services/systemBot.js');
+        return SystemBotService.sendTip(userId);
+    }
 }
 
 export const beaconBot = new OfficialBeaconBot();

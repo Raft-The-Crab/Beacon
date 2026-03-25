@@ -8,7 +8,7 @@ if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 1; // Faster fail on Railway 
 const RETRY_BASE_DELAY = 1000; // ms
 
 const BRAND_COLOR = '#5865F2';
@@ -72,9 +72,9 @@ export class NotificationService {
       auth: { user, pass },
       pool: true,
       maxConnections: 3,
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 5000,
       tls: {
         // Do not fail on invalid certs in dev/testing, but keep it strict in prod if possible
         rejectUnauthorized: process.env.NODE_ENV === 'production',
@@ -143,10 +143,15 @@ export class NotificationService {
 
     if (await tryConnect(initialPort)) return;
 
-    // Fallback logic
-    const fallbackPort = initialPort === 465 ? 587 : 465;
-    logger.warn(`[EMAIL] Initial port ${initialPort} failed. Trying fallback port ${fallbackPort}...`);
-    await tryConnect(fallbackPort);
+    // v3.5: Expanded Fallback Cycle (465, 587, 2525)
+    const fallbacks = [465, 587, 2525].filter(p => p !== initialPort);
+    
+    for (const port of fallbacks) {
+      logger.warn(`[EMAIL] Port ${initialPort} failed. Trying fallback port ${port}...`);
+      if (await tryConnect(port)) return;
+    }
+
+    logger.error(`[EMAIL] FATAL: All SMTP ports (465, 587, 2525) failed. Railway may be blocking all outbound SMTP traffic. Consider using Resend or a dedicated Email API.`);
   }
 
   private static async sendWithRetry(mailOptions: nodemailer.SendMailOptions, dryRunMeta?: Record<string, string>): Promise<boolean> {

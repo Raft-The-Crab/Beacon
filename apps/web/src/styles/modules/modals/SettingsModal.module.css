@@ -569,6 +569,73 @@
     margin-bottom: 32px;
 }
 
+.profileHeaderCard {
+    position: relative;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 72px; /* make room for overlapping avatar */
+}
+
+.headerBanner {
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    background-color: var(--accent-primary, #5865f2);
+}
+
+.bannerActions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.headerBanner:hover .bannerActions {
+    opacity: 1;
+}
+
+.bannerActionBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.bannerActionBtn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: translateY(-1px);
+}
+
+.headerAvatarWrap {
+    position: absolute;
+    bottom: -60px; /* pull down exactly half of the 120px avatar size */
+    left: 24px;
+    width: 136px; /* 120px + 2*(8px border) */
+    height: 136px;
+    border-radius: 50%;
+    background: var(--bg-surface-soft, rgba(14, 15, 17, 1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
 .formLabel {
     display: block;
     font-size: 11px;

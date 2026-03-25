@@ -114,7 +114,7 @@ export function LandingPage() {
               <h3>Core Engine</h3>
               <p>Ultra-low latency infrastructure engineered for instantaneous global synchronization of voice and state data.</p>
             </div>
-            
+
             <div className={`${styles.featureCard} ${styles.featurePrivacy}`}>
               <div className={styles.iconWrapper}>
                 <Shield className={styles.featureIcon} size={32} />
@@ -122,7 +122,7 @@ export function LandingPage() {
               <h3>Privacy Architecture</h3>
               <p>Encrypted tunnels for every interaction, featuring metadata stripping and user-governed identity control by default.</p>
             </div>
-            
+
             <div className={`${styles.featureCard} ${styles.featureDeveloperAPI}`}>
               <div className={styles.iconWrapper}>
                 <Zap className={styles.featureIcon} size={32} />

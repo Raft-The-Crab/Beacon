@@ -8,6 +8,7 @@ import { GuildMember } from './GuildMember';
 import type { ActionRowData } from '../builders/ActionRowBuilder';
 import type { CardData } from '../builders/CardBuilder';
 import type { RawInteraction, InteractionOption } from '../types/index';
+import { InteractionCollector } from './InteractionCollector';
 
 export interface ReplyOptions {
   content?: string;
@@ -248,6 +249,17 @@ export class InteractionContext {
     });
   }
 
+  /** v3.5: Await a component interaction from the reply message. */
+  async awaitComponent(options: { filter?: (i: InteractionContext) => boolean; time?: number } = {}): Promise<InteractionContext | null> {
+    const collector = new InteractionCollector(this._rest.client, {
+      ...options,
+      max: 1,
+      messageId: '@original', // Special case for the original interaction reply
+    });
+    const results = await collector.await();
+    return results[0] ?? null;
+  }
+
   /** Get the value(s) submitted from a select menu component. */
   getSelectValues(): string[] {
     return (this._raw as any)?.data?.values ?? [];
@@ -301,5 +313,35 @@ export class InteractionContext {
   /** The type of interaction (Ping = 1, Command = 2, Component = 3, Autocomplete = 4, ModalSubmit = 5) */
   get type(): number {
     return this._raw.type;
+  }
+
+  /** Whether this interaction is a slash command or context menu */
+  isChatInput(): boolean {
+    return this.type === 2;
+  }
+
+  /** Whether this interaction is a message component (button, select) */
+  isComponent(): boolean {
+    return this.type === 3;
+  }
+
+  /** Whether this interaction is a button */
+  isButton(): boolean {
+    return this.isComponent() && (this._raw.data as any)?.component_type === 2;
+  }
+
+  /** Whether this interaction is a select menu */
+  isSelectMenu(): boolean {
+    return this.isComponent() && [3, 5, 6, 7, 8].includes((this._raw.data as any)?.component_type);
+  }
+
+  /** Whether this interaction is an autocomplete request */
+  isAutocomplete(): boolean {
+    return this.type === 4;
+  }
+
+  /** Whether this interaction is a modal submission */
+  isModalSubmit(): boolean {
+    return this.type === 5;
   }
 }

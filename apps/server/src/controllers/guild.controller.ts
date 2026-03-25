@@ -446,7 +446,7 @@ export class GuildController {
                 data: {
                     name,
                     color,
-                    permissions: permissions ? BigInt(typeof permissions === 'string' ? parseInt(permissions) : permissions) : undefined,
+                    permissions: permissions !== undefined ? BigInt(permissions) : undefined,
                     position
                 }
             });
@@ -899,20 +899,47 @@ export class GuildController {
     static async updateMember(req: Request, res: Response) {
         try {
             const { guildId, userId } = req.params;
-            const { nickname, roles } = req.body;
+            const { nickname, roles, mute, deaf, communication_disabled_until, channel_id } = req.body;
+
+            const updateData: any = {};
+            if (nickname !== undefined) updateData.nickname = nickname;
+            if (roles !== undefined) updateData.roles = { set: roles.map((id: string) => ({ id })) };
+            if (mute !== undefined) updateData.mute = mute;
+            if (deaf !== undefined) updateData.deaf = deaf;
+            if (communication_disabled_until !== undefined) {
+                updateData.communicationDisabledUntil = communication_disabled_until ? new Date(communication_disabled_until) : null;
+            }
 
             const member = await prisma.guildMember.update({
                 where: { userId_guildId: { userId, guildId } },
-                data: {
-                    nickname,
-                    roles: roles ? { set: roles.map((id: string) => ({ id })) } : undefined
-                },
+                data: updateData,
                 include: { user: true, roles: true }
             });
 
-            SocketService.emitToRoom(guildId, 'GUILD_MEMBER_UPDATE', { guildId, member });
-            res.json(member);
+            // If channel_id is provided, we might want to forcefully update their voice state
+            if (channel_id !== undefined) {
+                if (channel_id === null) {
+                    await prisma.voiceState.deleteMany({ where: { userId, guildId } });
+                } else {
+                    await prisma.voiceState.updateMany({
+                        where: { userId, guildId },
+                        data: { channelId: channel_id }
+                    });
+                }
+            }
+
+            const serializedMember = serializeBigInt(member);
+            SocketService.emitToRoom(guildId, 'GUILD_MEMBER_UPDATE', { guildId, member: serializedMember });
+            
+            // Also emit a voice state update if channel changed
+            if (channel_id !== undefined) {
+                const vs = await prisma.voiceState.findFirst({ where: { userId, guildId }});
+                if (vs) SocketService.emitToRoom(guildId, 'VOICE_STATE_UPDATE', vs);
+            }
+
+            res.json(serializedMember);
         } catch (error) {
+            console.error('[UPDATE_MEMBER]', error);
             res.status(500).json({ error: 'Failed to update member' });
         }
     }

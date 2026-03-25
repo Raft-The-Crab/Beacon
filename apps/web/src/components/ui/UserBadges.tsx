@@ -140,11 +140,36 @@ export function UserBadges({ badges = [], isBot, size = 'sm' }: UserBadgesProps)
   )
 }
 
-/** Inline BOT tag (like Discord's "BOT" pill next to username) */
-export function BotTag({ className }: { className?: string }) {
+/** Inline BOT/APP/WEBHOOK tag (God-tier premium pill) */
+export function BotTag({ 
+  type = 'app', 
+  verified = false,
+  className 
+}: { 
+  type?: 'app' | 'webhook' | 'bot'
+  verified?: boolean
+  className?: string 
+}) {
+  const label = type === 'webhook' ? 'WEBHOOK' : (type === 'app' ? 'APP' : 'BOT');
+  
   return (
-    <span className={`${styles.botTag} ${className || ''}`}>
-      BOT
+    <span 
+      className={`
+        ${styles.botTag} 
+        ${verified ? styles.verifiedBot : ''} 
+        ${type === 'webhook' ? styles.webhookTag : ''}
+        ${className || ''}
+      `}
+    >
+      {verified && (
+        <span className={styles.verifiedCheckWrapper}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className={styles.verifiedCheck}>
+            <path d="M12 2L14.2 4.2L17.3 3.7L18.4 6.6L21.1 8L20.6 11.1L22.8 13.3L20.6 15.5L21.1 18.6L18.4 20L17.3 22.9L14.2 22.4L12 24.6L9.8 22.4L6.7 22.9L5.6 20L2.9 18.6L3.4 15.5L1.2 13.3L3.4 11.1L2.9 8L5.6 6.6L6.7 3.7L9.8 4.2L12 2Z" fill="currentColor" />
+            <path d="M9 12L11 14L16 9" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      )}
+      <span className={styles.tagLabel}>{label}</span>
     </span>
   )
 }

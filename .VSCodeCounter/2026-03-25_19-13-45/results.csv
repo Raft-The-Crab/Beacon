@@ -1,0 +1,716 @@
+"filename", "language", "YAML", "JSON", "Markdown", "TypeScript", "HTML", "Gradle", "Java Properties", "JavaScript", "JSON with Comments", "TypeScript JSX", "Batch", "Perl", "CSS", "MS SQL", "Python", "Rust", "XML", "Java", "Shell Script", "Docker", "pip requirements", "comment", "blank", "total"
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\.github\workflows\docker-publish.yml", "YAML", 68, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 13, 83
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\.github\workflows\sdk-publish.yml", "YAML", 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 38
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\CHANGELOG.md", "Markdown", 0, 0, 66, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 77
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\README.md", "Markdown", 0, 0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 86
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\desktop\package.json", "JSON", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\desktop\src-tauri\build.rs", "Rust", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 1, 4
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\desktop\src-tauri\gen\schemas\acl-manifests.json", "JSON", 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\desktop\src-tauri\gen\schemas\capabilities.json", "JSON", 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\desktop\src-tauri\gen\schemas\desktop-schema.json", "JSON", 0, 6722, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6722
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\desktop\src-tauri\gen\schemas\windows-schema.json", "JSON", 0, 6722, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6722
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\desktop\src-tauri\src\main.rs", "Rust", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 197, 0, 0, 0, 0, 0, 14, 39, 250
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\desktop\src-tauri\src\performance.rs", "Rust", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, 0, 4, 10, 55
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\desktop\src-tauri\tauri.conf.json", "JSON", 0, 152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 153
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\desktop\src\index.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\build.gradle", "Gradle", 0, 0, 0, 0, 0, 47, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 55
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\capacitor.build.gradle", "Gradle", 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7, 20
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\androidTest\java\com\getcapacitor\myapp\ExampleInstrumentedTest.java", "Java", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 1, 6, 27
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\AndroidManifest.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 0, 0, 0, 0, 0, 8, 42
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\java\chat\beacon\app\MainActivity.java", "Java", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3, 6
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\res\drawable-v24\ic_launcher_foreground.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 0, 0, 0, 0, 0, 1, 35
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\res\drawable\ic_launcher_background.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 170, 0, 0, 0, 0, 0, 1, 171
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\res\drawable\splash_background.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 0, 0, 0, 0, 0, 1, 29
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\res\layout\activity_main.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 2, 13
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 5
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\res\mipmap-anydpi-v26\ic_launcher_round.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 5
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\res\values\ic_launcher_background.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 4
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\res\values\strings.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 1, 8
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\res\values\styles.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 4, 25
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\main\res\xml\file_paths.xml", "XML", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 5
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\app\src\test\java\com\getcapacitor\myapp\ExampleUnitTest.java", "Java", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 5, 19
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\build.gradle", "Gradle", 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 7, 30
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\capacitor.settings.gradle", "Gradle", 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 4
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\gradle.properties", "Java Properties", 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 6, 23
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\gradle\wrapper\gradle-wrapper.properties", "Java Properties", 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\gradlew.bat", "Batch", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 22, 95
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\settings.gradle", "Gradle", 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\android\variables.gradle", "Gradle", 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\capacitor.config.ts", "TypeScript", 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 67
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\package.json", "JSON", 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\scripts\ensureAndroidSdk.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 46
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\mobile\src\index.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\README.md", "Markdown", 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 48
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\Dockerfile", "Docker", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 0, 13, 11, 46
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\clawcloud-ai.yaml", "YAML", 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 48
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\clawcloud_service.py", "Python", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 127, 0, 0, 0, 0, 0, 0, 6, 31, 164
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\download_model.py", "Python", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 44, 0, 0, 0, 0, 0, 0, 3, 10, 57
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\fine_tune.py", "Python", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 95, 0, 0, 0, 0, 0, 0, 8, 18, 121
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\index.ts", "TypeScript", 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 7, 41
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\model_runner.py", "Python", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 69, 0, 0, 0, 0, 0, 0, 7, 13, 89
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\models\index.d.ts", "TypeScript", 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 16
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\models\index.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 63
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\requirements.txt", "pip requirements", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 10
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\ai\start.sh", "Shell Script", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 7, 8, 30
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\config\coupon-codes.json", "JSON", 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 24
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\config\developers.json", "JSON", 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\config\redeem-codes.json", "JSON", 0, 44, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 44
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\package.json", "JSON", 0, 78, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 79
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\prisma\migrations\20260313_case_insensitive_username_unique\migration.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\prisma\migrations\20260325_add_message_deleted_at\migration.sql", "MS SQL", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 3
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\prisma\seed-quests.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 7, 80
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\scripts\init-system-bot.ts", "TypeScript", 0, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 38
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\scripts\prisma-generate-retry.cjs", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 12, 67
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\server-clawcloud.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 40
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\server-railway.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 15, 76
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api-server.ts", "TypeScript", 0, 0, 0, 319, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 56, 400
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\ai.ts", "TypeScript", 0, 0, 0, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 67
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\analytics.ts", "TypeScript", 0, 0, 0, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 13, 81
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\apps.ts", "TypeScript", 0, 0, 0, 156, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 34, 193
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\auditLogs.ts", "TypeScript", 0, 0, 0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 10, 74
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\auth.ts", "TypeScript", 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 7, 31
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\beacoin.ts", "TypeScript", 0, 0, 0, 488, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 76, 584
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\channels.ts", "TypeScript", 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 11, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\directMessages.ts", "TypeScript", 0, 0, 0, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 15, 129
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\folders.ts", "TypeScript", 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 12, 80
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\friends.ts", "TypeScript", 0, 0, 0, 309, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 51, 371
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\gifs.ts", "TypeScript", 0, 0, 0, 105, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 124
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\gifting.ts", "TypeScript", 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 13
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\guilds.ts", "TypeScript", 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 14, 75
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\health.ts", "TypeScript", 0, 0, 0, 68, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7, 76
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\index.ts", "TypeScript", 0, 0, 0, 81, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 91
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\interactions.ts", "TypeScript", 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 5, 16
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\media.ts", "TypeScript", 0, 0, 0, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 17, 116
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\messages.ts", "TypeScript", 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 21, 115
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\moderation.ts", "TypeScript", 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 9, 51
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\notes.ts", "TypeScript", 0, 0, 0, 201, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 35, 246
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\notifications.ts", "TypeScript", 0, 0, 0, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 19, 135
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\quests.ts", "TypeScript", 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 14
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\shop.ts", "TypeScript", 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 14
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\users.ts", "TypeScript", 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 8, 36
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\videoModeration.ts", "TypeScript", 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7, 33
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\api\webhooks.ts", "TypeScript", 0, 0, 0, 105, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 26, 143
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\bots\bots.ts", "TypeScript", 0, 0, 0, 383, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 68, 475
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\bots\index.ts", "TypeScript", 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6, 19
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\bots\intelligence.ts", "TypeScript", 0, 0, 0, 134, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 29, 169
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\bots\memory.ts", "TypeScript", 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 63
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\bots\plugins.ts", "TypeScript", 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 78
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\cache\index.ts", "TypeScript", 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 5
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\config\firebase.ts", "TypeScript", 0, 0, 0, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 16, 84
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\config\server.ts", "TypeScript", 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 32
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\controllers\auth.controller.ts", "TypeScript", 0, 0, 0, 421, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 76, 507
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\controllers\channel.controller.ts", "TypeScript", 0, 0, 0, 151, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 29, 183
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\controllers\gifting.controller.ts", "TypeScript", 0, 0, 0, 117, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 19, 143
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\controllers\guild.controller.ts", "TypeScript", 0, 0, 0, 1227, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 178, 1447
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\controllers\interaction.controller.ts", "TypeScript", 0, 0, 0, 390, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 61, 487
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\controllers\message.controller.ts", "TypeScript", 0, 0, 0, 510, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 46, 93, 649
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\controllers\moderation.controller.ts", "TypeScript", 0, 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 19, 140
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\controllers\quest.controller.ts", "TypeScript", 0, 0, 0, 109, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 17, 128
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\controllers\shop.controller.ts", "TypeScript", 0, 0, 0, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 20, 129
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\controllers\user.controller.ts", "TypeScript", 0, 0, 0, 571, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 78, 668
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\db\index.ts", "TypeScript", 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 41
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\db\mongo.ts", "TypeScript", 0, 0, 0, 168, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 17, 188
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\env.ts", "TypeScript", 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 22
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\lib\beaconSdk.ts", "TypeScript", 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 42
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\lib\configPaths.ts", "TypeScript", 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 30
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\lib\promoCodes.ts", "TypeScript", 0, 0, 0, 119, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 17, 137
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\media\index.ts", "TypeScript", 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\antiSpam.ts", "TypeScript", 0, 0, 0, 57, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 15, 81
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\auth.ts", "TypeScript", 0, 0, 0, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 74
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\error.ts", "TypeScript", 0, 0, 0, 57, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 7, 69
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\index.ts", "TypeScript", 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\performance.ts", "TypeScript", 0, 0, 0, 72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 17, 91
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\permission.ts", "TypeScript", 0, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10, 47
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\rateLimit.ts", "TypeScript", 0, 0, 0, 77, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 17, 104
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\requestId.ts", "TypeScript", 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 13
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\responseWrapper.ts", "TypeScript", 0, 0, 0, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 8, 47
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\security.ts", "TypeScript", 0, 0, 0, 312, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 47, 383
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\sovereign.ts", "TypeScript", 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 35
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\middleware\validation.ts", "TypeScript", 0, 0, 0, 165, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 23, 191
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\routes\activity.routes.ts", "TypeScript", 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 42
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\routes\upload.routes.ts", "TypeScript", 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 10, 54
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\scripts\test-fb-init.ts", "TypeScript", 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 17
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\activity.service.ts", "TypeScript", 0, 0, 0, 46, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 8, 58
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\ai\moderation.pl", "Perl", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 414, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62, 476
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\apps.ts", "TypeScript", 0, 0, 0, 170, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 24, 206
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\auditLog.ts", "TypeScript", 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 34
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\auth.ts", "TypeScript", 0, 0, 0, 343, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 67, 418
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\automod.ts", "TypeScript", 0, 0, 0, 220, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 35, 260
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\bot.service.ts", "TypeScript", 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 5, 46
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\cache.ts", "TypeScript", 0, 0, 0, 108, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 19, 133
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\e2ee.ts", "TypeScript", 0, 0, 0, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 50
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\gateway.ts", "TypeScript", 0, 0, 0, 371, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 75, 461
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\gatewayPublisher.ts", "TypeScript", 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 16
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\gracefulShutdown.ts", "TypeScript", 0, 0, 0, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 20, 137
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\healthMonitor.ts", "TypeScript", 0, 0, 0, 157, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 27, 192
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\imageModeration.ts", "TypeScript", 0, 0, 0, 96, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 15, 116
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\index.ts", "TypeScript", 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 5
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\logger.ts", "TypeScript", 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 44
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\membership.ts", "TypeScript", 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 30
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\messagePurge.ts", "TypeScript", 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 10, 62
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\moderation.ts", "TypeScript", 0, 0, 0, 447, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 68, 535
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\music.service.ts", "TypeScript", 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8, 73
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\notification.ts", "TypeScript", 0, 0, 0, 309, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 32, 348
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\permissions.ts", "TypeScript", 0, 0, 0, 46, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 14, 65
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\priorityQueue.ts", "TypeScript", 0, 0, 0, 156, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 29, 193
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\quest.ts", "TypeScript", 0, 0, 0, 138, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 26, 167
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\redis.ts", "TypeScript", 0, 0, 0, 504, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 103, 617
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\scheduledMessages.ts", "TypeScript", 0, 0, 0, 141, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 25, 174
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\serverBackup.ts", "TypeScript", 0, 0, 0, 170, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 23, 198
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\sovereignty.ts", "TypeScript", 0, 0, 0, 47, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 11, 60
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\storage.ts", "TypeScript", 0, 0, 0, 77, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 16, 95
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\systemAudit.ts", "TypeScript", 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 7, 81
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\systemBot.ts", "TypeScript", 0, 0, 0, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 10, 107
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\translation.ts", "TypeScript", 0, 0, 0, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 7, 60
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\twoFactor.ts", "TypeScript", 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 61
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\upload.ts", "TypeScript", 0, 0, 0, 171, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 20, 193
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\videoModeration.ts", "TypeScript", 0, 0, 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 11, 53
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\voice.ts", "TypeScript", 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 12, 72
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\services\webrtc.ts", "TypeScript", 0, 0, 0, 134, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 30, 185
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\test-smtp.ts", "TypeScript", 0, 0, 0, 41, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8, 50
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\types\express.d.ts", "TypeScript", 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\utils\autoTune.ts", "TypeScript", 0, 0, 0, 122, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 17, 149
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\utils\errors.ts", "TypeScript", 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 36
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\utils\id.ts", "TypeScript", 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 23
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\utils\permissions.ts", "TypeScript", 0, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 53
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\utils\responses.ts", "TypeScript", 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 35
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\utils\sanitize.ts", "TypeScript", 0, 0, 0, 96, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 21, 128
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\utils\serializeBigInt.ts", "TypeScript", 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 26
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\src\workers\index.ts", "TypeScript", 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 5
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\test_dotenv.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 38
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\test_pem.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 30
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\tsconfig.json", "JSON with Comments", 0, 0, 0, 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\server\wipe_buckets.ts", "TypeScript", 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 60
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\README.md", "Markdown", 0, 0, 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 123
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\index.html", "HTML", 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 24
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\package.json", "JSON", 0, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 71
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\postcss.config.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\public\version.html", "HTML", 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 13
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\App.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 398, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 39, 458
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\api\bots.ts", "TypeScript", 0, 0, 0, 67, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 76
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ErrorBoundary.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 206, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 27, 236
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\admin\AuditLogViewer.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 175, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 15, 193
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\admin\AutoModPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 246, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 21, 272
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\admin\PermissionMatrix.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 143, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 18, 171
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\admin\ServerInsights.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 144, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 160
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\animations\CelebrationAnimation.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 136, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 9, 150
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\animations\CrateAnimation.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 211, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 15, 230
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\chat\ChatArea.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 811, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 78, 906
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\dev\BotConsole.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 474, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 27, 503
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\dev\ComponentShowcase.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 140, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10, 151
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\embeds\EmbedRenderer.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 119
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\ActivityPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 10, 110
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\AddFriendModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 84
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\AssetManager.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 17, 155
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\BeacoinRewards.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 103, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 9, 116
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\BeacoinWallet.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 214, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 14, 232
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\CallInterface.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 342, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 38, 386
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\CreateDMModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 103, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 114
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\CurrentUserControls.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 145, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 159
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\CurrentUserProfileCard.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 313, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 37, 355
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\DMList.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 166, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 15, 184
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\DirectMessageView.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 194, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 17, 214
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\GroupDMModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 23, 223
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\IdentityPreview.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 10, 103
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\InviteView.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 146, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 19, 166
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\Marketplace.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 221, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 19, 247
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\MentionPicker.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 87, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 98
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\MessageInput.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 363, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 56, 429
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\MessageItem.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 666, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 45, 811
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\ModerationManager.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 161, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 176
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\Notes.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 276, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 294
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\NotificationInbox.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 131, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 144
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\NotificationPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 113, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 125
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\OnboardingFlow.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 13, 150
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\PinnedMessages.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 112, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 121
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\Poll.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 99
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\ProfileArtPicker.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8, 89
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\ProfileEnhanced.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 117, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 15, 135
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\QuestTracker.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 12, 121
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\QuickSwitcher.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 276, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 26, 310
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\RoleEditor.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 169, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 15, 186
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\RoleManager.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 368, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 33, 402
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\RoleTemplateSelector.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 117, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 128
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\ScheduledMessagesManager.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 15, 166
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\ScreenAnnotation.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 87, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 15, 103
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\ServerBoosting.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 148, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 14, 163
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\ServerDiscovery.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 169, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 16, 189
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\ServerSoundboard.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 146, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 16, 166
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\SlashCommandPicker.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 96
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\SlowmodeControl.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 129, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 17, 148
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\SoundManager.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 167, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 13, 181
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\StatusPicker.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 118, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 11, 132
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\StickerPicker.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 81, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 95
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\UserPopoverCard.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 298, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 29, 334
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\UserPresenceWidget.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 49
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\UsernameStyleEditor.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 146, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 13, 163
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\VoiceTranscription.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 57, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 11, 69
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\features\index.ts", "TypeScript", 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 16
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\friends\Friends.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 223, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 21, 245
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\index.ts", "TypeScript", 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 14
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\layout\DocsLayout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 117
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\layout\MainLayout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 141, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 20, 164
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\layout\MemberList.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 426, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 53, 480
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\layout\PolicyPage.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 29
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\layout\ServerList.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 375, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 26, 412
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\layout\ServerSearchPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 8, 106
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\layout\Sidebar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 466, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 27, 500
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\layout\WorkspaceLayout.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8, 49
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\AuditLogModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 145, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 161
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\BeaconNotesModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 246, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 24, 273
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\BotModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 122, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 13, 136
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\CreateChannelModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 134, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 12, 147
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\CreateServerModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 132, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 146
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\CustomStatusModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 123, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14, 140
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\GiftingModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 159, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 17, 178
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\ModalManager.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 214, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 26, 244
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\QuickSwitcherModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 13, 109
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\ServerInviteModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 143, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 17, 162
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\ServerSettingsModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 367, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 405
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\SettingsModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 177, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 20, 198
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\UserProfileModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 403, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 41, 452
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\WebhooksManager.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 297, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 26, 325
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\index.ts", "TypeScript", 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\AboutTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 41
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\AdvancedTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 33
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\AppearanceTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 170, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 181
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\CustomizationTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 104
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\NotificationsTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 81, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 86
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\ProfileTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 187, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 13, 201
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\RedeemTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 99, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 109
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\SecurityTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 149, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 157
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\ServerTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 65
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\TasksTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 77
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\modals\settings-tabs\VoiceTab.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 66
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\roles\RolesManager.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 231, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 21, 253
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\search\MessageSearch.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 133, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 12, 146
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\stage\StageChannel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 143, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 14, 158
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\threads\ThreadView.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 112, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 13, 126
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\typing\TypingIndicator.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 47
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\AuraOrbs.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 19
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Avatar.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 114, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 13, 129
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\AvatarUpload.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 11, 99
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Badge.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 33
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Button.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 30
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Card.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 35
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Collapsible.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 41
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\CommandPalette.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 170, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 17, 188
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\ConfirmModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 59
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\ConfirmModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 61
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\ContextMenu.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 166, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 19, 199
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\CreateServerModal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 246, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 265
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\CustomUsername.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 73
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Dropdown.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 136, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 159
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\EmojiPicker.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 179, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 200
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\FileUpload.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 169, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 17, 187
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\FocusMode.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 31
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\GifPicker.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 204, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 25, 230
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Icon.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 30
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\IconPicker.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 264
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\ImageLightbox.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 77, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 84
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Input.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 45
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\KeyboardShortcutsPanel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 91, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 15, 111
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\LoadingStates.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 96
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\MarkdownRenderer.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 228, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 39, 287
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Modal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 134, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 16, 151
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\MusicScrubber.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 11, 97
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\PerfOverlay.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 78, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 20, 100
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\RoleBadge.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 51
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\RoleColorPicker.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Select.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 74, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 13, 92
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\SelectDropdown.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 225, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 243
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\ServerTags.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 101
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Skeleton.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 51
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Switch.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 27
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Tabs.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 51
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Toast.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 79, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 90
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\Tooltip.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 104
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\UserBadges.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 149, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 17, 167
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\VirtualScroll.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8, 79
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\ui\index.ts", "TypeScript", 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 34
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\utils\VersionCheck.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 67, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 12, 80
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\components\voice\VoiceControls.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 109, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 125
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\config\api.ts", "TypeScript", 0, 0, 0, 146, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 28, 204
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\config\endpoints.ts", "TypeScript", 0, 0, 0, 79, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 26, 111
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\hooks\index.ts", "TypeScript", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\hooks\useCDN.ts", "TypeScript", 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 29
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\hooks\useKeyboardShortcuts.ts", "TypeScript", 0, 0, 0, 113, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 23, 146
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\hooks\usePerformance.ts", "TypeScript", 0, 0, 0, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 35, 160
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\hooks\useTypingIndicator.ts", "TypeScript", 0, 0, 0, 56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 10, 70
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\hooks\useWebRTC.ts", "TypeScript", 0, 0, 0, 212, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 39, 272
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\lib\api.ts", "TypeScript", 0, 0, 0, 152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 23, 185
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\lib\beaconSdk.ts", "TypeScript", 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 27
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\lib\cn.ts", "TypeScript", 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\lib\firebase.ts", "TypeScript", 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 36
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\ar.json", "JSON", 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\de.json", "JSON", 0, 176, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 176
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\en.json", "JSON", 0, 175, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 175
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\es.json", "JSON", 0, 175, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 175
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\fil.json", "JSON", 0, 73, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\fr.json", "JSON", 0, 175, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 175
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\hi.json", "JSON", 0, 176, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 176
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\id.json", "JSON", 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\it.json", "JSON", 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\ja.json", "JSON", 0, 176, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 176
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\ko.json", "JSON", 0, 176, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 176
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\nl.json", "JSON", 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\pl.json", "JSON", 0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 72
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\pt.json", "JSON", 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\ru.json", "JSON", 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\sv.json", "JSON", 0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 72
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\th.json", "JSON", 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\tr.json", "JSON", 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\vi.json", "JSON", 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\locales\zh.json", "JSON", 0, 176, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 176
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\main.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 21
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\AboutUs.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 46
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\AdminDashboard.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 143, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 153
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\AppDirectory.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 121, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 134
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\BeaconPlusStore.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 523, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 40, 566
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\CommunityHub.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 13
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\Contact.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 58
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\DeveloperPortal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 421, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 39, 461
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\Discovery.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 13
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\InvitePage.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 196, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 13, 212
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\LandingPage.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 138, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 151
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\Login.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 292, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 27, 323
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\MessagingHome.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 427, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 38, 476
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\MobileSplash.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 36
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\PartnerPortal.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 58
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\ResetPassword.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 101, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 113
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\SafetyHub.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 60
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\ServerSettings.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 934, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 62, 1015
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\Updates.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 11, 107
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\UserProfile.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 56
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\VerificationPage.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 165
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\VoiceChannel.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 602, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 59, 679
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\docs\APIReference.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 111, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 125
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\docs\BotCommands.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 178, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 190
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\docs\DocsHome.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 137, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 146
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\docs\GatewayDocs.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 115, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 124
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\docs\GettingStarted.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 117, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 127
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\docs\Mission.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 70
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\docs\SDKTutorial.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 126, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 138
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\index.ts", "TypeScript", 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 26
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\legal\License.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 79, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 91
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\legal\Privacy.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 59, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 68
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\legal\TOS.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 60
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\pages\legal\Terms.tsx", "TypeScript JSX", 0, 0, 0, 0, 0, 0, 0, 0, 0, 59, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 68
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\ActivitySyncService.ts", "TypeScript", 0, 0, 0, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 14, 100
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\apiClient.ts", "TypeScript", 0, 0, 0, 371, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 92, 481
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\cryptoService.ts", "TypeScript", 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 103
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\fileUpload.ts", "TypeScript", 0, 0, 0, 228, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 42, 284
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\fileUploadService.ts", "TypeScript", 0, 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 88
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\giphy.ts", "TypeScript", 0, 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 26, 145
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\index.ts", "TypeScript", 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 12
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\musicMetadata.ts", "TypeScript", 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7, 61
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\notificationSounds.ts", "TypeScript", 0, 0, 0, 104, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 20, 132
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\screenShare.ts", "TypeScript", 0, 0, 0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 11, 73
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\tenor.ts", "TypeScript", 0, 0, 0, 103, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 19, 126
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\voiceManager.ts", "TypeScript", 0, 0, 0, 571, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 110, 695
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\services\websocket.ts", "TypeScript", 0, 0, 0, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 40, 240
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\index.ts", "TypeScript", 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 13
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useAuthStore.ts", "TypeScript", 0, 0, 0, 295, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 32, 332
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useBeacoinStore.ts", "TypeScript", 0, 0, 0, 232, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 28, 262
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useDMStore.ts", "TypeScript", 0, 0, 0, 246, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 32, 285
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useInteractionStore.ts", "TypeScript", 0, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7, 94
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useLowBandwidthStore.ts", "TypeScript", 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 59
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useMessageStore.ts", "TypeScript", 0, 0, 0, 134, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 25, 160
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useNotificationStore.ts", "TypeScript", 0, 0, 0, 252, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 43, 298
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useNotificationSystem.ts", "TypeScript", 0, 0, 0, 46, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 62
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\usePinnedMessagesStore.ts", "TypeScript", 0, 0, 0, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 12, 73
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\usePlaylistStore.ts", "TypeScript", 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 16, 98
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\usePreferenceStore.ts", "TypeScript", 0, 0, 0, 123, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 16, 146
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\usePresenceStore.ts", "TypeScript", 0, 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 11, 88
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useProfileArtStore.ts", "TypeScript", 0, 0, 0, 106, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 125
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useQuestStore.ts", "TypeScript", 0, 0, 0, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 57
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useReactionsStore.ts", "TypeScript", 0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 34
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useRolesStore.ts", "TypeScript", 0, 0, 0, 197, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 30, 230
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useSFX.ts", "TypeScript", 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 42
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useServerStore.ts", "TypeScript", 0, 0, 0, 371, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 37, 410
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useShopStore.ts", "TypeScript", 0, 0, 0, 172, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 22, 198
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useStreakStore.ts", "TypeScript", 0, 0, 0, 154, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 174
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useTranslationStore.ts", "TypeScript", 0, 0, 0, 59, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 11, 72
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useUIStore.ts", "TypeScript", 0, 0, 0, 341, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 39, 390
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useUserListStore.ts", "TypeScript", 0, 0, 0, 203, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 226
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\stores\useVoiceStore.ts", "TypeScript", 0, 0, 0, 124, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 29, 154
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\animations.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 144, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 178
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\beacon-utils.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 311, 0, 0, 0, 0, 0, 0, 0, 0, 0, 57, 368
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\components\modals\GiftingModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 223, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 257
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\globals.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1459, 0, 0, 0, 0, 0, 0, 0, 0, 0, 267, 1726
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\index.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 46
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\admin\AuditLogViewer.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 193, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33, 226
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\admin\AutoModPanel.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 330, 0, 0, 0, 0, 0, 0, 0, 0, 0, 55, 385
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\admin\PermissionMatrix.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 122, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 139
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\admin\ServerInsights.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 192, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33, 225
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\animations\CelebrationAnimation.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 95, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 109
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\animations\CrateAnimation.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 267, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 301
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\chat\ChatArea.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 567, 0, 0, 0, 0, 0, 0, 0, 0, 0, 93, 660
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\dev\BotConsole.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 532, 0, 0, 0, 0, 0, 0, 0, 0, 0, 84, 616
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\dev\ComponentShowcase.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 223, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 259
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\embeds\EmbedRenderer.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 122, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 143
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\ActivityPanel.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 167, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 189
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\AddFriendModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 125, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 142
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\AssetManager.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 162, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 184
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\BeacoinRewards.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 219, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 249
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\BeacoinWallet.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 453, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 523
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\CallInterface.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 251, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 283
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\CreateDMModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 129, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 148
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\CurrentUserControls.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 132, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 151
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\CurrentUserProfileCard.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 187, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 215
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\DMList.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 149, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 171
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\DirectMessageView.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 145, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 168
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\GroupDMModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 290, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 332
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\IdentityPreview.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 125
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\InviteView.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 164, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 190
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\Marketplace.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 260, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 298
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\MessageInput.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 202, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 228
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\MessageItem.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1137, 0, 0, 0, 0, 0, 0, 0, 0, 0, 172, 1309
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\MessageSearch.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 239, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35, 274
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\ModerationManager.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 162, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 188
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\Notes.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 433, 0, 0, 0, 0, 0, 0, 0, 0, 0, 61, 494
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\NotificationInbox.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 274, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 314
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\NotificationPanel.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 194, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33, 227
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\OnboardingFlow.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 174, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 200
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\PinnedMessages.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 151, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27, 178
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\Poll.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 162, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 186
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\ProfileArtPicker.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 296, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 346
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\ProfileEnhanced.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 237, 0, 0, 0, 0, 0, 0, 0, 0, 0, 37, 274
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\QuestTracker.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 273, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45, 318
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\QuickSwitcher.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 285, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 323
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\RoleEditor.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 196, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 228
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\RoleManager.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 275, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 315
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\RoleTemplateSelector.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 158, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 183
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\ScheduledMessages.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 247, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 285
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\ServerBoosting.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 309, 0, 0, 0, 0, 0, 0, 0, 0, 0, 56, 365
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\ServerDiscovery.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 460, 0, 0, 0, 0, 0, 0, 0, 0, 0, 70, 530
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\ServerSoundboard.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 121, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 138
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\SlashCommandPicker.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 113, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 128
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\SlowmodeControl.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 138, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 161
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\SoundManager.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 186, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27, 213
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\StatusPicker.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 134, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 157
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\StickerPicker.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 288, 0, 0, 0, 0, 0, 0, 0, 0, 0, 52, 340
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\UserPopoverCard.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 156, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 180
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\UserPresenceWidget.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 95
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\features\UsernameStyleEditor.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 136, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 155
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\friends\Friends.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 272, 0, 0, 0, 0, 0, 0, 0, 0, 0, 44, 316
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\layout\DocsLayout.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 190, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 221
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\layout\MainLayout.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 90, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 101
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\layout\MemberList.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 305, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 355
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\layout\PolicyPage.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 125
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\layout\ServerList.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 347, 0, 0, 0, 0, 0, 0, 0, 0, 0, 53, 400
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\layout\Sidebar.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 532, 0, 0, 0, 0, 0, 0, 0, 0, 0, 83, 615
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\layout\WorkspaceLayout.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 145, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 161
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\misc\ThemeToggle.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 17
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\AuditLogModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 217, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 248
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\BeaconNotesModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 206, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 237
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\BotModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 96, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 112
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\CreateChannelModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 101, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 122
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\CreateServerModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 149, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 169
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\CustomStatusModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 0, 0, 0, 0, 0, 0, 0, 0, 0, 37, 287
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\QuickSwitcherModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 118, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 138
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\ServerInviteModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 168, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 191
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\ServerSettingsModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 472, 0, 0, 0, 0, 0, 0, 0, 0, 0, 84, 556
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\SettingsModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1732, 0, 0, 0, 0, 0, 0, 0, 0, 0, 286, 2018
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\UserProfileModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 324, 0, 0, 0, 0, 0, 0, 0, 0, 0, 46, 370
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\modals\WebhooksManager.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 402, 0, 0, 0, 0, 0, 0, 0, 0, 0, 63, 465
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\AdminDashboard.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 343, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 393
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\AppDirectory.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 133
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\BeaconPlusStore.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1698, 0, 0, 0, 0, 0, 0, 0, 0, 0, 273, 1971
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\CommunityHub.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 134
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\Contact.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 71
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\DeveloperPortal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 558, 0, 0, 0, 0, 0, 0, 0, 0, 0, 93, 651
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\Discovery.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 248, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35, 283
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\DiscoveryShell.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 32
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\Docs.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 268, 0, 0, 0, 0, 0, 0, 0, 0, 0, 41, 309
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\DocsHome.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 188, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 214
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\DocsPage.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 197, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27, 224
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\LandingPage.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 353, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 400
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\Login.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 282, 0, 0, 0, 0, 0, 0, 0, 0, 0, 37, 319
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\MessagingHome.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 857, 0, 0, 0, 0, 0, 0, 0, 0, 0, 124, 981
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\MobileSplash.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 121, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 136
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\PartnerPortal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 80
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\SafetyHub.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 67, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 77
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\ServerSettings.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 219, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 245
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\Updates.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 172, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 198
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\pages\VoiceChannel.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 714, 0, 0, 0, 0, 0, 0, 0, 0, 0, 111, 825
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\roles\RolesManager.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 365, 0, 0, 0, 0, 0, 0, 0, 0, 0, 56, 421
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\search\MessageSearch.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 185, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 215
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\stage\StageChannel.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 230, 0, 0, 0, 0, 0, 0, 0, 0, 0, 39, 269
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\threads\ThreadView.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 104, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 121
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\typing\TypingIndicator.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 51
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\AuraOrbs.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Avatar.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 177, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 215
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\AvatarUpload.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 83, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 98
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Badge.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 92
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Button.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 191, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 222
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Button.module.old.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 146, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 170
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Card.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 74
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Collapsible.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 64
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\ContextMenu.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 130, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 147
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\CreateServerModal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 157, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 181
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\CustomUsername.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 58
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Dropdown.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 121, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 141
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\EmojiPicker.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 151, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 173
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\FileUpload.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 125, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 148
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\FocusMode.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 99
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\GifPicker.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 148, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27, 175
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\IconPicker.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 226, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 262
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Input.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 94, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 109
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\KeyboardShortcutsPanel.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 168, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 191
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\LoadingStates.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 206, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 244
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\MarkdownRenderer.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 403, 0, 0, 0, 0, 0, 0, 0, 0, 0, 74, 477
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Modal.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 194, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 225
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\MusicScrubber.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 147, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 166
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\PerfOverlay.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 78
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\RoleBadge.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 47
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Select.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 68, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 79
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\SelectDropdown.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 224, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 260
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\ServerTags.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 87
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Skeleton.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 45
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Switch.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 72
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Tabs.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 63
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Toast.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 105, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 119
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\Tooltip.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 124, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 138
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\ui\UserBadges.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 97, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 114
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\modules\voice\VoiceControls.module.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 127
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\themes.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 113, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 127
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\styles\ui-system.css", "CSS", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 410, 0, 0, 0, 0, 0, 0, 0, 0, 0, 84, 494
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\types\prismjs.d.ts", "TypeScript", 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 10
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\types\simple-peer-browser.d.ts", "TypeScript", 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\utils\avatarUtils.ts", "TypeScript", 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 70
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\utils\beacoinEconomy.ts", "TypeScript", 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 24, 122
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\utils\cosmetics.ts", "TypeScript", 0, 0, 0, 195, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 27, 226
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\utils\modals.ts", "TypeScript", 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 63
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\utils\performance.ts", "TypeScript", 0, 0, 0, 206, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 29, 240
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\utils\performanceOptimizer.ts", "TypeScript", 0, 0, 0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 20, 117
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\utils\platform.ts", "TypeScript", 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 18
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\utils\platformBridge.ts", "TypeScript", 0, 0, 0, 78, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 7, 86
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\utils\roleTemplates.ts", "TypeScript", 0, 0, 0, 230, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 237
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\src\vite-env.d.ts", "TypeScript", 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 17
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\tailwind.config.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 22
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\tsconfig.json", "JSON with Comments", 0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 30
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\tsconfig.node.json", "JSON", 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 11
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\apps\web\vite.config.ts", "TypeScript", 0, 0, 0, 161, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 178
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\functions\api\[[path]].ts", "TypeScript", 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 7, 25
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\functions\media\[[path]].ts", "TypeScript", 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\functions\mod\[[path]].ts", "TypeScript", 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 10
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\package-lock.json", "JSON", 0, 14766, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 14767
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\package.json", "JSON", 0, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 85
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\README.md", "Markdown", 0, 0, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 42, 126
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\README.md", "Markdown", 0, 0, 57, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 78
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\evaluate.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 24
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\fix-extensions.js", "JavaScript", 0, 0, 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 11, 68
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\package.json", "JSON", 0, 77, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 78
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\browser.ts", "TypeScript", 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 17, 84
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\ActionRowBuilder.ts", "TypeScript", 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 60
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\AdvancedBuilders.ts", "TypeScript", 0, 0, 0, 273, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 78, 366
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\ButtonBuilder.ts", "TypeScript", 0, 0, 0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 13, 75
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\CardBuilder.ts", "TypeScript", 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 109
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\CommandBuilder.ts", "TypeScript", 0, 0, 0, 152, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 181
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\ContextMenuBuilder.ts", "TypeScript", 0, 0, 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 48
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\DropdownBuilder.ts", "TypeScript", 0, 0, 0, 105, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 121
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\EmbedBuilder.ts", "TypeScript", 0, 0, 0, 118, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 133
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\EmbedPresets.ts", "TypeScript", 0, 0, 0, 58, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 65
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\FormBuilder.ts", "TypeScript", 0, 0, 0, 73, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 85
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\MessageBuilder.ts", "TypeScript", 0, 0, 0, 105, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 118
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\ModalBuilder.ts", "TypeScript", 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 37
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\PaginatorBuilder.ts", "TypeScript", 0, 0, 0, 67, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 80
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\PollBuilder.ts", "TypeScript", 0, 0, 0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 82
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\ProgressBarBuilder.ts", "TypeScript", 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 62
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\SelectMenuBuilder.ts", "TypeScript", 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 60
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\TableBuilder.ts", "TypeScript", 0, 0, 0, 76, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 91
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\TimelineBuilder.ts", "TypeScript", 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 74
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\builders\index.ts", "TypeScript", 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 18
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\cache\TTLCache.ts", "TypeScript", 0, 0, 0, 91, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 18, 110
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\cache\index.ts", "TypeScript", 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\client.ts", "TypeScript", 0, 0, 0, 693, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 109, 849
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\connection.ts", "TypeScript", 0, 0, 0, 72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 19, 92
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\cooldowns\CooldownManager.ts", "TypeScript", 0, 0, 0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 100
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\errors\index.ts", "TypeScript", 0, 0, 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 95
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\events\EventEmitter.ts", "TypeScript", 0, 0, 0, 72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 85
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\gateway.ts", "TypeScript", 0, 0, 0, 335, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 48, 388
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\index.ts", "TypeScript", 0, 0, 0, 97, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 26, 147
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\AuditLogManager.ts", "TypeScript", 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 28
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\ChannelManager.ts", "TypeScript", 0, 0, 0, 104, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 120
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\GuildChannelManager.ts", "TypeScript", 0, 0, 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 28
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\GuildEmojiManager.ts", "TypeScript", 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 39
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\GuildInviteManager.ts", "TypeScript", 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 26
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\GuildManager.ts", "TypeScript", 0, 0, 0, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 23, 135
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\GuildMemberManager.ts", "TypeScript", 0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 31
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\GuildScheduledEventManager.ts", "TypeScript", 0, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 40
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\InviteManager.ts", "TypeScript", 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 18
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\MemberManager.ts", "TypeScript", 0, 0, 0, 130, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 152
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\PresenceManager.ts", "TypeScript", 0, 0, 0, 85, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 98
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\RoleManager.ts", "TypeScript", 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 39
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\UserManager.ts", "TypeScript", 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 68
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\managers\VoiceManager.ts", "TypeScript", 0, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 41
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\middleware\Middleware.ts", "TypeScript", 0, 0, 0, 74, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 14, 89
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\plugins\BeaconAIPlugin.ts", "TypeScript", 0, 0, 0, 68, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 16, 92
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\registry\CommandRegistry.ts", "TypeScript", 0, 0, 0, 163, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 24, 190
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\rest\RestClient.ts", "TypeScript", 0, 0, 0, 449, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 43, 105, 597
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\routing\EventRouter.ts", "TypeScript", 0, 0, 0, 148, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 25, 180
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\BeaconEventEmitter.ts", "TypeScript", 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 64
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\AuthAPI.ts", "TypeScript", 0, 0, 0, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 106
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\ChannelsAPI.ts", "TypeScript", 0, 0, 0, 68, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 79
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\HTTPClient.ts", "TypeScript", 0, 0, 0, 169, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 29, 202
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\InvitesAPI.ts", "TypeScript", 0, 0, 0, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 71
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\MessagesAPI.ts", "TypeScript", 0, 0, 0, 111, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 131
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\NotificationsAPI.ts", "TypeScript", 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 54
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\PresenceAPI.ts", "TypeScript", 0, 0, 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 7, 48
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\RolesAPI.ts", "TypeScript", 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 75
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\ServersAPI.ts", "TypeScript", 0, 0, 0, 154, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25, 179
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\UsersAPI.ts", "TypeScript", 0, 0, 0, 117, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 136
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\VoiceAPI.ts", "TypeScript", 0, 0, 0, 108, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 21, 131
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\api\WebhooksAPI.ts", "TypeScript", 0, 0, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 94
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\bot\BotFramework.ts", "TypeScript", 0, 0, 0, 222, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 43, 265
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\bot\Storage.ts", "TypeScript", 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 35
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\bot\index.ts", "TypeScript", 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\bot\types.ts", "TypeScript", 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 74
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\core-types.ts", "TypeScript", 0, 0, 0, 111, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 121
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\events\EventEmitter.ts", "TypeScript", 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 64
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\index.ts", "TypeScript", 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 9, 81
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\types.ts", "TypeScript", 0, 0, 0, 320, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 38, 359
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\utils\CacheManager.ts", "TypeScript", 0, 0, 0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 19, 92
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\utils\RateLimiter.ts", "TypeScript", 0, 0, 0, 67, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 12, 83
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\utils\index.ts", "TypeScript", 0, 0, 0, 164, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 193
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sdk\ws\WSClient.ts", "TypeScript", 0, 0, 0, 368, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 74, 446
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\security\RequestSigner.ts", "TypeScript", 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 8, 56
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\security\TokenManager.ts", "TypeScript", 0, 0, 0, 47, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 12, 62
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\security\index.ts", "TypeScript", 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\sharding\ShardManager.ts", "TypeScript", 0, 0, 0, 157, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 33, 193
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\AuditLog.ts", "TypeScript", 0, 0, 0, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 32
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\Channel.ts", "TypeScript", 0, 0, 0, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 16, 139
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\Collection.ts", "TypeScript", 0, 0, 0, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 137
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\Collector.ts", "TypeScript", 0, 0, 0, 68, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 84
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\ComponentCollector.ts", "TypeScript", 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 25
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\E2EEContext.ts", "TypeScript", 0, 0, 0, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 16, 107
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\Guild.ts", "TypeScript", 0, 0, 0, 264, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 31, 304
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\GuildMember.ts", "TypeScript", 0, 0, 0, 141, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 27, 171
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\InteractionContext.ts", "TypeScript", 0, 0, 0, 264, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 39, 306
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\Invite.ts", "TypeScript", 0, 0, 0, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 36
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\Message.ts", "TypeScript", 0, 0, 0, 216, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 30, 249
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\ModalCollector.ts", "TypeScript", 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 49
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\PermissionOverwrite.ts", "TypeScript", 0, 0, 0, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 27
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\ReactionCollector.ts", "TypeScript", 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 23
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\ScheduledEvent.ts", "TypeScript", 0, 0, 0, 37, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 43
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\User.ts", "TypeScript", 0, 0, 0, 201, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 19, 223
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\VoiceState.ts", "TypeScript", 0, 0, 0, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 49
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\structures\VoiceStateCollector.ts", "TypeScript", 0, 0, 0, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 9, 52
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\stubs\opusscript.ts", "TypeScript", 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 13
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\stubs\stream.ts", "TypeScript", 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 11
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\tasks\ScheduledTask.ts", "TypeScript", 0, 0, 0, 166, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 28, 196
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\types\channels.ts", "TypeScript", 0, 0, 0, 103, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 15, 131
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\types\index.ts", "TypeScript", 0, 0, 0, 396, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 52, 484
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\utils\IntentCalculator.ts", "TypeScript", 0, 0, 0, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 47
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\utils\Permissions.ts", "TypeScript", 0, 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 130
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\voice\AudioPlayer.ts", "TypeScript", 0, 0, 0, 140, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 30, 174
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\voice\VoiceConnection.ts", "TypeScript", 0, 0, 0, 136, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 29, 173
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\voice\VoiceInteraction.ts", "TypeScript", 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 6, 43
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\voice\VoiceManager.ts", "TypeScript", 0, 0, 0, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 59
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\src\webhooks\WebhookClient.ts", "TypeScript", 0, 0, 0, 77, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 91
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\packages\sdk\tsconfig.json", "JSON with Comments", 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 21
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\pnpm-lock.yaml", "YAML", 9583, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2493, 12076
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\pnpm-workspace.yaml", "YAML", 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4
+"c:\Users\mysti.KIM-JONG-UN.000\Desktop\Beacon\railway.json", "JSON", 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12
+"Total", "-", 9732, 31173, 395, 32494, 32, 101, 9, 468, 94, 26833, 41, 414, 33661, 3, 335, 241, 324, 37, 15, 22, 10, 1861, 16584, 154879

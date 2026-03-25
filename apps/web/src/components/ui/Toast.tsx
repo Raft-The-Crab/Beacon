@@ -40,7 +40,9 @@ function ToastComponent({ id, message, type, duration = 4000, onRemove }: ToastC
   return (
     <div className={`${styles.toast} ${styles[type]}`}>
       <div className={styles.icon}>{toastIcons[type]}</div>
-      <div className={styles.message}>{message}</div>
+      <div className={styles.message}>
+        {typeof message === 'object' ? JSON.stringify(message) : String(message)}
+      </div>
       <button
         className={styles.closeButton}
         onClick={() => onRemove(id)}

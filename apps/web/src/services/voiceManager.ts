@@ -355,8 +355,7 @@ class VoiceManagerClass {
     if (!this.currentGuildId) {
       // Still clear state even if guildId is missing
       const store = useVoiceStore.getState();
-      store.setCurrentVoiceState(null);
-      store.setConnectedChannel(null);
+      store.resetStore();
       this.currentChannelId = null;
       return;
     }
@@ -372,11 +371,7 @@ class VoiceManagerClass {
     this.localAnalyzer = null;
 
     const store = useVoiceStore.getState();
-    if (store.userId) {
-      store.removeVoiceState(store.userId);
-    }
-    store.setCurrentVoiceState(null);
-    store.setConnectedChannel(null);
+    store.resetStore();
 
     const guildId = this.currentGuildId;
     this.currentGuildId = null;

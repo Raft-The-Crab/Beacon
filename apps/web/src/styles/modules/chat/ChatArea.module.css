@@ -112,6 +112,10 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
+.mobileMenuBtn {
+  display: none;
+}
+
 .searchBar {
   position: relative;
   display: flex;
@@ -610,6 +614,22 @@
 
   .hideOnMobile {
     display: none !important;
+  }
+
+  .mobileMenuBtn {
+    display: flex;
+    margin-right: 4px;
+    padding: 6px;
+    border-radius: var(--radius-xl);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    transition: color 0.2s, background 0.2s;
+  }
+
+  .mobileMenuBtn:active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
   }
 }
 

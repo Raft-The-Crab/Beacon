@@ -12,6 +12,7 @@ import { VoiceStateCollector, type VoiceStateCollectorOptions } from './structur
 import { InteractionContext } from './structures/InteractionContext';
 import { MessageBuilder } from './builders/MessageBuilder';
 import { CommandBuilder } from './builders/CommandBuilder';
+import { InteractionCollector, type InteractionCollectorOptions } from './structures/InteractionCollector';
 import type { RawGuild, RawChannel, RawMessage, Embed } from './types/index';
 import { Guild } from './structures/Guild';
 import { Channel } from './structures/Channel';
@@ -791,6 +792,11 @@ export class Client extends EventEmitter {
   /** Collect voice state updates */
   createVoiceStateCollector(options: VoiceStateCollectorOptions = {}): VoiceStateCollector {
     return new VoiceStateCollector(this, options);
+  }
+
+  /** v3.5: Collect interactions (buttons, selects) */
+  createInteractionCollector(options: InteractionCollectorOptions = {}): InteractionCollector {
+    return new InteractionCollector(this, options);
   }
 
   // ─────────────────────────────────────────────────────────────

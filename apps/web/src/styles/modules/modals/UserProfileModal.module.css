@@ -39,17 +39,12 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0 24px 32px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
 .scrollArea::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scrollArea::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
+  display: none; /* Chrome/Safari */
 }
 
 .profileHeader {

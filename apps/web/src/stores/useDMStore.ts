@@ -50,6 +50,7 @@ interface DMStore {
   editMessage: (channelId: string, messageId: string, newContent: string) => Promise<void>
   deleteMessage: (channelId: string, messageId: string) => Promise<void>
   addReaction: (channelId: string, messageId: string, emoji: string) => Promise<void>
+  handleChannelCreateWs: (channelData: any) => void
 }
 
 const EMPTY_ARRAY: any[] = []
@@ -180,6 +181,16 @@ export const useDMStore = create<DMStore>((set, get) => ({
       throw e
     }
   },
+
+  handleChannelCreateWs: (channelData: any) => set(state => {
+    if (state.channels.find(c => c.id === channelData.id)) return state;
+    const newChannel: DMChannel = {
+      id: channelData.id,
+      participants: normalizeDMParticipants(channelData.recipients || []),
+      unreadCount: 0,
+    }
+    return { channels: [...state.channels, newChannel] }
+  }),
 
   updateUserStatus: (userId: string, status: PresenceStatus) =>
     set((state) => ({

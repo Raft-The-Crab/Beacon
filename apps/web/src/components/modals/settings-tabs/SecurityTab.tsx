@@ -67,7 +67,7 @@ export const SecurityTab: React.FC = () => {
 
     const handleVerify2FA = async () => {
         setSecurityLoading(true)
-        const res = await apiClient.verify2FA(twoFACode)
+        const res = await apiClient.verify2FA(twoFACode, twoFASecret?.secret)
         if (res.success) {
             setUser({ ...user!, twoFactorEnabled: true } as any)
             setShow2FAForm(false)

@@ -53,6 +53,8 @@ export async function getMe(req: Request, res: Response) {
             avatarDecorationId: true,
             profileEffectId: true,
             nameDesign: true,
+            bot: true,
+            isOfficial: true,
             createdAt: true,
           },
         })
@@ -143,15 +145,21 @@ export async function updateMe(req: Request, res: Response) {
       }
     }
 
-    // Beacon+ restriction for Display Name
-    if (trimmedDisplayName !== undefined) {
+    // Beacon+ restriction for Name Design
+    if (data.nameDesign && Object.keys(data.nameDesign).length > 0) {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { isBeaconPlus: true, displayName: true }
+        select: { isBeaconPlus: true }
       });
-      
-      if (user && !user.isBeaconPlus && trimmedDisplayName !== user.displayName) {
-        return res.status(403).json({ error: 'Custom display names require Beacon+' });
+      if (user && !user.isBeaconPlus) {
+        // Allow if it's strictly resetting to defaults
+        const isDefault = (!data.nameDesign.font || data.nameDesign.font === 'default') &&
+                          (!data.nameDesign.glow || data.nameDesign.glow === 'none') &&
+                          (!data.nameDesign.animation || data.nameDesign.animation === 'none') &&
+                          (!data.nameDesign.color);
+        if (!isDefault) {
+          return res.status(403).json({ error: 'Custom display name designs require Beacon+' });
+        }
       }
     }
 
@@ -192,6 +200,8 @@ export async function updateMe(req: Request, res: Response) {
         avatarDecorationId: true,
         profileEffectId: true,
         nameDesign: true,
+        bot: true,
+        isOfficial: true,
         createdAt: true,
       },
     });
@@ -249,6 +259,8 @@ export async function getUser(req: Request, res: Response) {
           avatarDecorationId: true,
           profileEffectId: true,
           nameDesign: true,
+          bot: true,
+          isOfficial: true,
           createdAt: true,
         },
       })

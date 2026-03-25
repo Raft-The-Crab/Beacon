@@ -128,8 +128,9 @@ export const ProfileTab: React.FC = () => {
                     <AvatarUpload
                         currentAvatar={user?.avatar && !user.avatar.includes('dicebear') ? user.avatar : undefined}
                         onUpload={handleAvatarUpload}
-                        size={80}
+                        size={120}
                         type="user"
+                        showButton={false}
                     />
                 </div>
             </div>
@@ -140,20 +141,14 @@ export const ProfileTab: React.FC = () => {
                     <div className={styles.formGroup}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                             <label className={styles.inputLabel} style={{ marginBottom: 0 }}>Display Name</label>
-                            {!hasBeaconPlus && <span className={styles.premiumBadge} style={{ fontSize: 10 }}>BEACON+</span>}
                         </div>
                         <Input
                             value={displayName}
                             onChange={(e: any) => setDisplayName(e.target.value)}
-                            placeholder={hasBeaconPlus ? "How people see your name" : "Your current display name"}
-                            disabled={!hasBeaconPlus}
+                            placeholder="How people see your name"
                             autoComplete="off"
                         />
-                        {!hasBeaconPlus && (
-                            <p className={styles.muted} style={{ fontSize: 11, marginTop: 4 }}>
-                                Custom display names are a Beacon+ exclusive feature.
-                            </p>
-                        )}
+                        {/* Restriction removed: basic display name changes now free */}
                     </div>
 
                     <div className={styles.formGroup}>

@@ -73,7 +73,7 @@ export function UserPopoverCard({
         // Vertical Logic: Prefer Bottom, Flip to Top if no space
         const spaceBelow = window.innerHeight - rect.bottom
         let top = rect.bottom + 8
-        
+
         if (spaceBelow < popoverHeight + viewportPadding && rect.top > popoverHeight + viewportPadding) {
             top = rect.top - popoverHeight - 8
         }

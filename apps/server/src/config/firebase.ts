@@ -28,10 +28,13 @@ function sanitizePrivateKey(key: string | undefined): string | null {
     let core = sanitized
         .replace(header, '')
         .replace(footer, '')
-        .replace(/\s+/g, '');
+        .replace(/[^A-Za-z0-9+/=]/g, '');
 
-    // Reconstruct with standard headers and mandatory newlines
-    return `${header}\n${core}\n${footer}\n`;
+  console.log(`[FIREBASE_DIAGNOSTIC] KeyLength: ${core.length} | HasStart: true | HasEnd: true`);
+
+  // Reconstruct with standard headers, chunking the core base64 into 64-character lines
+    const wrappedCore = core.match(/.{1,64}/g)?.join('\n') || core;
+    return `${header}\n${wrappedCore}\n${footer}\n`;
 }
 
 const privateKey = sanitizePrivateKey(rawPrivateKey);

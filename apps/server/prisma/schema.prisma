@@ -38,7 +38,10 @@ model User {
   profileEffectId    String?
   avatarDecorationId String?
   nameDesign         Json?           @default("{}")
+  systemSettings     Json?           @default("{}")
   bot                Boolean         @default(false)
+  isOfficial         Boolean         @default(false)
+  lastLoginAt        DateTime?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   passwordResetToken String?         @unique
@@ -153,15 +156,18 @@ model Role {
 }
 
 model GuildMember {
-  id       String   @id @default(cuid())
-  userId   String
-  guildId  String
-  nickname String?
-  avatar   String?
-  joinedAt DateTime @default(now())
-  guild    Guild    @relation(fields: [guildId], references: [id])
-  user     User     @relation(fields: [userId], references: [id])
-  roles    Role[]   @relation("GuildMemberToRole")
+  id                         String   @id @default(cuid())
+  userId                     String
+  guildId                    String
+  nickname                   String?
+  avatar                     String?
+  communicationDisabledUntil DateTime?
+  mute                       Boolean  @default(false)
+  deaf                       Boolean  @default(false)
+  joinedAt                   DateTime @default(now())
+  guild                      Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  user                       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roles                      Role[]   @relation("GuildMemberToRole")
 
   @@unique([userId, guildId])
   @@index([userId])

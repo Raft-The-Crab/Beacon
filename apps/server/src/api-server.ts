@@ -19,6 +19,17 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 logger.info(`[Pre-flight] Railway detected: ${isRailway} | Env: ${process.env.NODE_ENV || 'unknown'}`);
 
+// Global error handlers to prevent 502 Bad Gateway crashes
+process.on('uncaughtException', (err) => {
+    logger.error(`💥 [FATAL] Uncaught Exception: ${err.message || err}`);
+    if (err.stack) console.error(err.stack);
+    // Don't exit immediately in production unless necessary, let PM2/Railway handle restarts if it actually dies
+});
+
+process.on('unhandledRejection', (reason, _promise) => {
+    logger.error(`💥 [FATAL] Unhandled Rejection: ${reason}`);
+});
+
 import { WebSocketServer } from 'ws';
 import { connectMongo, prisma, redis } from './db';
 import { moderationService } from './services/moderation';
@@ -252,6 +263,12 @@ export class BeaconServer {
         const { NotificationService } = await import('./services/notification');
         NotificationService.ensureConnection().catch(err => {
             logger.error(`❌ SMTP Initialization Error: ${err.message}`);
+        });
+
+        // Initialize Official Beacon Bot
+        const { SystemBotService } = await import('./services/systemBot');
+        SystemBotService.init().catch(err => {
+            logger.error(`❌ System Bot Initialization Error: ${err.message}`);
         });
     }
 

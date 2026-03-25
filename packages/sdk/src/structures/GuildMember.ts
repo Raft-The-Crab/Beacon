@@ -103,6 +103,38 @@ export class GuildMember {
         return this.client.memberManager.removeRole(this.guildId, this.userId, roleId);
     }
 
+    /** Edit this member's properties (nickname, roles, voice state) */
+    async edit(options: { 
+        nickname?: string | null; 
+        roles?: string[]; 
+        mute?: boolean; 
+        deaf?: boolean; 
+        channelId?: string | null;
+        communicationDisabledUntil?: Date | null;
+    }) {
+        return this.client.memberManager.edit(this.guildId, this.userId, options);
+    }
+
+    /** Timeout this member (communication disabled) */
+    async timeout(until: Date | null) {
+        return this.client.memberManager.timeout(this.guildId, this.userId, until);
+    }
+
+    /** Mute this member in voice channels */
+    async setMute(mute: boolean) {
+        return this.client.memberManager.setMute(this.guildId, this.userId, mute);
+    }
+
+    /** Deafen this member in voice channels */
+    async setDeaf(deaf: boolean) {
+        return this.client.memberManager.setDeaf(this.guildId, this.userId, deaf);
+    }
+
+    /** Move this member to a different voice channel (or disconnect if null) */
+    async setVoiceChannel(channelId: string | null) {
+        return this.client.memberManager.setVoiceChannel(this.guildId, this.userId, channelId);
+    }
+
     /**
      * Refresh this member's data from the API.
      */

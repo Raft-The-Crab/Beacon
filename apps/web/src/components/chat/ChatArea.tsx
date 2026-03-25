@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Virtuoso } from 'react-virtuoso'
-import { Hash, Pin, Users, Search, Phone, Video, ChevronDown } from 'lucide-react'
+import { Hash, Pin, Users, Search, Phone, Video, ChevronDown, Menu } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { InteractionType } from 'beacon-sdk'
@@ -58,6 +58,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
 
   const toggleMemberList = useUIStore(state => state.toggleMemberList)
   const showMemberList = useUIStore(state => state.showMemberList)
+  const setShowMobileSidebar = useUIStore(state => state.setShowMobileSidebar)
 
   const { toasts, show } = useToast()
   const { pinMessage, unpinMessage, getPinnedMessages } = usePinnedMessagesStore()
@@ -95,6 +96,9 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       avatarDecorationId: isSelf ? user?.avatarDecorationId : author.avatarDecorationId,
       profileEffectId: isSelf ? (user as any)?.profileEffectId : author.profileEffectId,
       badges: isSelf ? user?.badges : author.badges,
+      isBot: !!author.bot || !!message.bot,
+      isOfficial: !!author.isOfficial,
+      webhookId: message.webhookId,
       isBeaconPlus: Boolean(
         isSelf
           ? user?.isBeaconPlus
@@ -509,6 +513,13 @@ export function ChatArea({ channelId }: ChatAreaProps) {
     >
       <div className={styles.header}>
         <div className={styles.headerLeft}>
+          <button 
+            className={`${styles.headerButton} ${styles.mobileMenuBtn}`}
+            onClick={() => setShowMobileSidebar(true)}
+            aria-label="Open sidebar"
+          >
+            <Menu size={20} />
+          </button>
           <div className={styles.channelInfo}>
             {isDMChannel ? (
               <Users size={22} className={styles.channelIcon} />
@@ -663,6 +674,9 @@ export function ChatArea({ channelId }: ChatAreaProps) {
                         authorAvatarDecorationId={author.avatarDecorationId}
                         authorProfileEffectId={author.profileEffectId}
                         authorBadges={author.badges}
+                        isBot={author.isBot}
+                        authorIsOfficial={author.isOfficial}
+                        webhookId={author.webhookId}
                         moderationUserId={author.id || undefined}
                         content={msg.content}
                         timestamp={(() => { const _td = msg.createdAt ? new Date(msg.createdAt) : null; return _td && !isNaN(_td.getTime()) ? _td.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '' })()}

@@ -68,6 +68,8 @@ interface MessageItemProps {
     thumbnail?: string
     image?: string
   }[]
+  authorIsOfficial?: boolean
+  webhookId?: string
   botActions?: {
     type: string
     label?: string
@@ -114,6 +116,8 @@ export const MessageItem = React.memo(function MessageItem({
   status = 'read',
   authorBadges,
   isBot,
+  authorIsOfficial,
+  webhookId,
   embeds,
   botActions,
 }: MessageItemProps) {
@@ -264,7 +268,8 @@ export const MessageItem = React.memo(function MessageItem({
                 baseColor={authorColor} 
               />
             </span>
-            {isBot && <BotTag />}
+            {webhookId && <BotTag type="webhook" />}
+            {!webhookId && isBot && <BotTag type="app" verified={authorIsOfficial} />}
             <span className={styles.time}>{timestamp}</span>
             {isPinned && (
               <span className={styles.pinnedBadge}>

@@ -1,4 +1,4 @@
-﻿import { Helmet } from 'react-helmet-async'
+import { Helmet } from 'react-helmet-async'
 import { PolicyPage } from '../components/layout/PolicyPage'
 import { Mail, MessageSquare, Globe } from 'lucide-react'
 import styles from '../styles/modules/pages/Contact.module.css'

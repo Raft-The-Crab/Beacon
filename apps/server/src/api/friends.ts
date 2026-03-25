@@ -6,6 +6,8 @@ import { Router, Response } from 'express';
 import { prisma } from '../db';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { publishGatewayEvent } from '../services/gatewayPublisher';
+import { ChannelType } from '@prisma/client';
+import { generateShortId } from '../utils/id';
 
 const router = Router();
 
@@ -188,6 +190,33 @@ router.post('/request', authenticate, async (req: AuthRequest, res: Response) =>
           data: { status: 1 },
         })
 
+        // Auto-create DM channel
+        try {
+          const extant = await prisma.channel.findFirst({
+            where: {
+              type: ChannelType.DM,
+              AND: [
+                { recipients: { some: { id: userId } } },
+                { recipients: { some: { id: targetId } } }
+              ]
+            }
+          });
+          if (!extant) {
+            const newChannel = await prisma.channel.create({
+              data: {
+                id: generateShortId('c', 12),
+                name: '',
+                type: ChannelType.DM,
+                recipients: { connect: [{ id: userId }, { id: targetId }] }
+              },
+              include: { recipients: { select: friendUserSelect } }
+            });
+            await publishGatewayEvent('CHANNEL_CREATE', newChannel, null, [userId, targetId]);
+          }
+        } catch (dmErr) {
+          console.error('Failed to auto-create DM channel:', dmErr);
+        }
+
         return res.json({
           success: true,
           accepted: true,
@@ -291,6 +320,33 @@ router.put('/:friendId/accept', authenticate, async (req: AuthRequest, res: Resp
       where: { id: friendRequest.id },
       data: { status: 1 }
     });
+
+    // Auto-create DM channel
+    try {
+      const extant = await prisma.channel.findFirst({
+        where: {
+          type: ChannelType.DM,
+          AND: [
+            { recipients: { some: { id: userId } } },
+            { recipients: { some: { id: friendId } } }
+          ]
+        }
+      });
+      if (!extant) {
+        const newChannel = await prisma.channel.create({
+          data: {
+            id: generateShortId('c', 12),
+            name: '',
+            type: ChannelType.DM,
+            recipients: { connect: [{ id: userId }, { id: friendId }] }
+          },
+          include: { recipients: { select: friendUserSelect } }
+        });
+        await publishGatewayEvent('CHANNEL_CREATE', newChannel, null, [userId, friendId]);
+      }
+    } catch (dmErr) {
+      console.error('Failed to auto-create DM channel on accept:', dmErr);
+    }
 
     // Create notification for the requester
     try {

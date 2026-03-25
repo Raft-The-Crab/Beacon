@@ -153,18 +153,23 @@ function TypewriterText({ children }: { children: string }) {
   )
 }
 
+function MentionText({ children }: { children: string }) {
+  return <span className={styles.mention}>@{children}</span>
+}
+
 // ── Inline Tag Renderer ──────────────────────────────────────────────
 // Renders a string that may contain custom tags into JSX elements.
 
 function renderCustomInline(text: string): React.ReactNode[] {
   const tagRegex = /\[(ghost|rainbow|shake|blur|system|glitch|bounce|flip|type)\](.*?)\[\/\1\]/g
   const neonRegex = /\*\*(.*?)\*\*\s*-\*/g
+  const mentionRegex = /@([A-Za-z0-9_.-]+)/g
   const parts: React.ReactNode[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null
 
-  // Merge both regex patterns into a single pass
-  const combined = new RegExp(`${tagRegex.source}|${neonRegex.source}`, 'g')
+  // Merge regex patterns into a single pass
+  const combined = new RegExp(`${tagRegex.source}|${neonRegex.source}|${mentionRegex.source}`, 'g')
 
   while ((match = combined.exec(text)) !== null) {
     // Add text before match
@@ -190,6 +195,9 @@ function renderCustomInline(text: string): React.ReactNode[] {
     } else if (match[3]) {
       // Neon glow match: **text** -*
       parts.push(<NeonGlowText key={match.index}>{match[3]}</NeonGlowText>)
+    } else if (match[4]) {
+      // Mention match: @username
+      parts.push(<MentionText key={match.index}>{match[4]}</MentionText>)
     }
 
     lastIndex = match.index + match[0].length

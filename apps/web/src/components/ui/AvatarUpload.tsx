@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Camera, Upload, Loader2 } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { fileUploadService, type UploadedFile } from '../../services/fileUpload'
@@ -9,9 +9,10 @@ interface AvatarUploadProps {
   onUpload: (file: UploadedFile) => void
   size?: number
   type?: 'user' | 'bot' | 'server'
+  showButton?: boolean
 }
 
-export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user' }: AvatarUploadProps) {
+export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user', showButton = true }: AvatarUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -54,7 +55,7 @@ export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user
     <div className={styles.container}>
       <div
         className={styles.avatarWrapper}
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, minWidth: size, minHeight: size, flexShrink: 0 }}
         onClick={() => fileInputRef.current?.click()}
       >
         {uploading ? (
@@ -63,10 +64,10 @@ export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user
           </div>
         ) : (
           <>
-            <Avatar
-              src={preview || currentAvatar || undefined}
-              username="User"
-              size="xl"
+            <img 
+              src={preview || currentAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=user`} 
+              alt="Avatar" 
+              className={styles.avatar} 
             />
             <div className={styles.overlay}>
               <Camera size={size / 4} />
@@ -85,14 +86,16 @@ export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user
         disabled={uploading}
       />
 
-      <button
-        className={styles.uploadButton}
-        onClick={() => fileInputRef.current?.click()}
-        disabled={uploading}
-      >
-        <Upload size={16} />
-        {uploading ? 'Uploading...' : 'Upload Photo'}
-      </button>
+      {showButton && (
+        <button
+          className={styles.uploadButton}
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          <Upload size={16} />
+          {uploading ? 'Uploading...' : 'Upload Photo'}
+        </button>
+      )}
     </div>
   )
 }

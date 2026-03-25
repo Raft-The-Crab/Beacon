@@ -121,8 +121,8 @@ export function MessagingHome() {
     const base =
       currentTab === "online" ? onlineFriends
         : currentTab === "pending" ? pendingFriends
-        : currentTab === "blocked" ? blockedFriendsList
-          : allFriends
+          : currentTab === "blocked" ? blockedFriendsList
+            : allFriends
     if (!friendSearch.trim()) return base
     return base.filter((f) =>
       `${f.displayName || ''} ${f.username || ''}`.toLowerCase().includes(friendSearch.toLowerCase())
@@ -243,20 +243,20 @@ export function MessagingHome() {
             (() => {
               const dmParticipant = getDMParticipant(channel)
               return (
-            <div
-              key={channel.id}
-              className={`${styles.dmItem} ${activeChannel === channel.id ? styles.dmItemActive : ""} `}
-              onClick={() => handleDMClick(channel.id)}
-            >
-              <Avatar
-                username={dmParticipant?.username}
-                status={dmParticipant?.status as any}
-                size="sm"
-              />
-              <div className={styles.dmName}>
-                {dmParticipant?.username || "Unknown"}
-              </div>
-            </div>
+                <div
+                  key={channel.id}
+                  className={`${styles.dmItem} ${activeChannel === channel.id ? styles.dmItemActive : ""} `}
+                  onClick={() => handleDMClick(channel.id)}
+                >
+                  <Avatar
+                    username={dmParticipant?.username}
+                    status={dmParticipant?.status as any}
+                    size="sm"
+                  />
+                  <div className={styles.dmName}>
+                    {dmParticipant?.username || "Unknown"}
+                  </div>
+                </div>
               )
             })()
           ))
@@ -324,7 +324,7 @@ export function MessagingHome() {
             </header>
 
             {/* Friends Content */}
-            <motion.div 
+            <motion.div
               className={styles.friendsBody}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -391,7 +391,7 @@ export function MessagingHome() {
                           </div>
                         </div>
                         {currentTab === 'pending' && (
-                        <div className={styles.friendActions}>
+                          <div className={styles.friendActions}>
                             <button
                               className={styles.pendingActionBtn}
                               type="button"

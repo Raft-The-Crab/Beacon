@@ -8,14 +8,24 @@ import { SelectDropdown } from '../../ui/SelectDropdown'
 import { fileUploadService } from '../../../services/fileUpload'
 import styles from '../../../styles/modules/modals/SettingsModal.module.css'
 
-const PRESET_COLORS = [
-    { name: 'Sapphire', color: '#7289da' },
-    { name: 'Ruby', color: '#ff5d66' },
-    { name: 'Emerald', color: '#23a559' },
-    { name: 'Amber', color: '#f0b232' },
-    { name: 'Amethyst', color: '#949cf7' },
-    { name: 'Rose', color: '#eb459e' },
-    { name: 'Gold', color: '#faa61a' },
+const accentPresets = [
+    { label: 'Beacon Blue', value: '#5865F2' },
+    { label: 'Electric Pink', value: '#ff007f' },
+    { label: 'Cyan Pulse', value: '#00ffff' },
+    { label: 'Emerald', value: '#2ecc71' },
+    { label: 'Ruby', value: '#e74c3c' },
+    { label: 'Neon Green', value: '#39ff14' },
+    { label: 'Amethyst', value: '#9b59b6' },
+    { label: 'Gold', value: '#f1c40f' },
+]
+
+const bgPresets = [
+    { label: 'Default', value: '#1e1f22' },
+    { label: 'Midnight', value: '#0a0a0c' },
+    { label: 'Deep Purple', value: '#1a0b2e' },
+    { label: 'Navy Glow', value: '#020b1a' },
+    { label: 'OLED', value: '#000000' },
+    { label: 'Slate', value: '#2c2e33' },
 ]
 
 const LANGUAGES = [
@@ -42,7 +52,9 @@ export const AppearanceTab: React.FC = () => {
         glassEnabled, setGlassEnabled, 
         messageDensity, setMessageDensity,
         customBackground, setCustomBackground,
-        customAccentColor, setCustomAccentColor
+        customAccentColor, setCustomAccentColor,
+        chatBubbleStyle, setChatBubbleStyle,
+        chatBubbleIntensity, setChatBubbleIntensity
     } = useUIStore()
     const { language, setLanguage } = useTranslationStore()
     const { enabled: lowBandwidth, toggle: toggleLowBandwidth } = useLowBandwidthStore()
@@ -139,7 +151,6 @@ export const AppearanceTab: React.FC = () => {
                     ))}
                 </div>
             </div>
-
             <div className={styles.appearanceSection}>
                 <h3>Customization</h3>
                 <div className={styles.formGroup}>
@@ -167,12 +178,51 @@ export const AppearanceTab: React.FC = () => {
                 <div className={styles.formGroup}>
                     <label className={styles.inputLabel}>Accent Color</label>
                     <div className={styles.colorPresets}>
-                        {PRESET_COLORS.map((preset) => (
-                            <button key={preset.name} className={`${styles.colorSwatch} ${customAccentColor === preset.color ? styles.activeSwatch : ''}`} style={{ backgroundColor: preset.color }} onClick={() => setCustomAccentColor(preset.color)} title={preset.name} />
+                        {accentPresets.map((preset) => (
+                            <button key={preset.label} className={`${styles.colorSwatch} ${customAccentColor === preset.value ? styles.activeSwatch : ''}`} style={{ backgroundColor: preset.value }} onClick={() => setCustomAccentColor(preset.value)} title={preset.label} />
                         ))}
-                        <input type="color" value={customAccentColor || '#7289da'} onChange={(e) => setCustomAccentColor(e.target.value)} className={styles.colorPicker} />
+                        <div className={styles.customColorBox}>
+                            <input type="color" value={customAccentColor || '#7289da'} onChange={(e) => setCustomAccentColor(e.target.value)} className={styles.colorPicker} />
+                        </div>
                     </div>
                     <Button variant="secondary" size="sm" onClick={() => setCustomAccentColor(null)} disabled={!customAccentColor}>Reset</Button>
+                </div>
+            </div>
+
+            <div className={styles.appearanceSection}>
+                <h3>Chat Bubble Style</h3>
+                <div className={styles.bubbleStyleOptions}>
+                    {([
+                        { key: 'reef' as const, label: 'Reef', desc: 'Sleek, sharp lines' },
+                        { key: 'jelly' as const, label: 'Jelly', desc: 'Bouncy, soft curves' },
+                        { key: 'comic' as const, label: 'Comic', desc: 'Bold borders' },
+                        { key: 'aurora' as const, label: 'Aurora', desc: 'Dynamic gradients' },
+                        { key: 'prism' as const, label: 'Prism', desc: 'Glassy reflections' },
+                        { key: 'carbon' as const, label: 'Carbon', desc: 'Industrial, dark' },
+                    ] as const).map(opt => (
+                        <button key={opt.key} className={`${styles.bubbleOption} ${chatBubbleStyle === opt.key ? styles.bubbleActive : ''}`} onClick={() => setChatBubbleStyle(opt.key)}>
+                            <div className={styles.bubblePreview} data-style={opt.key} />
+                            <div className={styles.bubbleText}>
+                                <span className={styles.bubbleLabel}>{opt.label}</span>
+                                <span className={styles.bubbleDesc}>{opt.desc}</span>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className={styles.appearanceSection}>
+                <h3>Bubble Intensity</h3>
+                <div className={styles.intensityOptions}>
+                    {(['low', 'medium', 'high'] as const).map(intensity => (
+                        <Button 
+                            key={intensity} 
+                            variant={chatBubbleIntensity === intensity ? 'primary' : 'secondary'}
+                            onClick={() => setChatBubbleIntensity(intensity)}
+                        >
+                            {intensity.charAt(0).toUpperCase() + intensity.slice(1)}
+                        </Button>
+                    ))}
                 </div>
             </div>
         </div>

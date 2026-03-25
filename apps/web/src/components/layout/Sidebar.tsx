@@ -330,9 +330,10 @@ export function Sidebar() {
   ])
 
   const memberCount = currentServer?.members?.length || 0
+  const showMobileSidebar = useUIStore(state => state.showMobileSidebar)
 
   return (
-    <div className={`${styles.sidebar} glass`}>
+    <div className={`${styles.sidebar} glass ${showMobileSidebar ? styles.mobileOpen : ''}`}>
       <div
         onContextMenu={serverCtxMenu}
         className={styles.header}

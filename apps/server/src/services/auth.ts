@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { validateUsername } from '../middleware/validation'
 import { logger } from './logger'
 import { NotificationService } from './notification'
+import { SystemBotService } from './systemBot'
 
 const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret-key-change-me').trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '')
 
@@ -222,6 +223,20 @@ export class AuthService {
       }
     }
 
+    const lastLogin = user.lastLoginAt ? new Date(user.lastLoginAt) : null;
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // Update lastLoginAt
+    await (prisma.user as any).update({
+      where: { id: user.id },
+      data: { lastLoginAt: now }
+    });
+
+    if (lastLogin && lastLogin < thirtyDaysAgo) {
+      SystemBotService.sendSystemDM(user.id, `👋 **Welcome back, ${user.username}!** It's been a while since we last saw you. I've missed you! Check out the new updates in the platform.`).catch(() => {});
+    }
+
     return {
       user: this.sanitizeUser(user),
       ...this.generateTokenPair(user.id)
@@ -248,9 +263,20 @@ export class AuthService {
 
   static verifyToken(token: string) {
     try {
-      return jwt.verify(token, JWT_SECRET) as { id: string, fph?: string }
-    } catch (err) {
-      return null
+      if (!JWT_SECRET) {
+        console.error('[AuthService] JWT_SECRET is missing or empty');
+        return null;
+      }
+      return jwt.verify(token, JWT_SECRET) as any;
+    } catch (err: any) {
+      if (err.name === 'TokenExpiredError') {
+        console.warn(`[AuthService] Token expired at: ${err.expiredAt}`);
+      } else if (err.name === 'JsonWebTokenError') {
+        console.warn(`[AuthService] Invalid token signature/format: ${err.message}`);
+      } else {
+        console.error('[AuthService] Token verification failed:', err.message);
+      }
+      return null;
     }
   }
 
@@ -268,6 +294,8 @@ export class AuthService {
       ...safeUser,
       hasPassword: !!password,
       theme: safeUser.theme || 'dark', // Prevent frontend crashes on null theme
+      bot: !!safeUser.bot,
+      isOfficial: !!safeUser.isOfficial,
       badges: normalizeUserBadges(safeUser.badges, safeUser.isBeaconPlus),
     }
   }
@@ -353,6 +381,9 @@ export class AuthService {
       }
     })
 
+    // System Bot: Security alert on password reset
+    SystemBotService.notifySecurityAlert(user.id, 'Your password was recently reset').catch(() => {});
+
     return { success: true, message: 'Password has been reset successfully' }
   }
 
@@ -370,7 +401,6 @@ export class AuthService {
     if (!user) {
       throw new Error('Invalid or expired verification code')
     }
-
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -379,6 +409,9 @@ export class AuthService {
         verificationExpires: null
       }
     })
+
+    // System Bot: Welcome message on first verification
+    SystemBotService.notifyWelcome(user.id, user.username).catch(() => {});
 
     return {
       success: true,

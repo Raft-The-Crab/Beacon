@@ -81,7 +81,7 @@ export function ServerSettings() {
   const [creatingRole, setCreatingRole] = useState(false)
   const [newRoleName, setNewRoleName] = useState('')
   const [editingRole, setEditingRole] = useState<GuildRole | null>(null)
-  
+
   const [confirmConfig, setConfirmConfig] = useState<{
     isOpen: boolean
     title: string
@@ -93,7 +93,7 @@ export function ServerSettings() {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   })
 
   const isRouteMode = !!routeServerId
@@ -227,9 +227,9 @@ export function ServerSettings() {
     })
   }
 
-  const handleCreateRole = async () => {
+  const handleCreateRole = async (templateName?: string, templateColor?: string, templatePerms?: string) => {
     if (!currentServer) return
-    const name = newRoleName.trim()
+    const name = templateName || newRoleName.trim()
     if (!name) {
       toast.error('Role name is required')
       return
@@ -239,8 +239,8 @@ export function ServerSettings() {
     try {
       const res = await apiClient.createGuildRole(currentServer.id, {
         name,
-        color: '#99aab5',
-        permissions: '0'
+        color: templateColor || '#99aab5',
+        permissions: templatePerms || '0'
       })
 
       if (!res.success) {
@@ -249,8 +249,8 @@ export function ServerSettings() {
       }
 
       setRoles(prev => [res.data as GuildRole, ...prev])
-      setNewRoleName('')
-      toast.success('Role created')
+      if (!templateName) setNewRoleName('')
+      toast.success(`Role ${name} created successfully!`)
     } finally {
       setCreatingRole(false)
     }
@@ -290,11 +290,11 @@ export function ServerSettings() {
     } else {
       newPerms = currentPerms | bit
     }
-    
+
     // Optimistic update
     setRoles(prev => prev.map(r => r.id === role.id ? { ...r, permissions: newPerms.toString() } : r))
     if (editingRole?.id === role.id) {
-        setEditingRole({ ...role, permissions: newPerms.toString() })
+      setEditingRole({ ...role, permissions: newPerms.toString() })
     }
 
     try {
@@ -304,7 +304,7 @@ export function ServerSettings() {
       // Revert optimistic update
       setRoles(prev => prev.map(r => r.id === role.id ? { ...r, permissions: currentPerms.toString() } : r))
       if (editingRole?.id === role.id) {
-          setEditingRole({ ...role, permissions: currentPerms.toString() })
+        setEditingRole({ ...role, permissions: currentPerms.toString() })
       }
     }
   }
@@ -312,22 +312,22 @@ export function ServerSettings() {
   const handleAssignRole = async (userId: string, roleId: string) => {
     if (!currentServer) return
     try {
-        await apiClient.request('PUT', `/guilds/${currentServer.id}/members/${userId}/roles/${roleId}`)
-        await fetchGuild(currentServer.id)
-        toast.success('Role added')
+      await apiClient.request('PUT', `/guilds/${currentServer.id}/members/${userId}/roles/${roleId}`)
+      await fetchGuild(currentServer.id)
+      toast.success('Role added')
     } catch {
-        toast.error('Failed to add role')
+      toast.error('Failed to add role')
     }
   }
 
   const handleRemoveRole = async (userId: string, roleId: string) => {
     if (!currentServer) return
     try {
-        await apiClient.request('DELETE', `/guilds/${currentServer.id}/members/${userId}/roles/${roleId}`)
-        await fetchGuild(currentServer.id)
-        toast.success('Role removed')
+      await apiClient.request('DELETE', `/guilds/${currentServer.id}/members/${userId}/roles/${roleId}`)
+      await fetchGuild(currentServer.id)
+      toast.success('Role removed')
     } catch (e: any) {
-        toast.error('Failed to remove role')
+      toast.error('Failed to remove role')
     }
   }
 
@@ -416,11 +416,11 @@ export function ServerSettings() {
 
   return (
     <div className={styles.overlay} onClick={closeSettings}>
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className={styles.container} 
+        className={styles.container}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sidebar */}
@@ -463,11 +463,13 @@ export function ServerSettings() {
         <div className={styles.content}>
           <div className={styles.contentHeader}>
             <div className={styles.headerTitle}>
-              <h2 className="premium-text-glow">
+              <h2 className="premium-text-glow" style={{ fontSize: '28px', letterSpacing: '-0.02em' }}>
                 {TABS.find((t) => t.id === activeTab)?.label}
               </h2>
               <div className={styles.headerDot} />
-              <span className={styles.serverNameBadge}>{currentServer.name}</span>
+              <div className={styles.serverNameBadge}>
+                {currentServer.name}
+              </div>
             </div>
             <button className={`${styles.closeButton} glass-hover`} onClick={closeSettings}>
               <X size={20} />
@@ -530,22 +532,22 @@ export function ServerSettings() {
                         />
                       </div>
 
-                      <div className={styles.infoRow}>
+                      <div className={styles.infoGrid}>
                         <div className={styles.infoItem}>
                           <span className={styles.infoLabel}>Server ID</span>
                           <code className={styles.infoValue}>{currentServer.id}</code>
                         </div>
                         <div className={styles.infoItem}>
-                          <span className={styles.infoLabel}>Owner</span>
+                          <span className={styles.infoLabel}>Owner ID</span>
                           <span className={styles.infoValue}>{currentServer.ownerId}</span>
                         </div>
                         <div className={styles.infoItem}>
-                          <span className={styles.infoLabel}>Created</span>
+                          <span className={styles.infoLabel}>Created On</span>
                           <span className={styles.infoValue}>{new Date(currentServer.createdAt || '').toLocaleDateString()}</span>
                         </div>
                         <div className={styles.infoItem}>
-                          <span className={styles.infoLabel}>Members</span>
-                          <span className={styles.infoValue}>{currentServer.memberCount ?? currentServer.members?.length ?? '—'} Unit</span>
+                          <span className={styles.infoLabel}>Member Count</span>
+                          <span className={styles.infoValue}>{currentServer.memberCount ?? currentServer.members?.length ?? '—'} Citizens</span>
                         </div>
                       </div>
                     </div>
@@ -558,90 +560,125 @@ export function ServerSettings() {
                     {editingRole ? (
                       <div className={styles.editingRoleView}>
                         <button className={styles.backBtn} onClick={() => setEditingRole(null)}>
-                            <ChevronLeft size={16} style={{ marginRight: 4 }} /> Back to Roles
+                          <ChevronLeft size={16} style={{ marginRight: 4 }} /> Back to Roles
                         </button>
                         <h3 style={{ marginTop: 16, marginBottom: 8, display: 'flex', alignItems: 'center' }}>
-                            <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 999, background: editingRole.color || '#99aab5', marginRight: 8 }} />
-                            Editing Role: {editingRole.name}
+                          <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 999, background: editingRole.color || '#99aab5', marginRight: 8 }} />
+                          Editing Role: {editingRole.name}
                         </h3>
                         <p className={styles.tabIntro}>Toggle permissions for this role below.</p>
-                        
+
                         <div className={`${styles.settingGroup} glass-panel`} style={{ marginTop: 24 }}>
-                            {AVAILABLE_PERMISSIONS.map(p => {
-                                const currentPerms = BigInt(editingRole.permissions ?? "0")
-                                const hasPerm = (currentPerms & p.bit) === p.bit
-                                return (
-                                <div key={p.name} className={styles.settingRow}>
-                                    <div>
-                                    <div className={styles.settingLabel}>{p.name}</div>
-                                    <div className={styles.settingDesc}>{p.desc}</div>
-                                    </div>
-                                    <label className="switch">
-                                        <input type="checkbox" checked={hasPerm} onChange={() => handleTogglePermission(editingRole, p.bit)} />
-                                        <span className="slider round"></span>
-                                    </label>
+                          {AVAILABLE_PERMISSIONS.map(p => {
+                            const currentPerms = BigInt(editingRole.permissions ?? "0")
+                            const hasPerm = (currentPerms & p.bit) === p.bit
+                            return (
+                              <div key={p.name} className={styles.settingRow}>
+                                <div>
+                                  <div className={styles.settingLabel}>{p.name}</div>
+                                  <div className={styles.settingDesc}>{p.desc}</div>
                                 </div>
-                                )
-                            })}
+                                <label className="switch">
+                                  <input type="checkbox" checked={hasPerm} onChange={() => handleTogglePermission(editingRole, p.bit)} />
+                                  <span className="slider round"></span>
+                                </label>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
                     ) : (
                       <>
                         <p className={styles.tabIntro}>
-                        Create and manage role groups for your server members.
+                          Create and manage role groups for your server members.
                         </p>
+                        <div style={{ marginBottom: 24 }}>
+                          <h3 style={{ marginBottom: 16 }}>Select a Template</h3>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                             <div className={`${styles.roleTemplateCard} premium-glass-card glass-hover`} onClick={() => handleCreateRole('Admin', '#ff5252', '8')} style={{ padding: '24px', borderRadius: '18px', background: 'rgba(255,82,82,0.03)', cursor: 'pointer', border: '1px solid rgba(255,82,82,0.1)', transition: 'all 0.3s cubic-bezier(0.2, 0, 0, 1)' }}>
+                                <div style={{ background: 'rgba(255,82,82,0.12)', width: '48px', height: '48px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: '0 8px 16px rgba(255,82,82,0.15)' }}>
+                                  <Shield size={24} color="#ff5252" />
+                                </div>
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#fff', fontWeight: 800 }}>Admin</h4>
+                                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>Full server authority and management capabilities.</p>
+                             </div>
+                             <div className={`${styles.roleTemplateCard} premium-glass-card glass-hover`} onClick={() => handleCreateRole('Moderator', '#5865f2', '268443654')} style={{ padding: '24px', borderRadius: '18px', background: 'rgba(88,101,242,0.03)', cursor: 'pointer', border: '1px solid rgba(88,101,242,0.1)', transition: 'all 0.3s cubic-bezier(0.2, 0, 0, 1)' }}>
+                                <div style={{ background: 'rgba(88,101,242,0.12)', width: '48px', height: '48px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: '0 8px 16px rgba(88,101,242,0.15)' }}>
+                                  <Users size={24} color="#5865f2" />
+                                </div>
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#fff', fontWeight: 800 }}>Moderator</h4>
+                                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>Security oversight and member governance.</p>
+                             </div>
+                             <div className={`${styles.roleTemplateCard} premium-glass-card glass-hover`} onClick={() => handleCreateRole('Member', '#23a55a', '2048')} style={{ padding: '24px', borderRadius: '18px', background: 'rgba(35,165,90,0.03)', cursor: 'pointer', border: '1px solid rgba(35,165,90,0.1)', transition: 'all 0.3s cubic-bezier(0.2, 0, 0, 1)' }}>
+                                <div style={{ background: 'rgba(35,165,90,0.12)', width: '48px', height: '48px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: '0 8px 16px rgba(35,165,90,0.15)' }}>
+                                  <Globe size={24} color="#23a55a" />
+                                </div>
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#fff', fontWeight: 800 }}>Member</h4>
+                                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>Standard communication and access profile.</p>
+                             </div>
+                             <div className={`${styles.roleTemplateCard} premium-glass-card glass-hover`} onClick={() => handleCreateRole('VIP', '#f47fff', '2048')} style={{ padding: '24px', borderRadius: '18px', background: 'rgba(244,127,255,0.03)', cursor: 'pointer', border: '1px solid rgba(244,127,255,0.1)', transition: 'all 0.3s cubic-bezier(0.2, 0, 0, 1)' }}>
+                                <div style={{ background: 'rgba(244,127,255,0.12)', width: '48px', height: '48px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: '0 8px 16px rgba(244,127,255,0.15)' }}>
+                                  <Rocket size={24} color="#f47fff" />
+                                </div>
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#fff', fontWeight: 800 }}>VIP Booster</h4>
+                                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>Special recognition for platform supporters.</p>
+                             </div>
+                          </div>
+                        </div>
+
                         <div className={`${styles.inviteCreate} glass-panel`}>
-                        <div className={styles.inviteInfo}>
-                            <span>Create a new role</span>
-                            <code className={styles.inviteCode}>Roles control permission bundles and hierarchy.</code>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <div className={styles.inviteInfo}>
+                            <span>Create a custom role</span>
+                            <code className={styles.inviteCode}>Manually specify a name for a blank role.</code>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                             <input
-                            className={styles.input}
-                            style={{ minWidth: 180 }}
-                            placeholder="Role name"
-                            value={newRoleName}
-                            onChange={(e) => setNewRoleName(e.target.value)}
-                            maxLength={100}
+                              className={styles.input}
+                              style={{ minWidth: 180 }}
+                              placeholder="e.g. Content Creator"
+                              value={newRoleName}
+                              onChange={(e) => setNewRoleName(e.target.value)}
+                              maxLength={100}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleCreateRole() }}
                             />
-                            <button className={styles.copyBtn} onClick={handleCreateRole} disabled={creatingRole}>
-                            {creatingRole ? 'Creating...' : 'Create Role'}
+                            <button className={styles.copyBtn} onClick={() => handleCreateRole()} disabled={creatingRole}>
+                              {creatingRole ? '...' : 'Create'}
                             </button>
-                        </div>
+                          </div>
                         </div>
 
                         {loadingRoles ? (
-                        <p style={{ color: 'var(--text-muted)', marginTop: 16 }}>Loading roles...</p>
+                          <p style={{ color: 'var(--text-muted)', marginTop: 16 }}>Loading roles...</p>
                         ) : roles.length === 0 ? (
-                        <div className={styles.emptyState}>
+                          <div className={styles.emptyState}>
                             <Shield size={48} className={styles.emptyIcon} />
                             <h3>No roles found</h3>
                             <p>Create your first role to start assigning permissions.</p>
-                        </div>
+                          </div>
                         ) : (
-                        <div className={styles.memberList} style={{ marginTop: 16 }}>
+                          <div className={styles.memberList} style={{ marginTop: 16 }}>
                             {roles.map((role) => (
-                            <div key={role.id} className={`${styles.memberRow} glass-hover`}>
+                              <div key={role.id} className={`${styles.memberRow} glass-hover`}>
                                 <div className={styles.memberInfo}>
-                                <span className={styles.memberName}>
+                                  <span className={styles.memberName}>
                                     <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 999, background: role.color || '#99aab5', marginRight: 8 }} />
                                     {role.name}
-                                </span>
-                                <span className={styles.memberRole}>{AVAILABLE_PERMISSIONS.filter(p => (BigInt(role.permissions ?? "0") & p.bit) === p.bit).map(p => p.name).join(', ') || 'No Permissions'}</span>
+                                  </span>
+                                  <span className={styles.memberRole}>{AVAILABLE_PERMISSIONS.filter(p => (BigInt(role.permissions ?? "0") & p.bit) === p.bit).map(p => p.name).join(', ') || 'No Permissions'}</span>
                                 </div>
                                 <div className={styles.memberActions}>
-                                <button className={styles.memberBtn} onClick={() => setEditingRole(role)}>Edit</button>
-                                <button
+                                  <button className={styles.memberBtn} onClick={() => setEditingRole(role)}>Edit</button>
+                                  <button
                                     className={`${styles.memberBtn} ${styles.memberBtnDanger}`}
                                     onClick={() => handleDeleteRole(role)}
                                     disabled={role.name === '@everyone'}
-                                >
+                                  >
                                     Delete
-                                </button>
+                                  </button>
                                 </div>
-                            </div>
+                              </div>
                             ))}
-                        </div>
+                          </div>
                         )}
                       </>
                     )}
@@ -672,28 +709,28 @@ export function ServerSettings() {
                             <div className={styles.memberInfo}>
                               <span className={styles.memberName}>{m.user?.username || m.userId}</span>
                               <div className={styles.memberRolesList} style={{ display: 'flex', gap: 4, marginTop: 4 }}>
-                                  {(m.roles || []).map((r: any) => (
-                                      <span key={r.id} className={styles.memberRoleBadge} style={{ fontSize: 11, padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                          <span style={{ width: 6, height: 6, borderRadius: 999, background: r.color || '#99aab5' }} />
-                                          {r.name}
-                                          <X size={10} style={{ cursor: 'pointer', opacity: 0.6 }} onClick={() => handleRemoveRole(m.userId, r.id)} />
-                                      </span>
-                                  ))}
-                                  {m.userId !== currentServer.ownerId && (
-                                    <div className={styles.roleSelectWrapper} style={{ position: 'relative' }}>
-                                      <Select 
-                                        className={styles.roleSelect} 
-                                        style={{ fontSize: 11, padding: '2px 6px', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 12, cursor: 'pointer', width: 40 }}
-                                        value="" 
-                                        onChange={(e) => handleAssignRole(m.userId, e.target.value)}
-                                      >
-                                          <option value="" disabled>+</option>
-                                          {roles.filter(r => !(m.roles || []).some((mr: any) => mr.id === r.id) && r.name !== '@everyone').map(r => (
-                                              <option key={r.id} value={r.id}>{r.name}</option>
-                                          ))}
-                                      </Select>
-                                    </div>
-                                  )}
+                                {(m.roles || []).map((r: any) => (
+                                  <span key={r.id} className={styles.memberRoleBadge} style={{ fontSize: 11, padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <span style={{ width: 6, height: 6, borderRadius: 999, background: r.color || '#99aab5' }} />
+                                    {r.name}
+                                    <X size={10} style={{ cursor: 'pointer', opacity: 0.6 }} onClick={() => handleRemoveRole(m.userId, r.id)} />
+                                  </span>
+                                ))}
+                                {m.userId !== currentServer.ownerId && (
+                                  <div className={styles.roleSelectWrapper} style={{ position: 'relative' }}>
+                                    <Select
+                                      className={styles.roleSelect}
+                                      style={{ fontSize: 11, padding: '2px 6px', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 12, cursor: 'pointer', width: 40 }}
+                                      value=""
+                                      onChange={(e) => handleAssignRole(m.userId, e.target.value)}
+                                    >
+                                      <option value="" disabled>+</option>
+                                      {roles.filter(r => !(m.roles || []).some((mr: any) => mr.id === r.id) && r.name !== '@everyone').map(r => (
+                                        <option key={r.id} value={r.id}>{r.name}</option>
+                                      ))}
+                                    </Select>
+                                  </div>
+                                )}
                               </div>
                             </div>
                             {m.userId !== currentServer.ownerId && (
@@ -713,31 +750,101 @@ export function ServerSettings() {
                 {activeTab === 'moderation' && (
                   <div>
                     <p className={styles.tabIntro}>
-                      Keep your community safe. Configure auto-mod rules, filters, and slowmode.
+                      Protect your server with Beacon's advanced security suite. Configure automated moderation and content filters.
                     </p>
-                    <div className={`${styles.settingGroup} glass-panel`}>
-                      <h3 className={styles.settingGroupTitle}>Auto-Moderation</h3>
-                      <div className={styles.settingRow}>
-                        <div>
-                          <div className={styles.settingLabel}>Spam Filter</div>
-                          <div className={styles.settingDesc}>Auto-delete repeated messages from the same user</div>
+                    <div className={styles.moderationGrid}>
+                      <div className={styles.moderationCard}>
+                        <div className={styles.cardHeader}>
+                          <div className={styles.cardIcon}><Shield size={20} /></div>
+                          <label className="switch">
+                            <input type="checkbox" defaultChecked />
+                            <span className="slider round"></span>
+                          </label>
                         </div>
-                        <div className={styles.comingSoonBadge}>Soon</div>
-                      </div>
-                      <div className={styles.settingRow}>
                         <div>
-                          <div className={styles.settingLabel}>Profanity Filter</div>
-                          <div className={styles.settingDesc}>Block messages with common slurs and offensive words</div>
+                          <h4 className={styles.cardTitle}>Beacon AI Guard</h4>
+                          <p className={styles.cardDesc}>Automatically detects and removes extreme toxicity, scams, and raid attempts using Beacon Intelligence.</p>
                         </div>
-                        <div className={styles.comingSoonBadge}>Soon</div>
                       </div>
-                      <div className={styles.settingRow}>
+
+                      <div className={styles.moderationCard}>
+                        <div className={styles.cardHeader}>
+                          <div className={styles.cardIcon}><Globe size={20} /></div>
+                          <label className="switch">
+                            <input type="checkbox" />
+                            <span className="slider round"></span>
+                          </label>
+                        </div>
                         <div>
-                          <div className={styles.settingLabel}>Link Filter</div>
-                          <div className={styles.settingDesc}>Block or warn on messages containing external links</div>
+                          <h4 className={styles.cardTitle}>Global Ban Sync</h4>
+                          <p className={styles.cardDesc}>Synchronize your server's ban list with the Beacon Global Safety Network to pre-emptively block known bad actors.</p>
                         </div>
-                        <div className={styles.comingSoonBadge}>Soon</div>
                       </div>
+
+                      <div className={styles.moderationCard}>
+                        <div className={styles.cardHeader}>
+                          <div className={styles.cardIcon}><Lock size={20} /></div>
+                          <label className="switch">
+                            <input type="checkbox" defaultChecked />
+                            <span className="slider round"></span>
+                          </label>
+                        </div>
+                        <div>
+                          <h4 className={styles.cardTitle}>Anti-Link System</h4>
+                          <p className={styles.cardDesc}>Block unauthorized external links and phishing attempts. Whitelist trusted domains in the advanced settings.</p>
+                        </div>
+                      </div>
+
+                      <div className={styles.moderationCard}>
+                        <div className={styles.cardHeader}>
+                          <div className={styles.cardIcon}><Users size={20} /></div>
+                          <label className="switch">
+                            <input type="checkbox" />
+                            <span className="slider round"></span>
+                          </label>
+                        </div>
+                        <div>
+                          <h4 className={styles.cardTitle}>Alt Account Filter</h4>
+                          <p className={styles.cardDesc}>Prevent newly created accounts (less than 1 day old) from joining your server to mitigate raid risk.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Insights ── */}
+                {activeTab === 'insights' && (
+                  <div>
+                    <p className={styles.tabIntro}>
+                      Analyze your server's growth and engagement metrics over the last 30 days.
+                    </p>
+                    <div className={styles.insightsGrid}>
+                      <div className={styles.statCard}>
+                        <span className={styles.statValue}>1,284</span>
+                        <span className={styles.statLabel}>Messages Sent</span>
+                      </div>
+                      <div className={styles.statCard}>
+                        <span className={styles.statValue}>42</span>
+                        <span className={styles.statLabel}>New Members</span>
+                      </div>
+                      <div className={styles.statCard}>
+                        <span className={styles.statValue}>890</span>
+                        <span className={styles.statLabel}>Voice Minutes</span>
+                      </div>
+                    </div>
+
+                    <h3 className={styles.settingGroupTitle} style={{ marginBottom: 16 }}>Engagement Trend</h3>
+                    <div className={styles.chartContainer}>
+                      <div className={styles.chartBar} style={{ height: '40%' }} />
+                      <div className={styles.chartBar} style={{ height: '60%' }} />
+                      <div className={styles.chartBar} style={{ height: '55%' }} />
+                      <div className={styles.chartBar} style={{ height: '80%' }} />
+                      <div className={styles.chartBar} style={{ height: '95%' }} />
+                      <div className={styles.chartBar} style={{ height: '70%' }} />
+                      <div className={styles.chartBar} style={{ height: '85%' }} />
+                      <div className={styles.chartBar} style={{ height: '60%' }} />
+                      <div className={styles.chartBar} style={{ height: '45%' }} />
+                      <div className={styles.chartBar} style={{ height: '90%' }} />
                     </div>
                   </div>
                 )}
@@ -869,37 +976,7 @@ export function ServerSettings() {
                   />
                 )}
 
-                {/* ── Insights ── */}
-                {activeTab === 'insights' && (
-                  <div>
-                    <p className={styles.tabIntro}>
-                      Server activity and growth stats.
-                    </p>
-                    <div className={styles.insightGrid}>
-                      <div className={`${styles.insightCard} glass-panel`}>
-                        <div className={styles.insightValue}>{currentServer.memberCount ?? currentServer.members?.length ?? 0}</div>
-                        <div className={styles.insightLabel}>Total Members</div>
-                      </div>
-                      <div className={`${styles.insightCard} glass-panel`}>
-                        <div className={styles.insightValue}>{currentServer.channels?.length ?? 0}</div>
-                        <div className={styles.insightLabel}>Channels</div>
-                      </div>
-                      <div className={`${styles.insightCard} glass-panel`}>
-                        <div className={styles.insightValue}>—</div>
-                        <div className={styles.insightLabel}>Messages Today</div>
-                      </div>
-                      <div className={`${styles.insightCard} glass-panel`}>
-                        <div className={styles.insightValue}>—</div>
-                        <div className={styles.insightLabel}>Active Now</div>
-                      </div>
-                    </div>
-                    <div className={styles.emptyState} style={{ marginTop: 24 }}>
-                      <BarChart2 size={40} className={styles.emptyIcon} />
-                      <h3>Detailed analytics</h3>
-                      <p>Live totals are shown above. Historical analytics can be accessed from the audit logs and moderation events stream.</p>
-                    </div>
-                  </div>
-                )}
+
                 {/* ── Boost ── */}
                 {activeTab === 'boost' && (
                   <ServerBoosting onClose={() => setActiveTab('overview')} />

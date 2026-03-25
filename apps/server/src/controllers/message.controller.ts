@@ -138,6 +138,38 @@ export async function createMessage(req: Request, res: Response) {
   }
 
   try {
+    const SYSTEM_BOT_ID = 'BEACON_SYSTEM_BOT';
+    
+    // Block replies to Official Beacon Bot in DMs
+    const targetChannel = await prisma.channel.findUnique({ 
+      where: { id: channelId },
+      include: { recipients: { select: { id: true, isOfficial: true } as any } }
+    }) as any;
+
+    if (!targetChannel) return res.status(404).json({ error: 'Channel not found' });
+
+    if (targetChannel.type === 'DM' || targetChannel.type === 'GROUP_DM') {
+      const isSystemDM = targetChannel.recipients.some((r: any) => r.id === SYSTEM_BOT_ID || r.isOfficial);
+      if (isSystemDM && userId !== SYSTEM_BOT_ID) {
+        return res.status(403).json({ error: 'You cannot reply to this system application.' });
+      }
+
+      // Blocked users cannot message each other in DMs
+      const recipientIds = targetChannel.recipients.map((r: any) => r.id);
+      const otherRecipients = recipientIds.filter((id: string) => id !== userId);
+      const blocks = await prisma.block.findMany({
+        where: {
+          OR: [
+            { userId: userId, blockedId: { in: otherRecipients } },
+            { userId: { in: otherRecipients }, blockedId: userId }
+          ]
+        }
+      });
+      if (blocks.length > 0) {
+        return res.status(403).json({ error: 'You cannot send messages due to a block' });
+      }
+    }
+
     // FAST lane text moderation before persisting message.
     if (process.env.ENABLE_MODERATION !== 'false' && String(content || '').trim()) {
       let moderation: any = null
@@ -179,9 +211,21 @@ export async function createMessage(req: Request, res: Response) {
       }
     }
 
-    // Slowmode enforcement
+    // Timeout enforceement
     const channel = await prisma.channel.findUnique({ where: { id: channelId } });
-    if (channel?.slowmode > 0) {
+    if (!channel) return res.status(404).json({ error: 'Channel not found' });
+    
+    if (channel.guildId) {
+        const member = await prisma.guildMember.findUnique({ 
+            where: { userId_guildId: { userId, guildId: channel.guildId } } 
+        });
+        if (member?.communicationDisabledUntil && new Date(member.communicationDisabledUntil) > new Date()) {
+            return res.status(403).json({ error: 'You are currently timed out.' });
+        }
+    }
+
+    // Slowmode enforcement
+    if (channel.slowmode > 0) {
       const cacheKey = `slowmode:${channelId}:${userId}`;
       const lastSent = await redis.get(cacheKey);
       if (lastSent) {

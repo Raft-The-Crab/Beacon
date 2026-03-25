@@ -120,6 +120,7 @@ export interface SlashCommand {
     cooldownMs?: number; // per-user cooldown
     requiredRoleIds?: string[];
     requiredPermissions?: Array<bigint | string | number>;
+    guildOnly?: boolean;
     handler: (args: Record<string, any>, context: BotContext) => Promise<BotResponse>;
 }
 
@@ -189,6 +190,13 @@ export abstract class BaseBot {
         const cmd = this.commands.get(cmdName);
 
         if (!cmd) return null;
+
+        if (cmd.guildOnly && !context.guildId) {
+            return {
+                content: `❌ This command can only be used within a server.`,
+                ephemeral: true,
+            };
+        }
 
         if (cmd.requiredRoleIds?.length) {
             const memberRoles = new Set(context.memberRoleIds || []);
@@ -413,6 +421,10 @@ export class BotFramework {
             // but we need to find the command in our map.
             const cmd = bot.commands.get(data.name);
             if (!cmd) return null;
+
+            if (cmd.guildOnly && !context.guildId) {
+                return { content: `❌ This command can only be used within a server.`, ephemeral: true };
+            }
 
             // Permission & Cooldown checks
             if (cmd.requiredRoleIds?.length) {

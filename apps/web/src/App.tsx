@@ -321,7 +321,11 @@ export function App() {
             if (data?.guildId && data?.userId) handleMemberRemoveWs(data.guildId, data.userId)
             break
           case 'CHANNEL_CREATE':
-            if (data?.guildId) handleChannelCreateWs(data)
+            if (data?.guildId) {
+                handleChannelCreateWs(data)
+            } else {
+                useDMStore.getState().handleChannelCreateWs(data)
+            }
             break
           case 'CHANNEL_UPDATE':
             if (data?.guildId && data?.id) handleChannelUpdateWs(data.guildId, data.id, data)

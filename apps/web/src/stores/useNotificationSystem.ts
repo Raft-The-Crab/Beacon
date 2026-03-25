@@ -31,17 +31,24 @@ export const useNotificationSystem = create<NotificationSystemState>((set, get) 
   toasts: [],
 
   show: (message, type = 'info', duration = 3000) => {
-    const id = `${hashMessage(message)}-${Date.now()}`;
+    let sanitizedMessage = '';
+    if (typeof message === 'string') {
+        sanitizedMessage = message;
+    } else if (message && typeof message === 'object') {
+        sanitizedMessage = (message as any).message || (message as any).error || JSON.stringify(message);
+    } else {
+        sanitizedMessage = String(message);
+    }
+
+    const id = `${hashMessage(sanitizedMessage)}-${Date.now()}`;
     
     // Deduplication logic: Don't show the exact same message within 2 seconds
-    const existing = get().toasts.find(t => t.message === message);
+    const existing = get().toasts.find(t => t.message === sanitizedMessage);
     if (existing) {
-        // Find if it was added very recently (e.g. within 2 seconds)
-        // We use the ID suffix for timing if needed, but a simple check is often enough
         return; 
     }
 
-    const newToast: Toast = { id, message, type, duration };
+    const newToast: Toast = { id, message: sanitizedMessage, type, duration };
     set((state) => ({ toasts: [...state.toasts, newToast] }));
 
     if (duration !== Infinity) {

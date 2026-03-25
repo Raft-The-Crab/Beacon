@@ -383,6 +383,16 @@ export const useUIStore = create<UIState>()(
         if (state.messageDensity) {
           document.documentElement.setAttribute('data-density', state.messageDensity)
         }
+        
+        // Custom background/accent rehydration
+        const accent = localStorage.getItem('beacon:custom_accent')
+        const bg = localStorage.getItem('beacon:custom_bg')
+        if (accent) {
+          document.documentElement.style.setProperty('--beacon-brand', accent)
+        }
+        if (bg) {
+          document.documentElement.style.setProperty('--custom-bg', `url(${bg})`)
+        }
       },
     }
   )
