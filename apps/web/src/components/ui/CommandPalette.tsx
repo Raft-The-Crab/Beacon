@@ -68,9 +68,9 @@ export function CommandPalette() {
     // Fuzzy Filter Data - Memoized to prevent unnecessary re-renders
     const results = React.useMemo(() => {
         const local = [
-            ...servers.filter(s => String(s.name || '').toLowerCase().includes(lowerQuery)).map(s => ({ type: 'server', id: s.id, name: s.name, icon: <Server size={18} /> })),
-            ...channels.filter(c => String(c.name || '').toLowerCase().includes(lowerQuery)).map(c => ({ type: 'channel', id: c.id, name: c.name, icon: <Hash size={18} /> })),
-            ...friends.filter(f => String(f.username || '').toLowerCase().includes(lowerQuery)).map(f => ({ type: 'user', id: f.id, name: f.username, icon: <UserIcon size={18} /> }))
+            ...servers.filter((s: any) => String(s.name || '').toLowerCase().includes(lowerQuery)).map((s: any) => ({ type: 'server', id: s.id, name: s.name, icon: <Server size={18} /> })),
+            ...channels.filter((c: any) => String(c.name || '').toLowerCase().includes(lowerQuery)).map((c: any) => ({ type: 'channel', id: c.id, name: c.name, icon: <Hash size={18} /> })),
+            ...friends.filter((f: any) => String(f.username || '').toLowerCase().includes(lowerQuery)).map((f: any) => ({ type: 'user', id: f.id, name: f.username, icon: <UserIcon size={18} /> }))
         ];
         const global = globalUsers.map(u => ({ type: 'global user', id: u.id, name: u.username, icon: <Globe size={18} opacity={0.5} /> }));
         return [...local, ...global].slice(0, 8);

@@ -15,7 +15,7 @@ function decorateSystemUser(user: User | null): User | null {
   }
 
   const normalizedBadges = new Set(
-    (user.badges || []).map((badge) => {
+    (user.badges || []).map((badge: any) => {
       switch (badge) {
         case 'owner':
         case 'admin':

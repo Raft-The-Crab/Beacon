@@ -10,7 +10,7 @@ import styles from '../styles/modules/pages/AdminDashboard.module.css'
 export function AdminDashboard() {
     const user = useAuthStore((state) => state.user)
     const hasAccess = useMemo(() => {
-        const badges = new Set((user?.badges || []).map((badge) => String(badge).toLowerCase()))
+        const badges = new Set((user?.badges || []).map((badge: any) => String(badge).toLowerCase()))
         return Boolean(user && (user.developerMode || badges.has('admin') || badges.has('owner')))
     }, [user])
 

@@ -167,7 +167,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
           if (s.id === guildId) {
             return {
               ...s,
-              channels: s.channels?.map(c => c.id === channelId ? { ...c, ...data } : c) || []
+              channels: s.channels?.map((c: any) => c.id === channelId ? { ...c, ...data } : c) || []
             } as any
           }
           return s
@@ -175,7 +175,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
         currentServer: state.currentServerId === guildId
           ? {
             ...state.currentServer!,
-            channels: state.currentServer?.channels?.map(c => c.id === channelId ? { ...c, ...data } : c) || []
+            channels: state.currentServer?.channels?.map((c: any) => c.id === channelId ? { ...c, ...data } : c) || []
           } as any
           : state.currentServer
       }))
@@ -193,7 +193,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
           if (s.id === guildId) {
             return {
               ...s,
-              channels: s.channels?.filter(c => c.id !== channelId) || []
+              channels: s.channels?.filter((c: any) => c.id !== channelId) || []
             } as any
           }
           return s
@@ -201,7 +201,7 @@ export const useServerStore = create<ServerState>((set, get) => ({
         currentServer: state.currentServerId === guildId
           ? {
             ...state.currentServer!,
-            channels: state.currentServer?.channels?.filter(c => c.id !== channelId) || []
+            channels: state.currentServer?.channels?.filter((c: any) => c.id !== channelId) || []
           } as any
           : state.currentServer
       }))
@@ -360,13 +360,13 @@ export const useServerStore = create<ServerState>((set, get) => ({
       servers: state.servers.map(s => {
         if (s.id === channel.guildId) {
           const channels = s.channels || []
-          if (channels.some(c => (c as Channel).id === channel.id)) return s
+          if (channels.some((c: any) => c.id === channel.id)) return s
           return { ...s, channels: [...channels, channel] } as any
         }
         return s
       }),
       currentServer: state.currentServerId === channel.guildId
-        ? { ...state.currentServer, channels: [...(state.currentServer?.channels || []).filter(c => (c as Channel).id !== channel.id), channel] } as Server
+        ? { ...state.currentServer, channels: [...(state.currentServer?.channels || []).filter((c: any) => c.id !== channel.id), channel] } as Server
         : state.currentServer
     }))
   },
@@ -380,20 +380,20 @@ export const useServerStore = create<ServerState>((set, get) => ({
     handleChannelUpdate: (guildId, channelId, updates) =>
       set(state => ({
         servers: state.servers.map(s => s.id === guildId
-          ? { ...s, channels: s.channels?.map(c => (c as Channel).id === channelId ? { ...c, ...updates } : c) || [] } as any
+          ? { ...s, channels: s.channels?.map((c: any) => c.id === channelId ? { ...c, ...updates } : c) || [] } as any
           : s),
         currentServer: state.currentServerId === guildId
-          ? { ...state.currentServer!, channels: state.currentServer?.channels?.map(c => (c as Channel).id === channelId ? { ...c, ...updates } : c) || [] } as any
+          ? { ...state.currentServer!, channels: state.currentServer?.channels?.map((c: any) => c.id === channelId ? { ...c, ...updates } : c) || [] } as any
           : state.currentServer
       })),
 
     handleChannelDelete: (guildId, channelId) =>
       set(state => ({
         servers: state.servers.map(s => s.id === guildId
-          ? { ...s, channels: s.channels?.filter(c => (c as Channel).id !== channelId) || [] } as any
+          ? { ...s, channels: s.channels?.filter((c: any) => c.id !== channelId) || [] } as any
           : s),
         currentServer: state.currentServerId === guildId
-          ? { ...state.currentServer!, channels: state.currentServer?.channels?.filter(c => (c as Channel).id !== channelId) || [] } as Server
+          ? { ...state.currentServer!, channels: state.currentServer?.channels?.filter((c: any) => c.id !== channelId) || [] } as Server
           : state.currentServer
       })),
 

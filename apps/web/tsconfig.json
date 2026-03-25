@@ -18,6 +18,7 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
+      "beacon-sdk": ["../../packages/sdk/src/index.ts"],
       "beacon.js": ["../../packages/sdk/src/index.ts"],
       "@beacon/*": ["../../packages/*/src/index.ts"],
       "@/*": ["./src/*"]
