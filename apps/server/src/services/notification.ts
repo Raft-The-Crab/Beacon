@@ -107,6 +107,13 @@ export class NotificationService {
   static async ensureConnection() {
     if (this._verified) return;
 
+    // Bypass completely if Resend is configured (Production/Railway compat)
+    if (this.resend || process.env.RESEND_API_KEY) {
+      logger.success(`[EMAIL] Resend API Key detected on boot. Bypassing unsecure SMTP tests.`);
+      this._verified = true;
+      return;
+    }
+
     const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.gmail.com';
     const initialPort = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10);
     const user = process.env.EMAIL_USER || process.env.SMTP_USER;
