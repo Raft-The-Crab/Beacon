@@ -55,7 +55,7 @@ export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user
     <div className={styles.container}>
       <div
         className={styles.avatarWrapper}
-        style={{ width: size, height: size, minWidth: size, minHeight: size, flexShrink: 0 }}
+        style={{ width: size, height: size, minWidth: size, minHeight: size, maxWidth: '100%', maxHeight: '100%', flexShrink: 0 }}
         onClick={() => fileInputRef.current?.click()}
       >
         {uploading ? (

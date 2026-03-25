@@ -47,8 +47,15 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
     z-index: 100;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .leftNav {
@@ -149,7 +156,8 @@
 
     .mobileOpen {
         transform: translateX(0);
-        box-shadow: 20px 0 64px rgba(0, 0, 0, 0.5);
+        box-shadow: 20px 0 80px rgba(0, 0, 0, 0.6);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .mainContent {

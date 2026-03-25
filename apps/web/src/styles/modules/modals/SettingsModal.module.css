@@ -2155,9 +2155,9 @@
     }
 
     .headerAvatarWrap {
-        width: 100px;
-        height: 100px;
-        bottom: -50px;
+        width: 128px;
+        height: 128px;
+        bottom: -40px;
         left: 16px;
     }
 
@@ -2199,14 +2199,14 @@
     }
 
     .headerAvatarWrap {
-        width: 80px;
-        height: 80px;
-        bottom: -40px;
+        width: 110px;
+        height: 110px;
+        bottom: -32px;
         left: 12px;
     }
 
     .headerBanner {
-        height: 80px;
+        height: 100px;
     }
 
     .appearanceSection h3 {

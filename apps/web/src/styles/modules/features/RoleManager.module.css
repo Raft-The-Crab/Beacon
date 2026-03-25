@@ -313,3 +313,81 @@
   padding-top: var(--space-md);
   border-top: 1px solid var(--border-color);
 }
+
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .rolesList {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 12px;
+    gap: 8px;
+    scrollbar-width: none;
+  }
+
+  .rolesList::-webkit-scrollbar {
+    display: none;
+  }
+
+  .roleItem {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    min-width: 160px;
+  }
+
+  .content {
+    padding: 24px;
+  }
+
+  .roleHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebarHeader {
+    padding: 16px;
+  }
+
+  .roleName {
+    font-size: 13px;
+  }
+
+  .content {
+    padding: 16px;
+  }
+
+  .roleTitleSection h2 {
+    font-size: 20px;
+  }
+
+  .permissionsList {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .permissionItem {
+    padding: 10px 12px;
+  }
+
+  .modal {
+    padding: 16px;
+  }
+}
