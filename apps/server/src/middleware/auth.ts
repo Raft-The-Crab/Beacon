@@ -19,15 +19,18 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
   const payload = AuthService.verifyToken(token) as { id: string, fph?: string } | null
 
-  // Triple-check Fingerprint for Session Hardening
+  // Fingerprint Logging (Soft Mode)
+  // NOTE: Hard-blocking on fingerprint mismatch has been disabled because
+  // cross-origin deployments (e.g. beacon.qzz.io → railway.app) do not
+  // forward the sid_sig cookie reliably, causing every authenticated
+  // request to 401 instantly after login. We log mismatches for audit
+  // purposes but no longer reject the session.
   if (payload?.fph) {
     const sidSig = req.cookies?.sid_sig;
     const currentFpHash = hashFingerprint(req);
 
     if (sidSig !== payload.fph || currentFpHash !== payload.fph) {
-      logger.warn(`[AUTH] Session hijack attempt blocked for User ${payload.id}: Fingerprint mismatch.`);
-      // If there's a mismatch, we reject the session
-      return res.status(401).json({ error: 'Session binding error (Fingerprint mismatch)' });
+      logger.warn(`[AUTH] Fingerprint drift for User ${payload.id} (soft-mode, not blocking).`);
     }
   }
 
