@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { logger } from './logger';
 import dns from 'dns';
 
@@ -85,6 +86,8 @@ export class NotificationService {
     parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10)
   );
 
+  private static resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
   private static _verified = false;
 
   private static getFromAddress(aliasType: 'support' | 'noreply' = 'noreply') {
@@ -147,9 +150,32 @@ export class NotificationService {
   }
 
   private static async sendWithRetry(mailOptions: nodemailer.SendMailOptions, dryRunMeta?: Record<string, string>): Promise<boolean> {
+    const resendKey = process.env.RESEND_API_KEY;
     const user = process.env.EMAIL_USER || process.env.SMTP_USER;
     const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
 
+    // 1. Try Resend API (Preferred for production/cloud)
+    if (this.resend && resendKey) {
+      try {
+        const { data, error } = await this.resend.emails.send({
+          from: String(mailOptions.from || NotificationService.getFromAddress('noreply')),
+          to: String(mailOptions.to),
+          subject: String(mailOptions.subject),
+          html: String(mailOptions.html),
+        });
+
+        if (error) {
+          logger.warn(`[EMAIL] Resend API failed, falling back to SMTP: ${error.message}`);
+        } else {
+          logger.info(`[EMAIL] Sent "${mailOptions.subject}" via Resend: ${data?.id}`);
+          return true;
+        }
+      } catch (error: any) {
+        logger.warn(`[EMAIL] Resend API error: ${error.message}`);
+      }
+    }
+
+    // 2. Dry-Run Case
     if (!user || !pass) {
       const metaLines = dryRunMeta
         ? Object.entries(dryRunMeta).map(([k, v]) => `  ${k}: ${v}`).join('\n')
@@ -164,12 +190,13 @@ export class NotificationService {
       return true;
     }
 
+    // 3. Fallback to SMTP
     await this.ensureConnection();
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         await this.transporter.sendMail(mailOptions);
-        logger.info(`[EMAIL] Sent "${mailOptions.subject}" to ${mailOptions.to}`);
+        logger.info(`[EMAIL] Sent "${mailOptions.subject}" via SMTP to ${mailOptions.to}`);
         return true;
       } catch (error: any) {
         const isRetryable = error.responseCode >= 400 || error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT';
@@ -178,7 +205,7 @@ export class NotificationService {
           logger.warn(`[EMAIL] Attempt ${attempt}/${MAX_RETRIES} failed, retrying in ${delay}ms: ${error.message}`);
           await new Promise(resolve => setTimeout(resolve, delay));
         } else {
-          logger.error(`[EMAIL] Failed after ${attempt} attempts to send "${mailOptions.subject}" to ${mailOptions.to}: ${error.message}`);
+          logger.error(`[EMAIL] Failed after ${attempt} attempts to send "${mailOptions.subject}" via SMTP: ${error.message}`);
           return false;
         }
       }

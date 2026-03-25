@@ -20,43 +20,80 @@ export const Updates: React.FC = () => {
                 {/* V2.1.0 Update */}
                 <motion.div 
                     className={styles.updateCard}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
                 >
-                    <Badge variant="beacon-plus" className={styles.versionBadge}>v2.1.0</Badge>
-                    <span className={styles.date}>March 24, 2026</span>
-                    <h2 className={styles.title}>System Hardening & UI Polish</h2>
+                    <div className={styles.cardHeader}>
+                        <div className={styles.versionInfo}>
+                            <Badge variant="beacon-plus">v2.1.0</Badge>
+                            <span className={styles.date}>March 24, 2026</span>
+                        </div>
+                        <h2 className={styles.title}>Infrastructure Hardening & Phase 1 Tiering</h2>
+                    </div>
+                    
                     <div className={styles.content}>
-                        <p>This update focuses on infrastructure stability and premium tier enforcement.</p>
-                        <ul>
-                            <li><strong>Message Lifecycle:</strong> Implemented 5-day soft-delete retention and automated purge worker.</li>
-                            <li><strong>Tier Restrictions:</strong> 1080p, 1440p, and 4k video streaming now requires Beacon+.</li>
-                            <li><strong>Display Names:</strong> Customized display names are now a premium-only feature.</li>
-                            <li><strong>Security:</strong> Consolidated 2FA logic and aligned gateway ports to 8000 for improved reliability.</li>
-                            <li><strong>UI Fixes:</strong> Resolved sidebar clipping issues and refined the User Profile modal.</li>
-                        </ul>
+                        <p className={styles.summary}>
+                            This release focuses on industrial-grade stability, backend protocol consolidation, and the initial rollout of the Beacon+ resource management system.
+                        </p>
+                        
+                        <div className={styles.section}>
+                            <h3>Protocol & Security</h3>
+                            <ul>
+                                <li><strong>Standardized Gateway:</strong> Unified high-availability communication on Port 8000 across the internal mesh network.</li>
+                                <li><strong>Auth Consolidation:</strong> Centralized 2FA logic within the core AuthController to minimize lateral security risks.</li>
+                                <li><strong>Scoped Logic:</strong> Resolved user-specific mutation edge cases in the reaction engine.</li>
+                            </ul>
+                        </div>
+
+                        <div className={styles.section}>
+                            <h3>Data Lifecycle</h3>
+                            <ul>
+                                <li><strong>Soft-Delete Architecture:</strong> Implemented a 5-day automated retention cycle for message objects prior to permanent database purge.</li>
+                                <li><strong>Automated Cleanup:</strong> Scheduled worker service for background attachment and orphan data removal.</li>
+                            </ul>
+                        </div>
+
+                        <div className={styles.section}>
+                            <h3>Beacon+ Tiering</h3>
+                            <ul>
+                                <li><strong>Resolution Scaling:</strong> Enabled 1080p, 1440p, and 4K bitrate profiles exclusively for premium subscribers.</li>
+                                <li><strong>Identity Customization:</strong> Unlocked custom display name editing for enhanced profile personalization.</li>
+                            </ul>
+                        </div>
                     </div>
                 </motion.div>
 
                 {/* V2.0.0 Update */}
                 <motion.div 
                     className={styles.updateCard}
-                    initial={{ opacity: 0, x: 20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
                 >
-                    <Badge variant="info" className={styles.versionBadge}>v2.0.0</Badge>
-                    <span className={styles.date}>March 15, 2026</span>
-                    <h2 className={styles.title}>The Next Generation of Chat</h2>
+                    <div className={styles.cardHeader}>
+                        <div className={styles.versionInfo}>
+                            <Badge variant="info">v2.0.0</Badge>
+                            <span className={styles.date}>March 15, 2026</span>
+                        </div>
+                        <h2 className={styles.title}>The Next Generation Protocol</h2>
+                    </div>
+
                     <div className={styles.content}>
-                        <p>Welcome to Beacon V2. A complete rewrite from the ground up focused on privacy and speed.</p>
-                        <ul>
-                            <li><strong>End-to-End Encryption:</strong> All direct messages are now secured with E2EE by default.</li>
-                            <li><strong>New Mesh Engine:</strong> Experience ultra-smooth gradients and glassmorphism across the entire UI.</li>
-                            <li><strong>Sub-channels:</strong> Organize your servers with nested channel hierarchies.</li>
-                            <li><strong>Global Search:</strong> Instantly find messages, users, and servers with our new Omni-Search.</li>
-                        </ul>
+                        <p className={styles.summary}>
+                            Beacon V2 represents a fundamental shift in our architectural philosophy, prioritizing end-to-end privacy and low-latency interaction.
+                        </p>
+                        
+                        <div className={styles.section}>
+                            <h3>Core Systems</h3>
+                            <ul>
+                                <li><strong>E2EE Default:</strong> Native integration of noise-protocol based encryption for all P2P and Group DM sessions.</li>
+                                <li><strong>Omni-Search:</strong> Deployed a high-performance indexing microservice for sub-millisecond data retrieval.</li>
+                                <li><strong>The Mesh:</strong> Entirely rewritten UI using our proprietary glassmorphism design tokens.</li>
+                            </ul>
+                        </div>
                     </div>
                 </motion.div>
             </div>

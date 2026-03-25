@@ -41,6 +41,7 @@
     "nodemailer": "^8.0.3",
     "nsfwjs": "^4.1.0",
     "qrcode": "^1.5.3",
+    "resend": "^6.9.4",
     "socket.io": "^4.7.0",
     "streamifier": "^0.1.1",
     "uuid": "^9.0.1",
