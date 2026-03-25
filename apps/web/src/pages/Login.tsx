@@ -57,7 +57,33 @@ export function Login() {
     return () => clearTimeout(timer)
   }, [email, username, isLogin])
 
+  // Check for any pending redirect results (if popup fell back to redirect)
+  useEffect(() => {
+    import('firebase/auth').then(({ getRedirectResult }) => {
+      getRedirectResult(auth).then(async (result) => {
+        if (result) {
+          const idToken = await result.user.getIdToken()
+          await authSocialLogin(idToken)
+          showToast('Welcome back with Google!', 'success')
+          navigate('/channels/@me')
+        }
+      }).catch((error) => {
+        if (error.code === 'auth/missing-initial-state') {
+          showToast('Google login failed: Please open in a standard browser (Safari/Chrome).', 'error')
+        } else if (error.code !== 'auth/popup-closed-by-user') {
+          showToast(error.message || 'Google login failed', 'error')
+        }
+      })
+    })
+  }, [authSocialLogin, navigate, showToast])
+
   const handleGoogleLogin = async () => {
+    const isAppBrowser = /FBAN|FBAV|Messenger|Instagram|LinkedIn|Snapchat|TikTok/i.test(navigator.userAgent)
+    if (isAppBrowser) {
+      showToast('To use Google Login, please tap the three dots and select "Open in System Browser".', 'error')
+      return
+    }
+
     setLoading(true)
     try {
       const result = await signInWithPopup(auth, googleProvider)
@@ -66,7 +92,9 @@ export function Login() {
       showToast('Welcome back with Google!', 'success')
       navigate('/channels/@me')
     } catch (error: any) {
-      if (error.code !== 'auth/popup-closed-by-user') {
+      if (error.code === 'auth/missing-initial-state') {
+        showToast('Google login failed: Please open in a standard browser (Safari/Chrome).', 'error')
+      } else if (error.code !== 'auth/popup-closed-by-user') {
         showToast(error.message || 'Google login failed', 'error')
       }
     } finally {
