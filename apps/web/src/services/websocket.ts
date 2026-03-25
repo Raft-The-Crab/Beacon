@@ -1,4 +1,5 @@
 import type { WSEventType, WSPayload } from 'beacon-sdk'
+import { WEB_SDK_ENDPOINTS } from '../lib/beaconSdk'
 import { API_CONFIG } from '../config/api'
 
 // Conditional Tauri types
@@ -44,7 +45,11 @@ export class BeaconWebSocket {
     if (this.ws?.readyState === WebSocket.OPEN) return
 
     try {
-      const url = `${API_CONFIG.WS_URL}?token=${encodeURIComponent(token)}`
+      // Prefer SDK-resolved WS URL (correctly points to Railway backend)
+      // Falls back to API_CONFIG.WS_URL which may resolve to CDN domain
+      const wsUrl = WEB_SDK_ENDPOINTS.wsUrl || API_CONFIG.WS_URL
+      const url = `${wsUrl}?token=${encodeURIComponent(token)}`
+      console.log('[WebSocket] Connecting to:', wsUrl)
       this.ws = new WebSocket(url)
       this.isIntentionalClose = false
 

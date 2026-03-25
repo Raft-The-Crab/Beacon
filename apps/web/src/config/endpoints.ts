@@ -105,7 +105,12 @@ const envApiUrl = (import.meta as any).env?.VITE_API_URL || (import.meta as any)
 const envWsUrl = (import.meta as any).env?.VITE_GATEWAY_URL
 
 const configuredApiUrl = envApiUrl || '/api'
-const configuredWsUrl = envWsUrl || '/gateway'
+
+// CRITICAL: If no explicit gateway URL is set, derive it from the API URL.
+// This prevents the WS URL from defaulting to the frontend CDN domain
+// (e.g. beacon.qzz.io/gateway) which doesn't support WebSocket upgrades.
+// Instead, it will correctly resolve to wss://beacon-v1-api.up.railway.app/gateway
+const configuredWsUrl = envWsUrl || undefined
 
 export const API_BASE_URL = resolveApiBaseUrl(configuredApiUrl)
 export const WS_BASE_URL = resolveWebSocketUrl(configuredWsUrl, configuredApiUrl)
