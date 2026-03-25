@@ -21,18 +21,16 @@ function sanitizePrivateKey(key: string | undefined): string | null {
     sanitized = sanitized.replace(/\\n/g, '\n');
 
     // 3. Robust PEM reconstruction
-    // If it's a single line (no newlines) but has headers, it might be smashed together
     const header = '-----BEGIN PRIVATE KEY-----';
     const footer = '-----END PRIVATE KEY-----';
     
-    // Remove headers/footers temporarily to clean the core base64 content
+    // Remove headers/footers and ALL whitespace/newlines to get clean base64
     let core = sanitized
         .replace(header, '')
         .replace(footer, '')
-        .replace(/\s+/g, ''); // Remove ALL whitespace/newlines from the base64 part
+        .replace(/\s+/g, '');
 
-    // Reconstruct with standard 64-char wrapping if possible, or just keep it as one block
-    // Firebase Admin SDK is usually okay with a single-line base64 string between headers
+    // Reconstruct with standard headers and mandatory newlines
     return `${header}\n${core}\n${footer}\n`;
 }
 

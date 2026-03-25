@@ -96,8 +96,10 @@ export class BeaconServer {
                 if (!origin) return callback(null, true);
                 const normalized = origin.toLowerCase().trim();
                 
-                // 1. Check explicit list from .env
-                const isAllowedExplicitly = allowedOrigins.includes(normalized);
+                // 1. Check explicit list from .env or known production domains
+                const isAllowedExplicitly = allowedOrigins.includes(normalized) || 
+                                           normalized === 'https://beacon.qzz.io' ||
+                                           normalized === 'https://beacon-v1.pages.dev';
                 
                 // 2. Check dynamic domains (*.qzz.io, *.pages.dev)
                 const isDynamicAllowed = normalized.endsWith('.qzz.io') || 
@@ -111,7 +113,6 @@ export class BeaconServer {
                                normalized.startsWith('http://127.0.0.1:');
 
                 if (isAllowedExplicitly || isDynamicAllowed || isLocal) {
-                    logger.success(`[CORS] \u2705 Allowed origin: ${origin}`);
                     callback(null, true);
                 } else {
                     logger.warn(`[CORS] \u274c Blocked origin: ${origin}`);
@@ -181,17 +182,13 @@ export class BeaconServer {
         this.app.use(responseWrapper);
         
         // v3: Cloudinary HTTPS rewriting middleware — fixes legacy insecure URLs in database
-        this.app.use((_req, res, next) => {
+        this.app.use((req, res, next) => {
             const originalSend = res.send;
             res.send = function(body) {
-                if (typeof body === 'string' && body.includes('http://res.cloudinary.com')) {
-                    body = body.replace(/http:\/\/res\.cloudinary\.com/g, 'https://res.cloudinary.com');
-                } else if (body && typeof body === 'object' && !Buffer.isBuffer(body)) {
-                    // For JSON responses already parsed
-                    let bodyStr = JSON.stringify(body);
-                    if (bodyStr.includes('http://res.cloudinary.com')) {
-                        bodyStr = bodyStr.replace(/http:\/\/res\.cloudinary\.com/g, 'https://res.cloudinary.com');
-                        return originalSend.call(this, JSON.parse(bodyStr));
+                // Only attempt rewrite on success/healthy responses to avoid masking errors or 502s
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    if (typeof body === 'string' && body.includes('http://res.cloudinary.com')) {
+                        body = body.replace(/http:\/\/res\.cloudinary\.com/g, 'https://res.cloudinary.com');
                     }
                 }
                 return originalSend.call(this, body);
