@@ -274,3 +274,34 @@
     border-radius: 10px;
   }
 }
+
+@media (max-width: 380px) {
+  .inputContainer {
+    padding: 4px 6px calc(8px + env(safe-area-inset-bottom) + var(--keyboard-offset));
+  }
+  
+  .magicButton,
+  .pickerWrapper {
+    display: none !important;
+  }
+  
+  .iconButton {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .sendButton {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .textarea {
+    font-size: 14px;
+    padding: 8px 2px;
+  }
+  
+  .inputWrapper {
+    padding: 2px 4px;
+    gap: 2px;
+  }
+}

@@ -693,3 +693,29 @@
     bottom: 76px;
   }
 }
+
+@media (max-width: 360px) {
+  .header {
+    height: 44px;
+    padding: 4px 6px;
+  }
+  
+  .channelName {
+    font-size: 13px;
+    max-width: 120px;
+  }
+  
+  .headerButton {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .dateSeparator {
+    padding: 8px 8px 4px;
+  }
+  
+  .dateLabel {
+    font-size: 10px;
+    padding: 2px 10px;
+  }
+}

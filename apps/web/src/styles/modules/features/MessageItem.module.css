@@ -636,6 +636,31 @@
     display: none !important; /* Hide floating actions on mobile to prevent overflow */
   }
 }
+
+@media (max-width: 380px) {
+  .message {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+  
+  .avatarArea, .avatar, .continueTime {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .content {
+    padding: 8px 12px;
+    max-width: calc(100% - 40px);
+  }
+  
+  .author {
+    font-size: 13px;
+  }
+  
+  .text {
+    font-size: 13.5px;
+  }
+}
 .downloadBtn {
   position: absolute;
   top: 8px;
