@@ -11,6 +11,8 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "start": "cd apps/server && node server-railway.js",
+    "build": "npm run build:server",
     "dev:web": "cd apps/web && npm run dev",
     "dev:desktop": "cd apps/desktop && npm run dev",
     "dev:mobile": "cd apps/mobile && npm run dev",
@@ -65,7 +67,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.2.0",
     "bcryptjs": "^3.0.3",
-    "beacon-sdk": "file:packages\\sdk",
+    "beacon-sdk": "file:packages/sdk",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
