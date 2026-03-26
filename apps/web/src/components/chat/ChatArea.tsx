@@ -646,19 +646,24 @@ export function ChatArea({ channelId }: ChatAreaProps) {
               const isRecent = prevMsg && (new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime() < 5 * 60 * 1000)
               const isContinuing = isSameUser && isRecent
               
-              // Date separator logic - refined for robustness
+              // Date separator logic - refined for extreme robustness
               const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date()
               const prevDate = prevMsg?.createdAt ? new Date(prevMsg.createdAt) : null
               
               const isInvalidMsgDate = isNaN(msgDate.getTime())
               const isInvalidPrevDate = prevDate && isNaN(prevDate.getTime())
               
+              // Use stable string keys for date comparison (YYYY-MM-DD)
+              const getDateKey = (d: Date | null) => {
+                if (!d || isNaN(d.getTime())) return null
+                return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+              }
+              
+              const msgDateKey = getDateKey(msgDate)
+              const prevDateKey = getDateKey(prevDate)
+              
               // Only show if it's the first message OR if the date has changed
-              const showDateSep = !prevMsg || 
-                                 (!isInvalidMsgDate && !isInvalidPrevDate && prevDate && 
-                                  (msgDate.getFullYear() !== prevDate.getFullYear() || 
-                                   msgDate.getMonth() !== prevDate.getMonth() || 
-                                   msgDate.getDate() !== prevDate.getDate()))
+              const showDateSep = !prevMsg || (msgDateKey !== prevDateKey && msgDateKey !== null)
               
               const today = new Date()
               const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)

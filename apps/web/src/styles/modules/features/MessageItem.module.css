@@ -6,7 +6,8 @@
   transition: background-color 0.1s ease;
   min-width: 0;
   width: 100%;
-  overflow-x: hidden; /* Prevent actions or long text from pushing width */
+  max-width: 100%;
+  overflow-x: hidden !important; /* Force containment of all internal elements */
   border-radius: 12px;
   margin: 1px 0;
 }
@@ -632,10 +633,7 @@
 
 @media (max-width: 768px) {
   .actions {
-    right: 8px;
-    top: -14px;
-    scale: 0.9;
-    transform-origin: right center;
+    display: none !important; /* Hide floating actions on mobile to prevent overflow */
   }
 }
 .downloadBtn {
