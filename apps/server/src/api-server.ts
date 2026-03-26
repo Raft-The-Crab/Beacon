@@ -215,7 +215,7 @@ export class BeaconServer {
         this.app.set('trust proxy', 1);
 
         this.app.use((req: any, _res: express.Response, next: express.NextFunction) => {
-            logger.info(`${req.method} ${req.path}`, req.id);
+            logger.info(`${req.method} ${req.path} | RequestID: ${req.id}`, req.id);
             next();
         });
 
@@ -229,7 +229,13 @@ export class BeaconServer {
         this.app.get('/api/health', getHealth); // Alias
         this.app.get('/api/ping', (_req, res) => res.json({ status: 'ok', message: 'pong', timestamp: new Date().toISOString() }));
         this.app.use('/api', apiRouter);
-        this.app.use(notFoundHandler);
+        
+        // v3.1: Catch-all diagnostics for production 404s
+        this.app.use((req, res, next) => {
+            logger.warn(`[404] \u26a0\ufe0f Route not found: ${req.method} ${req.path} | Origin: ${req.headers.origin || 'none'}`);
+            notFoundHandler(req, res);
+        });
+
         this.app.use(globalErrorHandler);
     }
 

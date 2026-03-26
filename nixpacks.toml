@@ -5,7 +5,7 @@ nixPkgs = ["nodejs_22", "pnpm-10_x", "npm-10_x", "openssl"]
 cmds = ["npm install --legacy-peer-deps --no-audit --no-fund --include=dev"]
 
 [phases.build]
-cmds = ["cd packages/sdk && npm run build && cd ../../apps/server && npm run build"]
+cmds = ["cd packages/sdk && npm run build", "cd apps/server && npm run build"]
 
 [start]
 cmd = "cd apps/server && npm run start:railway"
