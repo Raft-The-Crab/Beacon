@@ -58,6 +58,10 @@
     "typescript": "^5.9.3"
   },
   "overrides": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@types/express": "4.17.25",
     "@types/express-serve-static-core": "4.19.8",
     "@types/cookie-parser": "1.4.6"
