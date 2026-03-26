@@ -653,15 +653,28 @@ export function ChatArea({ channelId }: ChatAreaProps) {
               const isInvalidMsgDate = isNaN(msgDate.getTime())
               const isInvalidPrevDate = prevDate && isNaN(prevDate.getTime())
               
+              // Only show if it's the first message OR if the date has changed
               const showDateSep = !prevMsg || 
-                                 (!isInvalidMsgDate && !isInvalidPrevDate && prevDate && msgDate.toDateString() !== prevDate.toDateString())
+                                 (!isInvalidMsgDate && !isInvalidPrevDate && prevDate && 
+                                  (msgDate.getFullYear() !== prevDate.getFullYear() || 
+                                   msgDate.getMonth() !== prevDate.getMonth() || 
+                                   msgDate.getDate() !== prevDate.getDate()))
               
               const today = new Date()
               const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)
-              let dateLabel = !isInvalidMsgDate ? msgDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown Date'
+              
+              let dateLabel = 'Unknown Date'
               if (!isInvalidMsgDate) {
-                if (msgDate.toDateString() === today.toDateString()) dateLabel = 'Today'
-                else if (msgDate.toDateString() === yesterday.toDateString()) dateLabel = 'Yesterday'
+                const isToday = msgDate.getFullYear() === today.getFullYear() && 
+                              msgDate.getMonth() === today.getMonth() && 
+                              msgDate.getDate() === today.getDate()
+                const isYesterday = msgDate.getFullYear() === yesterday.getFullYear() && 
+                                  msgDate.getMonth() === yesterday.getMonth() && 
+                                  msgDate.getDate() === yesterday.getDate()
+                
+                if (isToday) dateLabel = 'Today'
+                else if (isYesterday) dateLabel = 'Yesterday'
+                else dateLabel = msgDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
               }
 
               return (

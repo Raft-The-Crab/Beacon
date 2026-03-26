@@ -1,12 +1,14 @@
 .message {
-  display: flex;
-  gap: 12px;
-  padding: 8px 16px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  transition: background-color 0.1s ease;
+  min-width: 0;
+  width: 100%;
+  overflow-x: hidden; /* Prevent actions or long text from pushing width */
   border-radius: 12px;
-  margin: 1px 8px;
-  animation: messageSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: 1px 0;
 }
 
 .withActions {
@@ -612,6 +614,30 @@
   width: fit-content;
 }
 
+.actions {
+  position: absolute;
+  top: -12px;
+  right: 16px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-xl);
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 768px) {
+  .actions {
+    right: 8px;
+    top: -14px;
+    scale: 0.9;
+    transform-origin: right center;
+  }
+}
 .downloadBtn {
   position: absolute;
   top: 8px;
@@ -956,10 +982,11 @@
 
 .audioMainContent {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 0;
+  max-width: calc(100% - 40px); /* Account for avatar on mobile */
 }
 
 .audioHeader {
@@ -1458,8 +1485,8 @@
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Mobile ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 @media (max-width: 768px) {
   .message {
+    padding: 6px 12px;
     gap: 10px;
-    padding: 4px 12px;
   }
 
   .avatar {

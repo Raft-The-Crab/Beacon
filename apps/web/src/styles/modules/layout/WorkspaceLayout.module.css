@@ -6,6 +6,7 @@
     padding: 14px;
     gap: 14px;
     overflow: hidden;
+    overflow-x: hidden; /* Strict horizontal overflow prevention */
     font-family: var(--font-family);
     background:
         radial-gradient(circle at 8% 12%, rgba(116, 140, 255, 0.1), transparent 34%),
@@ -77,7 +78,7 @@
 
 .mainContent {
     flex: 1;
-    min-width: 400px; /* Ensure chat doesn't get squashed too much */
+    min-width: 0; /* Changed from 400px to prevent mobile overflow */
     background: rgba(15, 15, 18, 0.4);
     backdrop-filter: blur(12px);
     display: flex;

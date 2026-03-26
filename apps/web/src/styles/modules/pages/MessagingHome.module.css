@@ -286,10 +286,11 @@
 .topBarLeft {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   height: 100%;
   flex: 1;
   min-width: 0;
+  overflow: hidden; /* Prevent children from pushing parent width */
 }
 
 .topBarRight {
@@ -334,10 +335,15 @@
 
 .divider {
   width: 1px;
-  height: 24px;
-  background: rgba(255, 255, 255, 0.15);
-  margin: 0 24px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 12px;
   flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .divider {
+    display: none;
+  }
 }
 
 /* Tabs */
@@ -347,6 +353,12 @@
   gap: 8px;
   height: 100%;
   min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 12px;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
@@ -381,22 +393,29 @@
 }
 
 .addFriendBtn {
-  height: 32px;
-  padding: 0 20px;
+  height: 28px;
+  padding: 0 12px;
   background: var(--status-success);
   background-image: linear-gradient(135deg, var(--status-success) 0%, #2ecc71 100%);
   color: white;
   border-radius: var(--radius-md);
-  font-weight: 800;
-  font-size: 13px;
+  font-weight: 700;
+  font-size: 12px;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   white-space: nowrap;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  margin-left: 8px;
-  box-shadow: 0 4px 15px rgba(35, 165, 89, 0.3);
+  margin-left: 4px;
+  box-shadow: 0 4px 12px rgba(35, 165, 89, 0.25);
+  flex-shrink: 0;
+}
+@media (max-width: 480px) {
+  .addFriendBtn {
+    padding: 0 8px;
+    font-size: 11px;
+  }
 }
 
 .addFriendBtn:hover {
