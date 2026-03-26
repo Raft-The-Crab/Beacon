@@ -108,7 +108,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({ embed }) => {
           )}
           <span className={styles.footerText}>
             {embed.footer?.text}
-            {embed.footer && embed.timestamp && ' • '}
+            {embed.footer && embed.timestamp && ' â€¢ '}
             {embed.timestamp && new Date(embed.timestamp).toLocaleString()}
           </span>
         </div>
