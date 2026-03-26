@@ -645,18 +645,24 @@ export function ChatArea({ channelId }: ChatAreaProps) {
               const isSameUser = prevMsg?.authorId === msg.authorId
               const isRecent = prevMsg && (new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime() < 5 * 60 * 1000)
               const isContinuing = isSameUser && isRecent
-
-              // Date separator logic
-              const _rawMd = msg.createdAt ? new Date(msg.createdAt) : null
-              const msgDate = _rawMd && !isNaN(_rawMd.getTime()) ? _rawMd : new Date()
-              const _rawPd = prevMsg?.createdAt ? new Date(prevMsg.createdAt) : null
-              const prevDate = _rawPd && !isNaN(_rawPd.getTime()) ? _rawPd : null
-              const showDateSep = !prevDate || msgDate.toDateString() !== prevDate.toDateString()
+              
+              // Date separator logic - refined for robustness
+              const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date()
+              const prevDate = prevMsg?.createdAt ? new Date(prevMsg.createdAt) : null
+              
+              const isInvalidMsgDate = isNaN(msgDate.getTime())
+              const isInvalidPrevDate = prevDate && isNaN(prevDate.getTime())
+              
+              const showDateSep = !prevMsg || 
+                                 (!isInvalidMsgDate && !isInvalidPrevDate && prevDate && msgDate.toDateString() !== prevDate.toDateString())
+              
               const today = new Date()
               const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)
-              let dateLabel = msgDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-              if (msgDate.toDateString() === today.toDateString()) dateLabel = 'Today'
-              else if (msgDate.toDateString() === yesterday.toDateString()) dateLabel = 'Yesterday'
+              let dateLabel = !isInvalidMsgDate ? msgDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown Date'
+              if (!isInvalidMsgDate) {
+                if (msgDate.toDateString() === today.toDateString()) dateLabel = 'Today'
+                else if (msgDate.toDateString() === yesterday.toDateString()) dateLabel = 'Yesterday'
+              }
 
               return (
                 <div key={msg.id}>

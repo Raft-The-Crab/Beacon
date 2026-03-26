@@ -9,7 +9,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { useUIStore } from '../../stores/useUIStore'
 import { MarkdownRenderer } from '../ui/MarkdownRenderer'
 import { useProfileArtStore } from '../../stores/useProfileArtStore'
-// import { UserPopoverCard } from './UserPopoverCard'
+import { CustomVideoPlayer, CustomAudioPlayer } from './MediaPlayers'
 import { resolveAssetUrl } from '../../config/endpoints'
 import styles from '../../styles/modules/features/MessageItem.module.css'
 
@@ -441,48 +441,11 @@ export const MessageItem = React.memo(function MessageItem({
                   }
 
                   if (isVideo) {
-                     return (
-                      <div className={styles.mediaWrapper}>
-                        <video
-                          src={url}
-                          controls
-                          className={styles.videoAttachment}
-                          preload="metadata"
-                        />
-                        {downloadBtn}
-                      </div>
-                    )
+                    return <CustomVideoPlayer src={url} filename={attachment.filename} />
                   }
 
                   if (isAudio) {
-                    return (
-                      <div className={styles.audioAttachmentContainer}>
-                        <div className={styles.audioPlayer}>
-                          <button 
-                            className={styles.audioPlayBtn}
-                            onClick={(e) => {
-                              const audio = e.currentTarget.parentElement?.querySelector('audio');
-                              if (audio) {
-                                if (audio.paused) audio.play();
-                                else audio.pause();
-                              }
-                            }}
-                          >
-                            <Volume2 size={20} />
-                          </button>
-                          <div className={styles.audioInfo}>
-                            <span className={styles.audioName}>{attachment.filename || 'Audio Message'}</span>
-                            <span className={styles.audioMeta}>{formatSize(attachment.size)}</span>
-                          </div>
-                          <audio
-                            src={url}
-                            className={styles.hiddenAudio}
-                            preload="metadata"
-                          />
-                          {downloadBtn}
-                        </div>
-                      </div>
-                    )
+                    return <CustomAudioPlayer src={url} filename={attachment.filename} />
                   }
 
                   return (
