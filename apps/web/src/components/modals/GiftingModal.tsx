@@ -3,7 +3,7 @@ import { Gift, X, Search, Send } from 'lucide-react'
 import { Button } from '../ui'
 import { useShopStore } from '../../stores/useShopStore'
 import { useUserListStore } from '../../stores/useUserListStore'
-import { api } from '../../lib/api'
+import { apiClient } from '../../services/apiClient'
 import styles from '../../styles/components/modals/GiftingModal.module.css'
 
 interface GiftingModalProps {
@@ -45,7 +45,7 @@ export function GiftingModal({ item, onClose }: GiftingModalProps) {
             return
         }
         try {
-            const { data } = await api.get('/friends/search', { params: { query } })
+            const { data } = await apiClient.request('GET', `/friends/search?query=${encodeURIComponent(query)}`)
             const remoteRows = Array.isArray(data) ? data : []
             if (remoteRows.length > 0) {
                 setResults(remoteRows.map((friend: any) => ({

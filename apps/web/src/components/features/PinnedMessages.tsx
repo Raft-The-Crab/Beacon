@@ -1,6 +1,6 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from '../../styles/modules/features/PinnedMessages.module.css';
-import { api } from '../../lib/api';
+import { apiClient } from '../../services/apiClient';
 
 interface Message {
   id: string;
@@ -27,7 +27,7 @@ export function PinnedMessages({ channelId, channelName, onClose, onJumpToMessag
   const loadPins = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/channels/${channelId}/pins`);
+      const { data } = await apiClient.request('GET', `/channels/${channelId}/pins`);
       setPins(data);
     } catch (err) {
       console.error('Failed to load pinned messages:', err);
@@ -38,7 +38,7 @@ export function PinnedMessages({ channelId, channelName, onClose, onJumpToMessag
 
   const handleUnpin = async (messageId: string) => {
     try {
-      await api.delete(`/channels/${channelId}/pins/${messageId}`);
+      await apiClient.request('DELETE', `/channels/${channelId}/pins/${messageId}`);
       setPins((prev) => prev.filter((m) => m.id !== messageId));
     } catch (err) {
       console.error('Failed to unpin message:', err);

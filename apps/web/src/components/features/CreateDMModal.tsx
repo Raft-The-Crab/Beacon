@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { MessageSquarePlus, Search, User } from 'lucide-react'
 import { useUserListStore } from '../../stores/useUserListStore'
 import { useDMStore } from '../../stores/useDMStore'
-import { api } from '../../lib/api'
+import { apiClient } from '../../services/apiClient'
 import { Avatar } from '../ui'
 import styles from '../../styles/modules/features/CreateDMModal.module.css'
 
@@ -37,7 +37,7 @@ export function CreateDMModal({ onClose }: CreateDMModalProps) {
         if (selectedFriendIds.length === 0) return
         setIsCreatingGroup(true)
         try {
-            const { data } = await api.post('/dms', { userIds: selectedFriendIds })
+            const { data } = await apiClient.request('POST', '/dms', { userIds: selectedFriendIds })
             await fetchChannels()
             if (data?.id) {
                 setActiveChannel(data.id)

@@ -3,7 +3,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { api } from '../../lib/api';
+import { apiClient } from '../../services/apiClient';
 import styles from '../../styles/modules/friends/Friends.module.css';
 
 interface Friend {
@@ -28,7 +28,7 @@ export const Friends: React.FC = () => {
 
   const loadFriends = async () => {
     try {
-      const { data } = await api.get('/friends');
+      const { data } = await apiClient.request('GET', '/friends');
       setFriends(data);
     } catch (error) {
       console.error('Failed to load friends:', error);
@@ -37,7 +37,7 @@ export const Friends: React.FC = () => {
 
   const loadPending = async () => {
     try {
-      const { data } = await api.get('/friends/pending');
+      const { data } = await apiClient.request('GET', '/friends/pending');
       setPending(data);
     } catch (error) {
       console.error('Failed to load pending:', error);
@@ -56,7 +56,7 @@ export const Friends: React.FC = () => {
     const [, username, discriminator] = match;
 
     try {
-      await api.post('/friends/request', { username, discriminator });
+      await apiClient.request('POST', '/friends/request', { username, discriminator });
       setAddFriendInput('');
       alert('Friend request sent!');
     } catch (error: any) {
@@ -66,7 +66,7 @@ export const Friends: React.FC = () => {
 
   const handleAcceptRequest = async (friendId: string) => {
     try {
-      await api.put(`/friends/${friendId}/accept`);
+      await apiClient.request('PUT', `/friends/${friendId}/accept`);
       loadFriends();
       loadPending();
     } catch (error) {
@@ -78,7 +78,7 @@ export const Friends: React.FC = () => {
     if (!confirm('Remove this friend?')) return;
 
     try {
-      await api.delete(`/friends/${friendId}`);
+      await apiClient.request('DELETE', `/friends/${friendId}`);
       setFriends(friends.filter(f => f.id !== friendId));
     } catch (error) {
       console.error('Failed to remove friend:', error);
@@ -89,7 +89,7 @@ export const Friends: React.FC = () => {
     if (!confirm('Block this user?')) return;
 
     try {
-      await api.post('/users/@me/block', { blockedUserId: userId });
+      await apiClient.request('POST', '/users/@me/block', { blockedUserId: userId });
       setFriends(friends.filter(f => f.id !== userId));
       loadFriends();
     } catch (error) {

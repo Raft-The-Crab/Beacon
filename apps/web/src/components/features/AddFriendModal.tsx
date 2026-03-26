@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { UserPlus, Sparkles, Send } from 'lucide-react'
-import { api } from '../../lib/api'
+import { apiClient } from '../../services/apiClient'
 import { useToast } from '../ui'
 import styles from '../../styles/modules/features/AddFriendModal.module.css'
 
@@ -24,7 +24,8 @@ export function AddFriendModal({ onClose, onSuccess }: AddFriendModalProps) {
                 ? { username: match[1].trim(), discriminator: match[2] }
                 : { username: trimmed }
 
-            await api.post('/friends/request', payload)
+            const res = await apiClient.request('POST', '/friends/request', payload)
+            if (!res.success) throw new Error(res.error)
             show(`Friend request sent to ${trimmed}!`, 'success')
             setInputValue("")
             onSuccess?.()

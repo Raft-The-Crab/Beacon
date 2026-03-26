@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useBeacoinStore } from '../../../stores/useBeacoinStore'
 import { useToast, Button, Input } from '../../ui'
-import { api } from '../../../lib/api'
+import { apiClient } from '../../../services/apiClient'
 import styles from '../../../styles/modules/modals/SettingsModal.module.css'
 
 type RedeemReward =
@@ -21,7 +21,9 @@ export const RedeemTab: React.FC = () => {
             setRedeeming(true)
             setRedeemRevealState('opening')
             setRedeemReward(null)
-            const { data } = await api.post('/users/@me/beacoin/redeem', { code: redeemCode.trim() })
+            const res = await apiClient.request('POST', '/users/@me/beacoin/redeem', { code: redeemCode.trim() })
+            if (!res.success) throw new Error(res.error)
+            const data = res.data as any
             await fetchWallet()
             setRedeemCode('')
 

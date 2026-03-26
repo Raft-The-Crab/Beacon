@@ -1,7 +1,7 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import styles from '../../styles/modules/modals/CustomStatusModal.module.css';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { api } from '../../lib/api';
+import { apiClient } from '../../services/apiClient';
 
 interface Props {
   onClose: () => void;
@@ -38,7 +38,7 @@ export function CustomStatusModal({ onClose }: Props) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { data: updated } = await api.patch('/users/me', { status, customStatus });
+      const { data: updated } = await apiClient.request('PATCH', '/users/me', { status, customStatus });
       setUser({ ...user!, ...updated });
       onClose();
     } catch (err) {
@@ -52,7 +52,7 @@ export function CustomStatusModal({ onClose }: Props) {
     setCustomStatus('');
     setSaving(true);
     try {
-      const { data: updated } = await api.patch('/users/me', { customStatus: null });
+      const { data: updated } = await apiClient.request('PATCH', '/users/me', { customStatus: null });
       setUser({ ...user!, ...updated });
       onClose();
     } catch (_) {} finally {

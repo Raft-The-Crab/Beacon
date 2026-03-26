@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Music, Plus, Loader2, Trash2 } from 'lucide-react'
 import { Button, Modal, Input } from '../ui'
-import { api } from '../../lib/api'
+import { apiClient } from '../../services/apiClient'
 import styles from '../../styles/modules/features/ServerSoundboard.module.css'
 
 interface Sound {
@@ -28,7 +28,7 @@ export function ServerSoundboard({ guildId }: { guildId: string }) {
     const fetchSounds = async () => {
         try {
             setLoading(true)
-            const { data } = await api.get(`/guilds/${guildId}/sounds`)
+            const { data } = await apiClient.request('GET', `/guilds/${guildId}/sounds`)
             setSounds(data)
         } catch (err) {
             console.error(err)
@@ -48,14 +48,12 @@ export function ServerSoundboard({ guildId }: { guildId: string }) {
             // 1. Upload file to media API
             const formData = new FormData()
             formData.append('file', file)
-            const uploadRes = await api.post('/media/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            })
+            const uploadRes = await apiClient.request('POST', '/media/upload', formData)
 
             const fileUrl = uploadRes.data.url
 
             // 2. Create sound entry
-            await api.post(`/guilds/${guildId}/sounds`, {
+            await apiClient.request('POST', `/guilds/${guildId}/sounds`, {
                 name: newName,
                 url: fileUrl,
                 emoji: newEmoji
@@ -74,7 +72,7 @@ export function ServerSoundboard({ guildId }: { guildId: string }) {
 
     const handleDelete = async (soundId: string) => {
         try {
-            await api.delete(`/guilds/${guildId}/sounds/${soundId}`)
+            await apiClient.request('DELETE', `/guilds/${guildId}/sounds/${soundId}`)
             setSounds(s => s.filter(x => x.id !== soundId))
         } catch (err) {
             console.error(err)

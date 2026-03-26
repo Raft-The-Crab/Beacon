@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Edit3, Save, Palette, Globe, Shield, Activity } from 'lucide-react';
 import { Button, Badge, useToast } from '../ui';
 import { UserPresenceWidget } from './UserPresenceWidget';
-import { api } from '../../lib/api';
+import { apiClient } from '../../services/apiClient';
 import styles from '../../styles/modules/features/ProfileEnhanced.module.css';
 
 interface ProfileTheme {
@@ -21,7 +21,7 @@ export const ProfileEnhanced: React.FC<{ user: any; isOwn?: boolean }> = ({ user
   const handleSave = async () => {
     setLoading(true);
     try {
-      await api.patch('/users/profile', {
+      await apiClient.request('PATCH', '/users/profile', {
         bio,
         accentColor: customTheme.accentColor
       });
