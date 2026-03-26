@@ -54,9 +54,9 @@
     "lightningcss-linux-x64-gnu": "^1.29.1",
     "lightningcss-linux-x64-musl": "^1.29.1",
     "lightningcss-win32-x64-msvc": "^1.29.1",
-    "@tailwindcss/oxide-linux-x64-gnu": "^4.0.0",
-    "@tailwindcss/oxide-linux-x64-musl": "^4.0.0",
-    "@tailwindcss/oxide-win32-x64-msvc": "^4.0.0",
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.2.1",
+    "@tailwindcss/oxide-linux-x64-musl": "^4.2.1",
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.2.1",
     "@rollup/rollup-linux-x64-gnu": "4.24.0",
     "@rollup/rollup-linux-x64-musl": "4.24.0"
   },
