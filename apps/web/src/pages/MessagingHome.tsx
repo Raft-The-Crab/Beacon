@@ -11,6 +11,7 @@ import {
   Search,
   Menu,
   HelpCircle,
+  Bell,
 } from "lucide-react"
 import { useDMStore } from "../stores/useDMStore"
 import { useUserListStore } from "../stores/useUserListStore"
@@ -292,7 +293,7 @@ export function MessagingHome() {
     <div className={styles.pageWrapper}>
       <AuraOrbs />
       <WorkspaceLayout showServerRail sidebar={sidebar} rightPanel={rightPanel}>
-        {activeMobileTab === 'messages' && (
+        {(activeMobileTab === 'messages' || activeMobileTab === 'servers') && (
           !activeChannel ? (
             <div className={styles.friendsWrapper}>
               {/* Top Bar */}
@@ -442,8 +443,12 @@ export function MessagingHome() {
           )
         )}
 
-        {(activeMobileTab === 'servers' || activeMobileTab === 'discover') && (
+        {activeMobileTab === 'notifications' && (
            <div className={mobileStyles.discoveryMobileView}>
+              <div className={mobileStyles.notificationsHeader}>
+                <Bell size={24} />
+                <h2>Notifications</h2>
+              </div>
               <ServerDiscovery />
            </div>
         )}

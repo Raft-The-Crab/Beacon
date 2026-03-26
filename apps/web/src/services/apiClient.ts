@@ -20,7 +20,9 @@ class ApiClient {
         
         this.baseUrl = isDev ? '/api' : (WEB_SDK_ENDPOINTS.apiUrl || API_BASE_URL);
         
-        console.log('[API] Using base URL:', this.baseUrl, isDev ? '(via proxy)' : '(direct)');
+        if (isDev) {
+            console.log('[API] Using base URL:', this.baseUrl, '(via proxy)');
+        }
         
         // Ensure CSRF token is initialized immediately
         this.csrfInitPromise = this.ensureCsrfToken();
@@ -62,7 +64,9 @@ class ApiClient {
             
             if (token) {
                 this.csrfToken = token;
-                console.log('[CSRF] Token successfully initialized');
+                // Only log in dev to avoid revealing init details
+                // @ts-ignore
+                if (import.meta.env.DEV) console.log('[CSRF] Token successfully initialized');
             } else {
                 console.warn('[CSRF] No token in response body, local cookie-read might fail');
             }

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { Hash, Pin, Users, Search, Phone, Video, ChevronDown, Menu, WifiOff } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -32,8 +32,13 @@ interface ChatAreaProps {
 export function ChatArea({ channelId }: ChatAreaProps) {
   const navigate = useNavigate()
   const { t } = useTranslationStore()
-  // Directly select the messages for the current channel
-  const messages = useMessageStore((state) => state.messages.get(channelId) || EMPTY_ARRAY);
+  const messagesRaw = useMessageStore((state) => state.messages.get(channelId) || EMPTY_ARRAY);
+  // Sort messages chronologically to ensure date separators work correctly
+  const messages = useMemo(() => {
+    return [...messagesRaw].sort((a, b) => 
+      new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+    );
+  }, [messagesRaw]);
   const fetchMessages = useMessageStore((state) => state.fetchMessages);
 
   // Select individual actions for better performance and stability
@@ -646,40 +651,27 @@ export function ChatArea({ channelId }: ChatAreaProps) {
               const isRecent = prevMsg && (new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime() < 5 * 60 * 1000)
               const isContinuing = isSameUser && isRecent
               
-              // Date separator logic - refined for extreme robustness
-              const msgDate = msg.createdAt ? new Date(msg.createdAt) : new Date()
-              const prevDate = prevMsg?.createdAt ? new Date(prevMsg.createdAt) : null
+              // Date separator logic - simplified and robust
+              const msgDateObj = msg.createdAt ? new Date(msg.createdAt) : new Date()
+              const msgDateString = msgDateObj.toDateString()
               
-              const isInvalidMsgDate = isNaN(msgDate.getTime())
-              const isInvalidPrevDate = prevDate && isNaN(prevDate.getTime())
+              const prevMsgDateString = prevMsg?.createdAt 
+                ? new Date(prevMsg.createdAt).toDateString() 
+                : null
               
-              // Use stable string keys for date comparison (YYYY-MM-DD)
-              const getDateKey = (d: Date | null) => {
-                if (!d || isNaN(d.getTime())) return null
-                return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
-              }
-              
-              const msgDateKey = getDateKey(msgDate)
-              const prevDateKey = getDateKey(prevDate)
-              
-              // Only show if it's the first message OR if the date has changed
-              const showDateSep = !prevMsg || (msgDateKey !== prevDateKey && msgDateKey !== null)
-              
-              const today = new Date()
-              const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)
+              const showDateSep = msgDateString !== prevMsgDateString
               
               let dateLabel = 'Unknown Date'
-              if (!isInvalidMsgDate) {
-                const isToday = msgDate.getFullYear() === today.getFullYear() && 
-                              msgDate.getMonth() === today.getMonth() && 
-                              msgDate.getDate() === today.getDate()
-                const isYesterday = msgDate.getFullYear() === yesterday.getFullYear() && 
-                                  msgDate.getMonth() === yesterday.getMonth() && 
-                                  msgDate.getDate() === yesterday.getDate()
+              if (!isNaN(msgDateObj.getTime())) {
+                const today = new Date()
+                const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)
+                
+                const isToday = msgDateString === today.toDateString()
+                const isYesterday = msgDateString === yesterday.toDateString()
                 
                 if (isToday) dateLabel = 'Today'
                 else if (isYesterday) dateLabel = 'Yesterday'
-                else dateLabel = msgDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                else dateLabel = msgDateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
               }
 
               return (

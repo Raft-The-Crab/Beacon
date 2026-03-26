@@ -314,73 +314,9 @@
 
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Phone ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 @media (max-width: 768px) {
-  .serverList {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: calc(60px + env(safe-area-inset-bottom));
-    flex-direction: row;
-    padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
-    gap: 4px;
-    z-index: 200;
-    background: var(--bg-tertiary);
-    border-top: 1px solid var(--glass-border);
-    border-radius: 18px 18px 0 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .serverButton {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-  }
-
-  .serverIcon {
-    width: 40px;
-    height: 40px;
-    font-size: 0.75rem;
-    border-radius: var(--radius-xl);
-    box-shadow: none;
-  }
-
-  .serverButton::before {
-    display: none;
-  }
-
-  .activeServer::before {
-    display: none;
-  }
-
-  .divider {
-    width: 2px;
-    height: 28px;
-    margin: 0 4px;
-  }
-
-  .folderContainer {
-    flex-direction: row;
-  }
-
-  .folderIcon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .activePill {
-    display: none;
-  }
-
-  .joinActions {
-    width: 100%;
-  }
-
-  .joinSecondaryButton,
-  .joinPrimaryButton {
-    flex: 1;
+  /* Standalone rail is completely hidden on mobile as it's now in the drawer */
+  .serverList:not(:global(.mobileServerRail) *) {
+    display: none !important;
   }
 }
 
@@ -397,4 +333,28 @@
   .joinPrimaryButton {
     width: 100%;
   }
+}
+/* Drawer-integrated stabilization */
+:global(.mobileServerRail) .serverList {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  flex-direction: column !important;
+  padding: 12px 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+:global(.mobileServerRail) .serverButton {
+  width: 48px !important;
+  height: 48px !important;
+}
+
+:global(.mobileServerRail) .serverIcon {
+  width: 48px !important;
+  height: 48px !important;
 }

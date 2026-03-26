@@ -36,7 +36,16 @@ export function WorkspaceLayout({
             )}
 
             <div className={`${styles.leftNav} ${showMobileSidebar ? styles.mobileOpen : ''}`}>
-                {sidebar}
+                <div className={styles.drawerContent}>
+                    {showServerRail && (
+                        <div className={styles.mobileServerRail}>
+                            <ServerList />
+                        </div>
+                    )}
+                    <div className={styles.sidebarWrapper}>
+                        {sidebar}
+                    </div>
+                </div>
             </div>
 
             <div className={styles.mainContent}>

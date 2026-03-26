@@ -1,4 +1,4 @@
-import { MessageSquare, Users, Compass, User } from 'lucide-react'
+import { Home, MessageSquare, Bell, User } from 'lucide-react'
 import { useUIStore } from '../../stores/useUIStore'
 import styles from '../../styles/modules/layout/BottomTabs.module.css'
 
@@ -6,9 +6,9 @@ export function BottomTabs() {
   const { activeMobileTab, setActiveMobileTab } = useUIStore()
 
   const tabs = [
-    { id: 'servers', icon: Users, label: 'Servers' },
+    { id: 'servers', icon: Home, label: 'Servers' },
     { id: 'messages', icon: MessageSquare, label: 'Messages' },
-    { id: 'discover', icon: Compass, label: 'Discover' },
+    { id: 'notifications', icon: Bell, label: 'Notifications' },
     { id: 'profile', icon: User, label: 'You' },
   ] as const
 

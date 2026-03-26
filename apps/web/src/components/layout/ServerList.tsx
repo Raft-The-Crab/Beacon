@@ -149,7 +149,7 @@ function ServerButton({ server, isActive, onClick }: {
 }
 
 // -- Main ServerList ------------------------------------------
-export function ServerList() {
+export function ServerList({ className }: { className?: string }) {
   const navigate = useNavigate()
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [joinInput, setJoinInput] = useState('')
@@ -276,7 +276,7 @@ export function ServerList() {
   ])
 
   return (
-    <div className={styles.serverList} onContextMenu={leftRailMenuTrigger}>
+    <div className={`${styles.serverList} ${className || ''}`} onContextMenu={leftRailMenuTrigger}>
       {/* Home */}
       <Tooltip content="Home" position="right">
         <button

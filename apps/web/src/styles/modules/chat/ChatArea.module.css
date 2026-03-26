@@ -5,7 +5,8 @@
   background: transparent;
   min-width: 0;
   position: relative;
-  overflow: hidden; /* Ensure nothing leaks out */
+  overflow-x: hidden !important;
+  overflow-y: hidden;
   transition: all 0.2s var(--ease-out);
 }
 
@@ -205,6 +206,8 @@
   display: flex;
   flex-direction: column;
   padding-bottom: 8px; /* Extra space for input area overlap protection */
+  overflow-x: hidden !important;
+  max-width: 100vw;
 }
 
 .welcome {

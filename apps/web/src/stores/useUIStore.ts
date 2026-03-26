@@ -33,7 +33,7 @@ interface UIState {
   showMobileSidebar: boolean
   customBackground: string | null
   customAccentColor: string | null
-  activeMobileTab: 'servers' | 'messages' | 'discover' | 'profile'
+  activeMobileTab: 'servers' | 'messages' | 'notifications' | 'profile'
 
   // Modal state
   showCustomStatus: boolean
@@ -93,7 +93,7 @@ interface UIState {
   setShowMobileSidebar: (show: boolean) => void
   setCustomBackground: (url: string | null) => void
   setCustomAccentColor: (color: string | null) => void
-  setActiveMobileTab: (tab: 'servers' | 'messages' | 'discover' | 'profile') => void
+  setActiveMobileTab: (tab: 'servers' | 'messages' | 'notifications' | 'profile') => void
   syncTheme: () => void
 
   setShowCustomStatus: (show: boolean) => void

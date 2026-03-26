@@ -7,9 +7,10 @@
   min-width: 0;
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden !important; /* Force containment of all internal elements */
+  overflow-x: hidden !important;
   border-radius: 12px;
   margin: 1px 0;
+  box-sizing: border-box;
 }
 
 .withActions {

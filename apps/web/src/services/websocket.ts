@@ -50,12 +50,14 @@ export class BeaconWebSocket {
       // Falls back to API_CONFIG.WS_URL which may resolve to CDN domain
       const wsUrl = WEB_SDK_ENDPOINTS.wsUrl || API_CONFIG.WS_URL
       const url = `${wsUrl}?token=${encodeURIComponent(token)}`
-      console.log('[WebSocket] Connecting to:', wsUrl)
+      // @ts-ignore
+      if (import.meta.env.DEV) console.log('[WebSocket] Connecting to:', wsUrl)
       this.ws = new WebSocket(url)
       this.isIntentionalClose = false
 
       this.ws.onopen = () => {
-        console.log('[WebSocket] Connected')
+        // @ts-ignore
+        if (import.meta.env.DEV) console.log('[WebSocket] Connected')
         this.reconnectAttempts = 0
         useUIStore.getState().setWsConnected(true)
         this.identify(token)
@@ -67,7 +69,8 @@ export class BeaconWebSocket {
       }
 
       this.ws.onclose = () => {
-        console.log('[WebSocket] Disconnected')
+        // @ts-ignore
+        if (import.meta.env.DEV) console.log('[WebSocket] Disconnected')
         useUIStore.getState().setWsConnected(false)
         this.cleanup()
         if (!this.isIntentionalClose && this.reconnectAttempts < API_CONFIG.WS_MAX_RECONNECT_ATTEMPTS) {
