@@ -50,6 +50,11 @@
     "tailwind-merge": "^3.5.0",
     "zustand": "^5.0.0"
   },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "^1.29.1",
+    "lightningcss-linux-x64-musl": "^1.29.1",
+    "lightningcss-win32-x64-msvc": "^1.29.1"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1",
     "@tailwindcss/vite": "^4.2.1",
