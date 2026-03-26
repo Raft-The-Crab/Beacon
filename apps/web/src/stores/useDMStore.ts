@@ -80,6 +80,24 @@ function normalizeDMParticipants(recipients: any[]): DMParticipant[] {
   })
 }
 
+function injectSystemBot(channels: DMChannel[]): DMChannel[] {
+  const hasBot = channels.some(c => c.participants.some(p => p.id === 'BEACON_SYSTEM_BOT' || p.username === 'Beacon Bot'))
+  if (hasBot) return channels
+
+  const botChannel: DMChannel = {
+    id: 'channel_beacon_bot',
+    unreadCount: 0,
+    participants: [
+      {
+        id: 'BEACON_SYSTEM_BOT',
+        username: 'Beacon Bot',
+        status: 'online',
+      }
+    ]
+  }
+  return [botChannel, ...channels]
+}
+
 export const useDMStore = create<DMStore>((set, get) => ({
   channels: [],
   activeChannel: null,
@@ -94,7 +112,7 @@ export const useDMStore = create<DMStore>((set, get) => ({
           unreadCount: 0,
           participants: normalizeDMParticipants(channel.recipients || [])
         }))
-        set({ channels: formatted })
+        set({ channels: injectSystemBot(formatted) })
       }
     } catch (e) {
       console.error('Failed to fetch DMs', e)
@@ -110,7 +128,7 @@ export const useDMStore = create<DMStore>((set, get) => ({
           unreadCount: 0,
           participants: normalizeDMParticipants(channel.recipients || [])
         }))
-        set({ channels: formatted })
+        set({ channels: injectSystemBot(formatted) })
       }
     } catch (e) {
       console.error('DM eager load failed', e)

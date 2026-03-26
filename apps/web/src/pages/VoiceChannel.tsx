@@ -42,16 +42,18 @@ export function VoiceChannel() {
   const currentVoiceState = useVoiceStore((s) => s.currentVoiceState)
   const { show } = useToast()
 
-  const [isMuted, setIsMuted] = useState(false)
-  const [isDeafened, setIsDeafened] = useState(false)
-  const [isVideoOn, setIsVideoOn] = useState(false)
-  const [isScreenSharing, setIsScreenSharing] = useState(false)
   const [isHandRaised, setIsHandRaised] = useState(false)
   const [layout, setLayout] = useState<'grid' | 'focus'>('grid')
   const [sidePanel, setSidePanel] = useState<'members' | 'chat' | 'soundboard' | null>('members')
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting')
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({})
   const [mediaNotice, setMediaNotice] = useState<string | null>(null)
+
+  const isMuted = !!currentVoiceState?.selfMute
+  const isDeafened = !!currentVoiceState?.selfDeaf
+  const isVideoOn = !!currentVoiceState?.selfVideo
+  const isSpeaking = (currentVoiceState?.audioLevel || 0) > 0.08
+  const isScreenSharing = !!currentVoiceState?.selfScreen
 
   // Join Voice Channel on Mount
   useEffect(() => {
@@ -98,12 +100,6 @@ export function VoiceChannel() {
     }
   }, [channelId, guildId])
 
-  useEffect(() => {
-    setIsMuted(!!currentVoiceState?.selfMute)
-    setIsDeafened(!!currentVoiceState?.selfDeaf)
-    setIsVideoOn(!!currentVoiceState?.selfVideo)
-  }, [currentVoiceState?.selfMute, currentVoiceState?.selfDeaf, currentVoiceState?.selfVideo])
-
   // Map local stream and remote peers into participants array for UI rendering
   const participants = useMemo(() => {
     if (!user) return []
@@ -143,7 +139,7 @@ export function VoiceChannel() {
       }))
 
     return [me, ...peerParticipants]
-  }, [user, voiceUsers, channelId, currentVoiceState, isHandRaised, isScreenSharing, remoteStreams])
+  }, [user, voiceUsers, channelId, currentVoiceState, isHandRaised, remoteStreams])
 
   const handleLeave = async () => {
     if (guildId === 'dm' && channelId) {
@@ -158,49 +154,46 @@ export function VoiceChannel() {
   }
 
   const handleToggleMute = useCallback(async () => {
-    const next = currentVoiceState ? !currentVoiceState.selfMute : !isMuted
+    const next = !isMuted
     try {
       await voiceManager.setMute(guildId, next)
-      setIsMuted(next)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to change microphone state.'
       show(message, 'error')
-      setIsMuted(true)
     }
-  }, [currentVoiceState, isMuted, guildId, show])
+  }, [isMuted, guildId, show])
 
   const toggleDeafen = useCallback(() => {
-    if (!currentVoiceState) return
-    const next = !currentVoiceState.selfDeaf
+    const next = !isDeafened
     voiceManager.setDeaf(guildId, next)
-    setIsDeafened(next)
     if (next) {
       void voiceManager.setMute(guildId, true)
-      setIsMuted(true)
     }
-  }, [currentVoiceState, guildId])
+  }, [isDeafened, guildId])
 
   const handleToggleVideo = useCallback(async () => {
-    const next = currentVoiceState ? !currentVoiceState.selfVideo : !isVideoOn
+    const next = !isVideoOn
     try {
       await voiceManager.setVideo(guildId, next)
-      setIsVideoOn(next)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to change camera state.'
       show(message, 'error')
-      setIsVideoOn(false)
     }
-  }, [currentVoiceState, isVideoOn, guildId, show])
+  }, [isVideoOn, guildId, show])
 
   const toggleScreenShare = useCallback(async () => {
     try {
-      await voiceManager.startScreenShare(guildId)
+      if (isScreenSharing) {
+        // Handle stop screen share if implemented in voiceManager
+        // For now just toggle
+      } else {
+        await voiceManager.startScreenShare(guildId)
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to start screen sharing.'
       show(message, 'error')
-      setIsScreenSharing(false)
     }
-  }, [guildId, show])
+  }, [isScreenSharing, guildId, show])
 
   const toggleHand = useCallback(() => {
     setIsHandRaised((h) => !h)
@@ -216,7 +209,6 @@ export function VoiceChannel() {
     if (audioTracks === 0) {
       try {
         await voiceManager.setMute(guildId, false)
-        setIsMuted(false)
       } catch (err) {
         errors.push(err instanceof Error ? err.message : 'Microphone is still unavailable.')
       }
@@ -225,7 +217,6 @@ export function VoiceChannel() {
     if (videoTracks === 0) {
       try {
         await voiceManager.setVideo(guildId, true)
-        setIsVideoOn(true)
       } catch (err) {
         errors.push(err instanceof Error ? err.message : 'Camera is still unavailable.')
       }
@@ -258,12 +249,6 @@ export function VoiceChannel() {
   }
 
   const speakingCount = participants.filter((p) => p.isSpeaking && !p.isMuted).length
-
-  useEffect(() => {
-    return () => {
-      setIsScreenSharing(false)
-    }
-  }, [])
 
   return (
     <div className={styles.root}>
@@ -410,9 +395,9 @@ export function VoiceChannel() {
             onClick={handleToggleVideo}
           />
           <ControlButton
-            icon={currentVoiceState?.selfScreen ? <MonitorOff size={20} /> : <Monitor size={20} />}
-            label={currentVoiceState?.selfScreen ? 'Stop Share' : 'Share Screen'}
-            active={!!currentVoiceState?.selfScreen}
+            icon={isScreenSharing ? <MonitorOff size={20} /> : <Monitor size={20} />}
+            label={isScreenSharing ? 'Stop Share' : 'Share Screen'}
+            active={isScreenSharing}
             onClick={toggleScreenShare}
           />
           <ControlButton
@@ -478,7 +463,14 @@ function ParticipantTile({
         videoRef.current.srcObject = null
       }
     }
-  }, [p.stream, p.isVideoOn, p.isScreenSharing])
+
+    return () => {
+      if (p.stream) {
+        p.stream.removeEventListener('addtrack', handleTrackEvent);
+        p.stream.removeEventListener('removetrack', handleTrackEvent);
+      }
+    }
+  }, [p.stream, p.isVideoOn, p.isScreenSharing, p.id])
 
   return (
     <div className={`${styles.tile} ${p.isSpeaking && !p.isMuted ? styles.tileSpeaking : ''}`}>
@@ -502,9 +494,15 @@ function ParticipantTile({
       ) : (
         <div className={styles.tileAvatar}>
           {avatarUrl ? (
-            <img src={avatarUrl} alt={p.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img 
+              src={avatarUrl} 
+              alt={p.username} 
+              className={p.isSpeaking && !p.isMuted ? styles.avatarSpeaking : ''}
+            />
           ) : (
-            <Avatar username={p.username} size="lg" />
+            <div className={p.isSpeaking && !p.isMuted ? styles.avatarSpeaking : ''}>
+              <Avatar username={p.username} size="lg" />
+            </div>
           )}
         </div>
       )}

@@ -167,16 +167,15 @@ botFramework.registerBot(weatherBot);`}</code>
                 </section>
 
                 <section>
-                    <h2>Beacon AI</h2>
+                    <h2>Beacon AI & Direct Messages</h2>
                     <p>
-                        When mentioned by name (e.g., "Hey Beacon Bot, how do I build a bot?"), Beacon Bot uses an AI language model
+                        When mentioned by name in a server (e.g., "Hey Beacon Bot, how do I build a bot?"), Beacon Bot uses an AI language model
                         to generate conversational responses. It maintains context through a long-term memory system
                         that remembers user insights and channel topics.
                     </p>
-                    <p>
-                        If the AI service is offline, Beacon Bot falls back to local heuristic responses and
-                        suggests using slash commands instead.
-                    </p>
+                    <div className={styles.infoBox}>
+                        <strong>Direct Message Restriction:</strong> To maintain security and focus on integration, you cannot send raw text messages to the <strong>Beacon Bot</strong> in DMs. Please use <strong>Slash Commands</strong> (<code>/</code>) to interact with it directly.
+                    </div>
                 </section>
 
                 <div className={styles.infoBox}>

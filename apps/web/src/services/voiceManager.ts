@@ -141,6 +141,20 @@ class VoiceManagerClass {
 
     if (!userId) return;
 
+    // Guard: If we've explicitly left but receive a late update for ourselves, ignore it
+    // unless it's a null update (which we already handle)
+    if (userId === store.userId && !this.currentGuildId && data.channel_id) {
+      console.info('[VoiceManager] Ignoring late VOICE_STATE_UPDATE after leave');
+      return;
+    }
+
+    // Guard: If we've explicitly left but receive a late update for ourselves, ignore it
+    // unless it's a null update (which we already handle)
+    if (userId === store.userId && !this.currentGuildId && data.channel_id) {
+      console.info('[VoiceManager] Ignoring late VOICE_STATE_UPDATE after leave');
+      return;
+    }
+
     if (!data.channel_id) {
       store.removeVoiceState(userId);
 

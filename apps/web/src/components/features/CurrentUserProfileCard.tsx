@@ -164,13 +164,13 @@ export function CurrentUserProfileCard({ children }: CurrentUserProfileCardProps
         if (!triggerRef.current) return
 
         const rect = triggerRef.current.getBoundingClientRect()
-        const popoverHeight = showStatusMenu || showAccountMenu ? 470 : 360
+        const popoverHeight = showStatusMenu || showAccountMenu ? 440 : 340
         const popoverWidth = 280
         const viewportPadding = 12
 
-        let top = rect.top - popoverHeight - 8
+        let top = rect.top - popoverHeight - 4
         if (top < viewportPadding || rect.top < 260) {
-            top = Math.min(window.innerHeight - popoverHeight - viewportPadding, rect.bottom + 6)
+            top = Math.min(window.innerHeight - popoverHeight - viewportPadding, rect.bottom + 4)
         }
 
         if (!Number.isFinite(top)) {
@@ -232,11 +232,11 @@ export function CurrentUserProfileCard({ children }: CurrentUserProfileCardProps
                         <motion.div
                             ref={popoverRef}
                             className={styles.popover}
-                            style={{ top: position.top, left: position.left }}
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            style={{ top: position.top, left: position.left, transformOrigin: 'bottom left' }}
+                            initial={{ opacity: 0, scale: 0.9, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 400 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 450 }}
                         >
                             <div className={styles.bodyCompact}>
                                 <div className={styles.menuHeader}>

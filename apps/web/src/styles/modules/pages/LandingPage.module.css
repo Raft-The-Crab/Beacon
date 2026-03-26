@@ -100,7 +100,17 @@
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
-    background: radial-gradient(circle at 50% 0%, rgba(88, 101, 242, 0.1) 0%, transparent 60%);
+    background: radial-gradient(circle at 50% 0%, rgba(88, 101, 242, 0.15) 0%, transparent 60%), #0a0a0c;
+}
+
+.heroWrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Ffilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 1;
 }
 
 .hero {
@@ -213,15 +223,16 @@
 }
 
 .featureCard {
-  background: linear-gradient(145deg, rgba(25, 25, 30, 0.4) 0%, rgba(15, 15, 18, 0.8) 100%);
+  background: rgba(25, 25, 30, 0.4);
   padding: 40px;
   border-radius: var(--radius-2xl);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   z-index: 2;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
   overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
 }
 
 .featureCard::before {
@@ -306,13 +317,17 @@
 }
 
 .featureCard:hover .iconWrapper {
-    transform: scale(1.1) rotate(5deg);
+    transform: scale(1.1) translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
-.featureCard:hover h3 {
-    background: linear-gradient(90deg, #fff, rgba(255,255,255,0.7));
-    -webkit-background-clip: text;
-    background-clip: text;
+.featureIcon {
+    animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
 }
 
 /* Status Island Removed */
@@ -425,5 +440,117 @@
     .landingFooter {
         margin-top: 60px;
         padding-top: 40px;
+    }
+}
+
+/* iPhone XR / small phone screens */
+@media (max-width: 480px) {
+    .heroWrapper {
+        padding: 20px 12px;
+    }
+
+    .hero {
+        margin: 0 auto 40px;
+    }
+
+    .title {
+        font-size: 2rem;
+        margin-bottom: 16px;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 24px;
+        line-height: 1.5;
+    }
+
+    .actions {
+        gap: 10px;
+    }
+
+    .primaryBtn,
+    .secondaryBtn {
+        padding: 14px 20px;
+        font-size: 15px;
+        text-align: center;
+    }
+
+    .featureGrid {
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .featureCard {
+        padding: 20px;
+    }
+
+    .featureCard h3 {
+        font-size: 1.3rem;
+    }
+
+    .featureCard p {
+        font-size: 14px;
+    }
+
+    .iconWrapper {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 16px;
+    }
+
+    .landingFooter {
+        margin-top: 40px;
+        padding-top: 24px;
+        gap: 16px;
+    }
+
+    .footerLinks {
+        gap: 16px;
+    }
+
+    .footerLinks a {
+        font-size: 13px;
+    }
+
+    .copyright {
+        font-size: 12px;
+    }
+
+    .ctaIsland {
+        padding: 16px 14px;
+    }
+
+    .ctaIsland p {
+        font-size: 12px;
+        margin-bottom: 12px;
+    }
+
+    .loginBtn {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .langSelector {
+        margin-top: 16px;
+    }
+
+    .navItem {
+        padding: 8px 10px;
+        font-size: 13px;
+        gap: 10px;
+    }
+
+    .navHeader {
+        font-size: 10px;
+        margin-bottom: 8px;
+        padding-left: 10px;
+    }
+
+    .navSection {
+        margin-bottom: 20px;
+    }
+
+    .landingNav {
+        padding: 16px 10px;
     }
 }

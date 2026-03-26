@@ -272,7 +272,7 @@ export class NotificationService {
           </span>
         </div>
         <p style="color:#6b7280;font-size:14px;line-height:1.6;margin:0;">
-          This code expires in <strong>24 hours</strong>. If you didn't attempt to create a ${BRAND_NAME} account, you can safely ignore and delete this email.
+          This code expires in <strong>30 minutes</strong>. If you didn't attempt to create a ${BRAND_NAME} account, you can safely ignore and delete this email.
         </p>
       `),
     }, { 'Verification Code': code });

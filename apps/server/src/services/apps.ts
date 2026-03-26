@@ -26,7 +26,7 @@ export class AppsService {
             })
         } catch (error: any) {
             // Fallback for bootstrap if DB isn't synced yet
-            logger.warn('AppsService.getUserApps failed, likely DB sync issue: ' + error.message)
+            logger.warn(`AppsService.getUserApps failed for user ${ownerId}: ${error.message}`, undefined, error)
             return []
         }
     }

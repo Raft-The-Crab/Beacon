@@ -52,8 +52,11 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       const endpoint = `/channels/${channelId}/messages`
       const res = await apiClient.request<PaginatedResponse<Message> | Message[]>('GET', endpoint, { before, limit: 50 })
       
-      if (res.success && res.data) {
-        set(state => {
+      set(state => {
+        const newLoading = new Map(state.isLoading)
+        newLoading.set(channelId, false)
+
+        if (res.success && res.data) {
           const newMessages = new Map(state.messages)
           const existing = newMessages.get(channelId) || []
           const payload = res.data as any
@@ -71,17 +74,16 @@ export const useMessageStore = create<MessageState>((set, get) => ({
             newOldest.set(channelId, items[0].id)
           }
 
-          const newLoading = new Map(state.isLoading)
-          newLoading.set(channelId, false)
-
           return {
             messages: newMessages,
             hasMore: newHasMore,
             oldestMessageId: newOldest,
             isLoading: newLoading
           }
-        })
-      }
+        }
+
+        return { isLoading: newLoading }
+      })
     } catch (error) {
       console.error('Failed to fetch messages:', error)
       set(state => {

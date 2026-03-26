@@ -347,6 +347,16 @@
   width: 6px;
 }
 
+@media (max-width: 768px) {
+  .messages {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .messages::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .messages::-webkit-scrollbar-track {
   background: transparent;
 }

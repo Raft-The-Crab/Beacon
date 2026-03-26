@@ -20,6 +20,8 @@ interface VoiceStore {
   voiceUsers: Map<string, VoiceState>
   connectedVoiceChannelId: string | null
   currentVoiceState: VoiceState | null
+  selfMute: boolean
+  selfDeaf: boolean
   incomingCall: { callerId: string; callerName: string; callerAvatar?: string; callType: 'voice' | 'video'; channelId: string } | null
 
   setUserId: (userId: string | null) => void
@@ -59,6 +61,8 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
   voiceUsers: new Map(),
   connectedVoiceChannelId: null,
   currentVoiceState: null,
+  selfMute: false,
+  selfDeaf: false,
   incomingCall: null,
   bandwidthMode: 'balanced',
   videoQuality: '720p',
@@ -94,11 +98,13 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
 
   setSelfMute: (muted) =>
     set(state => ({
+      selfMute: muted,
       currentVoiceState: state.currentVoiceState ? { ...state.currentVoiceState, selfMute: muted } : null
     })),
 
   setSelfDeaf: (deafened) =>
     set(state => ({
+      selfDeaf: deafened,
       currentVoiceState: state.currentVoiceState ? { ...state.currentVoiceState, selfDeaf: deafened } : null
     })),
 
@@ -167,6 +173,8 @@ export const useVoiceStore = create<VoiceStore>((set, get) => ({
     voiceUsers: new Map(),
     connectedVoiceChannelId: null,
     currentVoiceState: null,
+    selfMute: false,
+    selfDeaf: false,
     typingUsers: new Set(),
   })
 }));

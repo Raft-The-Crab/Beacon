@@ -139,16 +139,16 @@ export function App() {
 
   // Smart Language Sync from User Profile
   useEffect(() => {
-    if (user?.locale && language === 'en') {
-      const normalizedLocale = user.locale.split('-')[0].toLowerCase()
-      // Only sync if it's one of our supported languages
-      const supportedLanguages = ['en', 'fr', 'de', 'zh', 'hi', 'ru', 'pt', 'ar', 'ko', 'it', 'nl', 'tr', 'vi', 'th', 'id']
-      if (supportedLanguages.includes(normalizedLocale) && normalizedLocale !== 'en') {
-        console.info(`[LOCALE] Auto-switching language to ${normalizedLocale} based on user profile.`)
-        setLanguage(normalizedLocale)
-      }
+    if (!user?.locale || language !== 'en') return
+
+    const normalizedLocale = user.locale.split('-')[0].toLowerCase()
+    const supportedLanguages = ['en', 'fr', 'de', 'zh', 'hi', 'ru', 'pt', 'ar', 'ko', 'it', 'nl', 'tr', 'vi', 'th', 'id']
+    
+    if (supportedLanguages.includes(normalizedLocale) && normalizedLocale !== 'en' && normalizedLocale !== language) {
+      console.info(`[LOCALE] Auto-switching language to ${normalizedLocale} based on user profile.`)
+      setLanguage(normalizedLocale)
     }
-  }, [user?.locale, language, setLanguage])
+  }, [user?.locale, language]) // setLanguage removed from deps as it's from a store and stable
 
   useEffect(() => {
     const handleOpenBoost = () => setGlobalBoostOpen(true)
@@ -254,21 +254,28 @@ export function App() {
       const { type, data } = event
       switch (type) {
         case 'MESSAGE_CREATE': {
-          const channelId = data.channel_id || data.channelId
-          handleMessageCreate({ ...data, channelId })
-          useDMStore.getState().handleMessageCreate({ ...data, channelId })
+          if (import.meta.env.DEV) console.log('[WS] MESSAGE_CREATE', data)
+          const channelId = data.channel_id || data.channelId || data.channel?.id
+          if (!channelId) return
+          const normalized = { ...data, channelId }
+          handleMessageCreate(normalized)
+          useDMStore.getState().handleMessageCreate(normalized)
           break
         }
         case 'MESSAGE_UPDATE': {
-          const channelId = data.channel_id || data.channelId
+          if (import.meta.env.DEV) console.log('[WS] MESSAGE_UPDATE', data)
+          const channelId = data.channel_id || data.channelId || data.channel?.id
           const messageId = data.id || data.message?.id
+          if (!channelId || !messageId) return
           handleMessageUpdate(channelId, messageId, data)
           useDMStore.getState().handleMessageUpdate(channelId, messageId, data)
           break
         }
         case 'MESSAGE_DELETE': {
-          const channelId = data.channelId || data.channel_id
-          const messageId = data.messageId
+          if (import.meta.env.DEV) console.log('[WS] MESSAGE_DELETE', data)
+          const channelId = data.channelId || data.channel_id || data.guild_id
+          const messageId = data.messageId || data.id
+          if (!channelId || !messageId) return
           handleMessageDelete(channelId, messageId)
           useDMStore.getState().handleMessageDelete(channelId, messageId)
           break

@@ -10,9 +10,10 @@ interface AvatarUploadProps {
   size?: number
   type?: 'user' | 'bot' | 'server'
   showButton?: boolean
+  username?: string
 }
 
-export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user', showButton = true }: AvatarUploadProps) {
+export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user', showButton = true, username = 'user' }: AvatarUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -65,7 +66,7 @@ export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user
         ) : (
           <>
             <img 
-              src={preview || currentAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=user`} 
+              src={preview || currentAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`} 
               alt="Avatar" 
               className={styles.avatar} 
             />

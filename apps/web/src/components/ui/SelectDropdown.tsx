@@ -20,6 +20,7 @@ interface SelectDropdownProps {
   clearable?: boolean
   size?: 'sm' | 'md' | 'lg'
   className?: string
+  placement?: 'top' | 'bottom'
 }
 
 export const SelectDropdown = React.forwardRef<
@@ -38,6 +39,7 @@ export const SelectDropdown = React.forwardRef<
       clearable = false,
       size = 'md',
       className = '',
+      placement = 'bottom',
     },
     ref,
   ) => {
@@ -145,7 +147,7 @@ export const SelectDropdown = React.forwardRef<
     return (
       <div
         ref={ref || containerRef}
-        className={`${styles.container} ${styles[size]} ${disabled ? styles.disabled : ''} ${className}`}
+        className={`${styles.container} ${styles[size]} ${styles['placement_' + placement]} ${disabled ? styles.disabled : ''} ${className}`}
       >
         <button
           type="button"

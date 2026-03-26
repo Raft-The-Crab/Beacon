@@ -1,6 +1,6 @@
 .inputContainer {
   --keyboard-offset: 0px;
-  padding: 4px 16px 12px;
+  padding: 8px 16px 16px;
   background: transparent;
   position: relative;
   z-index: 20;
@@ -10,17 +10,17 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
-  margin-bottom: -4px;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 16px;
+  margin-bottom: -1px;
+  background: rgba(48, 49, 54, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-bottom: none;
-  border-radius: 18px 18px 0 0;
+  border-radius: 12px 12px 0 0;
   font-size: 13px;
   color: var(--text-muted);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
   z-index: 1;
 }
 
@@ -29,7 +29,7 @@
   height: 14px;
   background: var(--beacon-brand);
   border-radius: 1px;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .replyAuthor {
@@ -38,34 +38,48 @@
   margin-right: 4px;
 }
 
+.replyClose {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.replyClose:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
 .attachmentPreview {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 12px;
   padding: 16px;
-  background: rgba(22, 22, 24, 0.85);
+  margin-bottom: -1px;
+  background: rgba(48, 49, 54, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  max-height: 300px;
-  overflow-y: auto;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
   backdrop-filter: blur(20px);
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .attachmentItem {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 80px;
+  height: 80px;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.attachmentItem:hover {
-  transform: scale(1.02);
-  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .attachmentImage {
@@ -76,48 +90,45 @@
 
 .removeAttachment {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 24px;
-  height: 24px;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.6);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
   border: none;
   cursor: pointer;
-}
-
-.attachmentItem:hover .removeAttachment {
-  opacity: 1;
 }
 
 .inputWrapper {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  padding: 6px 12px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%); 
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.25),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Connect preview to input */
+.replyPreview + .inputWrapper,
+.attachmentPreview + .inputWrapper {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .inputWrapper:focus-within {
   background: rgba(255, 255, 255, 0.05);
-  border-color: var(--beacon-brand);
-  box-shadow: 
-    0 12px 48px rgba(88, 101, 242, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .textareaWrapper {
@@ -133,36 +144,35 @@
   border: none;
   outline: none !important;
   color: var(--text-primary);
-  font-size: 14px;
-  line-height: 1.4;
-  padding: 8px 4px; /* Maintain standard padding for text alignment */
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 10px 4px;
   resize: none;
   font-family: inherit;
-  min-height: 20px;
-  max-height: 120px; /* Reduced dramatically to prevent dominating screen */
+  min-height: 24px;
 }
 
 .textarea::placeholder {
   color: var(--text-muted);
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .actions {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
 }
 
 .iconButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   color: var(--text-muted);
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 10px;
   transition: all 0.2s;
   background: transparent;
   border: none;
@@ -170,138 +180,101 @@
 
 .iconButton:hover:not(:disabled) {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .magicButton {
-  color: #ffb800 !important;
-  position: relative;
-}
-
-.magicButton::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 12px;
-  background: linear-gradient(45deg, #ffb80066, transparent, #ffb80066);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.magicButton:hover::after {
-  opacity: 1;
+  color: #fbbf24 !important;
 }
 
 .sendButton {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--beacon-brand) !important;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--beacon-brand);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+  margin-left: 4px;
+  transition: all 0.2s transform;
 }
 
 .sendButton:hover:not(:disabled) {
-  transform: scale(1.05) translateY(-1px);
-  box-shadow: 0 6px 16px rgba(88, 101, 242, 0.4);
+  transform: scale(1.05);
+  filter: brightness(1.1);
 }
 
 .sendButton:disabled {
-  opacity: 0.4;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.2);
   cursor: not-allowed;
-  box-shadow: none;
+}
+
+.restrictedWrapper {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  min-height: 56px;
+  cursor: not-allowed;
+}
+
+.restrictedMessage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.restrictedIcon {
+  color: #fbbf24;
+  opacity: 0.8;
 }
 
 @media (max-width: 768px) {
   .inputContainer {
-    padding: 8px 10px calc(12px + env(safe-area-inset-bottom) + var(--keyboard-offset));
+    padding: 8px 12px calc(12px + env(safe-area-inset-bottom) + var(--keyboard-offset));
   }
   
   .inputWrapper {
-    border-radius: 24px;
-    padding: 2px 8px;
-    gap: 4px;
-    width: 100%;
-    max-width: 100%;
-    overflow: hidden;
+    border-radius: 16px;
+    padding: 4px 8px;
   }
 
-  .iconButton {
-    width: 34px;
-    height: 34px;
-    color: var(--text-muted);
+  /* Optimized for mobile */
+  .magicButton,
+  .pickerWrapper:first-of-type {
+    display: none !important;
   }
 
-  /* RE-ENABLED: Show all features on mobile but optimize space */
-  .pickerWrapper,
-  .magicButton {
-    display: flex !important;
-  }
-  
   .textarea {
-    font-size: 15px; /* Better for mobile typing */
-    padding: 10px 4px;
+    font-size: 16px;
+    padding: 12px 4px;
   }
 }
 
-/* Specific narrow mobile fix */
-@media (max-width: 450px) {
+@media (max-width: 480px) {
+  .inputContainer {
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom) + var(--keyboard-offset));
+  }
+  
   .actions {
     gap: 2px;
   }
-  
-  .inputWrapper {
-    gap: 2px;
-    padding: 2px 4px;
-  }
 
   .iconButton {
     width: 32px;
     height: 32px;
-    padding: 4px;
   }
 
   .sendButton {
     width: 32px;
     height: 32px;
-    border-radius: 10px;
-  }
-}
-
-@media (max-width: 380px) {
-  .inputContainer {
-    padding: 4px 6px calc(8px + env(safe-area-inset-bottom) + var(--keyboard-offset));
-  }
-  
-  .magicButton,
-  .pickerWrapper {
-    display: none !important;
-  }
-  
-  .iconButton {
-    width: 28px;
-    height: 28px;
-  }
-  
-  .sendButton {
-    width: 30px;
-    height: 30px;
-  }
-  
-  .textarea {
-    font-size: 14px;
-    padding: 8px 2px;
-  }
-  
-  .inputWrapper {
-    padding: 2px 4px;
-    gap: 2px;
   }
 }

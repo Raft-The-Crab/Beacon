@@ -70,22 +70,38 @@
     overflow: hidden;
     position: relative;
     box-sizing: border-box;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
     transition: transform var(--transition-normal) var(--ease-out);
 }
 
+.drawerContent {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.sidebarWrapper {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
 .mainContent {
     flex: 1;
-    min-width: 0; /* Changed from 400px to prevent mobile overflow */
+    min-width: 0;
     background: rgba(15, 15, 18, 0.4);
     backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     position: relative;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
 }
@@ -101,7 +117,7 @@
     overflow: hidden;
     position: relative;
     box-sizing: border-box;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
 }
@@ -114,21 +130,6 @@
 
     .rightPanel {
         display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .container {
-        padding: 0;
-        gap: 0;
-    }
-
-    .leftNav {
-        border-radius: 0;
-    }
-
-    .mainContent {
-        border-radius: 0;
     }
 }
 
@@ -191,6 +192,8 @@
         height: 100%;
         background: #2b2d31;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     .mainContent {
@@ -198,6 +201,22 @@
         min-width: 0;
         padding-bottom: calc(64px + env(safe-area-inset-bottom));
         box-sizing: border-box;
+    }
+}
+
+/* iPhone XR / small phone screens */
+@media (max-width: 480px) {
+    .leftNav {
+        width: min(90vw, 340px);
+        border-radius: 0;
+    }
+
+    .mainContent {
+        border-radius: 0;
+    }
+
+    .mobileServerRail {
+        width: 64px;
     }
 }
 
@@ -211,3 +230,4 @@
         display: none !important;
     }
 }
+

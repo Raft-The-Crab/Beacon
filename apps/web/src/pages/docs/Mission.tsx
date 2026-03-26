@@ -11,56 +11,45 @@ export function Mission() {
             </Helmet>
 
             <article className={`${styles.article} animate-fadeIn`}>
-                <header className={`${styles.header} premium-hero-section`} style={{ padding: '64px 0', textAlign: 'left', background: 'transparent' }}>
-                    <div className="premium-badge">
-                        <Compass size={14} />
-                        <span>The Vision</span>
-                    </div>
-                    <h1 className="premium-hero-heading accent-text" style={{ fontSize: 48 }}>The Beacon Mission</h1>
-                    <p className="premium-hero-subtitle" style={{ margin: 0, fontSize: 18 }}>
-                        Our commitment to privacy, data security, and the future of open communication.
+                <header className={`${styles.header}`} style={{ padding: '64px 0', textAlign: 'left', background: 'transparent' }}>
+                    <h1 style={{ fontSize: 48, color: 'var(--beacon-brand)' }}>Our Mission</h1>
+                    <p style={{ margin: 0, fontSize: 18, color: 'var(--text-muted)' }}>
+                        Building the future of secure, private, and open communication for everyone.
                     </p>
                 </header>
 
                 <section>
-                    <h2>The Centralized Illusion</h2>
+                    <h2>Privacy First</h2>
                     <p>
-                        Every modern messaging platform is a honeypot for data extraction. Your "identity" is a
-                        rented entry in a corporate database. Beacon dissolves this. By utilizing
-                        <strong>Advanced Secure Identity (ASI)</strong>, your digital self exists entirely outside
-                        the reach of institutional interference.
+                        We believe that privacy is a fundamental human right. Beacon is built from the ground up 
+                        to ensure that your conversations remain yours alone. No data mining, no tracking, 
+                        and no compromises.
                     </p>
                 </section>
 
                 <section>
-                    <h2>Architecture of the Rebellion</h2>
+                    <h2>Secure by Design</h2>
                     <p>
-                        The true intent behind Beacon's architecture is the neutralization of mass surveillance.
-                        Our protocols do not just encrypt data; they obfuscate existence. We use
-                        <strong>Multi-Layer Dynamic Routing (MLDR)</strong> to ensure that every packet is a phantom,
-                        untraceable by conventional SIGINT (Signal Intelligence) methods.
-                    </p>
-                    <div className={styles.infoBox}>
-                        "Privacy is not a feature; it is a fundamental property of the universe that we are
-                        simply restoring to its rightful owners."
-                    </div>
-                </section>
-
-                <section>
-                    <h2>The Singularity Bridge</h2>
-                    <p>
-                        As communication evolves, Beacon is prepared for the transition to post-biological
-                        interfaces. Our API is designed with <strong>Neutral Integration Latency</strong>,
-                        allowing for direct neural-link synchronization with minimal cognitive overhead.
-                        This is the future of the human hive mind—protected, private, and powerful.
+                        Our platform uses industry-leading encryption and decentralized principles to protect 
+                        your identity and your data. We don't just secure your messages; we protect your 
+                        digital footprint.
                     </p>
                 </section>
 
                 <section>
-                    <h2>The Ultimate Goal</h2>
+                    <h2>Open Communication</h2>
                     <p>
-                        To provide the world with a communication protocol that cannot be silenced, censored,
-                        or sold. Beacon is the light in the dark. The final encryption. The absolute truth.
+                        Beacon is designed to be an open platform where communities can thrive without 
+                        fear of censorship or surveillance. We provide the tools for you to connect, 
+                        collaborate, and communicate freely.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Our Goal</h2>
+                    <p>
+                        To provide a reliable, beautiful, and secure ecosystem for global communication. 
+                        Beacon is a place for everyone to feel safe and connected.
                     </p>
                 </section>
             </article>

@@ -26,6 +26,7 @@
   background-position: center;
   transition: all var(--transition-fast);
   z-index: 20;
+  backdrop-filter: blur(12px);
 }
 
 .header:hover {
@@ -191,6 +192,16 @@
   width: 4px;
 }
 
+@media (max-width: 768px) {
+  .channels {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .channels::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .channels::-webkit-scrollbar-track {
   background: transparent;
 }
@@ -300,9 +311,9 @@
 .channel:hover {
   background: var(--glass-bg);
   color: #fff;
-  transform: translateX(4px);
+  transform: translateX(6px);
   border-color: var(--glass-border);
-  box-shadow: var(--glass-reflection);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .channel::before {
@@ -432,8 +443,8 @@
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ User area ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 .userArea {
   padding: 10px 12px;
-  background: linear-gradient(180deg, rgba(8, 10, 16, 0.82), rgba(6, 8, 12, 0.9));
-  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(15, 17, 26, 0.85), rgba(10, 12, 18, 0.95));
+  backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -441,9 +452,9 @@
   min-height: 56px;
   margin-top: auto;
   position: relative;
-  border-top: 1px solid var(--glass-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 0 0 12px 12px;
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.4);
   z-index: 3;
 }
 

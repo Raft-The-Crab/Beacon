@@ -281,7 +281,7 @@
 
 .tileSpeaking {
   border-color: var(--status-success);
-  box-shadow: 0 0 0 2px rgba(35, 165, 89, 0.3);
+  box-shadow: 0 0 0 2px rgba(35, 165, 89, 0.2);
 }
 
 .tileVideo {
@@ -303,12 +303,20 @@
   background: var(--bg-hover);
 }
 
-.tileAvatar img {
-  width: 72px;
-  height: 72px;
+.tileAvatar img,
+.tileAvatar :global(.avatar-root) {
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--glass-border);
+  transition: all 0.2s ease;
+  border: 3px solid transparent;
+}
+
+.avatarSpeaking {
+  border-color: var(--status-success) !important;
+  box-shadow: 0 0 0 4px rgba(35, 165, 89, 0.2);
+  transform: scale(1.05);
 }
 
 .roleBadge {

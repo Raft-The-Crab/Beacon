@@ -22,10 +22,10 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bg-secondary);
+  background: rgba(20, 20, 25, 0.4);
   backdrop-filter: blur(20px);
-  opacity: 0.98;
-  border-right: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 :global(body:not(.glass-theme-active)) .sideNavContent {
@@ -85,12 +85,12 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
   color: var(--text-secondary);
-  font-size: 15px;
-  font-weight: 600;
-  border: 1px solid transparent;
-  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   cursor: pointer;
   transition: all 0.25s var(--ease-spring);
   text-align: left;
@@ -194,6 +194,16 @@
   width: 4px;
 }
 
+@media (max-width: 768px) {
+  .dmList {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .dmList::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .dmList::-webkit-scrollbar-track {
   background: transparent;
 }
@@ -207,13 +217,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
-  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  border-radius: var(--radius-xl);
   cursor: pointer;
   transition: all 0.25s var(--ease-spring);
   color: var(--text-secondary);
-  border: 1px solid transparent;
-  margin-bottom: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.01);
+  margin-bottom: 4px;
 }
 
 .dmItem:hover {
@@ -495,6 +506,16 @@
 
 .friendsScroll::-webkit-scrollbar {
   width: 4px;
+}
+
+@media (max-width: 768px) {
+  .friendsScroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .friendsScroll::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .friendRow {

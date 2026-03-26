@@ -77,6 +77,13 @@ export class BeaconServer {
     constructor() {
         this.app = express();
         this.server = http.createServer(this.app);
+
+        // Railway proxy compatibility — prevent TCP window errors
+        // Railway ALB defaults to ~60s idle. Server must keep sockets alive longer.
+        this.server.keepAliveTimeout = 65 * 1000;   // 65s > Railway's 60s
+        this.server.headersTimeout = 70 * 1000;     // Must be > keepAliveTimeout
+        this.server.requestTimeout = 5 * 60 * 1000; // 5 min for large uploads
+
         this.port = Number(process.env.PORT || 8000);
         console.log(`>>> [BOOT] Port detected: ${process.env.PORT || 'none (defaulting to 8000)'}`);
         this._bootStart = Date.now();

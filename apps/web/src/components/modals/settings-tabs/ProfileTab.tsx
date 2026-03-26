@@ -8,7 +8,7 @@ import styles from '../../../styles/modules/modals/SettingsModal.module.css'
 
 export const ProfileTab: React.FC = () => {
     const { user, setUser } = useAuthStore()
-    const hasBeaconPlus = Boolean((user as any)?.isBeaconPlus)
+    const hasBeaconPlus = Boolean((user as any)?.isBeaconPlus || (user?.badges || []).some((b: any) => String(b).toLowerCase() === 'beacon_plus'))
     const toast = useToast()
     const [loading, setLoading] = useState(false)
     const [username, setUsername] = useState(user?.username || '')
@@ -126,11 +126,12 @@ export const ProfileTab: React.FC = () => {
                 </div>
                 <div className={styles.headerAvatarWrap}>
                     <AvatarUpload
-                        currentAvatar={user?.avatar && !user.avatar.includes('dicebear') ? user.avatar : undefined}
+                        currentAvatar={user?.avatar || undefined}
                         onUpload={handleAvatarUpload}
                         size={120}
                         type="user"
                         showButton={false}
+                        username={user?.username}
                     />
                 </div>
             </div>

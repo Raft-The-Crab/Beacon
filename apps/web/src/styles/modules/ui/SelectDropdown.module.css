@@ -138,10 +138,27 @@
   animation: slideDown var(--transition-normal);
 }
 
+.container.placement_top .menu {
+  top: auto;
+  bottom: calc(100% + 0.5rem);
+  animation: slideUp var(--transition-normal);
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
     transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
   }
   to {
     opacity: 1;

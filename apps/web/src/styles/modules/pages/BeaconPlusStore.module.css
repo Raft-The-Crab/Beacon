@@ -10,8 +10,12 @@
                 var(--bg-primary);
     border-radius: var(--radius-2xl);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    scrollbar-width: none; /* Hide scrollbar but keep functionality */
+    -ms-overflow-style: none;
+}
+
+.container::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome/Safari */
 }
 
 .closeBtn {
@@ -39,7 +43,7 @@
 }
 
 .hero {
-    padding: clamp(60px, 12vw, 120px) clamp(24px, 6vw, 48px);
+    padding: clamp(32px, 8vw, 64px) clamp(20px, 4vw, 32px);
     background: linear-gradient(135deg, var(--beacon-brand) 0%, #7b2ff7 50%, #b845ed 100%);
     color: white;
     display: flex;
@@ -50,7 +54,7 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     overflow: hidden;
-    gap: 32px;
+    gap: 16px;
 }
 
 .hero::before {
@@ -88,45 +92,45 @@
     align-items: center;
     gap: 8px;
     background: rgba(255, 255, 255, 0.15);
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: var(--radius-full);
     font-weight: 700;
-    font-size: 13px;
-    margin-bottom: 24px;
+    font-size: 11px;
+    margin-bottom: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     backdrop-filter: blur(12px);
 }
 
 .heroTitle {
-    font-size: clamp(2rem, 6vw, 3rem);
+    font-size: clamp(1.5rem, 5vw, 2.25rem);
     font-weight: 800;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     letter-spacing: -0.03em;
     line-height: 1.1;
 }
 
 .heroSubtitle {
-    font-size: clamp(1rem, 2.5vw, 1.125rem);
+    font-size: clamp(0.875rem, 2vw, 1rem);
     opacity: 0.85;
-    line-height: 1.6;
-    max-width: 500px;
-    margin-bottom: 24px;
+    line-height: 1.5;
+    max-width: 440px;
+    margin-bottom: 16px;
 }
 
 .balanceDisplay {
     display: inline-flex;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
     background: rgba(255, 255, 255, 0.1);
-    padding: 10px 18px;
+    padding: 8px 14px;
     border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(12px);
     font-weight: 800;
-    font-size: 18px;
-    letter-spacing: 0.05em;
+    font-size: 14px;
+    letter-spacing: 0.03em;
 }
 
 .balanceDisplay span {

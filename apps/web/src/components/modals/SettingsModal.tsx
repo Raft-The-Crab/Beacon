@@ -65,7 +65,7 @@ export function SettingsModal({ isOpen: propIsOpen, onClose: propOnClose }: Sett
 
     const isOpen = propIsOpen !== undefined ? propIsOpen : showUserSettings
     const onClose = propOnClose || (() => setShowUserSettings(false))
-    const hasBeaconPlus = Boolean((user as any)?.isBeaconPlus)
+    const hasBeaconPlus = Boolean((user as any)?.isBeaconPlus || (user?.badges || []).some((b: any) => String(b).toLowerCase() === 'beacon_plus'))
     const activeTabMeta = TAB_META[activeTab]
 
     useEffect(() => {

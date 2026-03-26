@@ -15,7 +15,10 @@ Beacon is a next-generation communication platform designed to dismantle the bar
 
 ### 🤖 Intelligent Bot Ecosystem
 - **Universal SDK** — Build anything from simple utility bots to complex AI integrations using `beacon-sdk`.
-- **Bot-to-User DMs** — Bots can now initiate and manage direct messages with users for personalized notifications and interactions.
+- **Bot-to-User DMs** — Bots- **Verification**: 6-digit codes sent via email (expires in 30 minutes).
+- **Official Emails**:
+  - `noreply@beacon.qzz.io` (System notifications)
+  - `support@beacon.qzz.io` (User support)
 - **Seamless Server Invites** — Add bots to your servers with just two clicks, managed via a robust permission system.
 
 ### 🛡️ Hardened Security

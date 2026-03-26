@@ -66,8 +66,7 @@ export function DeveloperPortal() {
   const fetchHealth = async () => {
     setHealthLoading(true)
     try {
-      const root = WEB_SDK_ENDPOINTS.apiUrl.replace(/\/?api\/?$/i, '')
-      const res = await fetch(`${root}/health`, { method: 'GET', credentials: 'include' })
+      const res = await fetch(`${WEB_SDK_ENDPOINTS.apiUrl}/health`, { method: 'GET', credentials: 'include' })
       const json = await res.json().catch(() => ({}))
       setHealth(json || null)
     } catch {

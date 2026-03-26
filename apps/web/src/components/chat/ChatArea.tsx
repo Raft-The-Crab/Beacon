@@ -59,6 +59,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
   const dmCallName = isDMChannel
     ? (dmParticipantCount > 2 ? `Group Call (${dmParticipantCount} members)` : `Call with ${dmRecipient}`)
     : ''
+  const isRestrictedBot = isDMChannel && dmChannel?.participants?.some((p: any) => p.id === 'BEACON_SYSTEM_BOT' || p.username === 'Beacon Bot')
   const channelDisplayName = isDMChannel ? dmRecipient : (currentChannel?.name || 'general')
 
   const toggleMemberList = useUIStore(state => state.toggleMemberList)
@@ -805,10 +806,11 @@ export function ChatArea({ channelId }: ChatAreaProps) {
       </div>
 
       <MessageInput
-        placeholder={isDMChannel ? `Message ${dmRecipient}...` : `Message #${channelDisplayName}...`}
+        placeholder={isRestrictedBot ? "Use slash commands to interact with this bot" : (isDMChannel ? `Message ${dmRecipient}...` : `Message #${channelDisplayName}...`)}
         onSendMessage={handleSendMessage}
         onStartTyping={handleStartTyping}
         onStopTyping={handleStopTyping}
+        isRestricted={isRestrictedBot}
       />
 
       <Modal

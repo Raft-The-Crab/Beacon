@@ -1,6 +1,6 @@
 import React, { useRef, useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Smile, Edit, Trash2, File, Pin, Shield, Languages, Flag, Download, Check, Volume2 } from 'lucide-react'
+import { Smile, Edit, Trash2, File, Pin, Shield, Languages, Flag, Download, Check, Volume2, MoreVertical } from 'lucide-react'
 import type { UserBadge } from 'beacon-sdk'
 import { Avatar, Tooltip, EmojiPicker, ImageLightbox, Select } from '../ui'
 import { BotTag } from '../ui/UserBadges'
@@ -125,6 +125,7 @@ export const MessageItem = React.memo(function MessageItem({
   const [reactionAnchorEl, setReactionAnchorEl] = useState<HTMLElement | null>(null)
   const inlineReactionButtonRef = useRef<HTMLButtonElement>(null)
   const actionsReactionButtonRef = useRef<HTMLButtonElement>(null)
+  const [showMobileActions, setShowMobileActions] = useState(false)
   const [translatedContent, setTranslatedContent] = useState<string | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
@@ -615,7 +616,14 @@ export const MessageItem = React.memo(function MessageItem({
       </div>
 
       {showActions && (onDelete || onEdit || onPin || onReportMessage || onReportUser) && (
-        <div className={styles.actions}>
+        <div className={`${styles.actions} ${showMobileActions ? styles.actionsMobileActive : ''}`}>
+          <button 
+            className={styles.mobileMoreBtn}
+            onClick={() => setShowMobileActions(!showMobileActions)}
+            aria-label="More actions"
+          >
+            <MoreVertical size={18} />
+          </button>
           {/* Quick Reactions */}
           {onReaction && (
             <>

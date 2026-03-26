@@ -121,7 +121,7 @@ export class AuthService {
 
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
     const verificationExpires = new Date()
-    verificationExpires.setHours(verificationExpires.getHours() + 24)
+    verificationExpires.setMinutes(verificationExpires.getMinutes() + 30)
 
     const user = await prisma.user.create({
       data: {
@@ -432,7 +432,7 @@ export class AuthService {
 
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
     const verificationExpires = new Date()
-    verificationExpires.setHours(verificationExpires.getHours() + 24)
+    verificationExpires.setMinutes(verificationExpires.getMinutes() + 30)
 
     await prisma.user.update({
       where: { id: user.id },

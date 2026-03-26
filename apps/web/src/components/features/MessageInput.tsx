@@ -27,6 +27,7 @@ interface MessageInputProps {
   onVoiceClick?: () => void
   replyingTo?: ReplyTarget | null
   onCancelReply?: () => void
+  isRestricted?: boolean
 }
 
 export function MessageInput({
@@ -37,6 +38,7 @@ export function MessageInput({
   onVoiceClick,
   replyingTo,
   onCancelReply,
+  isRestricted = false,
 }: MessageInputProps) {
   const { show } = useToast()
   const MAX_MESSAGE_LENGTH = 2000
@@ -317,6 +319,19 @@ export function MessageInput({
 
   const removeAttachment = (index: number) => {
     setAttachments(attachments.filter((_, i) => i !== index))
+  }
+
+  if (isRestricted) {
+    return (
+      <div className={styles.inputContainer} style={{ '--keyboard-offset': `${keyboardOffset}px` } as any}>
+        <div className={`${styles.inputWrapper} ${styles.restrictedWrapper}`}>
+          <div className={styles.restrictedMessage}>
+            <Sparkles size={18} className={styles.restrictedIcon} />
+            <span>{placeholder}</span>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

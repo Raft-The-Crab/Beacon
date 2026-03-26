@@ -37,7 +37,6 @@ import { AuraOrbs } from "../components/ui/AuraOrbs"
 import { NotificationBell } from "../components/features/NotificationInbox"
 import { UserPopoverCard } from "../components/features/UserPopoverCard"
 import { BeaconPlusStore } from "./BeaconPlusStore"
-import { HomeHero } from "../components/features/HomeHero"
 import styles from "../styles/modules/pages/MessagingHome.module.css"
 import mobileStyles from "../styles/modules/pages/MessagingHomeMobile.module.css"
 
@@ -217,22 +216,17 @@ export function MessagingHome() {
           <span>Friends</span>
         </button>
 
+        <button className={styles.navButton} onClick={() => setShowWallet(true)}>
+          <Coins size={20} />
+          <span>Beacoins</span>
+        </button>
+
         <button
           className={`${styles.navButton} ${styles.premiumButton} `}
           onClick={() => setShowBeaconPlus(true)}
         >
           <Crown size={20} color="#f0b232" />
           <span>Beacon+</span>
-        </button>
-
-        <button className={styles.navButton} onClick={() => setShowDiscover(true)}>
-          <Compass size={20} />
-          <span>Discover</span>
-        </button>
-
-        <button className={styles.navButton} onClick={() => setShowWallet(true)}>
-          <Coins size={20} />
-          <span>Beacoins</span>
         </button>
       </div>
 
@@ -365,7 +359,10 @@ export function MessagingHome() {
                 {/* Friends List */}
                 <div className={styles.friendsScroll}>
                   {displayedFriends.length === 0 && currentTab !== "online" && currentTab !== "pending" && currentTab !== "blocked" ? (
-                    <HomeHero />
+                    <div className={mobileStyles.friendsEmpty}>
+                       <Users size={48} opacity={0.1} />
+                       <p>No friends to show yet.</p>
+                    </div>
                   ) : displayedFriends.length === 0 ? (
                     <div className={mobileStyles.friendsEmpty}>
                       <div className={mobileStyles.premiumGraphicWrap}>

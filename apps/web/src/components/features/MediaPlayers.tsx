@@ -119,7 +119,8 @@ export const CustomAudioPlayer: React.FC<CustomPlayerProps> = ({ src, filename }
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   const togglePlay = () => {
     if (audioRef.current) {
@@ -134,38 +135,51 @@ export const CustomAudioPlayer: React.FC<CustomPlayerProps> = ({ src, filename }
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      const p = (audioRef.current.currentTime / audioRef.current.duration) * 100;
-      setProgress(p);
+      const current = audioRef.current.currentTime;
+      const total = audioRef.current.duration;
+      setCurrentTime(current);
+      if (!isNaN(total)) {
+        setDuration(total);
+        setProgress((current / total) * 100);
+      }
     }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (audioRef.current) {
+    if (audioRef.current && !isNaN(audioRef.current.duration)) {
       const time = (Number(e.target.value) / 100) * audioRef.current.duration;
       audioRef.current.currentTime = time;
       setProgress(Number(e.target.value));
     }
   };
 
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return '0:00';
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <div className={styles.customAudioPlayer}>
+    <div className={styles.audioPlayer}>
       <audio
         ref={audioRef}
         src={src}
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => setIsPlaying(false)}
+        onLoadedMetadata={handleTimeUpdate}
       />
       
-      <button onClick={togglePlay} className={styles.audioPlayBtnPrimary}>
+      <button onClick={togglePlay} className={styles.audioPlayBtn}>
         {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
       </button>
       
-      <div className={styles.audioMainContent}>
+      <div className={styles.audioInfo}>
         <div className={styles.audioHeader}>
-          <span className={styles.audioTitle}>{filename || 'Audio Attachment'}</span>
-          <a href={src} download={filename || 'audio.mp3'} className={styles.audioDownloadSmall}>
-            <Download size={14} />
-          </a>
+          <span className={styles.audioName}>{filename || 'Audio Attachment'}</span>
+          <span className={styles.audioTime}>
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </span>
         </div>
         
         <div className={styles.audioProgressContainer}>
@@ -173,12 +187,21 @@ export const CustomAudioPlayer: React.FC<CustomPlayerProps> = ({ src, filename }
             type="range"
             min="0"
             max="100"
+            step="0.1"
             value={progress}
             onChange={handleSeek}
             className={styles.audioProgressBar}
           />
+          <div 
+            className={styles.audioProgressFill} 
+            style={{ width: `${progress}%` }} 
+          />
         </div>
       </div>
+
+      <a href={src} download={filename || 'audio.mp3'} className={styles.audioDownloadBtn}>
+        <Download size={18} />
+      </a>
     </div>
   );
 };

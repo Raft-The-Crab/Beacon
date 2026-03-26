@@ -28,6 +28,8 @@ export function CurrentUserControls() {
     const setTheme = useUIStore(state => state.setTheme)
     const currentTheme = useUIStore(state => state.theme)
     const currentVoiceState = useVoiceStore(state => state.currentVoiceState)
+    const selfMute = useVoiceStore(state => state.selfMute)
+    const selfDeaf = useVoiceStore(state => state.selfDeaf)
     const setSelfMute = useVoiceStore(state => state.setSelfMute)
     const setSelfDeaf = useVoiceStore(state => state.setSelfDeaf)
     const equippedFrame = useProfileArtStore(state => state.equippedFrame)
@@ -102,37 +104,37 @@ export function CurrentUserControls() {
             </CurrentUserProfileCard>
 
             <div className={styles.userControls}>
-                <Tooltip content={currentVoiceState?.selfMute ? 'Unmute Mic' : 'Mute Mic'} position="top">
+                <Tooltip content={selfMute ? 'Unmute Mic' : 'Mute Mic'} position="top">
                     <button
-                        className={`${styles.iconCtrlBtn} ${currentVoiceState?.selfMute ? styles.iconCtrlBtnActive : ''}`}
+                        className={`${styles.iconCtrlBtn} ${selfMute ? styles.iconCtrlBtnActive : ''}`}
                         onClick={() => {
-                            if (!currentVoiceState) return
-                            const next = !currentVoiceState.selfMute
+                            const next = !selfMute
                             setSelfMute(next)
-                            void voiceManager.setMute(currentVoiceState.guildId, next).catch(() => {
-                                setSelfMute(true)
-                            })
+                            if (currentVoiceState) {
+                                void voiceManager.setMute(currentVoiceState.guildId, next).catch(() => {
+                                    setSelfMute(true)
+                                })
+                            }
                         }}
-                        aria-label={currentVoiceState?.selfMute ? 'Unmute microphone' : 'Mute microphone'}
-                        disabled={!currentVoiceState}
+                        aria-label={selfMute ? 'Unmute microphone' : 'Mute microphone'}
                     >
-                        {currentVoiceState?.selfMute ? <MicOff size={16} /> : <Mic size={16} />}
+                        {selfMute ? <MicOff size={16} /> : <Mic size={16} />}
                     </button>
                 </Tooltip>
 
-                <Tooltip content={currentVoiceState?.selfDeaf ? 'Undeafen' : 'Deafen'} position="top">
+                <Tooltip content={selfDeaf ? 'Undeafen' : 'Deafen'} position="top">
                     <button
-                        className={`${styles.iconCtrlBtn} ${currentVoiceState?.selfDeaf ? styles.iconCtrlBtnActive : ''}`}
+                        className={`${styles.iconCtrlBtn} ${selfDeaf ? styles.iconCtrlBtnActive : ''}`}
                         onClick={() => {
-                            if (!currentVoiceState) return
-                            const next = !currentVoiceState.selfDeaf
+                            const next = !selfDeaf
                             setSelfDeaf(next)
-                            voiceManager.setDeaf(currentVoiceState.guildId, next)
+                            if (currentVoiceState) {
+                                voiceManager.setDeaf(currentVoiceState.guildId, next)
+                            }
                         }}
-                        aria-label={currentVoiceState?.selfDeaf ? 'Undeafen' : 'Deafen'}
-                        disabled={!currentVoiceState}
+                        aria-label={selfDeaf ? 'Undeafen' : 'Deafen'}
                     >
-                        {currentVoiceState?.selfDeaf ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                        {selfDeaf ? <VolumeX size={16} /> : <Volume2 size={16} />}
                     </button>
                 </Tooltip>
 

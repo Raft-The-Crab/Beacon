@@ -207,8 +207,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   resendVerification: async () => {
     const { verificationEmail } = get()
-    if (!verificationEmail) return
-    await apiClient.resendVerification(verificationEmail)
+    if (!verificationEmail) throw new Error('No verification email found. Please try registering again.')
+    const res = await apiClient.resendVerification(verificationEmail)
+    if (!res.success) throw new Error(res.error || 'Failed to resend verification code')
   },
 
   socialLogin: async (idToken) => {

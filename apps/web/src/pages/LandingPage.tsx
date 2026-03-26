@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Shield, Zap, Cpu, Globe, Rocket, MessageCircle, Star, Github, Users } from 'lucide-react'
+import { Shield, Zap, Cpu, Globe, Rocket, MessageCircle, Star, Github, Users, Code } from 'lucide-react'
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout'
 import { Tooltip, SelectDropdown } from '../components/ui'
 import styles from '../styles/modules/pages/LandingPage.module.css'
@@ -87,62 +87,61 @@ export function LandingPage() {
   return (
     <WorkspaceLayout sidebar={sidebar} rightPanel={rightPanel}>
       <div className={styles.heroWrapper}>
-
         <div className={styles.hero}>
-          <h1 className={`${styles.title} premium-hero-heading`}>
-            Beacon
-          </h1>
+          <h1 className={styles.title}>The Future of Communication</h1>
           <p className={styles.subtitle}>
-            {t('landing.subtitle')}
+            Secure, Private, and Open. Join the next generation of social networking with Beacon.
           </p>
           <div className={styles.actions}>
-            <Tooltip content={t('common.join_revolution', { defaultValue: 'Join the revolution' })} position="top">
-              <Link to="/login" className={styles.primaryBtn}>{t('landing.get_started')}</Link>
-            </Tooltip>
-            <Tooltip content={t('common.learn_how', { defaultValue: 'Learn how it works' })} position="top">
-              <Link to="/docs" className={styles.secondaryBtn}>{t('landing.read_docs')}</Link>
-            </Tooltip>
+            <Link to="/login" className={styles.primaryBtn}>Get Started</Link>
+            <Link to="/docs" className={styles.secondaryBtn}>Documentation</Link>
           </div>
         </div>
 
-        <section className={styles.features}>
-          <div className={styles.featureGrid}>
-            <div className={`${styles.featureCard} ${styles.featureCoreEngine}`}>
-              <div className={styles.iconWrapper}>
-                <Cpu className={styles.featureIcon} size={32} />
-              </div>
-              <h3>Core Engine</h3>
-              <p>Ultra-low latency infrastructure engineered for instantaneous global synchronization of voice and state data.</p>
+        <section className={styles.featureGrid}>
+          <div className={`${styles.featureCard} ${styles.featureCoreEngine}`}>
+            <div className={styles.iconWrapper}>
+              <Cpu className={styles.featureIcon} size={32} />
             </div>
+            <h3>Core Engine</h3>
+            <p>Our distributed architecture ensures that your messages are delivered instantly and securely, across the globe.</p>
+          </div>
 
-            <div className={`${styles.featureCard} ${styles.featurePrivacy}`}>
-              <div className={styles.iconWrapper}>
-                <Shield className={styles.featureIcon} size={32} />
-              </div>
-              <h3>Privacy Architecture</h3>
-              <p>Encrypted tunnels for every interaction, featuring metadata stripping and user-governed identity control by default.</p>
+          <div className={`${styles.featureCard} ${styles.featurePrivacy}`}>
+            <div className={styles.iconWrapper}>
+              <Shield className={styles.featureIcon} size={32} />
             </div>
+            <h3>Privacy First</h3>
+            <p>Your data belongs to you. We use end-to-end encryption and Sovereignty protocols to keep your conversations private.</p>
+          </div>
 
-            <div className={`${styles.featureCard} ${styles.featureDeveloperAPI}`}>
-              <div className={styles.iconWrapper}>
-                <Zap className={styles.featureIcon} size={32} />
-              </div>
-              <h3>Developer Ecosystem</h3>
-              <p>Advanced platform featuring programmable bot hooks, extensible JSON schemas, and industrial-grade throughput protection.</p>
+          <div className={`${styles.featureCard} ${styles.featureDeveloperAPI}`}>
+            <div className={styles.iconWrapper}>
+              <Code className={styles.featureIcon} size={32} />
             </div>
+            <h3>Developer Friendly</h3>
+            <p>Build powerful integrations with our robust SDK and API. Create bots, games, and tools with ease.</p>
           </div>
         </section>
 
+        <article style={{ marginTop: '80px', maxWidth: '800px', marginInline: 'auto', opacity: 0.8, textAlign: 'center' }}>
+          <h2 style={{ fontSize: '2.5rem', marginBottom: '1.5rem', background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Our Mission</h2>
+          <p style={{ fontSize: '1.2rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
+            At Beacon, we believe that everyone deserves a safe and private space to connect with others. 
+            Our mission is to build a communication platform that empowers users and fosters meaningful communities 
+            through decentralized innovation.
+          </p>
+        </article>
+
         <footer className={styles.landingFooter}>
           <div className={styles.footerLinks}>
-            <Link to="/terms">{t('landing.footer.tos')}</Link>
-            <Link to="/privacy">{t('landing.footer.privacy')}</Link>
-            <Link to="/license">License</Link>
-            <Link to="/safety">Safety Hub</Link>
-            <Link to="/about">{t('landing.footer.about')}</Link>
-            <Link to="/contact">{t('landing.footer.support')}</Link>
+            <Link to="/docs">Documentation</Link>
+            <Link to="/apps">App Directory</Link>
+            <Link to="/about">About Us</Link>
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms of Service</Link>
           </div>
-          <p className={styles.copyright}>{t('landing.footer.copyright')}</p>
+          <p className={styles.copyright}>&copy; {new Date().getFullYear()} Beacon Platform. Crafted with session-based security.</p>
         </footer>
       </div>
     </WorkspaceLayout>
