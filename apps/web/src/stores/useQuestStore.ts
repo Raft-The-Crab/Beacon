@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api } from '../lib/api'
+import { apiClient } from '../services/apiClient'
 
 interface Quest {
     id: string
@@ -32,8 +32,12 @@ export const useQuestStore = create<QuestState>((set) => ({
     fetchQuests: async () => {
         set({ isLoading: true })
         try {
-            const { data } = await api.get('/quests')
-            set({ quests: data, isLoading: false })
+            const res = await apiClient.request('GET', '/quests')
+            if (res.success) {
+                set({ quests: res.data, isLoading: false })
+            } else {
+                set({ isLoading: false })
+            }
         } catch (err) {
             set({ isLoading: false })
             console.error('Failed to fetch quests', err)
@@ -42,12 +46,14 @@ export const useQuestStore = create<QuestState>((set) => ({
 
     claimReward: async (questId: string) => {
         try {
-            await api.post('/quests/claim', { questId })
-            set((state) => ({
-                quests: state.quests.map(q =>
-                    q.questId === questId ? { ...q, claimed: true } : q
-                )
-            }))
+            const res = await apiClient.request('POST', '/quests/claim', { questId })
+            if (res.success) {
+                set((state) => ({
+                    quests: state.quests.map(q =>
+                        q.questId === questId ? { ...q, claimed: true } : q
+                    )
+                }))
+            }
         } catch (err) {
             console.error('Failed to claim reward', err)
             throw err

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Search, X } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { ROLE_TEMPLATES, RoleTemplate, searchRoleTemplates, getRoleTemplatesByCategory } from '../../utils/roleTemplates'

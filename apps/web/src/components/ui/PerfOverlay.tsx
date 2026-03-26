@@ -59,8 +59,8 @@ export function PerfOverlay() {
 
     if (!perfOverlay) return null
 
-    const fpsColor = stats.fps >= 55 ? '#3ba55d' : stats.fps >= 30 ? '#faa61a' : '#ed4245'
-    const pingColor = stats.ping < 50 ? '#3ba55d' : stats.ping < 100 ? '#faa61a' : '#ed4245'
+    const fpsColor = stats.fps >= 55 ? '#3ba55d' : stats.fps >= 30 ? 'var(--status-warning)' : 'var(--status-error)'
+    const pingColor = stats.ping < 50 ? '#3ba55d' : stats.ping < 100 ? 'var(--status-warning)' : 'var(--status-error)'
     const memPct = stats.jsHeapLimit > 0 ? Math.round((stats.memory / stats.jsHeapLimit) * 100) : 0
 
     return (
@@ -92,7 +92,7 @@ export function PerfOverlay() {
             </div>
 
             <div className={styles.bar}>
-                <div className={styles.barFill} style={{ width: `${memPct}%`, background: memPct > 80 ? '#ed4245' : '#3ba55d' }} />
+                <div className={styles.barFill} style={{ width: `${memPct}%`, background: memPct > 80 ? 'var(--status-error)' : '#3ba55d' }} />
             </div>
         </div>
     )

@@ -58,6 +58,30 @@
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: -0.01em;
+  max-width: 140px; /* Force truncation in header */
+}
+
+.connectionBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--bg-surface-soft);
+  border: 1px solid var(--status-error);
+  border-radius: var(--radius-xl);
+  color: var(--status-error);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: 8px;
+  animation: badgeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(var(--status-error-rgb, 237, 66, 69), 0.2);
+}
+
+@keyframes badgeIn {
+  from { opacity: 0; transform: scale(0.9) translateX(-4px); }
+  to { opacity: 1; transform: scale(1) translateX(0); }
 }
 
 .headerRight {
@@ -196,7 +220,7 @@
 .welcomeIcon {
   width: clamp(72px, 12vw, 96px);
   height: clamp(72px, 12vw, 96px);
-  background: radial-gradient(circle, rgba(114, 137, 218, 0.15), transparent 70%);
+  background: radial-gradient(circle, rgba(var(--beacon-brand-rgb, 88, 101, 242), 0.15), transparent 70%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -296,7 +320,7 @@
 .scrollToBottom:hover {
   background: var(--beacon-brand);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(114, 137, 218, 0.4);
+  box-shadow: 0 8px 24px rgba(var(--beacon-brand-rgb, 88, 101, 242), 0.4);
 }
 
 @keyframes fadeInUp {
@@ -382,8 +406,10 @@
   width: 100%;
   padding: 10px 14px;
   border-radius: 10px;
-  border: 1px solid var(--border-default, rgba(255,255,255,0.1));
-  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--text-primary);
   font-size: 14px;
   font-weight: 500;
@@ -394,16 +420,18 @@
   background-repeat: no-repeat;
   background-position: right 12px center;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: all 0.2s ease;
 }
 
 .reportSelect:hover {
-  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .reportSelect:focus {
+  background: rgba(255, 255, 255, 0.06);
   border-color: var(--beacon-brand);
-  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--beacon-brand-rgb, 88, 101, 242), 0.2);
 }
 
 .reportSelect option {
@@ -416,15 +444,17 @@
   width: 100%;
   padding: 10px 14px;
   border-radius: 10px;
-  border: 1px solid var(--border-default, rgba(255,255,255,0.1));
-  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--text-primary);
   font-size: 14px;
   font-family: inherit;
   resize: vertical;
   outline: none;
   min-height: 80px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: all 0.2s ease;
 }
 
 .reportTextarea::placeholder {
@@ -432,8 +462,9 @@
 }
 
 .reportTextarea:focus {
+  background: rgba(255, 255, 255, 0.05);
   border-color: var(--beacon-brand);
-  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--beacon-brand-rgb, 88, 101, 242), 0.2);
 }
 
 .reportActions {
@@ -467,7 +498,7 @@
 
 .editTextarea:focus {
   border-color: var(--beacon-brand);
-  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--beacon-brand-rgb, 88, 101, 242), 0.2);
 }
 
 .editActions {
@@ -605,7 +636,7 @@
   }
 
   .messages {
-    padding: 0 2px calc(10px + env(safe-area-inset-bottom)) 2px;
+    padding: 0 4px calc(10px + env(safe-area-inset-bottom)) 4px;
   }
 
   .dateSeparator {

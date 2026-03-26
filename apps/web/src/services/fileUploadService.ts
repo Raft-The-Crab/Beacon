@@ -1,5 +1,4 @@
-import axios, { AxiosProgressEvent } from 'axios'
-import { api } from '../lib/api'
+import { apiClient } from '../services/apiClient'
 
 export interface UploadProgress {
   loaded: number
@@ -19,32 +18,12 @@ export class FileUploadService {
     file: File,
     onProgress?: (progress: UploadProgress) => void
   ): Promise<UploadResult> {
-    const formData = new FormData()
-    formData.append('file', file)
-
-    try {
-      const response = await api.post('/media/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
-        onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-          if (onProgress && progressEvent.total) {
-            const percentage = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            onProgress({
-              loaded: progressEvent.loaded,
-              total: progressEvent.total,
-              percentage
-            })
-          }
-        }
-      })
-
-      return response.data
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.error || 'Upload failed')
-      }
-      throw error
+    const res = await apiClient.uploadFile('/media/upload', file, onProgress);
+    
+    if (res.success) {
+      return res.data;
+    } else {
+      throw new Error(res.error || 'Upload failed');
     }
   }
 

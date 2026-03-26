@@ -222,8 +222,8 @@
 
 .clearBtn {
   background: none;
-  border: 1px solid var(--status-error, #f23f43);
-  color: var(--status-error, #f23f43);
+  border: 1px solid var(--status-error, var(--status-error));
+  color: var(--status-error, var(--status-error));
   padding: 8px 16px;
   border-radius: var(--radius-sm, 14px);
   cursor: pointer;

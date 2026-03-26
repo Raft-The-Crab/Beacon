@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { UserPlus, Sparkles, Send } from 'lucide-react'
 import { api } from '../../lib/api'
 import { useToast } from '../ui'

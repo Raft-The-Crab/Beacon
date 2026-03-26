@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useLowBandwidthStore } from '../../stores/useLowBandwidthStore';
 import styles from '../../styles/modules/ui/AuraOrbs.module.css';
 

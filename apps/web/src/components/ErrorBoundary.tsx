@@ -126,7 +126,7 @@ export class ErrorBoundary extends Component<Props, State> {
             width: '64px',
             height: '64px',
             borderRadius: 'var(--radius-full, 50%)',
-            background: 'var(--status-error, #f23f43)',
+            background: 'var(--status-error, var(--status-error))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -179,7 +179,7 @@ export class ErrorBoundary extends Component<Props, State> {
               onClick={this.handleRetry}
               style={{
                 padding: '0.625rem 1.25rem',
-                background: 'var(--beacon-brand, #5865f2)',
+                background: 'var(--beacon-brand, var(--beacon-brand))',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 'var(--radius-lg, 12px)',

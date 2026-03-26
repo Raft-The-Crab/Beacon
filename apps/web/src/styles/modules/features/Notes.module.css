@@ -199,7 +199,7 @@
 
 .deleteBtn:hover {
   background: rgba(242, 63, 67, 0.1) !important;
-  color: #f23f43 !important;
+  color: var(--status-error) !important;
   border-color: rgba(242, 63, 67, 0.2) !important;
 }
 

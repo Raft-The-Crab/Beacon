@@ -40,7 +40,7 @@ const ACTION_NAMES: Record<number, string> = {
 };
 
 const ACTION_COLORS: Record<number, string> = {
-  20: '#f23f43', 21: '#f23f43', 62: '#f23f43', 72: '#f23f43', 42: '#f23f43', 32: '#f23f43', 12: '#f23f43',
+  20: 'var(--status-error)', 21: 'var(--status-error)', 62: 'var(--status-error)', 72: 'var(--status-error)', 42: 'var(--status-error)', 32: 'var(--status-error)', 12: 'var(--status-error)',
   1: '#f0b232', 11: '#f0b232', 23: '#f0b232', 24: '#f0b232', 31: '#f0b232', 51: '#f0b232',
 };
 

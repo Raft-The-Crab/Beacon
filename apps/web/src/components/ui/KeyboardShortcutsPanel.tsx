@@ -1,4 +1,4 @@
-﻿import { useEffect } from 'react'
+import { useEffect } from 'react'
 import { X, Command } from 'lucide-react'
 import { useUIStore } from '../../stores/useUIStore'
 import styles from '../../styles/modules/ui/KeyboardShortcutsPanel.module.css'
@@ -13,14 +13,14 @@ const SHORTCUTS: Shortcut[] = [
   // Navigation
   { keys: ['Ctrl', 'K'], description: 'Open Quick Switcher', category: 'Navigation' },
   { keys: ['Ctrl', '/'], description: 'Show Keyboard Shortcuts', category: 'Navigation' },
-  { keys: ['Alt', '↑'], description: 'Jump to previous unread channel', category: 'Navigation' },
-  { keys: ['Alt', '↓'], description: 'Jump to next unread channel', category: 'Navigation' },
+  { keys: ['Alt', '?'], description: 'Jump to previous unread channel', category: 'Navigation' },
+  { keys: ['Alt', '?'], description: 'Jump to next unread channel', category: 'Navigation' },
   { keys: ['Ctrl', 'Shift', 'M'], description: 'Toggle member list', category: 'Navigation' },
 
   // Messaging
   { keys: ['Enter'], description: 'Send message', category: 'Messaging' },
   { keys: ['Shift', 'Enter'], description: 'New line', category: 'Messaging' },
-  { keys: ['↑'], description: 'Edit last message', category: 'Messaging' },
+  { keys: ['?'], description: 'Edit last message', category: 'Messaging' },
   { keys: ['/'], description: 'Open slash command picker', category: 'Messaging' },
   { keys: ['Esc'], description: 'Cancel reply / close picker', category: 'Messaging' },
 

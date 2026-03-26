@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { api } from '../lib/api'
+import { apiClient } from '../services/apiClient'
 
 interface StreakPet {
   id: string
@@ -81,7 +81,7 @@ export const useStreakStore = create<StreakStore>()(
             })
 
             get().levelUpPet(userId)
-            await api.post('/beacoin/earn', { type: 'STREAK_MAINTAINED', amount: Math.min(newDays, 10) })
+            await apiClient.request('POST', '/beacoin/earn', { type: 'STREAK_MAINTAINED', amount: Math.min(newDays, 10) })
           } else {
             set(state => {
               const newStreaks = { ...state.streaks }
@@ -154,8 +154,8 @@ export const useStreakStore = create<StreakStore>()(
       name: 'beacon-streaks',
       partialize: (state) => ({ streaks: state.streaks }),
       onRehydrateStorage: () => (state) => {
-        if (state && typeof state.streaks !== 'object') {
-          state.streaks = {}
+        if (state && typeof (state as any).streaks !== 'object') {
+          (state as any).streaks = {}
         }
       }
     }
@@ -163,11 +163,11 @@ export const useStreakStore = create<StreakStore>()(
 )
 
 function getStreakColor(days: number): string {
-  if (days >= 365) return STREAK_COLORS[365]
-  if (days >= 100) return STREAK_COLORS[100]
-  if (days >= 60) return STREAK_COLORS[60]
-  if (days >= 30) return STREAK_COLORS[30]
-  if (days >= 14) return STREAK_COLORS[14]
-  if (days >= 7) return STREAK_COLORS[7]
-  return STREAK_COLORS[1]
+  if (days >= 365) return (STREAK_COLORS as any)[365]
+  if (days >= 100) return (STREAK_COLORS as any)[100]
+  if (days >= 60) return (STREAK_COLORS as any)[60]
+  if (days >= 30) return (STREAK_COLORS as any)[30]
+  if (days >= 14) return (STREAK_COLORS as any)[14]
+  if (days >= 7) return (STREAK_COLORS as any)[7]
+  return (STREAK_COLORS as any)[1]
 }

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Virtuoso } from 'react-virtuoso'
-import { Hash, Pin, Users, Search, Phone, Video, ChevronDown, Menu } from 'lucide-react'
+import { Hash, Pin, Users, Search, Phone, Video, ChevronDown, Menu, WifiOff } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { InteractionType } from 'beacon-sdk'
@@ -58,6 +58,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
 
   const toggleMemberList = useUIStore(state => state.toggleMemberList)
   const showMemberList = useUIStore(state => state.showMemberList)
+  const wsConnected = useUIStore(state => state.wsConnected)
   const setShowMobileSidebar = useUIStore(state => state.setShowMobileSidebar)
 
   const { toasts, show } = useToast()
@@ -78,7 +79,7 @@ export function ChatArea({ channelId }: ChatAreaProps) {
     const roles = Array.isArray(memberRecord?.roles)
       ? memberRecord.roles.map((role: any) => ({
           name: typeof role === 'string' ? role : role?.name || 'Role',
-          color: typeof role === 'string' ? '#5865f2' : role?.color || '#5865f2',
+          color: typeof role === 'string' ? 'var(--beacon-brand)' : role?.color || 'var(--beacon-brand)',
         }))
       : []
 
@@ -126,8 +127,13 @@ export function ChatArea({ channelId }: ChatAreaProps) {
   const isVoiceLikeChannel = channelType === 'voice' || channelType === '2' || channelType === 'stage' || channelType === '13'
   const canStartCall = isVoiceLikeChannel || isDMChannel
 
-  const openCall = useCallback(() => {
-    if (isDMChannel) {
+  const openCall = useCallback(async () => {
+    if (isDMChannel && channelId) {
+      try {
+        await apiClient.startCall(channelId)
+      } catch (err) {
+        console.warn('Start call notify failed:', err)
+      }
       const callName = encodeURIComponent(dmCallName || 'Direct Message Call')
       navigate(`/voice?guildId=dm&channelId=${encodeURIComponent(channelId)}&name=${callName}&server=Direct%20Messages`)
       return
@@ -527,6 +533,12 @@ export function ChatArea({ channelId }: ChatAreaProps) {
               <Hash size={24} className={styles.channelIcon} />
             )}
             <span className={styles.channelName}>{channelDisplayName}</span>
+            {!wsConnected && (
+              <div className={styles.connectionBadge} title="Connecting to real-time gateway...">
+                <WifiOff size={14} />
+                <span>Syncing...</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -891,7 +903,6 @@ export function ChatArea({ channelId }: ChatAreaProps) {
         </div>
       </Modal>
 
-      <ToastContainer />
 
       <MessageSearch
         isOpen={showSearch}

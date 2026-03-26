@@ -242,10 +242,10 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                     <h3>Infrastructure Console</h3>
                 </div>
                 <div className={styles.headerBadges}>
-                    <span style={{ fontSize: 11, padding: '4px 8px', borderRadius: 999, background: apiHealthy === false ? 'rgba(242,63,67,0.15)' : 'rgba(46,160,67,0.15)', color: apiHealthy === false ? '#f23f43' : '#2ea043' }}>
+                    <span style={{ fontSize: 11, padding: '4px 8px', borderRadius: 999, background: apiHealthy === false ? 'rgba(242,63,67,0.15)' : 'rgba(46,160,67,0.15)', color: apiHealthy === false ? 'var(--status-error)' : '#2ea043' }}>
                         API {apiHealthy === false ? 'Offline' : 'Online'}
                     </span>
-                    <span style={{ fontSize: 11, padding: '4px 8px', borderRadius: 999, background: aiHealthy === false ? 'rgba(242,63,67,0.15)' : 'rgba(46,160,67,0.15)', color: aiHealthy === false ? '#f23f43' : '#2ea043' }}>
+                    <span style={{ fontSize: 11, padding: '4px 8px', borderRadius: 999, background: aiHealthy === false ? 'rgba(242,63,67,0.15)' : 'rgba(46,160,67,0.15)', color: aiHealthy === false ? 'var(--status-error)' : '#2ea043' }}>
                         AI {aiHealthy === false ? 'Degraded' : 'Connected'}
                     </span>
                 </div>
@@ -409,7 +409,7 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                                     type="text" 
                                     value={editAccentColor} 
                                     onChange={e => setEditAccentColor(e.target.value)}
-                                    placeholder="#5865f2"
+                                    placeholder="var(--beacon-brand)"
                                 />
                             </div>
                             <div className={styles.actions}>
@@ -461,7 +461,7 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                         <div className={styles.terminalActions}>
                             <button onClick={() => { void checkApiHealth(); void checkAiHealth(); }} style={{ fontSize: 10, opacity: 0.75, border: 'none', background: 'transparent', color: 'white', cursor: 'pointer' }}>REFRESH</button>
                             <button onClick={clearLogs} style={{ fontSize: 10, opacity: 0.5, border: 'none', background: 'transparent', color: 'white', cursor: 'pointer' }}>CLEAR</button>
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: apiHealthy === false ? '#f23f43' : '#2ea043' }} title="Backend Health" />
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: apiHealthy === false ? 'var(--status-error)' : '#2ea043' }} title="Backend Health" />
                         </div>
                     </div>
                     <div className={styles.terminalBody}>

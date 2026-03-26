@@ -208,7 +208,7 @@ export function DeveloperPortal() {
       <h3 className={styles.panelTitle}>Platform Health</h3>
       <div className={`${styles.statusCard} ${health?.status === 'healthy' ? styles.statusCardHealthy : styles.statusCardDegraded}`}>
         <div className={styles.statusHeader}>
-          <Activity size={18} style={{ color: health?.status === 'healthy' ? '#2ea043' : '#f23f43' }} />
+          <Activity size={18} style={{ color: health?.status === 'healthy' ? '#2ea043' : 'var(--status-error)' }} />
           <span>{healthLoading ? 'Checking...' : (health?.status === 'healthy' ? 'Operational' : 'Degraded')}</span>
         </div>
         <div className={styles.statusDetails}>

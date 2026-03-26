@@ -452,7 +452,7 @@
 }
 
 .statusDegraded {
-  color: #f23f43;
+  color: var(--status-error);
 }
 
 .statusUnknown {

@@ -1,4 +1,4 @@
-﻿import styles from '../../styles/modules/ui/LoadingStates.module.css'
+import styles from '../../styles/modules/ui/LoadingStates.module.css'
 
 interface SkeletonProps {
   width?: string

@@ -12,7 +12,7 @@ export function Contact() {
 
             <section>
                 <p>
-                    Whether you are an architect building on our SDK, a user seeking sovereignty, or a partner interested in the Beacon protocol, our lines of communication are always open. We prioritize high-impact feedback and technical inquiries.
+                    Whether you are an architect building on our SDK, a user seeking security, or a partner interested in the Beacon protocol, our lines of communication are always open. We prioritize high-impact feedback and technical inquiries.
                 </p>
             </section>
 

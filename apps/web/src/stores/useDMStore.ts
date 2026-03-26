@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { MessageReaction } from '../components/features/MessageItem'
 import { PresenceStatus } from 'beacon-sdk'
-import { api } from '../lib/api'
+import { apiClient } from '../services/apiClient'
 import { useAuthStore } from './useAuthStore'
 
 export interface DirectMessage {
@@ -51,6 +51,9 @@ interface DMStore {
   deleteMessage: (channelId: string, messageId: string) => Promise<void>
   addReaction: (channelId: string, messageId: string, emoji: string) => Promise<void>
   handleChannelCreateWs: (channelData: any) => void
+  handleMessageCreate: (message: DirectMessage & { channelId: string }) => void
+  handleMessageUpdate: (channelId: string, messageId: string, updates: Partial<DirectMessage>) => void
+  handleMessageDelete: (channelId: string, messageId: string) => void
 }
 
 const EMPTY_ARRAY: any[] = []
@@ -84,13 +87,15 @@ export const useDMStore = create<DMStore>((set, get) => ({
 
   fetchChannels: async () => {
     try {
-      const { data } = await api.get('/dms')
-      const formatted = data.map((channel: any) => ({
-        id: channel.id,
-        unreadCount: 0,
-        participants: normalizeDMParticipants(channel.recipients || [])
-      }))
-      set({ channels: formatted })
+      const res = await apiClient.getDMs()
+      if (res.success && Array.isArray(res.data)) {
+        const formatted = res.data.map((channel: any) => ({
+          id: channel.id,
+          unreadCount: 0,
+          participants: normalizeDMParticipants(channel.recipients || [])
+        }))
+        set({ channels: formatted })
+      }
     } catch (e) {
       console.error('Failed to fetch DMs', e)
     }
@@ -98,13 +103,15 @@ export const useDMStore = create<DMStore>((set, get) => ({
 
   eagerLoad: async () => {
     try {
-      const { data } = await api.get('/dms')
-      const formatted = data.map((channel: any) => ({
-        id: channel.id,
-        unreadCount: 0,
-        participants: normalizeDMParticipants(channel.recipients || [])
-      }))
-      set({ channels: formatted })
+      const res = await apiClient.getDMs()
+      if (res.success && Array.isArray(res.data)) {
+        const formatted = res.data.map((channel: any) => ({
+          id: channel.id,
+          unreadCount: 0,
+          participants: normalizeDMParticipants(channel.recipients || [])
+        }))
+        set({ channels: formatted })
+      }
     } catch (e) {
       console.error('DM eager load failed', e)
     }
@@ -160,7 +167,9 @@ export const useDMStore = create<DMStore>((set, get) => ({
   createDMChannel: async (target: DMParticipant | string) => {
     const userId = typeof target === 'string' ? target : target.id;
     try {
-      const { data } = await api.post('/dms', { userIds: [userId] });
+      const res = await apiClient.createDM([userId]);
+      if (!res.success) throw new Error(res.error)
+      const data = res.data
       const newChannel: DMChannel = {
         id: data.id,
         participants: normalizeDMParticipants(data.recipients || []),
@@ -191,6 +200,57 @@ export const useDMStore = create<DMStore>((set, get) => ({
     }
     return { channels: [...state.channels, newChannel] }
   }),
+  
+  handleMessageCreate: (message) => {
+    const { channelId } = message
+    set((state) => {
+      // Don't add if already exists (e.g. from optimistic update)
+      const current = state.messages.get(channelId) || []
+      if (current.find((m) => m.id === message.id)) return state
+
+      const messages = new Map(state.messages)
+      
+      // Decryption Logic Sync
+      let displayContent = message.content
+      if (message.nonce && message.encryptedContent) {
+        displayContent = "[Encrypted Content]"
+      }
+
+      messages.set(channelId, [...current, { ...message, content: displayContent }])
+      
+      // Update unread count if not in active channel
+      const isCurrentChannel = state.activeChannel === channelId
+      const channels = state.channels.map(c => 
+        c.id === channelId && !isCurrentChannel 
+          ? { ...c, unreadCount: (c.unreadCount || 0) + 1 } 
+          : c
+      )
+
+      return { messages, channels }
+    })
+  },
+
+  handleMessageUpdate: (channelId, messageId, updates) => {
+    set((state) => {
+      const messages = new Map(state.messages)
+      const current = messages.get(channelId) || []
+      const updated = current.map((m) => 
+        m.id === messageId ? { ...m, ...updates } : m
+      )
+      messages.set(channelId, updated)
+      return { messages }
+    })
+  },
+
+  handleMessageDelete: (channelId, messageId) => {
+    set((state) => {
+      const messages = new Map(state.messages)
+      const current = messages.get(channelId) || []
+      const filtered = current.filter((m) => m.id !== messageId)
+      messages.set(channelId, filtered)
+      return { messages }
+    })
+  },
 
   updateUserStatus: (userId: string, status: PresenceStatus) =>
     set((state) => ({
@@ -211,7 +271,7 @@ export const useDMStore = create<DMStore>((set, get) => ({
         payload.encryptedContent = btoa(content)
         payload.content = "This message is end-to-end encrypted."
       }
-      await api.post(`/channels/${channelId}/messages`, payload)
+      await apiClient.sendMessage(channelId, payload)
     } catch (error) {
       console.error(error)
       throw error
@@ -282,9 +342,9 @@ export const useDMStore = create<DMStore>((set, get) => ({
 
     try {
       if (removingExistingReaction) {
-        await api.delete(`/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}/@me`)
+        await apiClient.removeReaction(channelId, messageId, emoji)
       } else {
-        await api.put(`/channels/${channelId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}/@me`)
+        await apiClient.addReaction(channelId, messageId, emoji)
       }
     } catch (error) {
       console.error('Failed to sync reaction with server', error)

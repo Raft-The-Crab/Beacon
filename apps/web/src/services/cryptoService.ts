@@ -1,5 +1,5 @@
 /**
- * Sovereign Security Engine (E2EE)
+ * Advanced Security Engine (E2EE)
  * Powered by Web Crypto API
  */
 export class CryptoService {

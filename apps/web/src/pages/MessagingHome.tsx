@@ -17,7 +17,7 @@ import { useUserListStore } from "../stores/useUserListStore"
 import { useUIStore } from "../stores/useUIStore"
 import { useBeacoinStore } from "../stores/useBeacoinStore"
 import { useAuthStore } from "../stores/useAuthStore"
-import { api } from "../lib/api"
+import { apiClient } from "../services/apiClient"
 
 import { Avatar, Tooltip, Modal } from "../components/ui"
 import { ChatArea } from "../components/chat/ChatArea"
@@ -36,7 +36,9 @@ import { AuraOrbs } from "../components/ui/AuraOrbs"
 import { NotificationBell } from "../components/features/NotificationInbox"
 import { UserPopoverCard } from "../components/features/UserPopoverCard"
 import { BeaconPlusStore } from "./BeaconPlusStore"
+import { HomeHero } from "../components/features/HomeHero"
 import styles from "../styles/modules/pages/MessagingHome.module.css"
+import mobileStyles from "../styles/modules/pages/MessagingHomeMobile.module.css"
 
 type FriendTab = "online" | "all" | "pending" | "blocked"
 
@@ -57,6 +59,8 @@ export function MessagingHome() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const { show } = useToast()
   const ui = useUIStore()
+  const activeMobileTab = useUIStore((state) => state.activeMobileTab)
+  const setActiveMobileTab = useUIStore((state) => state.setActiveMobileTab)
 
   const { fetchWallet } = useBeacoinStore()
 
@@ -65,8 +69,12 @@ export function MessagingHome() {
 
   const loadPendingFriends = async () => {
     try {
-      const { data } = await api.get('/friends/pending')
-      setPendingFriends(Array.isArray(data) ? data : [])
+      const res = await apiClient.request('GET', '/friends/pending')
+      if (res.success) {
+        setPendingFriends(Array.isArray(res.data) ? res.data : [])
+      } else {
+        setPendingFriends([])
+      }
     } catch {
       setPendingFriends([])
     }
@@ -142,9 +150,9 @@ export function MessagingHome() {
 
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case "online": return "var(--status-online, #23a559)"
+      case "online": return "var(--status-online, var(--status-success))"
       case "idle": return "var(--status-idle, #f0b232)"
-      case "dnd": return "var(--status-dnd, #f23f43)"
+      case "dnd": return "var(--status-dnd, var(--status-error))"
       default: return "var(--text-muted)"
     }
   }
@@ -160,9 +168,13 @@ export function MessagingHome() {
 
   const handleAcceptPending = async (friendId: string, username: string) => {
     try {
-      await api.put(`/friends/${friendId}/accept`)
-      show(`Accepted friend request from ${username}`, 'success')
-      await Promise.all([fetchFriends(), loadPendingFriends()])
+      const res = await apiClient.request('PUT', `/friends/${friendId}/accept`)
+      if (res.success) {
+        show(`Accepted friend request from ${username}`, 'success')
+        await Promise.all([fetchFriends(), loadPendingFriends()])
+      } else {
+        throw new Error(res.error?.message || 'Failed to accept friend request')
+      }
     } catch {
       show('Failed to accept friend request', 'error')
     }
@@ -170,9 +182,11 @@ export function MessagingHome() {
 
   const handleDeclinePending = async (friendId: string, username: string) => {
     try {
-      await api.delete(`/friends/${friendId}`)
-      show(`Declined friend request from ${username}`, 'info')
-      await loadPendingFriends()
+      const res = await apiClient.request('DELETE', `/friends/${friendId}`)
+      if (res.success) {
+        show(`Declined friend request from ${username}`, 'info')
+        await loadPendingFriends()
+      }
     } catch {
       show('Failed to decline friend request', 'error')
     }
@@ -278,147 +292,180 @@ export function MessagingHome() {
     <div className={styles.pageWrapper}>
       <AuraOrbs />
       <WorkspaceLayout showServerRail sidebar={sidebar} rightPanel={rightPanel}>
-        {!activeChannel ? (
-          <div className={styles.friendsWrapper}>
-            {/* Top Bar */}
-            <header className={styles.topBar}>
-              <div className={styles.topBarLeft}>
-                <button
-                  className={styles.menuButton}
-                  onClick={() => ui.setShowMobileSidebar(true)}
-                >
-                  <Menu size={20} />
-                </button>
-                <Users size={20} />
-                <h2 className={styles.topBarTitle}>Friends</h2>
-                <div className={styles.divider} />
-                <div className={styles.tabs}>
-                  {(["online", "all", "pending", "blocked"] as FriendTab[]).map((tab) => (
-                    <button
-                      key={tab}
-                      className={`${styles.tab} ${currentTab === tab ? styles.tabActive : ""} `}
-                      onClick={() => setCurrentTab(tab)}
-                    >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    </button>
-                  ))}
+        {activeMobileTab === 'messages' && (
+          !activeChannel ? (
+            <div className={styles.friendsWrapper}>
+              {/* Top Bar */}
+              <header className={styles.topBar}>
+                <div className={styles.topBarLeft}>
                   <button
-                    className={styles.addFriendBtn}
-                    onClick={() => setShowAddFriend(true)}
+                    className={styles.menuButton}
+                    onClick={() => ui.setShowMobileSidebar(true)}
                   >
-                    Add Friend
+                    <Menu size={20} />
                   </button>
-                </div>
-              </div>
-              <div className={styles.topBarRight}>
-                <NotificationBell />
-                <Tooltip content="Help" position="left">
-                  <button
-                    className={styles.iconCtrlBtn}
-                    onClick={() => window.open("/docs", "_blank")}
-                  >
-                    <HelpCircle size={18} />
-                  </button>
-                </Tooltip>
-              </div>
-            </header>
-
-            {/* Friends Content */}
-            <motion.div
-              className={styles.friendsBody}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {/* Search */}
-              <div className={styles.friendsSearchRow}>
-                <div className={styles.friendsSearchWrap}>
-                  <Search size={14} className={styles.friendsSearchIcon} />
-                  <input
-                    className={styles.friendsSearchInput}
-                    placeholder="Search"
-                    value={friendSearch}
-                    onChange={(e) => setFriendSearch(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Tab Label */}
-              <div className={styles.friendsLabel}>{tabLabel()}</div>
-
-              {/* Friends List */}
-              <div className={styles.friendsScroll}>
-                {displayedFriends.length === 0 ? (
-                  <div className={styles.friendsEmpty}>
-                    <Users size={48} opacity={0.2} />
-                    <p>{currentTab === "online" ? "No friends online right now." : "No friends to show."}</p>
-                  </div>
-                ) : (
-                  <Virtuoso
-                    data={displayedFriends}
-                    itemContent={(_index, friend) => (
-                      <div
-                        key={friend.id}
-                        className={styles.friendRow}
+                  <Users size={20} />
+                  <h2 className={styles.topBarTitle}>Friends</h2>
+                  <div className={styles.divider} />
+                  <div className={styles.tabs}>
+                    {(["online", "all", "pending", "blocked"] as FriendTab[]).map((tab) => (
+                      <button
+                        key={tab}
+                        className={`${styles.tab} ${currentTab === tab ? styles.tabActive : ""} `}
+                        onClick={() => setCurrentTab(tab)}
                       >
-                        <UserPopoverCard
-                          userId={friend.id}
-                          username={friend.username}
-                          displayName={friend.displayName ?? undefined}
-                          banner={friend.banner ?? undefined}
-                          avatar={friend.avatar ?? undefined}
-                          status={friend.status as any}
-                          customStatus={friend.customStatus ?? undefined}
-                          bio={friend.bio ?? undefined}
-                          badges={friend.badges}
-                          joinedAt={friend.createdAt}
-                          avatarDecorationId={friend.avatarDecorationId ?? undefined}
-                          profileEffectId={friend.profileEffectId ?? undefined}
-                          onAddFriend={undefined}
-                        >
-                          <Avatar
-                            username={friend.displayName || friend.username}
-                            src={friend.avatar ?? undefined}
-                            status={friend.status as any}
-                            size="md"
-                            avatarDecorationId={friend.avatarDecorationId ?? undefined}
-                          />
-                        </UserPopoverCard>
-                        <div className={styles.friendInfo}>
-                          <div className={styles.friendName}>{friend.displayName || friend.username}</div>
-                          <div style={{ color: getStatusColor(friend.status), fontSize: 12 }}>
-                            {friend.customStatus || getStatusLabel(friend.status)}
-                          </div>
-                        </div>
-                        {currentTab === 'pending' && (
-                          <div className={styles.friendActions}>
-                            <button
-                              className={styles.pendingActionBtn}
-                              type="button"
-                              onClick={() => void handleAcceptPending(friend.id, friend.username)}
-                            >
-                              Accept
-                            </button>
-                            <button
-                              className={styles.pendingActionBtn}
-                              type="button"
-                              onClick={() => void handleDeclinePending(friend.id, friend.username)}
-                            >
-                              Ignore
-                            </button>
-                          </div>
-                        )}
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      </button>
+                    ))}
+                    <button
+                      className={styles.addFriendBtn}
+                      onClick={() => setShowAddFriend(true)}
+                    >
+                      Add Friend
+                    </button>
+                  </div>
+                </div>
+                <div className={styles.topBarRight}>
+                  <NotificationBell />
+                  <Tooltip content="Help" position="left">
+                    <button
+                      className={styles.iconCtrlBtn}
+                      onClick={() => window.open("/docs", "_blank")}
+                    >
+                      <HelpCircle size={18} />
+                    </button>
+                  </Tooltip>
+                </div>
+              </header>
+
+              {/* Friends Content */}
+              <motion.div
+                className={styles.friendsBody}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {/* Search */}
+                <div className={styles.friendsSearchRow}>
+                  <div className={styles.friendsSearchWrap}>
+                    <Search size={14} className={styles.friendsSearchIcon} />
+                    <input
+                      className={styles.friendsSearchInput}
+                      placeholder="Search"
+                      value={friendSearch}
+                      onChange={(e) => setFriendSearch(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Tab Label */}
+                <div className={styles.friendsLabel}>{tabLabel()}</div>
+
+                {/* Friends List */}
+                <div className={styles.friendsScroll}>
+                  {displayedFriends.length === 0 && currentTab !== "online" && currentTab !== "pending" && currentTab !== "blocked" ? (
+                    <HomeHero />
+                  ) : displayedFriends.length === 0 ? (
+                    <div className={mobileStyles.friendsEmpty}>
+                      <div className={mobileStyles.premiumGraphicWrap}>
+                         <Users size={48} className={mobileStyles.premiumIcon} />
+                         <div className={mobileStyles.premiumGlow} />
                       </div>
-                    )}
-                  />
-                )}
+                      <p>{currentTab === "online" ? "No friends online right now." : "No friends to show."}</p>
+                    </div>
+                  ) : (
+                    <Virtuoso
+                      data={displayedFriends}
+                      itemContent={(_index, friend) => (
+                        <div
+                          key={friend.id}
+                          className={styles.friendRow}
+                        >
+                          <UserPopoverCard
+                            userId={friend.id}
+                            username={friend.username}
+                            displayName={friend.displayName ?? undefined}
+                            banner={friend.banner ?? undefined}
+                            avatar={friend.avatar ?? undefined}
+                            status={friend.status as any}
+                            customStatus={friend.customStatus ?? undefined}
+                            bio={friend.bio ?? undefined}
+                            badges={friend.badges}
+                            joinedAt={friend.createdAt}
+                            avatarDecorationId={friend.avatarDecorationId ?? undefined}
+                            profileEffectId={friend.profileEffectId ?? undefined}
+                            onAddFriend={undefined}
+                          >
+                            <Avatar
+                              username={friend.displayName || friend.username}
+                              src={friend.avatar ?? undefined}
+                              status={friend.status as any}
+                              size="md"
+                              avatarDecorationId={friend.avatarDecorationId ?? undefined}
+                            />
+                          </UserPopoverCard>
+                          <div className={styles.friendInfo}>
+                            <div className={styles.friendName}>{friend.displayName || friend.username}</div>
+                            <div style={{ color: getStatusColor(friend.status), fontSize: 12 }}>
+                              {friend.customStatus || getStatusLabel(friend.status)}
+                            </div>
+                          </div>
+                          {currentTab === 'pending' && (
+                            <div className={styles.friendActions}>
+                              <button
+                                className={styles.pendingActionBtn}
+                                type="button"
+                                onClick={() => void handleAcceptPending(friend.id, friend.username)}
+                              >
+                                Accept
+                              </button>
+                              <button
+                                className={styles.pendingActionBtn}
+                                type="button"
+                                onClick={() => void handleDeclinePending(friend.id, friend.username)}
+                              >
+                                Ignore
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    />
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          ) : (
+            <div className={styles.chatWrapper}>
+              <ChatArea channelId={activeChannel} />
+            </div>
+          )
+        )}
+
+        {(activeMobileTab === 'servers' || activeMobileTab === 'discover') && (
+           <div className={mobileStyles.discoveryMobileView}>
+              <ServerDiscovery />
+           </div>
+        )}
+
+        {activeMobileTab === 'profile' && (
+           <div className={mobileStyles.profileMobileView}>
+              <div className={mobileStyles.profileMobileHeader}>
+                <Avatar username={user?.username} size="xl" status={user?.status as any} />
+                <h2>{user?.displayName || user?.username}</h2>
+                <p>@{user?.username}</p>
               </div>
-            </motion.div>
-          </div>
-        ) : (
-          <div className={styles.chatWrapper}>
-            <ChatArea channelId={activeChannel} />
-          </div>
+              <div className={mobileStyles.profileMobileActions}>
+                 <button className={styles.navButton} onClick={() => ui.setShowUserSettings(true)}>
+                    <Users size={20} />
+                    <span>Edit Profile</span>
+                 </button>
+                 <button className={styles.navButton} onClick={() => useAuthStore.getState().logout()}>
+                    <HelpCircle size={20} />
+                    <span>Log Out</span>
+                 </button>
+              </div>
+           </div>
         )}
 
         {showWallet && <BeacoinWallet onClose={() => setShowWallet(false)} />}

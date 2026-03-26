@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api } from '../lib/api'
+import { apiClient } from '../services/apiClient'
 import { useAuthStore } from './useAuthStore'
 import { useBeacoinStore } from './useBeacoinStore'
 
@@ -12,14 +12,14 @@ const FALLBACK_MARKETPLACE = {
     ],
     decorations: [
         { id: 'deco-royal-orbit', name: 'Royal Orbit', price: 800, color: '#f0b232' },
-        { id: 'deco-ember-crown', name: 'Ember Crown', price: 1000, color: '#f04747' },
+        { id: 'deco-ember-crown', name: 'Ember Crown', price: 1000, color: 'var(--status-error)' },
     ],
     themes: [
-        { id: 'theme-midnight', name: 'Midnight', price: 1200, accentColor: '#5865f2', description: 'Deep midnight blue with beacon brand accent' },
+        { id: 'theme-midnight', name: 'Midnight', price: 1200, accentColor: 'var(--beacon-brand)', description: 'Deep midnight blue with beacon brand accent' },
         { id: 'theme-aurora', name: 'Aurora', price: 1500, accentColor: '#c471ed', description: 'Ethereal aurora borealis inspired theme' },
         { id: 'theme-sunset', name: 'Sunset', price: 1200, accentColor: '#f0743d', description: 'Warm golden sunset with amber accents' },
         { id: 'theme-ocean', name: 'Ocean', price: 1300, accentColor: '#00d9ff', description: 'Serene deep ocean with cyan waves' },
-        { id: 'theme-forest', name: 'Forest', price: 1200, accentColor: '#23a559', description: 'Lush forest green with nature vibes' },
+        { id: 'theme-forest', name: 'Forest', price: 1200, accentColor: 'var(--status-success)', description: 'Lush forest green with nature vibes' },
     ],
 }
 
@@ -44,7 +44,8 @@ function writeLocalOwned(items: OwnedCosmetic[]) {
 }
 
 function isDbOrNetworkError(err: any): boolean {
-    const msg = String(err?.response?.data?.error || err?.message || '').toLowerCase()
+    const errorData = err?.response?.data || err?.error || err;
+    const msg = String(errorData?.error || err?.message || '').toLowerCase()
     return msg.includes('database not connected') || msg.includes('network') || msg.includes('failed to fetch')
 }
 
@@ -79,13 +80,17 @@ export const useShopStore = create<ShopState>((set) => ({
     fetchOwned: async () => {
         try {
             set({ isLoading: true, error: null })
-            const { data } = await api.get('/shop/@me')
-            set({ ownedCosmetics: data, isLoading: false })
+            const res = await apiClient.request('GET', '/shop/@me')
+            if (res.success) {
+                set({ ownedCosmetics: res.data, isLoading: false })
+            } else {
+                throw res
+            }
         } catch (err: any) {
             const fallbackOwned = readLocalOwned()
             set({
                 ownedCosmetics: fallbackOwned,
-                error: isDbOrNetworkError(err) ? 'Store backend unavailable. Running in local mode.' : (err?.response?.data?.error || 'Failed to load cosmetics'),
+                error: isDbOrNetworkError(err) ? 'Store backend unavailable. Running in local mode.' : (err?.error?.message || err?.message || 'Failed to load cosmetics'),
                 isLoading: false
             })
         }
@@ -94,12 +99,16 @@ export const useShopStore = create<ShopState>((set) => ({
     fetchMarketplace: async () => {
         try {
             set({ isLoading: true, error: null })
-            const { data } = await api.get('/shop/marketplace')
-            set({ marketplace: data, isLoading: false })
+            const res = await apiClient.request('GET', '/shop/marketplace')
+            if (res.success) {
+                set({ marketplace: res.data, isLoading: false })
+            } else {
+                throw res
+            }
         } catch (err: any) {
             set({
                 marketplace: FALLBACK_MARKETPLACE,
-                error: isDbOrNetworkError(err) ? 'Marketplace is in offline mode (database unavailable).' : (err?.response?.data?.error || 'Failed to load marketplace'),
+                error: isDbOrNetworkError(err) ? 'Marketplace is in offline mode (database unavailable).' : (err?.error?.message || err?.message || 'Failed to load marketplace'),
                 isLoading: false
             })
         }
@@ -107,8 +116,10 @@ export const useShopStore = create<ShopState>((set) => ({
 
     fetchMyGifts: async () => {
         try {
-            const { data } = await api.get('/gifting/my-gifts')
-            set({ myGifts: data })
+            const res = await apiClient.request('GET', '/gifting/my-gifts')
+            if (res.success) {
+                set({ myGifts: res.data })
+            }
         } catch (err) {
             console.error('Failed to load gifts')
         }
@@ -116,13 +127,16 @@ export const useShopStore = create<ShopState>((set) => ({
 
     purchaseCosmetic: async (cosmeticId: string, couponCode?: string) => {
         try {
-            const { data } = await api.post('/shop/purchase', { cosmeticId, couponCode })
-            set((state) => ({ ownedCosmetics: [data.cosmetic, ...state.ownedCosmetics] }))
-            // Refresh wallet balance
-            useBeacoinStore.getState().fetchWallet()
+            const res = await apiClient.request('POST', '/shop/purchase', { cosmeticId, couponCode })
+            if (res.success) {
+                set((state) => ({ ownedCosmetics: [res.data.cosmetic, ...state.ownedCosmetics] }))
+                useBeacoinStore.getState().fetchWallet()
+            } else {
+                throw res
+            }
         } catch (err: any) {
             if (!isDbOrNetworkError(err)) {
-                throw new Error(err?.response?.data?.error || 'Purchase failed')
+                throw new Error(err?.error?.message || err?.message || 'Purchase failed')
             }
 
             const state = useShopStore.getState()
@@ -163,21 +177,28 @@ export const useShopStore = create<ShopState>((set) => ({
 
     sendGift: async (recipientId, cosmeticId, type, message, tier) => {
         try {
-            await api.post('/gifting/send', { recipientId, cosmeticId, type, message, tier })
-            useBeacoinStore.getState().fetchWallet()
+            const res = await apiClient.request('POST', '/gifting/send', { recipientId, cosmeticId, type, message, tier })
+            if (res.success) {
+                useBeacoinStore.getState().fetchWallet()
+            } else {
+                throw res
+            }
         } catch (err: any) {
-            throw new Error(err?.response?.data?.error || 'Gifting failed')
+            throw new Error(err?.error?.message || err?.message || 'Gifting failed')
         }
     },
 
     equipCosmetic: async (cosmeticId: string | null, type: 'avatar' | 'profile' | 'theme') => {
         try {
-            await api.post('/shop/equip', { cosmeticId, type })
-            // Refresh auto user to update equipped cosmetics
-            useAuthStore.getState().checkSession()
+            const res = await apiClient.request('POST', '/shop/equip', { cosmeticId, type })
+            if (res.success) {
+                useAuthStore.getState().checkSession()
+            } else {
+                throw res
+            }
         } catch (err: any) {
             if (!isDbOrNetworkError(err)) {
-                throw new Error(err?.response?.data?.error || 'Equip failed')
+                throw new Error(err?.error?.message || err?.message || 'Equip failed')
             }
 
             const user = useAuthStore.getState().user
@@ -188,7 +209,6 @@ export const useShopStore = create<ShopState>((set) => ({
             } else if (type === 'profile') {
                 await useAuthStore.getState().updateProfile({ profileEffectId: cosmeticId } as any)
             } else if (type === 'theme') {
-                // Theme equipping is handled by the server - just notify
                 set({ error: 'Theme equipped! Changes will sync when backend is available.' })
             }
             set({ error: 'Equipped in offline mode. Changes will sync when backend is available.' })

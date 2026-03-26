@@ -26,7 +26,7 @@
 
 .badge {
     background: rgba(250, 166, 26, 0.15);
-    color: #faa61a;
+    color: var(--status-warning);
     padding: 2px 10px;
     border-radius: var(--radius-xl);
     font-size: 11px;
@@ -129,7 +129,7 @@
 }
 
 .cancelBtn:hover {
-    color: #ed4245;
+    color: var(--status-error);
     background: rgba(237, 66, 69, 0.1);
 }
 

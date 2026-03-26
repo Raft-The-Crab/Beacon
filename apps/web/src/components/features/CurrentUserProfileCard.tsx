@@ -65,9 +65,9 @@ export function CurrentUserProfileCard({ children }: CurrentUserProfileCardProps
     const setShowUserSettings = useUIStore(state => state.setShowUserSettings)
 
     const STATUS_OPTIONS = [
-        { value: 'online',    label: 'Online',    color: '#23a559', icon: <Circle size={10} fill="#23a559" stroke="none" /> },
+        { value: 'online',    label: 'Online',    color: 'var(--status-success)', icon: <Circle size={10} fill="var(--status-success)" stroke="none" /> },
         { value: 'idle',      label: 'Idle',      color: '#f0b232', icon: <Moon size={11} /> },
-        { value: 'dnd',       label: 'Do Not Disturb', color: '#ed4245', icon: <Minus size={11} /> },
+        { value: 'dnd',       label: 'Do Not Disturb', color: 'var(--status-error)', icon: <Minus size={11} /> },
         { value: 'invisible', label: 'Invisible', color: '#747f8d', icon: <EyeOff size={11} /> },
     ] as const
 
@@ -250,7 +250,7 @@ export function CurrentUserProfileCard({ children }: CurrentUserProfileCardProps
                                         <span>Customize Profile</span>
                                     </button>
                                     <button className={styles.quickActionBtn} onClick={() => setShowStatusMenu(s => !s)}>
-                                        <Circle size={10} fill={(user?.status === 'dnd' ? '#ed4245' : user?.status === 'idle' ? '#f0b232' : user?.status === 'invisible' ? '#747f8d' : '#23a559')} stroke="none" />
+                                        <Circle size={10} fill={(user?.status === 'dnd' ? 'var(--status-error)' : user?.status === 'idle' ? '#f0b232' : user?.status === 'invisible' ? '#747f8d' : 'var(--status-success)')} stroke="none" />
                                         <span>Set Status</span>
                                     </button>
                                 </div>
@@ -268,7 +268,7 @@ export function CurrentUserProfileCard({ children }: CurrentUserProfileCardProps
                                 </button>
 
                                 <button className={styles.actionRow} onClick={() => setShowStatusMenu(s => !s)}>
-                                    <Circle size={12} fill={(user?.status === 'dnd' ? '#ed4245' : user?.status === 'idle' ? '#f0b232' : user?.status === 'invisible' ? '#747f8d' : '#23a559')} stroke="none" />
+                                    <Circle size={12} fill={(user?.status === 'dnd' ? 'var(--status-error)' : user?.status === 'idle' ? '#f0b232' : user?.status === 'invisible' ? '#747f8d' : 'var(--status-success)')} stroke="none" />
                                     <span style={{ flex: 1 }}>Status</span>
                                     <ChevronRight size={13} style={{ opacity: 0.5, transform: showStatusMenu ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
                                 </button>

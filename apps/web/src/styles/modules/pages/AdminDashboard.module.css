@@ -30,7 +30,7 @@
     width: 56px;
     height: 56px;
     padding: 12px;
-    background: linear-gradient(135deg, var(--beacon-brand), #23a559);
+    background: linear-gradient(135deg, var(--beacon-brand), var(--status-success));
     color: #000;
     border-radius: 18px;
     box-shadow: 0 8px 24px rgba(0, 255, 135, 0.3);
@@ -360,7 +360,7 @@
 
 .ban {
     background: rgba(242, 63, 67, 0.1);
-    color: #f23f43;
+    color: var(--status-error);
     border: 1px solid rgba(242, 63, 67, 0.2);
 }
 
@@ -372,7 +372,7 @@
 
 .unban {
     background: rgba(35, 165, 89, 0.1);
-    color: #23a559;
+    color: var(--status-success);
     border: 1px solid rgba(35, 165, 89, 0.2);
 }
 

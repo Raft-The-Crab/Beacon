@@ -8,7 +8,7 @@ import avatarStyles from '../../styles/modules/ui/Avatar.module.css'
 
 const RARITY_COLORS: Record<string, string> = {
     common: '#8e9297',
-    rare: '#5865f2',
+    rare: 'var(--beacon-brand)',
     epic: '#7b2ff7',
     legendary: '#f0b232',
 }

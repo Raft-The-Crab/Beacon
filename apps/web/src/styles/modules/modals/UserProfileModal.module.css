@@ -295,7 +295,8 @@
   }
   
   .identitySection {
-    padding-top: 140px;
+    padding-top: 120px;
+    padding-bottom: 12px;
   }
 }
 
@@ -303,8 +304,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .nameHeader {

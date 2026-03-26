@@ -1,5 +1,6 @@
-﻿import React from 'react'
+import React from 'react'
 import { ServerList } from './ServerList'
+import { BottomTabs } from './BottomTabs'
 import { useUIStore } from '../../stores/useUIStore'
 import styles from '../../styles/modules/layout/WorkspaceLayout.module.css'
 
@@ -20,7 +21,11 @@ export function WorkspaceLayout({
 
     return (
         <div className={styles.container}>
-            {showServerRail && <ServerList />}
+            {showServerRail && (
+                <div className={styles.serverRailWrapper}>
+                    <ServerList />
+                </div>
+            )}
 
             {/* Mobile Drawer Backdrop */}
             {showMobileSidebar && (
@@ -43,6 +48,8 @@ export function WorkspaceLayout({
                     {rightPanel}
                 </div>
             )}
+
+            <BottomTabs />
         </div>
     )
 }

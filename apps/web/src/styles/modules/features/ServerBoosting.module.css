@@ -86,7 +86,7 @@
 }
 
 .zapIcon {
-    color: #5865f2;
+    color: var(--beacon-brand);
     margin-bottom: 8px;
 }
 
@@ -125,7 +125,7 @@
     left: 0;
     top: 0;
     bottom: 0;
-    background: linear-gradient(90deg, #5865f2, #ed4245);
+    background: linear-gradient(90deg, var(--beacon-brand), var(--status-error));
     border-radius: var(--radius-xs);
     box-shadow: 0 0 12px rgba(88, 101, 242, 0.4);
     transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -146,8 +146,8 @@
 }
 
 .markerActive {
-    background: #5865f2;
-    border-color: #5865f2;
+    background: var(--beacon-brand);
+    border-color: var(--beacon-brand);
     color: #fff;
 }
 
@@ -182,7 +182,7 @@
 }
 
 .perkHighlight {
-    border: 2px solid #5865f2;
+    border: 2px solid var(--beacon-brand);
     background: linear-gradient(135deg, rgba(88, 101, 242, 0.1), transparent);
 }
 
@@ -198,7 +198,7 @@
 }
 
 .perkUnlocked .perkIcon {
-    background: #5865f2;
+    background: var(--beacon-brand);
     color: #fff;
 }
 
@@ -219,7 +219,7 @@
 .unlockedBadge {
     font-size: 10px;
     font-weight: 900;
-    background: #23a559;
+    background: var(--status-success);
     color: #fff;
     padding: 4px 8px;
     border-radius: var(--radius-xs);
@@ -253,7 +253,7 @@
     padding: 16px;
     border-radius: var(--radius-xl);
     border: none;
-    background: linear-gradient(135deg, #5865f2, #ed4245);
+    background: linear-gradient(135deg, var(--beacon-brand), var(--status-error));
     color: #fff;
     font-size: 16px;
     font-weight: 800;

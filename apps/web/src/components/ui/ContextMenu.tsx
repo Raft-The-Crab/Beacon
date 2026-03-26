@@ -1,10 +1,10 @@
-﻿import { useEffect, useRef, useState, createContext, useContext, useCallback } from 'react'
+import { useEffect, useRef, useState, createContext, useContext, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import styles from '../../styles/modules/ui/ContextMenu.module.css'
 
-// ────────────────────────────────────────────────────────────
+// ------------------------------------------------------------
 // Types
-// ────────────────────────────────────────────────────────────
+// ------------------------------------------------------------
 export interface ContextMenuItem {
   id: string
   label: string
@@ -29,9 +29,9 @@ interface ContextMenuContextValue {
   close: () => void
 }
 
-// ────────────────────────────────────────────────────────────
+// ------------------------------------------------------------
 // Context
-// ────────────────────────────────────────────────────────────
+// ------------------------------------------------------------
 const ContextMenuCtx = createContext<ContextMenuContextValue>({
   open: () => {},
   close: () => {},
@@ -41,9 +41,9 @@ export function useContextMenu() {
   return useContext(ContextMenuCtx)
 }
 
-// ────────────────────────────────────────────────────────────
+// ------------------------------------------------------------
 // Provider (mount once near root)
-// ────────────────────────────────────────────────────────────
+// ------------------------------------------------------------
 export function ContextMenuProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<ContextMenuState>({ x: 0, y: 0, items: [], visible: false })
   const menuRef = useRef<HTMLDivElement>(null)
@@ -155,7 +155,7 @@ function MenuItemRow({ item, close }: { item: ContextMenuItem; close: () => void
         <button className={`${styles.item} ${item.disabled ? styles.disabled : ''}`}>
           {item.icon && <span className={styles.icon}>{item.icon}</span>}
           <span className={styles.label}>{item.label}</span>
-          <span className={styles.chevron}>›</span>
+          <span className={styles.chevron}>�</span>
         </button>
         {subOpen && (
           <div ref={submenuRef} className={`${styles.submenu} ${submenuPos === 'left' ? styles.submenuLeft : ''}`}>
@@ -185,9 +185,9 @@ function MenuItemRow({ item, close }: { item: ContextMenuItem; close: () => void
   )
 }
 
-// ────────────────────────────────────────────────────────────
+// ------------------------------------------------------------
 // Hook helper: onContextMenu handler factory
-// ────────────────────────────────────────────────────────────
+// ------------------------------------------------------------
 export function useContextMenuTrigger(items: ContextMenuItem[]) {
   const { open } = useContextMenu()
   return (e: React.MouseEvent) => {

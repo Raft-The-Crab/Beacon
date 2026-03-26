@@ -128,7 +128,7 @@ export function LandingPage() {
                 <Zap className={styles.featureIcon} size={32} />
               </div>
               <h3>Developer Ecosystem</h3>
-              <p>Sovereign platform featuring programmable bot hooks, extensible JSON schemas, and industrial-grade throughput protection.</p>
+              <p>Advanced platform featuring programmable bot hooks, extensible JSON schemas, and industrial-grade throughput protection.</p>
             </div>
           </div>
         </section>

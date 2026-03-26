@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Play, Pause, Clock } from 'lucide-react';
 import styles from '../../styles/modules/ui/MusicScrubber.module.css';
 

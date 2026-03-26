@@ -76,7 +76,7 @@
   width: clamp(36px, 8vw, 44px);
   height: clamp(36px, 8vw, 44px);
   border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, #f0b232, #faa61a);
+  background: linear-gradient(135deg, #f0b232, var(--status-warning));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -280,7 +280,7 @@
 
 .txIcon.income {
   background: rgba(35, 165, 89, 0.15);
-  color: #23a559;
+  color: var(--status-success);
 }
 
 .txIcon.outgoing {
@@ -318,7 +318,7 @@
 }
 
 .txAmount.income {
-  color: #23a559;
+  color: var(--status-success);
 }
 
 .txAmount.outgoing {
@@ -399,7 +399,7 @@
   background: rgba(35, 165, 89, 0.15);
   border: 1px solid rgba(35, 165, 89, 0.3);
   border-radius: var(--radius-xl);
-  color: #23a559;
+  color: var(--status-success);
   font-size: 13px;
   font-weight: 700;
   text-align: center;
@@ -486,7 +486,7 @@
   padding: 13px;
   border-radius: var(--radius-xl);
   border: none;
-  background: linear-gradient(135deg, #f0b232, #faa61a);
+  background: linear-gradient(135deg, #f0b232, var(--status-warning));
   color: #fff;
   font-size: 15px;
   font-weight: 800;

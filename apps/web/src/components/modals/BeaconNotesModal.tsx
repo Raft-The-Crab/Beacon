@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Music, Smile, Loader2 } from 'lucide-react'
 import { Modal, Input, Button, EmojiPicker, useToast } from '../ui'
 import { apiClient } from '../../services/apiClient'
@@ -13,7 +13,7 @@ interface BeaconNotesModalProps {
 
 export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
     const [text, setText] = useState('')
-    const [emoji, setEmoji] = useState('✨')
+    const [emoji, setEmoji] = useState('?')
     const [musicUrl, setMusicUrl] = useState('')
     const [metadata, setMetadata] = useState<MusicMetadata | null>(null)
     const [clipDuration, setClipDuration] = useState<15 | 30>(15)
@@ -33,7 +33,7 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
             if (res.success && res.data?.note) {
                 const note = res.data.note
                 setText(note.text || '')
-                setEmoji(note.emoji || '✨')
+                setEmoji(note.emoji || '?')
                 setMusicUrl(note.musicUrl || '')
                 if (note.musicMetadata) {
                     setMetadata(note.musicMetadata)
@@ -122,7 +122,7 @@ export function BeaconNotesModal({ isOpen, onClose }: BeaconNotesModalProps) {
 
     const handleClear = () => {
         setText('')
-        setEmoji('✨')
+        setEmoji('?')
         setMusicUrl('')
         setMetadata(null)
     }

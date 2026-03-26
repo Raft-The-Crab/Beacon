@@ -2,11 +2,11 @@
   display: flex;
   gap: 14px;
   padding: 8px 14px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   border-radius: 14px;
   margin: 2px 10px;
-  animation: messageFadeIn 0.3s ease-out;
+  animation: messageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .withActions {
@@ -20,14 +20,14 @@
 
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Mention highlight ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
 .mentioned {
-  background: rgba(250, 168, 26, 0.06) !important;
-  border-left: 2px solid #faa81a;
+  background: rgba(var(--status-warning-rgb, 250, 168, 26), 0.06) !important;
+  border-left: 2px solid var(--status-warning);
   padding-left: 14px;
-  box-shadow: 0 0 30px rgba(250, 168, 26, 0.15);
+  box-shadow: 0 0 30px rgba(var(--status-warning-rgb, 250, 168, 26), 0.15);
 }
 
 .mentioned:hover {
-  background: rgba(250, 168, 26, 0.1) !important;
+  background: rgba(var(--status-warning-rgb, 250, 168, 26), 0.1) !important;
 }
 
 .message.continuing {
@@ -90,13 +90,17 @@
   min-width: 0;
   width: fit-content;
   max-width: min(88%, 1150px);
-  padding: 9px 14px 10px; /* Increased horizontal padding slightly */
-  border-radius: 18px; /* Softer, more modern curve */
-  background: rgba(255, 255, 255, 0.045); /* Solid but faint glassmorphism */
-  border: 1px solid rgba(255, 255, 255, 0.05); /* Brighter but thinner border */
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  animation: bubbleRiseIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  transition: all 0.2s ease;
+  padding: 10px 16px; 
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  animation: bubbleRiseIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .message:hover .content {
@@ -234,7 +238,7 @@
 }
 
 .ownStatusRead {
-  color: var(--brand-experiment);
+  color: var(--beacon-brand);
 }
 
 .ownStatusSending,
@@ -776,15 +780,18 @@
 }
 
 .botEmbed {
-  background: rgba(47, 49, 54, 0.6);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   border-radius: var(--radius-xl);
-  border-left: 4px solid #5865F2;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 4px solid var(--beacon-brand);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .embedTitle {
@@ -1137,7 +1144,7 @@
 
 .actionBtn.danger:hover {
   background: rgba(237, 66, 69, 0.15);
-  color: #ed4245;
+  color: var(--status-error);
 }
 
 /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ Quick reactions ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ */
@@ -1252,17 +1259,24 @@
   }
 
   .author {
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .text {
     font-size: 14px;
+    line-height: 1.45;
   }
 
   .content {
+    flex: 1;
+    min-width: 0;
     width: auto;
-    min-width: 120px;
-    max-width: calc(100vw - 92px);
+    max-width: calc(100% - 6px);
   }
 
   .imageAttachment {
@@ -1278,15 +1292,25 @@
   }
 
   .actions {
-    position: static;
+    position: absolute;
+    top: -12px;
+    right: 8px;
+    opacity: 0;
+    pointer-events: none;
+    padding: 2px;
+    box-shadow: var(--shadow-xl);
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--glass-border);
+    transform: scale(0.9) translateY(4px);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 150;
+  }
+
+  .message:active .actions,
+  .message:focus-within .actions {
     opacity: 1;
     pointer-events: auto;
-    padding: 2px 4px;
-    margin-top: 4px;
-    box-shadow: none;
-    background: transparent;
-    border: none;
-    backdrop-filter: none;
+    transform: scale(1) translateY(0);
   }
 
   .message .addReactionBtn {

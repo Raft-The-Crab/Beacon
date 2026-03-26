@@ -602,9 +602,9 @@ export function ServerSettings() {
                                 <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#fff', fontWeight: 800 }}>Admin</h4>
                                 <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>Full server authority and management capabilities.</p>
                              </div>
-                             <div className={`${styles.roleTemplateCard} premium-glass-card glass-hover`} onClick={() => handleCreateRole('Moderator', '#5865f2', '268443654')} style={{ padding: '24px', borderRadius: '18px', background: 'rgba(88,101,242,0.03)', cursor: 'pointer', border: '1px solid rgba(88,101,242,0.1)', transition: 'all 0.3s cubic-bezier(0.2, 0, 0, 1)' }}>
+                             <div className={`${styles.roleTemplateCard} premium-glass-card glass-hover`} onClick={() => handleCreateRole('Moderator', 'var(--beacon-brand)', '268443654')} style={{ padding: '24px', borderRadius: '18px', background: 'rgba(88,101,242,0.03)', cursor: 'pointer', border: '1px solid rgba(88,101,242,0.1)', transition: 'all 0.3s cubic-bezier(0.2, 0, 0, 1)' }}>
                                 <div style={{ background: 'rgba(88,101,242,0.12)', width: '48px', height: '48px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: '0 8px 16px rgba(88,101,242,0.15)' }}>
-                                  <Users size={24} color="#5865f2" />
+                                  <Users size={24} color="var(--beacon-brand)" />
                                 </div>
                                 <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#fff', fontWeight: 800 }}>Moderator</h4>
                                 <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>Security oversight and member governance.</p>

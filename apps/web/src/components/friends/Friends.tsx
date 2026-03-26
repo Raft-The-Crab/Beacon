@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Friends UI Component
  */
 
@@ -218,21 +218,21 @@ export const Friends: React.FC = () => {
                     window.location.hash = `/channels/@me/${friend.id}`
                   }}
                 >
-                  💬
+                  ??
                 </button>
                 <button
                   className={styles.blockBtn}
                   title="Block"
                   onClick={() => handleBlockUser(friend.id)}
                 >
-                  🚫
+                  ??
                 </button>
                 <button
                   className={styles.moreBtn}
                   title="More"
                   onClick={() => handleRemoveFriend(friend.id)}
                 >
-                  ⋯
+                  ?
                 </button>
               </div>
             </div>

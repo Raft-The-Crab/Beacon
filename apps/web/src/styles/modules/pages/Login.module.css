@@ -29,7 +29,7 @@
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-2xl);
-  padding: clamp(32px, 5vw, 48px);
+  padding: clamp(24px, 5vw, 48px);
   z-index: 10;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
   position: relative;
@@ -316,4 +316,32 @@
 
 .googleBtn:active {
   transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 28px 20px;
+    max-width: calc(100vw - 32px);
+    margin: 16px;
+  }
+
+  .forgotPassword {
+    justify-content: center;
+    margin-top: -8px;
+  }
+
+  .toggleLink {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .toggleLink span {
+    margin-left: 0;
+  }
+
+  .divider {
+    margin: 24px 0;
+  }
 }

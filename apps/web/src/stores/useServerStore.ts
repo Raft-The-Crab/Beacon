@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { Guild as Server, Channel } from 'beacon-sdk'
-import { api } from '../lib/api'
+import { apiClient } from '../services/apiClient'
 
 interface ServerFolder {
   id: string;
@@ -52,10 +52,10 @@ interface ServerState {
 
   handleGuildCreate: (guild: Server) => void;
   handleChannelCreate: (channel: Channel) => void;
-    handleGuildUpdate: (guildId: string, updates: Partial<Server>) => void;
-    handleChannelUpdate: (guildId: string, channelId: string, updates: Partial<Channel>) => void;
-    handleChannelDelete: (guildId: string, channelId: string) => void;
-    handleMemberRemove: (guildId: string, userId: string) => void;
+  handleGuildUpdate: (guildId: string, updates: Partial<Server>) => void;
+  handleChannelUpdate: (guildId: string, channelId: string, updates: Partial<Channel>) => void;
+  handleChannelDelete: (guildId: string, channelId: string) => void;
+  handleMemberRemove: (guildId: string, userId: string) => void;
 }
 
 export const useServerStore = create<ServerState>((set, get) => ({
@@ -68,10 +68,12 @@ export const useServerStore = create<ServerState>((set, get) => ({
   fetchGuilds: async () => {
     set({ isLoading: true })
     try {
-      const { data } = await api.get('/guilds/me')
-      set({ servers: data, isLoading: false })
-      if (data.length > 0 && !get().currentServerId) {
-        get().setCurrentServer(data[0].id)
+      const res = await apiClient.getMyGuilds()
+      if (res.success && Array.isArray(res.data)) {
+        set({ servers: res.data, isLoading: false })
+        if (res.data.length > 0 && !get().currentServerId) {
+          get().setCurrentServer(res.data[0].id)
+        }
       }
       await get().fetchFolders()
     } catch (error) {
@@ -82,13 +84,13 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   eagerLoad: async () => {
     try {
-      const [{ data: guilds }, { data: folders }] = await Promise.all([
-        api.get<Server[]>('/guilds/me').catch(() => ({ data: [] })),
-        api.get<ServerFolder[]>('/folders').catch(() => ({ data: [] }))
+      const [guildsRes, foldersRes] = await Promise.all([
+        apiClient.getMyGuilds(),
+        apiClient.getFolders()
       ]);
 
-      const safeGuilds = Array.isArray(guilds) ? guilds : [];
-      const safeFoldersRaw = Array.isArray(folders) ? folders : [];
+      const safeGuilds = guildsRes.success && Array.isArray(guildsRes.data) ? guildsRes.data : [];
+      const safeFoldersRaw = foldersRes.success && Array.isArray(foldersRes.data) ? foldersRes.data : [];
 
       set({
         servers: safeGuilds,
@@ -100,15 +102,16 @@ export const useServerStore = create<ServerState>((set, get) => ({
       }
     } catch (error) {
       console.error('Store eager load critical failure', error);
-      // Ensure state is at least normalized even on failure
       set({ servers: [], folders: [] });
     }
   },
 
   fetchFolders: async () => {
     try {
-      const { data } = await api.get<ServerFolder[]>('/folders');
-      set({ folders: (data as any[]).map(normalizeFolder) });
+      const res = await apiClient.getFolders();
+      if (res.success && Array.isArray(res.data)) {
+        set({ folders: res.data.map(normalizeFolder) });
+      }
     } catch (error) {
       console.error('Failed to fetch folders', error);
     }
@@ -116,11 +119,14 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   fetchGuild: async (id) => {
     try {
-      const { data } = await api.get(`/guilds/${id}`);
-      set(state => ({
-        servers: state.servers.map(s => s.id === id ? { ...s, ...data } : s) as any,
-        currentServer: state.currentServerId === id ? ({ ...state.currentServer, ...data } as any) : state.currentServer
-      }));
+      const res = await apiClient.getGuild(id);
+      if (res.success) {
+        const data = res.data;
+        set(state => ({
+          servers: state.servers.map(s => s.id === id ? { ...s, ...data } : s) as any,
+          currentServer: state.currentServerId === id ? ({ ...state.currentServer, ...data } as any) : state.currentServer
+        }));
+      }
     } catch (error) {
       console.error(error);
     }
@@ -128,12 +134,15 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   createGuild: async (name, icon) => {
     try {
-      const { data } = await api.post('/guilds', { name, icon })
-      set(state => ({
-        servers: [...state.servers, data] as any,
-        currentServerId: data.id,
-        currentServer: data as any
-      }))
+      const res = await apiClient.createGuild(name, icon)
+      if (res.success) {
+        const data = res.data
+        set(state => ({
+          servers: [...state.servers, data] as any,
+          currentServerId: data.id,
+          currentServer: data as any
+        }))
+      }
     } catch (error) {
       throw error;
     }
@@ -141,18 +150,21 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   createChannel: async (guildId, name, type, parentId) => {
     try {
-      const { data } = await api.post('/channels', { guildId, name, type, parentId });
-      set(state => ({
-        servers: state.servers.map(s => {
-          if (s.id === guildId) {
-            return { ...s, channels: [...(s.channels || []), data] } as any
-          }
-          return s
-        }),
-        currentServer: state.currentServerId === guildId
-          ? { ...state.currentServer, channels: [...(state.currentServer?.channels || []), data] } as any
-          : state.currentServer
-      }))
+      const res = await apiClient.createChannel({ guildId, name, type, parentId });
+      if (res.success) {
+        const data = res.data
+        set(state => ({
+          servers: state.servers.map(s => {
+            if (s.id === guildId) {
+              return { ...s, channels: [...(s.channels || []), data] } as any
+            }
+            return s
+          }),
+          currentServer: state.currentServerId === guildId
+            ? { ...state.currentServer, channels: [...(state.currentServer?.channels || []), data] } as any
+            : state.currentServer
+        }))
+      }
     } catch (error) {
       console.error('Create Channel Error:', error);
       throw error;
@@ -161,24 +173,27 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   updateChannel: async (guildId, channelId, updates) => {
     try {
-      const { data } = await api.patch(`/channels/${channelId}`, updates);
-      set(state => ({
-        servers: state.servers.map(s => {
-          if (s.id === guildId) {
-            return {
-              ...s,
-              channels: s.channels?.map((c: any) => c.id === channelId ? { ...c, ...data } : c) || []
+      const res = await apiClient.request('PATCH', `/channels/${channelId}`, updates);
+      if (res.success) {
+        const data = res.data
+        set(state => ({
+          servers: state.servers.map(s => {
+            if (s.id === guildId) {
+              return {
+                ...s,
+                channels: s.channels?.map((c: any) => c.id === channelId ? { ...c, ...data } : c) || []
+              } as any
+            }
+            return s
+          }),
+          currentServer: state.currentServerId === guildId
+            ? {
+              ...state.currentServer!,
+              channels: state.currentServer?.channels?.map((c: any) => c.id === channelId ? { ...c, ...data } : c) || []
             } as any
-          }
-          return s
-        }),
-        currentServer: state.currentServerId === guildId
-          ? {
-            ...state.currentServer!,
-            channels: state.currentServer?.channels?.map((c: any) => c.id === channelId ? { ...c, ...data } : c) || []
-          } as any
-          : state.currentServer
-      }))
+            : state.currentServer
+        }))
+      }
     } catch (error) {
       console.error('Update Channel Error:', error);
       throw error;
@@ -187,24 +202,26 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   deleteChannel: async (guildId, channelId) => {
     try {
-      await api.delete(`/channels/${channelId}`);
-      set(state => ({
-        servers: state.servers.map(s => {
-          if (s.id === guildId) {
-            return {
-              ...s,
-              channels: s.channels?.filter((c: any) => c.id !== channelId) || []
+      const res = await apiClient.request('DELETE', `/channels/${channelId}`);
+      if (res.success) {
+        set(state => ({
+          servers: state.servers.map(s => {
+            if (s.id === guildId) {
+              return {
+                ...s,
+                channels: s.channels?.filter((c: any) => c.id !== channelId) || []
+              } as any
+            }
+            return s
+          }),
+          currentServer: state.currentServerId === guildId
+            ? {
+              ...state.currentServer!,
+              channels: state.currentServer?.channels?.filter((c: any) => c.id !== channelId) || []
             } as any
-          }
-          return s
-        }),
-        currentServer: state.currentServerId === guildId
-          ? {
-            ...state.currentServer!,
-            channels: state.currentServer?.channels?.filter((c: any) => c.id !== channelId) || []
-          } as any
-          : state.currentServer
-      }))
+            : state.currentServer
+        }))
+      }
     } catch (error) {
       console.error('Delete Channel Error:', error);
       throw error;
@@ -213,11 +230,14 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   updateGuild: async (guildId, updates) => {
     try {
-      const { data } = await api.patch("/guilds/" + guildId, updates);
-      set(state => ({
-        servers: state.servers.map(s => s.id === guildId ? { ...s, ...data } : s),
-        currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...data } as any) : state.currentServer
-      }));
+      const res = await apiClient.request('PATCH', `/guilds/${guildId}`, updates);
+      if (res.success) {
+        const data = res.data
+        set(state => ({
+          servers: state.servers.map(s => s.id === guildId ? { ...s, ...data } : s),
+          currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...data } as any) : state.currentServer
+        }));
+      }
     } catch (error) {
       console.error(error);
       throw error;
@@ -226,15 +246,17 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   deleteGuild: async (guildId) => {
     try {
-      await api.delete("/guilds/" + guildId);
-      set(state => {
-        const newServers = state.servers.filter(s => s.id !== guildId);
-        return {
-          servers: newServers,
-          currentServerId: state.currentServerId === guildId ? null : state.currentServerId,
-          currentServer: state.currentServerId === guildId ? null : state.currentServer
-        };
-      });
+      const res = await apiClient.request('DELETE', `/guilds/${guildId}`);
+      if (res.success) {
+        set(state => {
+          const newServers = state.servers.filter(s => s.id !== guildId);
+          return {
+            servers: newServers,
+            currentServerId: state.currentServerId === guildId ? null : state.currentServerId,
+            currentServer: state.currentServerId === guildId ? null : state.currentServer
+          };
+        });
+      }
     } catch (error) {
       console.error(error);
       throw error;
@@ -249,7 +271,6 @@ export const useServerStore = create<ServerState>((set, get) => ({
     const server = get().servers.find(s => s.id === serverId) || null;
     set({ currentServerId: serverId, currentServer: server });
 
-    // Guild list payloads can be lightweight; hydrate full guild details on selection.
     const hasChannels = Array.isArray((server as any)?.channels) && (server as any).channels.length > 0
     const hasMembers = Array.isArray((server as any)?.members) && (server as any).members.length > 0
     if (!hasChannels || !hasMembers) {
@@ -259,11 +280,14 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   boostGuild: async (guildId) => {
     try {
-      const { data } = await api.post(`/guilds/${guildId}/boost`);
-      set(state => ({
-        servers: state.servers.map(s => s.id === guildId ? { ...s, ...data.guild } : s),
-        currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...data.guild } as any) : state.currentServer
-      }));
+      const res = await apiClient.request('POST', `/guilds/${guildId}/boost`);
+      if (res.success) {
+        const data = res.data
+        set(state => ({
+          servers: state.servers.map(s => s.id === guildId ? { ...s, ...data.guild } : s),
+          currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...data.guild } as any) : state.currentServer
+        }));
+      }
     } catch (error) {
       console.error(error);
       throw error;
@@ -272,11 +296,14 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   updateVanityUrl: async (guildId, vanityUrl) => {
     try {
-      const { data } = await api.post(`/guilds/${guildId}/vanity`, { vanityUrl });
-      set(state => ({
-        servers: state.servers.map(s => s.id === guildId ? { ...s, ...data } : s),
-        currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...data } as any) : state.currentServer
-      }));
+      const res = await apiClient.request('POST', `/guilds/${guildId}/vanity`, { vanityUrl });
+      if (res.success) {
+        const data = res.data
+        set(state => ({
+          servers: state.servers.map(s => s.id === guildId ? { ...s, ...data } : s),
+          currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...data } as any) : state.currentServer
+        }));
+      }
     } catch (error) {
       console.error(error);
       throw error;
@@ -285,11 +312,14 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   joinGuild: async (guildId) => {
     try {
-      const { data } = await api.post(`/guilds/${guildId}/join`);
-      set(state => ({
-        servers: [...state.servers.filter(s => s.id !== data.id), data] as any
-      }));
-      get().setCurrentServer(data.id);
+      const res = await apiClient.request('POST', `/guilds/${guildId}/join`);
+      if (res.success) {
+        const data = res.data
+        set(state => ({
+          servers: [...state.servers.filter(s => s.id !== data.id), data] as any
+        }));
+        get().setCurrentServer(data.id);
+      }
     } catch (error) {
       console.error(error);
       throw error;
@@ -298,25 +328,29 @@ export const useServerStore = create<ServerState>((set, get) => ({
 
   leaveGuild: async (guildId) => {
     try {
-      await api.delete(`/guilds/${guildId}/leave`);
-      set(state => {
-        const newServers = state.servers.filter(s => s.id !== guildId);
-        return {
-          servers: newServers,
-          currentServerId: state.currentServerId === guildId ? null : state.currentServerId,
-          currentServer: state.currentServerId === guildId ? null : state.currentServer
-        };
-      });
+      const res = await apiClient.request('DELETE', `/guilds/${guildId}/leave`);
+      if (res.success) {
+        set(state => {
+          const newServers = state.servers.filter(s => s.id !== guildId);
+          return {
+            servers: newServers,
+            currentServerId: state.currentServerId === guildId ? null : state.currentServerId,
+            currentServer: state.currentServerId === guildId ? null : state.currentServer
+          };
+        });
+      }
     } catch (error) {
       console.error(error);
       throw error;
     }
   },
 
-  createFolder: async (name, serverIds, color = '#5865f2') => {
+  createFolder: async (name, serverIds, color = 'var(--beacon-brand)') => {
     try {
-      const { data } = await api.post('/folders', { name, guildIds: serverIds, color });
-      set(state => ({ folders: [...state.folders, normalizeFolder(data)] }));
+      const res = await apiClient.createFolder({ name, guildIds: serverIds, color });
+      if (res.success) {
+        set(state => ({ folders: [...state.folders, normalizeFolder(res.data)] }));
+      }
     } catch (error) {
       console.error(error);
     }
@@ -333,8 +367,10 @@ export const useServerStore = create<ServerState>((set, get) => ({
       const folder = get().folders.find(f => f.id === folderId);
       if (!folder) return;
       const newServerIds = [...folder.serverIds, serverId];
-      const { data } = await api.post('/folders', { id: folderId, name: folder.name, guildIds: newServerIds, color: folder.color });
-      set(state => ({ folders: state.folders.map(f => f.id === folderId ? normalizeFolder(data) : f) }));
+      const res = await apiClient.updateFolder(folderId, { name: folder.name, guildIds: newServerIds, color: folder.color });
+      if (res.success) {
+        set(state => ({ folders: state.folders.map(f => f.id === folderId ? normalizeFolder(res.data) : f) }));
+      }
     } catch (error) {
       console.error(error);
     }
@@ -345,8 +381,10 @@ export const useServerStore = create<ServerState>((set, get) => ({
       const folder = get().folders.find(f => f.id === folderId);
       if (!folder) return;
       const newServerIds = folder.serverIds.filter(id => id !== serverId);
-      const { data } = await api.post('/folders', { id: folderId, name: folder.name, guildIds: newServerIds, color: folder.color });
-      set(state => ({ folders: state.folders.map(f => f.id === folderId ? normalizeFolder(data) : f) }));
+      const res = await apiClient.updateFolder(folderId, { name: folder.name, guildIds: newServerIds, color: folder.color });
+      if (res.success) {
+        set(state => ({ folders: state.folders.map(f => f.id === folderId ? normalizeFolder(res.data) : f) }));
+      }
     } catch (error) {
       console.error(error);
     }
@@ -371,39 +409,39 @@ export const useServerStore = create<ServerState>((set, get) => ({
     }))
   },
 
-    handleGuildUpdate: (guildId, updates) =>
-      set(state => ({
-        servers: state.servers.map(s => s.id === guildId ? { ...s, ...updates } : s) as any,
-        currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...updates } as any) : state.currentServer
-      })),
+  handleGuildUpdate: (guildId, updates) =>
+    set(state => ({
+      servers: state.servers.map(s => s.id === guildId ? { ...s, ...updates } : s) as any,
+      currentServer: state.currentServerId === guildId ? ({ ...state.currentServer, ...updates } as any) : state.currentServer
+    })),
 
-    handleChannelUpdate: (guildId, channelId, updates) =>
-      set(state => ({
-        servers: state.servers.map(s => s.id === guildId
-          ? { ...s, channels: s.channels?.map((c: any) => c.id === channelId ? { ...c, ...updates } : c) || [] } as any
-          : s),
-        currentServer: state.currentServerId === guildId
-          ? { ...state.currentServer!, channels: state.currentServer?.channels?.map((c: any) => c.id === channelId ? { ...c, ...updates } : c) || [] } as any
-          : state.currentServer
-      })),
+  handleChannelUpdate: (guildId, channelId, updates) =>
+    set(state => ({
+      servers: state.servers.map(s => s.id === guildId
+        ? { ...s, channels: s.channels?.map((c: any) => c.id === channelId ? { ...c, ...updates } : c) || [] } as any
+        : s),
+      currentServer: state.currentServerId === guildId
+        ? { ...state.currentServer!, channels: state.currentServer?.channels?.map((c: any) => c.id === channelId ? { ...c, ...updates } : c) || [] } as any
+        : state.currentServer
+    })),
 
-    handleChannelDelete: (guildId, channelId) =>
-      set(state => ({
-        servers: state.servers.map(s => s.id === guildId
-          ? { ...s, channels: s.channels?.filter((c: any) => c.id !== channelId) || [] } as any
-          : s),
-        currentServer: state.currentServerId === guildId
-          ? { ...state.currentServer!, channels: state.currentServer?.channels?.filter((c: any) => c.id !== channelId) || [] } as Server
-          : state.currentServer
-      })),
+  handleChannelDelete: (guildId, channelId) =>
+    set(state => ({
+      servers: state.servers.map(s => s.id === guildId
+        ? { ...s, channels: s.channels?.filter((c: any) => c.id !== channelId) || [] } as any
+        : s),
+      currentServer: state.currentServerId === guildId
+        ? { ...state.currentServer!, channels: state.currentServer?.channels?.filter((c: any) => c.id !== channelId) || [] } as Server
+        : state.currentServer
+    })),
 
-    handleMemberRemove: (guildId, userId) =>
-      set(state => ({
-        servers: state.servers.map(s => s.id === guildId
-          ? { ...s, members: (s as any).members?.filter((m: any) => m.userId !== userId) || [] } as any
-          : s),
-        currentServer: state.currentServerId === guildId
-          ? { ...state.currentServer!, members: (state.currentServer as any)?.members?.filter((m: any) => m.userId !== userId) || [] } as any
-          : state.currentServer
-      })),
+  handleMemberRemove: (guildId, userId) =>
+    set(state => ({
+      servers: state.servers.map(s => s.id === guildId
+        ? { ...s, members: (s as any).members?.filter((m: any) => m.userId !== userId) || [] } as any
+        : s),
+      currentServer: state.currentServerId === guildId
+        ? { ...state.currentServer!, members: (state.currentServer as any)?.members?.filter((m: any) => m.userId !== userId) || [] } as any
+        : state.currentServer
+    })),
 }))

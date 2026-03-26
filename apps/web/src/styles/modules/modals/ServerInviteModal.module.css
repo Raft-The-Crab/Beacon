@@ -101,7 +101,7 @@
 }
 
 .copied {
-    background: #23a559 !important;
+    background: var(--status-success) !important;
     color: #fff !important;
 }
 

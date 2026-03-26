@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, ReactNode, KeyboardEvent } from 'react'
+import { useState, useRef, useEffect, ReactNode, KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import styles from '../../styles/modules/ui/Dropdown.module.css'
 

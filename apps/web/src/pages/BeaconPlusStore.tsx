@@ -5,7 +5,7 @@ import { useBeacoinStore } from '../stores/useBeacoinStore'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useShopStore } from '../stores/useShopStore'
 import { useTranslationStore } from '../stores/useTranslationStore'
-import { api } from '../lib/api'
+import { apiClient } from '../services/apiClient'
 import { Button } from '../components/ui'
 import { CelebrationAnimation } from '../components/animations/CelebrationAnimation'
 import { CrateAnimation } from '../components/animations/CrateAnimation'
@@ -77,21 +77,28 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
 
         const code = couponInput.toUpperCase().trim()
         try {
-            const { data } = await api.post('/users/@me/beacoin/coupon/validate', { code })
-            if (data?.kind !== 'percent') {
+            const res = await apiClient.request('POST', '/users/@me/beacoin/coupon/validate', { code })
+            if (res.success) {
+                const data = res.data
+                if (data?.kind !== 'percent') {
+                    setDiscount(0)
+                    setCouponCode('')
+                    setError('This code can only be used in Redeem Code settings.')
+                    return
+                }
+
+                setError('')
+                setDiscount(Number(data.value) || 0)
+                setCouponCode(data.code || code)
+            } else {
                 setDiscount(0)
                 setCouponCode('')
-                setError('This code can only be used in Redeem Code settings.')
-                return
+                setError(res.error?.message || 'Invalid or expired coupon code.')
             }
-
-            setError('')
-            setDiscount(Number(data.value) || 0)
-            setCouponCode(data.code || code)
         } catch (err: any) {
             setDiscount(0)
             setCouponCode('')
-            setError(err?.response?.data?.error || 'Invalid or expired coupon code.')
+            setError('Invalid or expired coupon code.')
         }
     }
 
@@ -458,7 +465,7 @@ export function BeaconPlusStore({ onClose }: { onClose?: () => void }) {
                                     ? (user as any)?.avatarDecorationId === item.id
                                     : (user as any)?.profileEffectId === item.id
                                 const itemType = activeTab === 'themes' ? 'theme' : activeTab === 'decorations' ? 'avatar' : 'profile'
-                                const accentColor = activeTab === 'themes' ? item.accentColor : item.color || (activeTab === 'decorations' ? '#5865f2' : '#7b2ff7')
+                                const accentColor = activeTab === 'themes' ? item.accentColor : item.color || (activeTab === 'decorations' ? 'var(--beacon-brand)' : '#7b2ff7')
                                 const effectiveItemPrice = getEffectivePrice(item.price)
 
                                 return (

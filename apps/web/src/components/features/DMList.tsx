@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Search, Plus } from 'lucide-react'
 import { Avatar, Input, Badge, Button, Modal } from '../ui'
 import { useDMStore, DMChannel, DMParticipant } from '../../stores/useDMStore'

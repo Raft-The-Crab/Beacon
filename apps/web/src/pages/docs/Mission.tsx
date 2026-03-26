@@ -18,7 +18,7 @@ export function Mission() {
                     </div>
                     <h1 className="premium-hero-heading accent-text" style={{ fontSize: 48 }}>The Beacon Mission</h1>
                     <p className="premium-hero-subtitle" style={{ margin: 0, fontSize: 18 }}>
-                        Our commitment to privacy, data sovereignty, and the future of open communication.
+                        Our commitment to privacy, data security, and the future of open communication.
                     </p>
                 </header>
 
@@ -27,7 +27,7 @@ export function Mission() {
                     <p>
                         Every modern messaging platform is a honeypot for data extraction. Your "identity" is a
                         rented entry in a corporate database. Beacon dissolves this. By utilizing
-                        <strong>Absolute Sovereign Identity (ASI)</strong>, your digital self exists entirely outside
+                        <strong>Advanced Secure Identity (ASI)</strong>, your digital self exists entirely outside
                         the reach of institutional interference.
                     </p>
                 </section>

@@ -42,13 +42,13 @@
 .input:focus {
   outline: none;
   background: var(--bg-tertiary);
-  border-color: #5865F2; /* SOLID BLUE */
+  border-color: var(--beacon-brand); /* SOLID BLUE */
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(88, 101, 242, 0.2);
 }
 
 .input:focus-visible {
-  outline: 2px solid #5865F2;
+  outline: 2px solid var(--beacon-brand);
   outline-offset: -2px;
 }
 

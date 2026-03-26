@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { X, AlertCircle, CheckCircle, Info, AlertTriangle, Crown } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNotificationSystem, ToastType } from '../../stores/useNotificationSystem'
 import styles from '../../styles/modules/ui/Toast.module.css'
 
@@ -30,15 +30,17 @@ interface Toast {
 }
 
 function ToastComponent({ id, message, type, duration = 4000, onRemove }: ToastComponentProps) {
-  useEffect(() => {
-    if (duration > 0 && duration !== Infinity) {
-      const timer = setTimeout(() => onRemove(id), duration)
-      return () => clearTimeout(timer)
-    }
-  }, [id, duration, onRemove])
-
   return (
-    <div className={`${styles.toast} ${styles[type]}`}>
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20, scale: 0.9, filter: 'blur(10px)' }}
+      animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, scale: 0.8, filter: 'blur(10px)', transition: { duration: 0.2 } }}
+      className={`${styles.toast} ${styles[type]}`}
+      onHoverStart={(e) => {
+        // Pause duration logic could go here if needed
+      }}
+    >
       <div className={styles.icon}>{toastIcons[type]}</div>
       <div className={styles.message}>
         {typeof message === 'object' ? JSON.stringify(message) : String(message)}
@@ -50,8 +52,16 @@ function ToastComponent({ id, message, type, duration = 4000, onRemove }: ToastC
       >
         <X size={14} />
       </button>
-      <div className={styles.progress} style={{ animationDuration: `${duration}ms` }} />
-    </div>
+      {duration !== Infinity && (
+        <motion.div 
+          className={styles.progress} 
+          initial={{ scaleX: 1 }}
+          animate={{ scaleX: 0 }}
+          transition={{ duration: duration / 1000, ease: 'linear' }}
+          onAnimationComplete={() => onRemove(id)}
+        />
+      )}
+    </motion.div>
   )
 }
 
@@ -60,13 +70,15 @@ export function ToastContainer() {
   
   return (
     <div className={styles.container}>
-      {toasts.map((toast) => (
-        <ToastComponent
-          key={toast.id}
-          {...toast}
-          onRemove={remove}
-        />
-      ))}
+      <AnimatePresence mode="popLayout">
+        {toasts.map((toast) => (
+          <ToastComponent
+            key={toast.id}
+            {...toast}
+            onRemove={remove}
+          />
+        ))}
+      </AnimatePresence>
     </div>
   )
 }

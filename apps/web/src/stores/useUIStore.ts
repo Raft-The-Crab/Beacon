@@ -33,6 +33,7 @@ interface UIState {
   showMobileSidebar: boolean
   customBackground: string | null
   customAccentColor: string | null
+  activeMobileTab: 'servers' | 'messages' | 'discover' | 'profile'
 
   // Modal state
   showCustomStatus: boolean
@@ -62,6 +63,7 @@ interface UIState {
   // Keyboard shortcuts panel
   showKeyboardShortcuts: boolean
   showQuickSwitcher: boolean
+  wsConnected: boolean
 
   // Editing state
   editingMessageId: string | null
@@ -91,6 +93,7 @@ interface UIState {
   setShowMobileSidebar: (show: boolean) => void
   setCustomBackground: (url: string | null) => void
   setCustomAccentColor: (color: string | null) => void
+  setActiveMobileTab: (tab: 'servers' | 'messages' | 'discover' | 'profile') => void
   syncTheme: () => void
 
   setShowCustomStatus: (show: boolean) => void
@@ -104,6 +107,7 @@ interface UIState {
   setShowMemberList: (show: boolean) => void
   setShowKeyboardShortcuts: (show: boolean) => void
   setShowQuickSwitcher: (show: boolean) => void
+  setWsConnected: (connected: boolean) => void
   setEditingMessage: (id: string | null, content?: string) => void
 }
 
@@ -135,6 +139,7 @@ export const useUIStore = create<UIState>()(
       showMobileSidebar: false,
       customBackground: typeof localStorage !== 'undefined' ? localStorage.getItem('beacon:custom_bg') : null,
       customAccentColor: typeof localStorage !== 'undefined' ? localStorage.getItem('beacon:custom_accent') : null,
+      activeMobileTab: 'messages',
 
       showCustomStatus: false,
       showGroupDM: false,
@@ -148,6 +153,7 @@ export const useUIStore = create<UIState>()(
       showMemberList: true,
       showKeyboardShortcuts: false,
       showQuickSwitcher: false,
+      wsConnected: true,
       editingMessageId: null,
       editingMessageContent: '',
       showBotModal: false,
@@ -286,6 +292,8 @@ export const useUIStore = create<UIState>()(
         }
       },
 
+      setActiveMobileTab: (tab) => set({ activeMobileTab: tab }),
+
       setShowCustomStatus: (show) => set({ showCustomStatus: show }),
       setShowGroupDM: (show) => set({ showGroupDM: show }),
       setShowWebhooks: (show, guildId) =>
@@ -299,6 +307,7 @@ export const useUIStore = create<UIState>()(
       setShowMemberList: (show) => set({ showMemberList: show }),
       setShowKeyboardShortcuts: (show) => set({ showKeyboardShortcuts: show }),
       setShowQuickSwitcher: (show) => set({ showQuickSwitcher: show }),
+      setWsConnected: (connected) => set({ wsConnected: connected }),
       setEditingMessage: (id, content) => set({ editingMessageId: id, editingMessageContent: content || '' }),
       setShowBotModal: (show, data) => set({ showBotModal: show, botModalData: data || null }),
 

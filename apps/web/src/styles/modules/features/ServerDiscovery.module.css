@@ -356,7 +356,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #23a559;
+    background: var(--status-success);
     box-shadow: 0 0 10px rgba(35, 165, 89, 0.5);
 }
 
@@ -434,9 +434,9 @@
     }
 
     .serverGrid {
-        padding: 0 24px 32px;
+        padding: 0 16px 24px;
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 16px;
     }
 
     .serverFooter {
@@ -487,7 +487,7 @@
     }
 
     .featuredCard {
-        height: 200px;
+        height: 180px;
         border-radius: 18px;
     }
 

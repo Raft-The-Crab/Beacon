@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Code, Eye, Layers, Type, CreditCard, List, Layout, Activity, Zap } from 'lucide-react'
 import { Button } from '../ui/Button'
 import styles from '../../styles/modules/dev/ComponentShowcase.module.css'

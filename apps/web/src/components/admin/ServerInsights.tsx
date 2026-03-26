@@ -36,7 +36,7 @@ export function ServerInsights({ memberCount, channelCount, messageCountToday = 
             value: memberCount.toLocaleString(),
             change: 12.5,
             icon: <Users size={18} />,
-            color: '#5865f2',
+            color: 'var(--beacon-brand)',
         },
         {
             label: 'Messages Today',
@@ -50,7 +50,7 @@ export function ServerInsights({ memberCount, channelCount, messageCountToday = 
             value: activeMembers.toLocaleString(),
             change: 8.1,
             icon: <Activity size={18} />,
-            color: '#faa61a',
+            color: 'var(--status-warning)',
         },
         {
             label: 'Channels',
@@ -130,7 +130,7 @@ export function ServerInsights({ memberCount, channelCount, messageCountToday = 
                                 className={styles.bar}
                                 style={{
                                     height: `${(d.messages / maxMessages) * 100}%`,
-                                    background: `linear-gradient(to top, ${d.messages > maxMessages * 0.7 ? '#3ba55d' : '#5865f2'}, ${d.messages > maxMessages * 0.7 ? '#43b581' : '#7289da'})`,
+                                    background: `linear-gradient(to top, ${d.messages > maxMessages * 0.7 ? '#3ba55d' : 'var(--beacon-brand)'}, ${d.messages > maxMessages * 0.7 ? 'var(--status-success)' : '#7289da'})`,
                                 }}
                             />
                             <span className={styles.barLabel}>{d.label}</span>

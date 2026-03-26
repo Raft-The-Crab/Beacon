@@ -1,6 +1,7 @@
 import type { WSEventType, WSPayload } from 'beacon-sdk'
 import { WEB_SDK_ENDPOINTS } from '../lib/beaconSdk'
 import { API_CONFIG } from '../config/api'
+import { useUIStore } from '../stores/useUIStore'
 
 // Conditional Tauri types
 type InvokeFunction = (cmd: string, args?: any) => Promise<any>
@@ -56,6 +57,7 @@ export class BeaconWebSocket {
       this.ws.onopen = () => {
         console.log('[WebSocket] Connected')
         this.reconnectAttempts = 0
+        useUIStore.getState().setWsConnected(true)
         this.identify(token)
         this.flushMessageQueue()
       }
@@ -66,6 +68,7 @@ export class BeaconWebSocket {
 
       this.ws.onclose = () => {
         console.log('[WebSocket] Disconnected')
+        useUIStore.getState().setWsConnected(false)
         this.cleanup()
         if (!this.isIntentionalClose && this.reconnectAttempts < API_CONFIG.WS_MAX_RECONNECT_ATTEMPTS) {
           this.scheduleReconnect(token)

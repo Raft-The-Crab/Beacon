@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Edit3, Save, Palette, Globe, Shield, Activity } from 'lucide-react';
 import { Button, Badge, useToast } from '../ui';
 import { UserPresenceWidget } from './UserPresenceWidget';
@@ -15,7 +15,7 @@ export const ProfileEnhanced: React.FC<{ user: any; isOwn?: boolean }> = ({ user
   const [loading, setLoading] = useState(false);
   const toast = useToast();
   const [customTheme, setCustomTheme] = useState<ProfileTheme>({
-    accentColor: user.accentColor || '#5865f2'
+    accentColor: user.accentColor || 'var(--beacon-brand)'
   });
 
   const handleSave = async () => {

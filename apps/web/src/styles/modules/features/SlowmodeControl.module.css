@@ -44,7 +44,7 @@
 
 .badgeActive {
   background: rgba(88, 101, 242, 0.15);
-  color: var(--accent, #5865f2);
+  color: var(--accent, var(--beacon-brand));
 }
 
 /* Presets */
@@ -77,8 +77,8 @@
 
 .presetActive {
   background: rgba(88, 101, 242, 0.15) !important;
-  border-color: var(--accent, #5865f2) !important;
-  color: var(--accent, #5865f2) !important;
+  border-color: var(--accent, var(--beacon-brand)) !important;
+  color: var(--accent, var(--beacon-brand)) !important;
 }
 
 /* Slider */
@@ -111,7 +111,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--accent, #5865f2);
+  background: var(--accent, var(--beacon-brand));
   cursor: pointer;
   transition: transform 0.1s;
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);

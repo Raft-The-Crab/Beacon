@@ -33,6 +33,15 @@
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
 }
 
+@media (max-width: 480px) {
+  .popover {
+    width: calc(100vw - 24px);
+    max-width: 340px;
+    left: 12px !important;
+    right: 12px !important;
+  }
+}
+
 :global(body:not(.glass-theme-active)) .popover {
   background: var(--bg-tertiary);
   backdrop-filter: none;
@@ -156,7 +165,7 @@
 }
 
 .actionRow.danger {
-  color: #ed4245;
+  color: var(--status-error);
 }
 
 .actionRow.danger:hover {

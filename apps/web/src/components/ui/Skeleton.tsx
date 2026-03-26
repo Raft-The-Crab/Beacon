@@ -1,4 +1,4 @@
-﻿import styles from '../../styles/modules/ui/Skeleton.module.css'
+import styles from '../../styles/modules/ui/Skeleton.module.css'
 
 interface SkeletonProps {
   width?: string | number

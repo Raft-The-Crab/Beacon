@@ -17,9 +17,9 @@ interface AvatarProps {
 }
 
 const statusColors: Record<string, string> = {
-  online: '#23a559',
+  online: 'var(--status-success)',
   idle: '#f0b232',
-  dnd: '#f23f43',
+  dnd: 'var(--status-error)',
   invisible: '#80848e',
   offline: '#80848e',
 }
@@ -27,10 +27,10 @@ const statusColors: Record<string, string> = {
 // Generate a stable gradient from a string (no external service)
 function stringToGradient(str: string): { bg: string; text: string } {
   const palettes = [
-    { bg: 'linear-gradient(135deg, #5865f2 0%, #7289da 100%)', text: '#fff' },
-    { bg: 'linear-gradient(135deg, #23a559 0%, #2da652 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, var(--beacon-brand) 0%, #7289da 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, var(--status-success) 0%, #2da652 100%)', text: '#fff' },
     { bg: 'linear-gradient(135deg, #f0b232 0%, #e67e22 100%)', text: '#fff' },
-    { bg: 'linear-gradient(135deg, #f23f43 0%, #c0392b 100%)', text: '#fff' },
+    { bg: 'linear-gradient(135deg, var(--status-error) 0%, #c0392b 100%)', text: '#fff' },
     { bg: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)', text: '#fff' },
     { bg: 'linear-gradient(135deg, #1abc9c 0%, #16a085 100%)', text: '#fff' },
     { bg: 'linear-gradient(135deg, #e91e8c 0%, #c2185b 100%)', text: '#fff' },

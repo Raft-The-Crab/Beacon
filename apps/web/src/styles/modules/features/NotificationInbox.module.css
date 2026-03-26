@@ -231,7 +231,7 @@
 .iconWrap.friend_request,
 .iconWrap.friend_accept {
   background: rgba(35, 165, 89, 0.18);
-  color: #23a559;
+  color: var(--status-success);
 }
 
 .iconWrap.reaction {
@@ -305,7 +305,7 @@
 
 .readBtn:hover {
   background: rgba(35, 165, 89, 0.2);
-  color: #23a559;
+  color: var(--status-success);
 }
 
 .deleteBtn:hover {

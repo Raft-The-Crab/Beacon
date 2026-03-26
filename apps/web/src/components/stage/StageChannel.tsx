@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Stage Channel Component - Voice channels with speaker/listener modes
  */
 
@@ -49,7 +49,7 @@ export const StageChannel: React.FC<{ channelId: string }> = ({ channelId: _chan
   return (
     <div className={styles.stageChannel}>
       <div className={styles.header}>
-        <div className={styles.stageIcon}>🎙️</div>
+        <div className={styles.stageIcon}>???</div>
         <div className={styles.topicSection}>
           {isEditingTopic ? (
             <input
@@ -70,7 +70,7 @@ export const StageChannel: React.FC<{ channelId: string }> = ({ channelId: _chan
 
       <div className={styles.stage}>
         <div className={styles.section}>
-          <h3>Speakers — {speakers.length}</h3>
+          <h3>Speakers � {speakers.length}</h3>
           <div className={styles.memberGrid}>
             {speakers.length === 0 ? (
               <div className={styles.emptyState}>
@@ -91,17 +91,17 @@ export const StageChannel: React.FC<{ channelId: string }> = ({ channelId: _chan
                   </div>
                   <div className={styles.memberName}>{member.username}</div>
                   {member.role === 'moderator' && (
-                    <div className={styles.modBadge}>🛡️</div>
+                    <div className={styles.modBadge}>???</div>
                   )}
-                  {member.muted && <div className={styles.mutedBadge}>🔇</div>}
+                  {member.muted && <div className={styles.mutedBadge}>??</div>}
                   
                   <div className={styles.memberActions}>
                     <button onClick={() => handleMuteMember(member.id)}>
-                      {member.muted ? '🔊' : '🔇'}
+                      {member.muted ? '??' : '??'}
                     </button>
                     {member.role !== 'moderator' && (
                       <button onClick={() => handleDemoteToListener(member.id)}>
-                        ⬇️
+                        ??
                       </button>
                     )}
                   </div>
@@ -112,7 +112,7 @@ export const StageChannel: React.FC<{ channelId: string }> = ({ channelId: _chan
         </div>
 
         <div className={styles.section}>
-          <h3>Listeners — {listeners.length}</h3>
+          <h3>Listeners � {listeners.length}</h3>
           <div className={styles.listenerList}>
             {listeners.map(member => (
               <div key={member.id} className={styles.listenerItem}>
@@ -141,11 +141,11 @@ export const StageChannel: React.FC<{ channelId: string }> = ({ channelId: _chan
       <div className={styles.controls}>
         {!requestedToSpeak ? (
           <button className={styles.requestBtn} onClick={handleRequestToSpeak}>
-            ✋ Request to Speak
+            ? Request to Speak
           </button>
         ) : (
           <button className={styles.requestBtn} disabled>
-            ⏳ Request Pending
+            ? Request Pending
           </button>
         )}
         <button className={styles.leaveBtn}>

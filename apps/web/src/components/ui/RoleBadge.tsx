@@ -1,4 +1,4 @@
-﻿import * as LucideIcons from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
 import styles from '../../styles/modules/ui/RoleBadge.module.css'
 
 interface RoleBadgeProps {

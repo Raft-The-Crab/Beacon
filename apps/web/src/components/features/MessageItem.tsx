@@ -288,7 +288,7 @@ export const MessageItem = React.memo(function MessageItem({
             )}
             {isEncrypted && (
               <Tooltip content="End-to-end encrypted">
-                <Shield size={12} style={{ color: 'var(--brand-experiment)', marginLeft: 4 }} />
+                <Shield size={12} style={{ color: 'var(--beacon-brand)', marginLeft: 4 }} />
               </Tooltip>
             )}
             {edited && <span className={styles.edited}>(edited)</span>}
@@ -316,7 +316,7 @@ export const MessageItem = React.memo(function MessageItem({
               <div
                 key={i}
                 className={`${styles.botEmbed} ${embed.thumbnail ? styles.botEmbedWithThumb : ''}`}
-                style={{ borderLeftColor: embed.color || '#5865F2' }}
+                style={{ borderLeftColor: embed.color || 'var(--beacon-brand)' }}
               >
                 {embed.title && <div className={styles.embedTitle}>{embed.title}</div>}
                 {embed.description && <div className={styles.embedDesc}>{embed.description}</div>}

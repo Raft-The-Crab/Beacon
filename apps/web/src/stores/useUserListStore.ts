@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import type { User, PresenceStatus } from 'beacon.js'
-import { api } from '../lib/api'
+import type { User, PresenceStatus } from 'beacon-sdk'
+import { apiClient } from '../services/apiClient'
 
 function extractFriendsPayload(payload: any): any[] {
   if (Array.isArray(payload)) return payload
@@ -11,13 +11,13 @@ function extractFriendsPayload(payload: any): any[] {
 }
 
 async function fetchFriendsList() {
-  try {
-    const { data } = await api.get('/users/me/friends')
-    return extractFriendsPayload(data)
-  } catch {
-    const { data } = await api.get('/friends')
-    return extractFriendsPayload(data)
-  }
+  let res = await apiClient.request('GET', '/users/me/friends')
+  if (res.success) return extractFriendsPayload(res.data)
+  
+  res = await apiClient.request('GET', '/friends')
+  if (res.success) return extractFriendsPayload(res.data)
+  
+  return []
 }
 
 export interface Friend extends User {
@@ -89,9 +89,12 @@ export const useUserListStore = create<UserListState>((set, get) => ({
 
   fetchPendingRequests: async () => {
     try {
-      const { data } = await api.get('/friends/pending')
-      const pendingList = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
-      set({ pendingRequests: pendingList })
+      const res = await apiClient.request('GET', '/friends/pending')
+      if (res.success) {
+        const data = res.data
+        const pendingList = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+        set({ pendingRequests: pendingList })
+      }
     } catch (e) {
       console.error('Failed to fetch pending requests', e)
     }
@@ -165,9 +168,12 @@ export const useUserListStore = create<UserListState>((set, get) => ({
 
   fetchBlockedUsers: async () => {
     try {
-      const { data } = await api.get('/users/me/blocked')
-      const blockedList = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
-      set({ blockedUsers: blockedList.map((u: any) => u.id) })
+      const res = await apiClient.request('GET', '/users/me/blocked')
+      if (res.success) {
+        const data = res.data
+        const blockedList = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+        set({ blockedUsers: blockedList.map((u: any) => u.id) })
+      }
     } catch (e) {
       console.error('Failed to fetch blocked users', e)
     }
@@ -175,14 +181,16 @@ export const useUserListStore = create<UserListState>((set, get) => ({
 
   blockUser: async (userId) => {
     try {
-      await api.post('/users/block', { targetId: userId })
-      set((state) => {
-        if (state.blockedUsers.includes(userId)) return state
-        return {
-          blockedUsers: [...state.blockedUsers, userId],
-          friends: state.friends.filter(f => f.id !== userId)
-        }
-      })
+      const res = await apiClient.request('POST', '/users/block', { targetId: userId })
+      if (res.success) {
+        set((state) => {
+          if (state.blockedUsers.includes(userId)) return state
+          return {
+            blockedUsers: [...state.blockedUsers, userId],
+            friends: state.friends.filter(f => f.id !== userId)
+          }
+        })
+      }
     } catch (e) {
       console.error('Failed to block user', e)
     }
@@ -190,10 +198,12 @@ export const useUserListStore = create<UserListState>((set, get) => ({
 
   unblockUser: async (userId) => {
     try {
-      await api.post('/users/unblock', { targetId: userId })
-      set((state) => ({
-        blockedUsers: state.blockedUsers.filter((id) => id !== userId),
-      }))
+      const res = await apiClient.request('POST', '/users/unblock', { targetId: userId })
+      if (res.success) {
+        set((state) => ({
+          blockedUsers: state.blockedUsers.filter((id) => id !== userId),
+        }))
+      }
     } catch (e) {
       console.error('Failed to unblock user', e)
     }

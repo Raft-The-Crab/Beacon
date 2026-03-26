@@ -19,7 +19,7 @@ export const CustomizationTab: React.FC = () => {
         animation: 'none',
         color: '',
     })
-    const [profileColor, setProfileColor] = useState<string>((user as any)?.profileColor || '#5865f2')
+    const [profileColor, setProfileColor] = useState<string>((user as any)?.profileColor || 'var(--beacon-brand)')
     const [pronouns] = useState<string>((user as any)?.pronouns || '')
 
     return (

@@ -25,7 +25,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #43b581;
+  background: var(--status-success);
   animation: pulse 2s infinite;
 }
 
@@ -71,7 +71,7 @@
   left: -2px;
   right: -2px;
   bottom: -2px;
-  border: 2px solid #43b581;
+  border: 2px solid var(--status-success);
   border-radius: var(--radius-xl);
   animation: speaking 0.3s ease-in-out infinite alternate;
 }
@@ -112,12 +112,12 @@
 }
 
 .controlBtn.active {
-  background: #ed4245;
+  background: var(--status-error);
   color: white;
 }
 
 .controlBtn.disconnect {
-  background: #ed4245;
+  background: var(--status-error);
   color: white;
 }
 

@@ -45,7 +45,7 @@
 }
 
 .moderator {
-    color: #43b581;
+    color: var(--status-success);
     background: rgba(67, 181, 129, 0.15);
 }
 
@@ -55,7 +55,7 @@
 }
 
 .bot {
-    color: #5865f2;
+    color: var(--beacon-brand);
     background: rgba(88, 101, 242, 0.15);
 }
 
@@ -65,7 +65,7 @@
 }
 
 .bugHunter {
-    color: #43b581;
+    color: var(--status-success);
     background: rgba(67, 181, 129, 0.15);
 }
 
@@ -79,7 +79,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: #5865f2;
+    background: var(--beacon-brand);
     color: white;
     font-size: 10px;
     font-weight: 700;

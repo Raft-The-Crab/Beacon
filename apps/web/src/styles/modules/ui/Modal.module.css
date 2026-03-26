@@ -4,67 +4,46 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: overlayFadeIn 0.2s ease;
-  padding: clamp(10px, 2vw, 16px);
-}
-
-/* Disable blur on low-bandwidth mode for performance */
-[data-low-bandwidth="true"] .overlay {
-  backdrop-filter: none;
-  background-color: rgba(0, 0, 0, 0.85);
+  padding: 16px;
 }
 
 .closing {
   opacity: 0;
-  transition: opacity 0.2s ease-out;
-}
-
-.closing .modal {
-  transform: scale(0.95) translateY(20px);
-  opacity: 0;
-  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
-}
-
-@keyframes overlayFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  transition: opacity 0.25s ease-out;
 }
 
 .modal {
-  background: var(--bg-panel);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-  width: min(100%, 1000px);
+  background: rgba(18, 18, 22, 0.7);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  width: 100%;
   max-width: 95%;
-  max-height: min(85vh, calc(100dvh - 32px));
+  max-height: min(90vh, calc(100dvh - 32px));
   overflow: hidden;
-  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   position: relative;
-  animation: modalBounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: modalEnter 0.5s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-@keyframes modalBounceIn {
-  0% {
+@keyframes modalEnter {
+  from {
     opacity: 0;
-    transform: translateY(30px) scale(0.9);
+    transform: translateY(20px) scale(0.98);
   }
-  60% {
-    opacity: 1;
-    transform: translateY(-5px) scale(1.02);
-  }
-  100% {
+  to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
@@ -74,81 +53,71 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
-  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
   flex-shrink: 0;
 }
 
 .title {
   font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-  flex: 1;
-  min-width: 0;
+  font-weight: 700;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
 }
 
 .closeButton {
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.6);
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-xs);
+  border-radius: 10px;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  padding: 4px;
-  font-size: 24px;
+  font-size: 20px;
   line-height: 1;
-  flex-shrink: 0;
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-  transform: scale(1.1) rotate(90deg);
-}
-
-.closeButton:active {
-  transform: scale(0.9) rotate(90deg);
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .content {
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
   position: relative;
-  z-index: 10;
   flex: 1;
   min-height: 0;
 }
-  
-.noScroll {
-  overflow: hidden;
+
+/* Custom Modal scrollbar */
+.content::-webkit-scrollbar {
+  width: 5px;
 }
 
-.noPadding {
-  padding: 0;
+.content::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.sm {
-  width: clamp(300px, 90vw, 400px);
+.content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 
-.md {
-  width: clamp(320px, 90vw, 600px);
-}
-
-.lg {
-  width: clamp(360px, 90vw, 800px);
-}
-
-.xl {
-  width: clamp(400px, 90vw, 1000px);
-}
+.sm { max-width: 440px; }
+.md { max-width: 600px; }
+.lg { max-width: 800px; }
+.xl { max-width: 1000px; }
 
 .transparent {
   background: transparent;
@@ -160,66 +129,40 @@
 @media (max-width: 768px) {
   .overlay {
     align-items: flex-end;
-    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
   }
 
   .modal {
-    width: min(96vw, 760px);
-    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px);
-    border-radius: 22px 22px 0 0;
-    animation: modalSlideUpMobile 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .modal.sm,
-  .modal.md,
-  .modal.lg,
-  .modal.xl {
-    width: min(96vw, 760px);
-  }
-
-  .header {
-    padding: 14px 16px;
-  }
-
-  .content {
-    padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
-  }
-}
-
-@media (max-width: 480px) {
-  .overlay {
-    padding: 0;
-  }
-
-  .modal {
-    width: 100%;
     max-width: 100%;
-    max-height: calc(100dvh - 20px);
-    margin-top: auto;
-    border-radius: 20px 20px 0 0;
+    margin-bottom: 0;
+    border-radius: 28px 28px 0 0;
+    max-height: calc(100dvh - 40px);
+    animation: modalDrawerUp 0.4s cubic-bezier(0.19, 1, 0.22, 1);
   }
 
-  .title {
-    font-size: 18px;
+  @keyframes modalDrawerUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
   }
 
   .header {
-    padding: 12px 14px;
+    padding: 16px 20px;
+    /* Add a visual handle on mobile */
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
   }
 
   .content {
-    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
-  }
-}
-
-@keyframes modalSlideUpMobile {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+    padding: 20px;
   }
 }

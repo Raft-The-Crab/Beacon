@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Upload, X, File, Image as ImageIcon, Loader } from 'lucide-react'
 import { fileUploadService, type UploadedFile } from '../../services/fileUpload'
 import { Button } from './Button'

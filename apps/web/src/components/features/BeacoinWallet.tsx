@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Coins, ArrowUpRight, ArrowDownLeft, Send, X, TrendingUp, Gift } from 'lucide-react'
 import { useBeacoinStore, BeacoinTransaction } from '../../stores/useBeacoinStore'
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -174,7 +174,7 @@ export function BeacoinWallet({ onClose }: BeacoinWalletProps) {
             <div className={styles.sendForm}>
               {sendSuccess && (
                 <div className={styles.successBanner}>
-                  ✓ Coins sent successfully!
+                  ? Coins sent successfully!
                 </div>
               )}
               <div className={styles.field}>

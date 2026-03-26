@@ -185,15 +185,15 @@
 }
 
 .progressFill.success {
-  background: #43b581;
+  background: var(--status-success);
 }
 
 .progressFill.warning {
-  background: #faa61a;
+  background: var(--status-warning);
 }
 
 .progressFill.danger {
-  background: #f04747;
+  background: var(--status-error);
 }
 
 .progressLabel {

@@ -120,7 +120,7 @@
   left: -4px;
   right: -4px;
   bottom: -4px;
-  border: 3px solid #43b581;
+  border: 3px solid var(--status-success);
   border-radius: 50%;
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -253,7 +253,7 @@
 }
 
 .leaveBtn {
-  background: #ed4245;
+  background: var(--status-error);
   color: white;
 }
 

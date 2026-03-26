@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Hash, Volume2, Users, MessageSquare, Server, X, Clock, ArrowRight, Settings, Moon, LogOut, Coins } from 'lucide-react'
 import { openUserSettingsModal } from '../../utils/modals'
@@ -299,8 +299,8 @@ export function QuickSwitcher({ onClose }: QuickSwitcherProps) {
         ) : null}
 
         <div className={styles.footer}>
-          <span><kbd>↑↓</kbd> Navigate</span>
-          <span><kbd>↵</kbd> Open</span>
+          <span><kbd>??</kbd> Navigate</span>
+          <span><kbd>?</kbd> Open</span>
           <span><kbd>Esc</kbd> Close</span>
         </div>
       </div>

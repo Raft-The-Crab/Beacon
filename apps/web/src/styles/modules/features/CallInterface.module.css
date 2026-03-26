@@ -17,6 +17,22 @@
   overflow: auto;
 }
 
+@media (max-width: 768px) {
+  .videoGrid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .videoGrid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
+}
+
 .videoTile {
   position: relative;
   background: var(--bg-secondary);
@@ -132,6 +148,13 @@
   flex-direction: column;
   z-index: 100;
   box-shadow: var(--shadow-glass);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 768px) {
+  .participantsSidebar {
+    width: 100%;
+  }
 }
 
 .sidebarHeader {
@@ -206,6 +229,15 @@
   border-top: 1px solid var(--glass-border);
 }
 
+@media (max-width: 768px) {
+  .controls {
+    padding: 16px 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+  }
+}
+
 .controlsGroup {
   display: flex;
   gap: 16px;
@@ -223,6 +255,19 @@
   color: var(--text-primary);
   transition: all var(--transition-normal);
   cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .controlButton {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  
+  .controlButton svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .controlButton:hover {
@@ -261,6 +306,14 @@
   border: none;
   cursor: pointer;
   transition: all var(--transition-normal);
+}
+
+@media (max-width: 480px) {
+  .endCallButton {
+    height: 48px;
+    padding: 0 20px;
+    font-size: 14px;
+  }
 }
 
 .endCallButton:hover {

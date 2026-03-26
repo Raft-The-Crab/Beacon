@@ -111,7 +111,7 @@
 
 .reorderBtns button:hover {
   opacity: 1;
-  color: var(--beacon-brand, #5865f2);
+  color: var(--beacon-brand, var(--beacon-brand));
 }
 
 .reorderBtns button:disabled {
@@ -149,7 +149,7 @@
 
 .deleteRoleBtn {
   background: rgba(237, 66, 69, 0.1);
-  color: #ed4245;
+  color: var(--status-error);
   border: 1px solid rgba(237, 66, 69, 0.2);
   padding: 6px 16px;
   border-radius: var(--radius-xs);
@@ -160,7 +160,7 @@
 }
 
 .deleteRoleBtn:hover {
-  background: #ed4245;
+  background: var(--status-error);
   color: white;
 }
 
@@ -193,7 +193,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--beacon-brand, #5865f2);
+  background: var(--beacon-brand, var(--beacon-brand));
 }
 
 .tabContent {
@@ -233,7 +233,7 @@
 }
 
 .roleNameInput:focus {
-  border-color: var(--beacon-brand, #5865f2);
+  border-color: var(--beacon-brand, var(--beacon-brand));
 }
 
 .colorConfig {

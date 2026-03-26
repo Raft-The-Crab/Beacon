@@ -145,7 +145,14 @@ export function VoiceChannel() {
     return [me, ...peerParticipants]
   }, [user, voiceUsers, channelId, currentVoiceState, isHandRaised, isScreenSharing, remoteStreams])
 
-  const handleLeave = () => {
+  const handleLeave = async () => {
+    if (guildId === 'dm' && channelId) {
+       try {
+         await apiClient.stopCall(channelId)
+       } catch (err) {
+         console.warn('Stop call notify failed:', err)
+       }
+    }
     void voiceManager.leaveChannel()
     navigate(-1)
   }
@@ -269,8 +276,8 @@ export function VoiceChannel() {
           </div>
           <span className={styles.serverLabel}>{serverName}</span>
           {connectionStatus === 'connecting' && (
-            <div className={styles.statusPill} style={{ background: 'rgba(250, 166, 26, 0.15)', color: '#faa61a' }}>
-              <span className={styles.statusDot} style={{ background: '#faa61a' }} />
+            <div className={styles.statusPill} style={{ background: 'rgba(250, 166, 26, 0.15)', color: 'var(--status-warning)' }}>
+              <span className={styles.statusDot} style={{ background: 'var(--status-warning)' }} />
               Connecting...
             </div>
           )}
@@ -281,8 +288,8 @@ export function VoiceChannel() {
             </div>
           )}
           {connectionStatus === 'failed' && (
-            <div className={styles.statusPill} style={{ background: 'rgba(242, 63, 67, 0.15)', color: '#f04747' }}>
-              <span className={styles.statusDot} style={{ background: '#f04747' }} />
+            <div className={styles.statusPill} style={{ background: 'rgba(242, 63, 67, 0.15)', color: 'var(--status-error)' }}>
+              <span className={styles.statusDot} style={{ background: 'var(--status-error)' }} />
               Connection Failed
             </div>
           )}

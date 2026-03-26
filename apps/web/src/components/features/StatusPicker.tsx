@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { Button, Input } from '../ui'
 import { useAuthStore, PresenceStatus } from '../../stores/useAuthStore'
@@ -14,19 +14,19 @@ const statusOptions: { value: PresenceStatus; label: string; description: string
     value: 'online',
     label: 'Online',
     description: 'You appear online and active',
-    color: '#43b581',
+    color: 'var(--status-success)',
   },
   {
     value: 'idle',
     label: 'Idle',
     description: 'You appear away or inactive',
-    color: '#faa61a',
+    color: 'var(--status-warning)',
   },
   {
     value: 'dnd',
     label: 'Do Not Disturb',
     description: 'You will not receive notifications',
-    color: '#f04747',
+    color: 'var(--status-error)',
   },
   {
     value: 'invisible',

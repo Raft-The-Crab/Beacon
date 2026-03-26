@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Plus, ChevronRight, Gamepad2, School, GraduationCap, ArrowLeft, Users, Globe } from 'lucide-react'
 import { Modal, Button, Input, AvatarUpload } from '../ui'
 import { useUIStore } from '../../stores/useUIStore'

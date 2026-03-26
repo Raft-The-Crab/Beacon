@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Bell, X, Check, CheckCheck, MessageCircle, UserPlus, AtSign, Heart, Info } from 'lucide-react'
 import { useNotificationStore, type SmartNotification } from '../../stores/useNotificationStore'
 import styles from '../../styles/modules/features/NotificationInbox.module.css'

@@ -137,7 +137,7 @@
 }
 
 .deleteBtn:hover {
-    color: #ed4245;
+    color: var(--status-error);
     background: rgba(237, 66, 69, 0.1);
 }
 
@@ -188,7 +188,7 @@
 
 .actionChip {
     background: rgba(250, 166, 26, 0.15);
-    color: #faa61a;
+    color: var(--status-warning);
 }
 
 .exempt {

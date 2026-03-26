@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import styles from '../../styles/modules/ui/Card.module.css';
 
 interface CardProps {

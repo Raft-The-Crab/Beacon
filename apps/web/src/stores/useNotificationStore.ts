@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { apiClient } from '../services/apiClient'
+import { useNotificationSystem } from './useNotificationSystem'
 
 interface NotificationSettings {
   priority: 'all' | 'high' | 'mentions'
@@ -174,6 +175,12 @@ export const useNotificationStore = create<NotificationStore>()(
         })
 
         if (!inserted) return
+
+        // In-app toast
+        useNotificationSystem.getState().show(
+          notification.body, 
+          (notification.type as any) === 'error' ? 'error' : (notification.type === 'message' || notification.type === 'dm' ? 'info' : 'success')
+        )
 
         // Browser notification
         if ('Notification' in window && Notification.permission === 'granted') {

@@ -134,6 +134,6 @@
 
 .disabled:hover {
     background: rgba(237, 66, 69, 0.2);
-    color: #ed4245;
+    color: var(--status-error);
     transform: scale(1.1);
 }

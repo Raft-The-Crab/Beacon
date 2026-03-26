@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import styles from '../../styles/modules/features/SlowmodeControl.module.css';
 import { API_BASE_URL } from '../../config/endpoints';
 
@@ -89,7 +89,7 @@ const SlowmodeControl: React.FC<SlowmodeControlProps> = ({
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <span className={styles.icon}>🐌</span>
+        <span className={styles.icon}>??</span>
         <div>
           <div className={styles.title}>Slowmode</div>
           <div className={styles.subtitle}>
@@ -137,9 +137,9 @@ const SlowmodeControl: React.FC<SlowmodeControlProps> = ({
         {value === 0 ? 'No slowmode' : `Users can send a message every ${formatDuration(value)}`}
       </div>
 
-      {error && <div className={styles.error}>⚠️ {error}</div>}
-      {saved && <div className={styles.success}>✓ Slowmode updated</div>}
-      {saving && <div className={styles.saving}>Saving…</div>}
+      {error && <div className={styles.error}>?? {error}</div>}
+      {saved && <div className={styles.success}>? Slowmode updated</div>}
+      {saving && <div className={styles.saving}>Saving�</div>}
     </div>
   );
 };

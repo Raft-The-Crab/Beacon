@@ -99,7 +99,7 @@ export function DocsHome() {
                     </div>
                     <div className={`${styles.buildCard} premium-glass-card`}>
                         <div style={{ padding: 32 }}>
-                            <Shield size={24} style={{ color: '#23A559', marginBottom: 16 }} />
+                            <Shield size={24} style={{ color: 'var(--status-success)', marginBottom: 16 }} />
                             <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 12 }}>{t('docs.build_section.oauth')}</h3>
                             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                                 {t('docs.build_section.oauth_desc')}

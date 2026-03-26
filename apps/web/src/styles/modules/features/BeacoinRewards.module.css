@@ -120,7 +120,7 @@
 }
 
 .dayCheck {
-    color: #43b581;
+    color: var(--status-success);
     position: absolute;
     top: 4px;
     right: 4px;
@@ -199,7 +199,7 @@
 
 .progressFill {
     height: 100%;
-    background: linear-gradient(90deg, #5865f2 0%, #7b2ff7 100%);
+    background: linear-gradient(90deg, var(--beacon-brand) 0%, #7b2ff7 100%);
     border-radius: var(--radius-2xs);
     transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }

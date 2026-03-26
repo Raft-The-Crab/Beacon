@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VoiceControls - UI component for voice channel controls
  */
 

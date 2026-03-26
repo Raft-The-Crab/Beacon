@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { apiRequest } from '../lib/api'
+import { apiClient } from '../services/apiClient'
 import type { MessageWithExtras as Message, PaginatedResponse } from 'beacon-sdk'
 
 interface MessageState {
@@ -49,28 +49,18 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     })
 
     try {
-      const response = await apiRequest<PaginatedResponse<Message> | Message[]>({
-        method: 'GET',
-        url: `/channels/${channelId}/messages`,
-        params: { limit: 50, before }
-      }, {
-        retries: 1,
-        retryDelay: 250,
-      })
-
-      if (response.success && response.data) {
+      const endpoint = `/channels/${channelId}/messages`
+      const res = await apiClient.request<PaginatedResponse<Message> | Message[]>('GET', endpoint, { before, limit: 50 })
+      
+      if (res.success && res.data) {
         set(state => {
           const newMessages = new Map(state.messages)
           const existing = newMessages.get(channelId) || []
-          const payload = response.data as any
+          const payload = res.data as any
           const items: Message[] = Array.isArray(payload) ? payload : (payload.items || [])
           const hasMore = Array.isArray(payload) ? items.length === 50 : Boolean(payload.hasMore)
 
-          // Prepend older messages
-          const combined = before
-            ? [...items, ...existing]
-            : items
-
+          const combined = before ? [...items, ...existing] : items
           newMessages.set(channelId, combined)
 
           const newHasMore = new Map(state.hasMore)
@@ -94,7 +84,6 @@ export const useMessageStore = create<MessageState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to fetch messages:', error)
-
       set(state => {
         const newLoading = new Map(state.isLoading)
         newLoading.set(channelId, false)
@@ -107,17 +96,13 @@ export const useMessageStore = create<MessageState>((set, get) => ({
     const state = get()
     const oldestId = state.oldestMessageId.get(channelId)
     if (!oldestId || !state.hasMore.get(channelId)) return
-
     await state.fetchMessages(channelId, oldestId)
   },
 
   sendMessage: async (channelId, content, attachments) => {
     try {
-      await apiRequest({
-        method: 'POST',
-        url: `/channels/${channelId}/messages`,
-        data: { content, attachments }
-      })
+      const res = await apiClient.sendMessage(channelId, { content, attachments })
+      if (!res.success) throw new Error(res.error)
     } catch (error) {
       console.error('Failed to send message:', error)
       throw error

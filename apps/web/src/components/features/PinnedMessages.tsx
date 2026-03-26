@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from '../../styles/modules/features/PinnedMessages.module.css';
 import { api } from '../../lib/api';
 
@@ -54,22 +54,22 @@ export function PinnedMessages({ channelId, channelName, onClose, onJumpToMessag
     <div className={styles.panel}>
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <span className={styles.pinIcon}>📌</span>
+          <span className={styles.pinIcon}>??</span>
           <h3>Pinned Messages</h3>
           {channelName && <span className={styles.channelName}>#{channelName}</span>}
         </div>
-        <button className={styles.closeBtn} onClick={onClose}>✕</button>
+        <button className={styles.closeBtn} onClick={onClose}>?</button>
       </div>
 
       <div className={styles.content}>
         {loading ? (
           <div className={styles.empty}>
             <div className={styles.spinner} />
-            <p>Loading pins…</p>
+            <p>Loading pins�</p>
           </div>
         ) : pins.length === 0 ? (
           <div className={styles.empty}>
-            <span className={styles.emptyIcon}>📌</span>
+            <span className={styles.emptyIcon}>??</span>
             <p>No pinned messages yet</p>
             <span className={styles.emptyHint}>Right-click any message to pin it</span>
           </div>
@@ -97,7 +97,7 @@ export function PinnedMessages({ channelId, channelName, onClose, onJumpToMessag
                         onClick={() => { onJumpToMessage(msg.id); onClose(); }}
                         title="Jump to message"
                       >
-                        ↗
+                        ?
                       </button>
                     )}
                     <button
@@ -105,7 +105,7 @@ export function PinnedMessages({ channelId, channelName, onClose, onJumpToMessag
                       onClick={() => handleUnpin(msg.id)}
                       title="Unpin message"
                     >
-                      ✕
+                      ?
                     </button>
                   </div>
                 </div>

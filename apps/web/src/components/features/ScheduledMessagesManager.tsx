@@ -23,9 +23,9 @@ interface ScheduledMessagesManagerProps {
 }
 
 const STATUS_CONFIG = {
-    pending: { icon: <Clock size={14} />, color: '#faa61a', label: 'Pending' },
+    pending: { icon: <Clock size={14} />, color: 'var(--status-warning)', label: 'Pending' },
     sent: { icon: <CheckCircle size={14} />, color: '#3ba55d', label: 'Sent' },
-    failed: { icon: <AlertCircle size={14} />, color: '#ed4245', label: 'Failed' },
+    failed: { icon: <AlertCircle size={14} />, color: 'var(--status-error)', label: 'Failed' },
     cancelled: { icon: <XCircle size={14} />, color: '#8e8e93', label: 'Cancelled' },
 }
 

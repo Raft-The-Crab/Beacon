@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api } from '../lib/api'
+import { apiClient } from '../services/apiClient'
 
 let walletFetchInFlight: Promise<void> | null = null
 let walletLastFetchedAt = 0
@@ -85,16 +85,21 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
     set({ isLoading: true })
     walletFetchInFlight = (async () => {
       try {
-        const { data } = await api.get('/users/@me/beacoin')
-        walletLastFetchedAt = Date.now()
-        set({
-          balance: data.balance ?? 0,
-          transactions: data.transactions ?? [],
-          streak: data.streak ?? 0,
-          lastDailyClaim: data.lastDailyClaim ?? null,
-          dailyRewards: generateDailyRewards(data.streak ?? 0),
-          isLoading: false,
-        })
+        const res = await apiClient.request('GET', '/users/@me/beacoin')
+        if (res.success) {
+          const data = res.data
+          walletLastFetchedAt = Date.now()
+          set({
+            balance: data.balance ?? 0,
+            transactions: data.transactions ?? [],
+            streak: data.streak ?? 0,
+            lastDailyClaim: data.lastDailyClaim ?? null,
+            dailyRewards: generateDailyRewards(data.streak ?? 0),
+            isLoading: false,
+          })
+        } else {
+          set({ isLoading: false })
+        }
       } catch {
         // Keep the last known wallet state instead of overwriting with synthetic values.
         set({ isLoading: false })
@@ -108,15 +113,19 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
 
   sendCoins: async (toUserId, amount, note) => {
     try {
-      const { data } = await api.post('/users/@me/beacoin/send', {
+      const res = await apiClient.request('POST', '/users/@me/beacoin/send', {
         toUserId,
         amount,
         note,
       })
-      set((state) => ({
-        balance: state.balance - amount,
-        transactions: [data.transaction, ...state.transactions],
-      }))
+      if (res.success) {
+        set((state) => ({
+          balance: state.balance - amount,
+          transactions: [res.data.transaction, ...state.transactions],
+        }))
+      } else {
+        throw res
+      }
     } catch (err) {
       throw err
     }
@@ -125,12 +134,16 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
   purchaseSubscription: async (tier: 'monthly' | 'yearly', couponCode?: string) => {
     set({ isLoading: true })
     try {
-      const { data } = await api.post('/users/@me/beacoin/subscribe', { tier, couponCode })
-      set((state) => ({
-        isLoading: false,
-        balance: state.balance - data.cost,
-        transactions: [data.transaction, ...state.transactions]
-      }))
+      const res = await apiClient.request('POST', '/users/@me/beacoin/subscribe', { tier, couponCode })
+      if (res.success) {
+        set((state) => ({
+          isLoading: false,
+          balance: state.balance - res.data.cost,
+          transactions: [res.data.transaction, ...state.transactions]
+        }))
+      } else {
+        throw res
+      }
     } catch (err: any) {
       set({ isLoading: false })
       throw err
@@ -144,36 +157,31 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
     const isStreakDay = (streak % 7) === 6
     const reward = DAILY_BASE + (isStreakDay ? STREAK_BONUS : 0)
     const newStreak = streak + 1
-    const now = new Date().toISOString()
-
-    const tx: BeacoinTransaction = {
-      id: `daily-${Date.now()}`,
-      type: 'earn',
-      amount: reward,
-      description: isStreakDay ? `Daily reward + ${STREAK_BONUS} streak bonus! 🔥` : 'Daily check-in reward',
-      timestamp: now,
-    }
+    const nowISO = new Date().toISOString()
 
     try {
-      const { data } = await api.post('/users/@me/beacoin/daily')
-      const now = new Date().toISOString()
-      
-      set((state) => ({
-        balance: state.balance + reward,
-        streak: newStreak,
-        lastDailyClaim: now,
-        dailyRewards: generateDailyRewards(newStreak),
-        transactions: [
-          {
-            id: data.transaction?.id || `daily-${Date.now()}`,
-            type: 'earn',
-            amount: reward,
-            description: isStreakDay ? `Daily reward + ${STREAK_BONUS} streak bonus! 🔥` : 'Daily check-in reward',
-            timestamp: now,
-          },
-          ...state.transactions
-        ],
-      }))
+      const res = await apiClient.request('POST', '/users/@me/beacoin/daily')
+      if (res.success) {
+        const data = res.data
+        set((state) => ({
+          balance: state.balance + reward,
+          streak: newStreak,
+          lastDailyClaim: nowISO,
+          dailyRewards: generateDailyRewards(newStreak),
+          transactions: [
+            {
+              id: data.transaction?.id || `daily-${Date.now()}`,
+              type: 'earn',
+              amount: reward,
+              description: isStreakDay ? `Daily reward + ${STREAK_BONUS} streak bonus! 🔥` : 'Daily check-in reward',
+              timestamp: nowISO,
+            },
+            ...state.transactions
+          ],
+        }))
+      } else {
+        throw res
+      }
     } catch (err) {
       console.error('Failed to claim daily reward:', err)
       throw err
@@ -184,61 +192,50 @@ export const useBeacoinStore = create<BeacoinState>((set, get) => ({
     const { messageCount } = get()
     if (messageCount < ACTIVITY_THRESHOLD) return
 
-    const tx: BeacoinTransaction = {
-      id: `activity-${Date.now()}`,
-      type: 'earn',
-      amount: ACTIVITY_REWARD,
-      description: `Activity milestone: ${ACTIVITY_THRESHOLD} messages! 💬`,
-      timestamp: new Date().toISOString(),
-    }
-
     try {
-      const { data } = await api.post('/users/@me/beacoin/activity')
-      set((state) => ({
-        balance: state.balance + ACTIVITY_REWARD,
-        messageCount: 0, // reset count
-        transactions: [
-          {
-            id: data.transaction?.id || `activity-${Date.now()}`,
-            type: 'earn',
-            amount: ACTIVITY_REWARD,
-            description: `Activity milestone: ${ACTIVITY_THRESHOLD} messages! 💬`,
-            timestamp: new Date().toISOString(),
-          },
-          ...state.transactions
-        ],
-      }))
+      const res = await apiClient.request('POST', '/users/@me/beacoin/activity')
+      if (res.success) {
+        const data = res.data
+        set((state) => ({
+          balance: state.balance + ACTIVITY_REWARD,
+          messageCount: 0, // reset count
+          transactions: [
+            {
+              id: data.transaction?.id || `activity-${Date.now()}`,
+              type: 'earn',
+              amount: ACTIVITY_REWARD,
+              description: `Activity milestone: ${ACTIVITY_THRESHOLD} messages! 💬`,
+              timestamp: new Date().toISOString(),
+            },
+            ...state.transactions
+          ],
+        }))
+      }
     } catch (err) {
       console.error('Failed to claim activity reward:', err)
     }
   },
 
   claimInviteBonus: async (invitedUserId: string) => {
-    const tx: BeacoinTransaction = {
-      id: `invite-${Date.now()}`,
-      type: 'bonus',
-      amount: INVITE_BONUS,
-      description: 'Invite bonus — a friend joined Beacon!',
-      timestamp: new Date().toISOString(),
-      fromUserId: invitedUserId,
-    }
-
     try {
-      const { data } = await api.post('/users/@me/beacoin/invite', { invitedUserId })
-      set((state) => ({
-        balance: state.balance + INVITE_BONUS,
-        transactions: [
-          {
-            id: data.transaction?.id || `invite-${Date.now()}`,
-            type: 'bonus',
-            amount: INVITE_BONUS,
-            description: 'Invite bonus — a friend joined Beacon!',
-            timestamp: new Date().toISOString(),
-            fromUserId: invitedUserId,
-          },
-          ...state.transactions
-        ],
-      }))
+      const res = await apiClient.request('POST', '/users/@me/beacoin/invite', { invitedUserId })
+      if (res.success) {
+        const data = res.data
+        set((state) => ({
+          balance: state.balance + INVITE_BONUS,
+          transactions: [
+            {
+              id: data.transaction?.id || `invite-${Date.now()}`,
+              type: 'bonus',
+              amount: INVITE_BONUS,
+              description: 'Invite bonus — a friend joined Beacon!',
+              timestamp: new Date().toISOString(),
+              fromUserId: invitedUserId,
+            },
+            ...state.transactions
+          ],
+        }))
+      }
     } catch (err) {
       console.error('Failed to claim invite bonus:', err)
     }

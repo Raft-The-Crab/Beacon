@@ -9,7 +9,7 @@ import { fileUploadService } from '../../../services/fileUpload'
 import styles from '../../../styles/modules/modals/SettingsModal.module.css'
 
 const accentPresets = [
-    { label: 'Beacon Blue', value: '#5865F2' },
+    { label: 'Beacon Blue', value: 'var(--beacon-brand)' },
     { label: 'Electric Pink', value: '#ff007f' },
     { label: 'Cyan Pulse', value: '#00ffff' },
     { label: 'Emerald', value: '#2ecc71' },

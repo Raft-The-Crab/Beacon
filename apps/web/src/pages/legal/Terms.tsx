@@ -24,9 +24,9 @@ export function Terms() {
                 </section>
 
                 <section>
-                    <h2>1. The Sovereign Protocol</h2>
+                    <h2>1. The Advanced Protocol</h2>
                     <p>
-                        Beacon is designed as a sovereign communication layer. By using this Service, you acknowledge that while we provide the interface, you are responsible for your own data security and interactions.
+                        Beacon is designed as a secure communication layer. By using this Service, you acknowledge that while we provide the interface, you are responsible for your own data security and interactions.
                     </p>
                 </section>
 

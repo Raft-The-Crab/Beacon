@@ -1,4 +1,4 @@
-﻿import { useState, ReactNode } from 'react'
+import { useState, ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
 import styles from '../../styles/modules/ui/Collapsible.module.css'
 

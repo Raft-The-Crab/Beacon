@@ -42,7 +42,7 @@
 }
 
 .headerIcon {
-    color: #5865f2;
+    color: var(--beacon-brand);
     filter: drop-shadow(0 0 10px rgba(88, 101, 242, 0.5));
 }
 
@@ -231,7 +231,7 @@
 }
 
 .emptyState svg {
-    color: #5865f2;
+    color: var(--beacon-brand);
     filter: drop-shadow(0 0 20px rgba(88, 101, 242, 0.4));
     animation: pulse 2s infinite ease-in-out;
 }
@@ -314,4 +314,4 @@
         justify-content: center;
     }
 }
-
+

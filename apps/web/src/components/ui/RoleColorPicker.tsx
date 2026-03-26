@@ -3,8 +3,8 @@ import { Pipette } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
 const PRESET_COLORS = [
-  '#5865f2', '#3ba55d', '#f0b232', '#ed4245', '#eb459e', '#00b0f4',
-  '#2b2d31', '#99aab5', '#faa61a', '#43b581', '#7289da', '#ff73fa',
+  'var(--beacon-brand)', '#3ba55d', '#f0b232', 'var(--status-error)', '#eb459e', '#00b0f4',
+  '#2b2d31', '#99aab5', 'var(--status-warning)', 'var(--status-success)', '#7289da', '#ff73fa',
 ]
 
 interface RoleColorPickerProps {
@@ -70,7 +70,7 @@ export function RoleColorPicker({ value, onChange, className }: RoleColorPickerP
                 value={value}
                 onChange={(e) => onChange(e.currentTarget.value)}
                 className="h-9 flex-1 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-500 focus:border-indigo-400"
-                placeholder="#5865f2"
+                placeholder="var(--beacon-brand)"
               />
             </div>
           </Popover.Content>

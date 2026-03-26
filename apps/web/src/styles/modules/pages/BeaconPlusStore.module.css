@@ -40,7 +40,7 @@
 
 .hero {
     padding: clamp(60px, 12vw, 120px) clamp(24px, 6vw, 48px);
-    background: linear-gradient(135deg, #5865f2 0%, #7b2ff7 50%, #b845ed 100%);
+    background: linear-gradient(135deg, var(--beacon-brand) 0%, #7b2ff7 50%, #b845ed 100%);
     color: white;
     display: flex;
     flex-direction: column;
@@ -269,7 +269,7 @@
 }
 
 .saveBadge {
-    background: #23a559;
+    background: var(--status-success);
     color: white;
     font-size: 10px;
     padding: 3px 8px;
@@ -501,7 +501,7 @@
 
 .plusGiftPrice em {
     font-style: normal;
-    color: #23a559;
+    color: var(--status-success);
     font-weight: 700;
 }
 
@@ -598,7 +598,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.05);
-    border: 2px solid var(--accent, #5865f2);
+    border: 2px solid var(--accent, var(--beacon-brand));
 }
 
 .animatedRing,
@@ -646,7 +646,7 @@
 }
 
 .cosmeticPrice .owned {
-    color: #43b581;
+    color: var(--status-success);
     display: flex;
     align-items: center;
     gap: 4px;
@@ -1352,7 +1352,7 @@
 }
 
 .saveBadge {
-    background: #23a559;
+    background: var(--status-success);
     color: white;
     font-size: 10px;
     padding: 3px 8px;
@@ -1574,7 +1574,7 @@
 
 .plusGiftPrice em {
     font-style: normal;
-    color: #23a559;
+    color: var(--status-success);
     font-weight: 700;
 }
 

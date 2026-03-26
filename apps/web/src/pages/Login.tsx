@@ -5,7 +5,7 @@ import { useToast } from '../components/ui'
 import { Mail, Lock, User, Loader2, LogIn, UserPlus, Shield } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
-import { api } from '../lib/api'
+import { apiClient } from '../services/apiClient'
 import { resolveAssetUrl } from '../config/endpoints'
 import styles from '../styles/modules/pages/Login.module.css'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -46,8 +46,8 @@ export function Login() {
       if (trimmedIdentifier.length < 1) return
 
       try {
-        const { data } = await api.get(`/auth/profile-preview/${encodeURIComponent(trimmedIdentifier)}`)
-        if (data) setProfilePreview(data)
+        const res = await apiClient.request('GET', `/auth/profile-preview/${encodeURIComponent(trimmedIdentifier)}`)
+        if (res.success && res.data) setProfilePreview(res.data)
         else setProfilePreview(null)
       } catch {
         setProfilePreview(null)
@@ -108,11 +108,15 @@ export function Login() {
 
     setLoading(true);
     try {
-      await api.post('/auth/forgot-password', { email });
-      showToast('If an account exists with that email, a reset link has been sent.', 'success');
-      setIsForgotPassword(false);
+      const res = await apiClient.request('POST', '/auth/forgot-password', { email });
+      if (res.success) {
+        showToast('If an account exists with that email, a reset link has been sent.', 'success');
+        setIsForgotPassword(false);
+      } else {
+        throw new Error(res.error?.message || 'Failed to send reset link');
+      }
     } catch (error: any) {
-      showToast(error.response?.data?.error || 'Failed to send reset link', 'error');
+      showToast(error.message || 'Failed to send reset link', 'error');
     } finally {
       setLoading(false);
     }

@@ -583,7 +583,7 @@
     background-size: cover;
     background-position: center;
     position: relative;
-    background-color: var(--accent-primary, #5865f2);
+    background-color: var(--accent-primary, var(--beacon-brand));
 }
 
 .bannerActions {
@@ -1053,7 +1053,7 @@
 }
 
 .devInfo p {
-    color: #23a559;
+    color: var(--status-success);
     font-weight: 800;
     font-size: 18px;
 }
@@ -1129,7 +1129,7 @@
     }
 
     .header h2 {
-        font-size: 24px;
+        font-size: 20px;
     }
 
     .headerMain {
@@ -1142,7 +1142,7 @@
     }
 
     .tabContent {
-        padding: 0 32px 32px 32px;
+        padding: 0 20px 24px 20px;
     }
 
     .closeWrapper {
@@ -1210,11 +1210,13 @@
 
     .navItem {
         white-space: nowrap;
-        padding: 8px 12px;
-        font-size: 13px;
+        padding: 8px 14px;
+        font-size: 14px;
         gap: 8px;
         border-radius: var(--radius-xl);
         min-width: max-content;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .divider {
@@ -1225,7 +1227,7 @@
 
     .header,
     .tabContent {
-        padding: 24px 20px;
+        padding: 16px 14px;
     }
 
     .header {
@@ -1301,7 +1303,7 @@
 
     .header,
     .tabContent {
-        padding: 16px 16px;
+        padding: 12px 10px;
     }
 
     .header h2 {
@@ -1388,7 +1390,9 @@
     }
 
     .sidebar {
-        padding: 10px 60px 10px 12px;
+        padding: 8px 52px 8px 8px;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(20px);
     }
 
     .header {
@@ -1529,7 +1533,7 @@
 
 .langCheck {
     font-size: 18px;
-    color: #5865f2;
+    color: var(--beacon-brand);
     font-weight: 900;
     z-index: 1;
 }
@@ -1560,7 +1564,7 @@
 
 .perfBadgeLow {
     background: rgba(35, 165, 89, 0.15);
-    color: #23a559;
+    color: var(--status-success);
     border: 1px solid rgba(35, 165, 89, 0.3);
 }
 
@@ -1940,7 +1944,7 @@
 
 .premiumBadge {
     padding: 4px 8px;
-    background: linear-gradient(135deg, #f0b232, #faa61a);
+    background: linear-gradient(135deg, #f0b232, var(--status-warning));
     color: #000;
     font-size: 10px;
     font-weight: 800;
@@ -2229,4 +2233,4 @@
         grid-template-columns: 1fr 1fr;
     }
 }
-
+

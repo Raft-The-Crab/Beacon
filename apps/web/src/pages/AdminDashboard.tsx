@@ -55,25 +55,25 @@ export function AdminDashboard() {
 
             <div className={styles.grid}>
                 <Card className={styles.statCard}>
-                    <div className={styles.statIcon} style={{ background: 'rgba(88, 101, 242, 0.1)', color: '#5865f2' }}>
+                    <div className={styles.statIcon} style={{ background: 'rgba(88, 101, 242, 0.1)', color: 'var(--beacon-brand)' }}>
                         <Activity size={20} />
                     </div>
                     <div className={styles.statInfo}>
                         <span className={styles.statLabel}>Operational Access</span>
                         <span className={styles.statValue}>Verified</span>
                     </div>
-                    <div className={styles.statTrend} style={{ color: '#23a559' }}>Granted</div>
+                    <div className={styles.statTrend} style={{ color: 'var(--status-success)' }}>Granted</div>
                 </Card>
 
                 <Card className={styles.statCard}>
-                    <div className={styles.statIcon} style={{ background: 'rgba(35, 165, 89, 0.1)', color: '#23a559' }}>
+                    <div className={styles.statIcon} style={{ background: 'rgba(35, 165, 89, 0.1)', color: 'var(--status-success)' }}>
                         <Radar size={20} />
                     </div>
                     <div className={styles.statInfo}>
                         <span className={styles.statLabel}>Live Telemetry</span>
                         <span className={styles.statValue}>Protected</span>
                     </div>
-                    <div className={styles.statTrend} style={{ color: '#23a559' }}>Ready</div>
+                    <div className={styles.statTrend} style={{ color: 'var(--status-success)' }}>Ready</div>
                 </Card>
 
                 <Card className={styles.statCard}>
@@ -95,7 +95,7 @@ export function AdminDashboard() {
                         <span className={styles.statLabel}>Exposure</span>
                         <span className={styles.statValue}>Internal Only</span>
                     </div>
-                    <div className={styles.statTrend} style={{ color: '#23a559' }}>Locked</div>
+                    <div className={styles.statTrend} style={{ color: 'var(--status-success)' }}>Locked</div>
                 </Card>
             </div>
 
@@ -121,15 +121,15 @@ export function AdminDashboard() {
                     </div>
                     <div className={styles.servicesGrid}>
                         <div className={styles.serviceItem}>
-                            <CheckCircle size={14} color="#23a559" />
+                            <CheckCircle size={14} color="var(--status-success)" />
                             <span>Platform admin badge required</span>
                         </div>
                         <div className={styles.serviceItem}>
-                            <CheckCircle size={14} color="#23a559" />
+                            <CheckCircle size={14} color="var(--status-success)" />
                             <span>Developer mode allowed for trusted operators</span>
                         </div>
                         <div className={styles.serviceItem}>
-                            <CheckCircle size={14} color="#23a559" />
+                            <CheckCircle size={14} color="var(--status-success)" />
                             <span>Unauthorized users are blocked before render</span>
                         </div>
                     </div>

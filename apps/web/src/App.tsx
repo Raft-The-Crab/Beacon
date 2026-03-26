@@ -26,6 +26,7 @@ import { KeyboardShortcutsPanel } from './components/ui/KeyboardShortcutsPanel'
 import { isAndroid } from './utils/platform'
 import { ServerBoosting } from './components/features/ServerBoosting'
 import { ServerInviteModal } from './components/modals/ServerInviteModal'
+import { IncomingCallModal } from './components/features/IncomingCallModal'
 
 import { ContextMenuProvider } from './components/ui/ContextMenu'
 import { VersionCheck } from './components/utils/VersionCheck'
@@ -108,6 +109,7 @@ export function App() {
   const setPresence = usePresenceStore((s) => s.setPresence)
   const addNotification = useNotificationStore((s) => s.addNotification)
   const fetchNotifications = useNotificationStore((s) => s.fetchNotifications)
+  const setIncomingCall = useVoiceStore((s) => s.setIncomingCall)
   const currentServer = useServerStore(s => s.currentServer)
 
   const [globalBoostOpen, setGlobalBoostOpen] = React.useState(false)
@@ -161,8 +163,11 @@ export function App() {
 
   // Hydrate auth state from token/cookie on initial mount.
   useEffect(() => {
-    // Only run session check once on mount
-    void checkSession().catch(err => console.error('Session hydration failed', err))
+    // Only run session check once on mount if token exists
+    const token = localStorage.getItem('token') || localStorage.getItem('beacon_token') || localStorage.getItem('accessToken');
+    if (token) {
+      void checkSession().catch(err => console.error('Session hydration failed', err))
+    }
   }, []) // Removed checkSession from deps as it's stable and we only want mount-check
 
   useEffect(() => {
@@ -248,15 +253,26 @@ export function App() {
     const handler = (event: WebSocketEvent) => {
       const { type, data } = event
       switch (type) {
-        case 'MESSAGE_CREATE':
-          handleMessageCreate({ ...data, channelId: data.channel_id || data.channelId })
+        case 'MESSAGE_CREATE': {
+          const channelId = data.channel_id || data.channelId
+          handleMessageCreate({ ...data, channelId })
+          useDMStore.getState().handleMessageCreate({ ...data, channelId })
           break
-        case 'MESSAGE_UPDATE':
-          handleMessageUpdate(data.channel_id || data.channelId, data.id || data.message?.id, data)
+        }
+        case 'MESSAGE_UPDATE': {
+          const channelId = data.channel_id || data.channelId
+          const messageId = data.id || data.message?.id
+          handleMessageUpdate(channelId, messageId, data)
+          useDMStore.getState().handleMessageUpdate(channelId, messageId, data)
           break
-        case 'MESSAGE_DELETE':
-          handleMessageDelete(data.channelId || data.channel_id, data.messageId)
+        }
+        case 'MESSAGE_DELETE': {
+          const channelId = data.channelId || data.channel_id
+          const messageId = data.messageId
+          handleMessageDelete(channelId, messageId)
+          useDMStore.getState().handleMessageDelete(channelId, messageId)
           break
+        }
         case 'MESSAGE_PIN':
           pinMessage(data.channelId || data.channel_id, {
             id: data.message.id,
@@ -313,7 +329,7 @@ export function App() {
             if (data?.guildId) useRolesStore.getState().fetchRoles(data.guildId)
             break
           case 'GUILD_MEMBER_UPDATE':
-            // Member data updated (e.g. nick change) â€” re-fetch guild for member list accuracy
+            // Member data updated (e.g. nick change) — re-fetch guild for member list accuracy
             if (data?.guildId) useServerStore.getState().fetchGuild(data.guildId)
             break
           case 'GUILD_MEMBER_REMOVE':
@@ -332,6 +348,18 @@ export function App() {
             break
           case 'CHANNEL_DELETE':
             if (data?.guildId && data?.id) handleChannelDeleteWs(data.guildId, data.id)
+            break
+          case 'VOICE_CALL_RING':
+            setIncomingCall({
+              callerId: data.callerId || data.userId,
+              callerName: data.callerName || data.username || 'Someone',
+              callerAvatar: data.callerAvatar || data.avatar,
+              callType: data.callType || 'voice',
+              channelId: data.channelId || data.channel_id,
+            })
+            break
+          case 'VOICE_CALL_STOP':
+            setIncomingCall(null)
             break
         default:
           break
@@ -429,6 +457,7 @@ export function App() {
                 <CommandPalette />
                 <KeyboardShortcutsPanel />
                 <VersionCheck />
+                <IncomingCallModal />
 
                 {/* Global Modals */}
                 <Modal isOpen={globalBoostOpen} onClose={() => setGlobalBoostOpen(false)} size="md" noPadding={true}>
@@ -458,4 +487,3 @@ export default function AppWrapper() {
     </BrowserRouter>
   )
 }
-

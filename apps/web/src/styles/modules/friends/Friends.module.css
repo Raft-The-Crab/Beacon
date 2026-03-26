@@ -48,7 +48,7 @@
 
 .badge {
   display: inline-block;
-  background: #ed4245;
+  background: var(--status-error);
   color: white;
   font-size: 12px;
   font-weight: 600;
@@ -175,15 +175,15 @@
 }
 
 .status.online {
-  background: #43b581;
+  background: var(--status-success);
 }
 
 .status.idle {
-  background: #faa61a;
+  background: var(--status-warning);
 }
 
 .status.dnd {
-  background: #f04747;
+  background: var(--status-error);
 }
 
 .status.offline {
@@ -276,7 +276,7 @@
 }
 
 .acceptBtn {
-  background: #43b581;
+  background: var(--status-success);
   color: white;
   box-shadow: 0 2px 8px rgba(67, 181, 129, 0.2);
 }

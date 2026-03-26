@@ -48,7 +48,7 @@
 }
 
 .gameIcon {
-    color: var(--beacon-brand, #5865f2);
+    color: var(--beacon-brand, var(--beacon-brand));
     filter: drop-shadow(0 0 4px rgba(88, 101, 242, 0.4));
 }
 
@@ -63,14 +63,14 @@
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    color: var(--text-muted, #8e9297);
+    color: var(--text-muted);
     letter-spacing: 0.02em;
 }
 
 .activityName {
     font-size: 13px;
     font-weight: 600;
-    color: var(--white, #ffffff);
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -79,17 +79,17 @@
 .activityDetails,
 .activityState {
     font-size: 11px;
-    color: var(--text-normal, #dcddde);
+    color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .actionBtn {
-    color: var(--text-muted, #8e9297);
+    color: var(--text-muted);
     transition: color 0.2s;
 }
 
 .actionBtn:hover {
-    color: var(--white, #ffffff);
+    color: var(--text-primary);
 }

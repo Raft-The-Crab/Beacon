@@ -1,4 +1,4 @@
-﻿import { Bell, Check, X, Settings, MessageSquare, AtSign, Phone, UserPlus, Mail } from 'lucide-react'
+import { Bell, Check, X, Settings, MessageSquare, AtSign, Phone, UserPlus, Mail } from 'lucide-react'
 import { Button } from '../ui'
 import { useNotificationStore } from '../../stores/useNotificationStore'
 import styles from '../../styles/modules/features/NotificationPanel.module.css'

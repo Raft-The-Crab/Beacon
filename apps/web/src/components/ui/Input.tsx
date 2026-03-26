@@ -1,4 +1,4 @@
-﻿import { InputHTMLAttributes, forwardRef } from 'react'
+import { InputHTMLAttributes, forwardRef } from 'react'
 import styles from '../../styles/modules/ui/Input.module.css'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {

@@ -159,7 +159,7 @@ export function InvitePage() {
             </div>
 
             {error && (
-              <div style={{ background: 'rgba(242,63,67,0.1)', border: '1px solid rgba(242,63,67,0.3)', borderRadius: 8, padding: '10px 14px', color: '#f23f43', fontSize: 14, marginBottom: 16 }}>
+              <div style={{ background: 'rgba(242,63,67,0.1)', border: '1px solid rgba(242,63,67,0.3)', borderRadius: 8, padding: '10px 14px', color: 'var(--status-error)', fontSize: 14, marginBottom: 16 }}>
                 {error}
               </div>
             )}

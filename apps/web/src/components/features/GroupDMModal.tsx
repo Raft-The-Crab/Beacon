@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from '../../styles/modules/features/GroupDMModal.module.css';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../config/endpoints';
@@ -103,7 +103,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
   const statusColors: Record<string, string> = {
     online: '#23a55a',
     idle: '#f0b232',
-    dnd: '#f23f43',
+    dnd: 'var(--status-error)',
     invisible: '#80848e',
     offline: '#80848e',
   };
@@ -113,7 +113,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
       <div className={`app-modal-shell ${styles.modal}`}>
         <div className={styles.header}>
           <h2>New Group DM</h2>
-          <button className={styles.closeBtn} onClick={onClose}>✕</button>
+          <button className={styles.closeBtn} onClick={onClose}>?</button>
         </div>
 
         <div className={styles.subheader}>
@@ -142,7 +142,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
                   alt={f.username}
                 />
                 <span className={styles.chipName}>{f.displayName || f.username}</span>
-                <button className={styles.chipRemove} onClick={() => toggle(f)}>✕</button>
+                <button className={styles.chipRemove} onClick={() => toggle(f)}>?</button>
               </div>
             ))}
           </div>
@@ -150,13 +150,13 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
 
         {/* Search */}
         <div className={styles.searchWrapper}>
-          <span className={styles.searchIcon}>🔍</span>
+          <span className={styles.searchIcon}>??</span>
           <input
             ref={searchRef}
             className={styles.searchInput}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search for friends…"
+            placeholder="Search for friends�"
           />
         </div>
 
@@ -191,7 +191,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
                   )}
                 </div>
                 <div className={`${styles.checkbox} ${isSelected(f.id) ? styles.checkboxChecked : ''}`}>
-                  {isSelected(f.id) && <span>✓</span>}
+                  {isSelected(f.id) && <span>?</span>}
                 </div>
               </div>
             ))
@@ -199,7 +199,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
         </div>
 
         {error && (
-          <div className={styles.error}>⚠️ {error}</div>
+          <div className={styles.error}>?? {error}</div>
         )}
 
         <div className={styles.footer}>
@@ -211,7 +211,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
             onClick={handleCreate}
             disabled={selected.length === 0 || creating}
           >
-            {creating ? 'Creating…' : 'Create Group DM'}
+            {creating ? 'Creating�' : 'Create Group DM'}
           </button>
         </div>
       </div>

@@ -89,7 +89,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #23a559;
+  background: var(--status-success);
   animation: pulse 1.4s infinite;
 }
 
@@ -124,14 +124,14 @@
 
 .topBtnActive {
   background: var(--bg-hover);
-  color: var(--beacon-brand, #5865f2);
+  color: var(--beacon-brand, var(--beacon-brand));
 }
 
 .memberCountBadge {
   position: absolute;
   top: -4px;
   right: -4px;
-  background: var(--beacon-brand, #5865f2);
+  background: var(--beacon-brand, var(--beacon-brand));
   color: #fff;
   font-size: 10px;
   font-weight: 800;
@@ -280,7 +280,7 @@
 }
 
 .tileSpeaking {
-  border-color: #23a559;
+  border-color: var(--status-success);
   box-shadow: 0 0 0 2px rgba(35, 165, 89, 0.3);
 }
 
@@ -324,7 +324,7 @@
 }
 
 .roleOwner { background: rgba(240, 178, 50, 0.2); color: #f0b232; }
-.roleMod   { background: rgba(35, 165, 89, 0.2);  color: #23a559; }
+.roleMod   { background: rgba(35, 165, 89, 0.2);  color: var(--status-success); }
 
 .premiumBadge {
   position: absolute;
@@ -356,7 +356,7 @@
 .handIcon { font-size: 16px; }
 
 .mutedIcon   { color: var(--status-error); }
-.screenIcon  { color: var(--beacon-brand, #5865f2); }
+.screenIcon  { color: var(--beacon-brand, var(--beacon-brand)); }
 
 .tileLabel {
   position: absolute;
@@ -384,7 +384,7 @@
 }
 
 .speakIndicatorActive {
-  background: #23a559;
+  background: var(--status-success);
   box-shadow: 0 0 0 2px rgba(35, 165, 89, 0.4);
   animation: pulse 1s infinite;
 }
@@ -477,7 +477,7 @@
   position: absolute;
   inset: -2px;
   border-radius: 50%;
-  border: 2px solid #23a559;
+  border: 2px solid var(--status-success);
   animation: pulse 1s infinite;
 }
 
@@ -541,7 +541,7 @@
 .chatAuthor {
   font-size: 12px;
   font-weight: 700;
-  color: var(--beacon-brand, #5865f2);
+  color: var(--beacon-brand, var(--beacon-brand));
 }
 
 .chatText {
@@ -569,7 +569,7 @@
   outline: none;
 }
 
-.chatInputField:focus { border-color: var(--beacon-brand, #5865f2); }
+.chatInputField:focus { border-color: var(--beacon-brand, var(--beacon-brand)); }
 .chatInputField::placeholder { color: var(--text-muted); }
 
 .chatSendBtn {
@@ -577,7 +577,7 @@
   height: 36px;
   border-radius: var(--radius-xl);
   border: none;
-  background: var(--beacon-brand, #5865f2);
+  background: var(--beacon-brand, var(--beacon-brand));
   color: #fff;
   font-size: 16px;
   cursor: pointer;

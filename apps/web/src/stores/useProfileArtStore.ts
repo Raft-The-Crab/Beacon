@@ -28,7 +28,7 @@ const DEFAULT_ARTS: ProfileArt[] = [
     id: 'frame-beacon-og',
     name: 'Beacon',
     type: 'frame',
-    preview: 'linear-gradient(135deg, #5865f2 0%, #7b2ff7 50%, #ff73fa 100%)',
+    preview: 'linear-gradient(135deg, var(--beacon-brand) 0%, #7b2ff7 50%, #ff73fa 100%)',
     animation: 'spin-slow',
     rarity: 'common',
     price: 0,

@@ -16,7 +16,7 @@ const CrownSVG = ({ size }: { size: number }) => (
 
 const AdminShieldSVG = ({ size }: { size: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C12 2 4 5 4 10C4 16.5 12 22 12 22C12 22 20 16.5 20 10C20 5 12 2 12 2Z" fill="#ED4245" />
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C12 2 4 5 4 10C4 16.5 12 22 12 22C12 22 20 16.5 20 10C20 5 12 2 12 2Z" fill="var(--status-error)" />
     <path fillRule="evenodd" clipRule="evenodd" d="M12 2C12 2 4 5 4 10C4 16.5 12 22 12 22V2Z" fill="#DA373C" />
     <path d="M12 6L13.5 10.5H18L14.5 13L16 17.5L12 15L8 17.5L9.5 13L6 10.5H10.5L12 6Z" fill="#FFF" />
   </svg>
@@ -24,7 +24,7 @@ const AdminShieldSVG = ({ size }: { size: number }) => (
 
 const ModShieldSVG = ({ size }: { size: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C12 2 4 5 4 10C4 16.5 12 22 12 22C12 22 20 16.5 20 10C20 5 12 2 12 2Z" fill="#5865F2" />
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C12 2 4 5 4 10C4 16.5 12 22 12 22C12 22 20 16.5 20 10C20 5 12 2 12 2Z" fill="var(--beacon-brand)" />
     <path fillRule="evenodd" clipRule="evenodd" d="M12 2C12 2 4 5 4 10C4 16.5 12 22 12 22V2Z" fill="#4752C4" />
     <path d="M10 15L7 12L8.5 10.5L10 12L15.5 6.5L17 8L10 15Z" fill="#FFF" />
   </svg>
@@ -43,8 +43,8 @@ const SparklesSVG = ({ size }: { size: number }) => (
 
 const BotSVG = ({ size }: { size: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="4" y="6" width="16" height="12" rx="2" fill="#5865F2" />
-    <path d="M8 6V4M16 6V4" stroke="#5865F2" strokeWidth="2" strokeLinecap="round" />
+    <rect x="4" y="6" width="16" height="12" rx="2" fill="var(--beacon-brand)" />
+    <path d="M8 6V4M16 6V4" stroke="var(--beacon-brand)" strokeWidth="2" strokeLinecap="round" />
     <circle cx="9" cy="11" r="1.5" fill="#FFF" />
     <circle cx="15" cy="11" r="1.5" fill="#FFF" />
     <rect x="8" y="14" width="8" height="2" fill="#FFF" />
@@ -60,8 +60,8 @@ const StarSVG = ({ size }: { size: number }) => (
 
 const BugSVG = ({ size }: { size: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path fillRule="evenodd" clipRule="evenodd" d="M12 5C9.24 5 7 7.24 7 10V18C7 19.1 7.9 20 9 20H15C16.1 20 17 19.1 17 18V10C17 7.24 14.76 5 12 5ZM12 7C14.21 7 16 8.79 16 11H8C8 8.79 9.79 7 12 7Z" fill="#23A559" />
-    <path d="M6 10H8V12H6V10ZM16 10H18V12H16V10ZM5 14H8V16H5V14ZM16 14H19V16H16V14ZM10 2H14V4H10V2ZM9 22H15V24H9V22Z" fill="#23A559" />
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 5C9.24 5 7 7.24 7 10V18C7 19.1 7.9 20 9 20H15C16.1 20 17 19.1 17 18V10C17 7.24 14.76 5 12 5ZM12 7C14.21 7 16 8.79 16 11H8C8 8.79 9.79 7 12 7Z" fill="var(--status-success)" />
+    <path d="M6 10H8V12H6V10ZM16 10H18V12H16V10ZM5 14H8V16H5V14ZM16 14H19V16H16V14ZM10 2H14V4H10V2ZM9 22H15V24H9V22Z" fill="var(--status-success)" />
     <circle cx="10" cy="9" r="1" fill="#FFF" />
     <circle cx="14" cy="9" r="1" fill="#FFF" />
   </svg>

@@ -16,7 +16,7 @@ export const ProfileTab: React.FC = () => {
     const [bio, setBio] = useState(user?.bio || '')
     const [bannerUrl, setBannerUrl] = useState((user as any)?.banner || '')
     const [pronouns, setPronouns] = useState<string>((user as any)?.pronouns || '')
-    const [profileColor, setProfileColor] = useState<string>((user as any)?.profileColor || '#5865f2')
+    const [profileColor, setProfileColor] = useState<string>((user as any)?.profileColor || 'var(--beacon-brand)')
     const bannerInputRef = useRef<HTMLInputElement>(null)
 
     const resolveBannerUrl = (b?: string | null) => {

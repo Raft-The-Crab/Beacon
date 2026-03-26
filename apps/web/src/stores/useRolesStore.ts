@@ -1,8 +1,5 @@
 import { create } from 'zustand'
 import { apiClient } from '../services/apiClient'
-import { api } from '../lib/api'
-
-
 import { PermissionBit } from 'beacon-sdk'
 
 export type Permission = keyof typeof PermissionBit
@@ -72,12 +69,14 @@ export const useRolesStore = create<RolesStore>((set, get) => ({
 
   fetchRoles: async (serverId) => {
     try {
-      const { data } = await api.get(`/guilds/${serverId}/roles`)
-      const mappedRoles = data.map((r: any) => ({
-        ...r,
-        permissions: bitfieldToPermissions(r.permissions)
-      }))
-      get().setRoles(serverId, mappedRoles)
+      const res = await apiClient.request('GET', `/guilds/${serverId}/roles`)
+      if (res.success) {
+        const mappedRoles = (res.data as any[]).map((r: any) => ({
+          ...r,
+          permissions: bitfieldToPermissions(r.permissions)
+        }))
+        get().setRoles(serverId, mappedRoles)
+      }
     } catch (error) {
       console.error('Failed to fetch roles', error)
     }
@@ -94,14 +93,17 @@ export const useRolesStore = create<RolesStore>((set, get) => ({
         ...roleData,
         permissions: permissionsToBitfield(roleData.permissions || [])
       }
-      const { data } = await api.post(`/guilds/${serverId}/roles`, payload)
-      const mappedRole = { ...data, permissions: bitfieldToPermissions(data.permissions) }
-      set((state) => {
-        const serverRoles = state.roles[serverId] || []
-        return {
-          roles: { ...state.roles, [serverId]: [...serverRoles, mappedRole] }
-        }
-      })
+      const res = await apiClient.request('POST', `/guilds/${serverId}/roles`, payload)
+      if (res.success) {
+        const data = res.data
+        const mappedRole = { ...data, permissions: bitfieldToPermissions(data.permissions) }
+        set((state) => {
+          const serverRoles = state.roles[serverId] || []
+          return {
+            roles: { ...state.roles, [serverId]: [...serverRoles, mappedRole] }
+          }
+        })
+      }
     } catch (error) {
       console.error('Failed to add role', error)
     }
@@ -113,17 +115,20 @@ export const useRolesStore = create<RolesStore>((set, get) => ({
         ...updates,
         permissions: updates.permissions ? permissionsToBitfield(updates.permissions) : undefined
       }
-      const { data } = await api.patch(`/guilds/${serverId}/roles/${roleId}`, payload)
-      const mappedRole = { ...data, permissions: bitfieldToPermissions(data.permissions) }
-      set((state) => {
-        const serverRoles = state.roles[serverId] || []
-        const updatedRoles = serverRoles.map((role) =>
-          role.id === roleId ? { ...role, ...mappedRole } : role
-        )
-        return {
-          roles: { ...state.roles, [serverId]: updatedRoles }
-        }
-      })
+      const res = await apiClient.request('PATCH', `/guilds/${serverId}/roles/${roleId}`, payload)
+      if (res.success) {
+        const data = res.data
+        const mappedRole = { ...data, permissions: bitfieldToPermissions(data.permissions) }
+        set((state) => {
+          const serverRoles = state.roles[serverId] || []
+          const updatedRoles = serverRoles.map((role) =>
+            role.id === roleId ? { ...role, ...mappedRole } : role
+          )
+          return {
+            roles: { ...state.roles, [serverId]: updatedRoles }
+          }
+        })
+      }
     } catch (error) {
       console.error('Failed to update role', error)
     }
@@ -131,13 +136,15 @@ export const useRolesStore = create<RolesStore>((set, get) => ({
 
   deleteRole: async (serverId, roleId) => {
     try {
-      await api.delete(`/guilds/${serverId}/roles/${roleId}`)
-      set((state) => {
-        const serverRoles = state.roles[serverId] || []
-        return {
-          roles: { ...state.roles, [serverId]: serverRoles.filter((role) => role.id !== roleId) }
-        }
-      })
+      const res = await apiClient.request('DELETE', `/guilds/${serverId}/roles/${roleId}`)
+      if (res.success) {
+        set((state) => {
+          const serverRoles = state.roles[serverId] || []
+          return {
+            roles: { ...state.roles, [serverId]: serverRoles.filter((role) => role.id !== roleId) }
+          }
+        })
+      }
     } catch (error) {
       console.error('Failed to delete role', error)
     }
@@ -146,10 +153,12 @@ export const useRolesStore = create<RolesStore>((set, get) => ({
   reorderRoles: async (serverId, reorderedRoles) => {
     try {
       const roleOrder = reorderedRoles.map((r, i) => ({ id: r.id, position: reorderedRoles.length - i }))
-      await api.put(`/guilds/${serverId}/roles/reorder`, { roles: roleOrder })
-      set((state) => ({
-        roles: { ...state.roles, [serverId]: reorderedRoles.map((r, i) => ({ ...r, position: reorderedRoles.length - i })) }
-      }))
+      const res = await apiClient.request('PUT', `/guilds/${serverId}/roles/reorder`, { roles: roleOrder })
+      if (res.success) {
+        set((state) => ({
+          roles: { ...state.roles, [serverId]: reorderedRoles.map((r, i) => ({ ...r, position: reorderedRoles.length - i })) }
+        }))
+      }
     } catch (error) {
       console.error('Failed to reorder roles', error)
     }

@@ -33,7 +33,7 @@ const MOCK_ITEMS: ShopItem[] = [
 
 const RARITY_COLORS: Record<string, string> = {
     common: '#8e8e93',
-    rare: '#5865f2',
+    rare: 'var(--beacon-brand)',
     epic: '#9b59b6',
     legendary: '#f1c40f',
 }

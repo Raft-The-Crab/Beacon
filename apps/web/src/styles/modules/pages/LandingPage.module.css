@@ -398,3 +398,32 @@
     background: var(--bg-primary);
     color: var(--text-primary);
 }
+
+@media (max-width: 768px) {
+    .heroWrapper {
+        padding: 40px 20px;
+    }
+
+    .title {
+        font-size: 2.8rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+        margin-bottom: 32px;
+    }
+
+    .featureGrid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .featureCard {
+        padding: 24px;
+    }
+
+    .landingFooter {
+        margin-top: 60px;
+        padding-top: 40px;
+    }
+}

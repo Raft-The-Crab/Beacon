@@ -10,14 +10,14 @@ export function AboutUs() {
 
             <section>
                 <p>
-                    Beacon isn't just a messaging app; it's a statement. Born from the need for a truly sovereign, de-centralized, and high-performance communication layer, Beacon represents the next evolution in digital interaction.
+                    Beacon isn't just a messaging app; it's a statement. Born from the need for a truly secure, advanced, and high-performance communication layer, Beacon represents the next evolution in digital interaction.
                 </p>
             </section>
 
             <section>
                 <h2>Our Vision</h2>
                 <p>
-                    We believe that communication is a fundamental human right. Our vision is to provide the infrastructure where privacy is the default, not an option. We are building a world where your data remains yours, protected by the "Sovereign Protocol"—a custom engine designed for absolute security and sub-100ms global latency.
+                    We believe that communication is a fundamental human right. Our vision is to provide the infrastructure where privacy is the default, not an option. We are building a world where your data remains yours, protected by the "Advanced Protocol"—a custom engine designed for absolute security and sub-100ms global latency.
                 </p>
             </section>
 

@@ -22,7 +22,7 @@ export const API_CONFIG = {
 
   // WebSocket Configuration
   WS_RECONNECT_INTERVAL: 5000,
-  WS_MAX_RECONNECT_ATTEMPTS: 10,
+  WS_MAX_RECONNECT_ATTEMPTS: 100,
   WS_HEARTBEAT_INTERVAL: 30000,
 
   // Cache Configuration

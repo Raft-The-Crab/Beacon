@@ -106,12 +106,12 @@ class ApiClient {
         localStorage.setItem('beacon_token', token);
     }
 
-    public async request(
+    public async request<T = any>(
         method: string,
         endpoint: string,
         data?: any,
         retryOnCsrf: boolean = true
-    ): Promise<{ success: boolean; data?: any; error?: string }> {
+    ): Promise<{ success: boolean; data?: T; error?: any }> {
         // Refresh token from localStorage in case another flow updated it.
         this.token = localStorage.getItem('token') || localStorage.getItem('beacon_token') || localStorage.getItem('accessToken');
 
@@ -171,7 +171,10 @@ class ApiClient {
 
             if (res.status === 401) {
                 const authVal = requestHeaders['Authorization'] || 'MISSING';
-                console.warn(`[API] 401 Unauthorized on ${endpoint}. Token found in header: ${authVal !== 'MISSING'}. Header start: ${authVal.slice(0, 15)}...`);
+                // Only log 401 if we actually tried to send a token, to reduce noise on public pages
+                if (authVal !== 'MISSING') {
+                    console.warn(`[API] 401 Unauthorized on ${endpoint}. Token start: ${authVal.slice(0, 15)}...`);
+                }
             }
 
             // Handle CSRF failures with recovery
@@ -199,6 +202,74 @@ class ApiClient {
             console.error(`[API] Network error on ${method} ${endpoint}:`, error);
             return { success: false, error: error instanceof Error ? error.message : 'Network error' };
         }
+    }
+
+    public async uploadFile(
+        endpoint: string,
+        file: File,
+        onProgress?: (progress: { loaded: number; total: number; percentage: number }) => void
+    ): Promise<{ success: boolean; data?: any; error?: any }> {
+        // Ensure CSRF token is initialized
+        if (this.csrfInitPromise) {
+            await this.csrfInitPromise;
+        }
+
+        if (!this.csrfToken) {
+            this.csrfToken = this.getCookie('csrf_token');
+        }
+
+        return new Promise((resolve) => {
+            const xhr = new XMLHttpRequest();
+            const url = this.baseUrl + endpoint;
+
+            xhr.open('POST', url, true);
+            xhr.withCredentials = true;
+
+            if (this.token) {
+                xhr.setRequestHeader('Authorization', `Bearer ${this.token}`);
+            }
+
+            if (this.csrfToken) {
+                xhr.setRequestHeader('x-csrf-token', this.csrfToken);
+            }
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable && onProgress) {
+                    const percentage = Math.round((event.loaded * 100) / event.total);
+                    onProgress({
+                        loaded: event.loaded,
+                        total: event.total,
+                        percentage
+                    });
+                }
+            };
+
+            xhr.onload = () => {
+                let response: any;
+                try {
+                    response = JSON.parse(xhr.responseText);
+                } catch (e) {
+                    response = xhr.responseText;
+                }
+
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // Standardize response to match the request() method's behavior
+                    const data = response.data || response;
+                    resolve({ success: true, data });
+                } else {
+                    const error = response?.error || response?.message || xhr.statusText;
+                    resolve({ success: false, error });
+                }
+            };
+
+            xhr.onerror = () => {
+                resolve({ success: false, error: 'Network error' });
+            };
+
+            const formData = new FormData();
+            formData.append('file', file);
+            xhr.send(formData);
+        });
     }
 
     async login(identifier: string, password: string) {
@@ -474,8 +545,50 @@ class ApiClient {
         return this.request('POST', `/applications/${applicationId}/bot/token`);
     }
 
+    async getDMs() {
+        return this.request('GET', '/dms');
+    }
 
+    async createDM(userIds: string[]) {
+        return this.request('POST', '/dms', { userIds });
+    }
 
+    async getGuild(guildId: string) {
+        return this.request('GET', `/guilds/${guildId}`);
+    }
+
+    async getMyGuilds() {
+        return this.request('GET', '/guilds/me');
+    }
+
+    async createGuild(name: string, icon?: string) {
+        return this.request('POST', '/guilds', { name, icon });
+    }
+
+    async getFolders() {
+        return this.request('GET', '/folders');
+    }
+
+    async createFolder(data: { name: string, guildIds: string[], color?: string }) {
+        return this.request('POST', '/folders', data);
+    }
+
+    async updateFolder(id: string, data: { name: string, guildIds: string[], color?: string }) {
+        return this.request('POST', '/folders', { id, ...data });
+    }
+
+    async createChannel(data: { guildId: string, name: string, type: string, parentId?: string }) {
+        return this.request('POST', '/channels', data);
+    }
+
+    // -- VOICE & CALLS --
+    async startCall(channelId: string) {
+        return this.request('POST', `/channels/${channelId}/call`, { action: 'start' });
+    }
+
+    async stopCall(channelId: string) {
+        return this.request('POST', `/channels/${channelId}/call`, { action: 'stop' });
+    }
 }
 
 export const apiClient = new ApiClient();

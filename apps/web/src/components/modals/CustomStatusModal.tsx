@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import styles from '../../styles/modules/modals/CustomStatusModal.module.css';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { api } from '../../lib/api';
@@ -12,19 +12,19 @@ type Status = 'online' | 'idle' | 'dnd' | 'invisible';
 const STATUS_OPTIONS: { value: Status; label: string; color: string; description: string }[] = [
   { value: 'online', label: 'Online', color: '#23a55a', description: 'Active and available' },
   { value: 'idle', label: 'Idle', color: '#f0b232', description: 'Away from keyboard' },
-  { value: 'dnd', label: 'Do Not Disturb', color: '#f23f43', description: 'Mute notifications' },
+  { value: 'dnd', label: 'Do Not Disturb', color: 'var(--status-error)', description: 'Mute notifications' },
   { value: 'invisible', label: 'Invisible', color: '#80848e', description: 'Appear offline' },
 ];
 
 const QUICK_STATUSES = [
-  '🎮 Gaming',
-  '🎵 Listening to music',
-  '💻 Coding',
-  '☕ Taking a break',
-  '📚 Studying',
-  '🏃 Exercising',
-  '🎬 Watching something',
-  '😴 Sleeping soon',
+  '?? Gaming',
+  '?? Listening to music',
+  '?? Coding',
+  '? Taking a break',
+  '?? Studying',
+  '?? Exercising',
+  '?? Watching something',
+  '?? Sleeping soon',
 ];
 
 export function CustomStatusModal({ onClose }: Props) {
@@ -65,7 +65,7 @@ export function CustomStatusModal({ onClose }: Props) {
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2>Set Status</h2>
-          <button className={styles.closeBtn} onClick={onClose}>✕</button>
+          <button className={styles.closeBtn} onClick={onClose}>?</button>
         </div>
 
         {/* Presence Status */}
@@ -83,7 +83,7 @@ export function CustomStatusModal({ onClose }: Props) {
                   <span className={styles.statusLabel}>{opt.label}</span>
                   <span className={styles.statusDesc}>{opt.description}</span>
                 </div>
-                {status === opt.value && <span className={styles.check}>✓</span>}
+                {status === opt.value && <span className={styles.check}>?</span>}
               </button>
             ))}
           </div>
@@ -101,7 +101,7 @@ export function CustomStatusModal({ onClose }: Props) {
               maxLength={128}
             />
             {customStatus && (
-              <button className={styles.clearInput} onClick={() => setCustomStatus('')}>✕</button>
+              <button className={styles.clearInput} onClick={() => setCustomStatus('')}>?</button>
             )}
           </div>
           <p className={styles.charCount}>{customStatus.length}/128</p>
@@ -129,7 +129,7 @@ export function CustomStatusModal({ onClose }: Props) {
           <div className={styles.actionRight}>
             <button className={styles.cancelBtn} onClick={onClose}>Cancel</button>
             <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? 'Saving�' : 'Save'}
             </button>
           </div>
         </div>

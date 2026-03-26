@@ -1,4 +1,4 @@
-﻿import { ReactNode, useState } from 'react'
+import { ReactNode, useState } from 'react'
 import styles from '../../styles/modules/ui/Tabs.module.css'
 
 export interface TabItem {
