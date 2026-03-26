@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Thread Management Component
  */
 
@@ -99,11 +99,11 @@ export const ThreadView: React.FC<{ channelId: string }> = ({ channelId: _channe
                 <div className={styles.threadName}>{thread.name}</div>
                 <div className={styles.threadMeta}>
                   <span>{thread.messageCount} messages</span>
-                  <span>•</span>
+                  <span>â€¢</span>
                   <span>{thread.memberCount} members</span>
                   {thread.archived && thread.archiveTimestamp && (
                     <>
-                      <span>•</span>
+                      <span>â€¢</span>
                       <span>Archived {new Date(thread.archiveTimestamp).toLocaleDateString()}</span>
                     </>
                   )}

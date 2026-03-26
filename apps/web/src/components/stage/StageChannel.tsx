@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Stage Channel Component - Voice channels with speaker/listener modes
  */
 
@@ -70,7 +70,7 @@ export const StageChannel: React.FC<{ channelId: string }> = ({ channelId: _chan
 
       <div className={styles.stage}>
         <div className={styles.section}>
-          <h3>Speakers — {speakers.length}</h3>
+          <h3>Speakers â€” {speakers.length}</h3>
           <div className={styles.memberGrid}>
             {speakers.length === 0 ? (
               <div className={styles.emptyState}>
@@ -112,7 +112,7 @@ export const StageChannel: React.FC<{ channelId: string }> = ({ channelId: _chan
         </div>
 
         <div className={styles.section}>
-          <h3>Listeners — {listeners.length}</h3>
+          <h3>Listeners â€” {listeners.length}</h3>
           <div className={styles.listenerList}>
             {listeners.map(member => (
               <div key={member.id} className={styles.listenerItem}>

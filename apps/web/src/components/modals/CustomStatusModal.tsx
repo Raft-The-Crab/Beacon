@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import styles from '../../styles/modules/modals/CustomStatusModal.module.css';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { api } from '../../lib/api';
@@ -129,7 +129,7 @@ export function CustomStatusModal({ onClose }: Props) {
           <div className={styles.actionRight}>
             <button className={styles.cancelBtn} onClick={onClose}>Cancel</button>
             <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving�' : 'Save'}
+              {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
         </div>

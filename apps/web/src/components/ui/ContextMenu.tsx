@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, createContext, useContext, useCallback } from 'react'
+﻿import { useEffect, useRef, useState, createContext, useContext, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import styles from '../../styles/modules/ui/ContextMenu.module.css'
 
@@ -155,7 +155,7 @@ function MenuItemRow({ item, close }: { item: ContextMenuItem; close: () => void
         <button className={`${styles.item} ${item.disabled ? styles.disabled : ''}`}>
           {item.icon && <span className={styles.icon}>{item.icon}</span>}
           <span className={styles.label}>{item.label}</span>
-          <span className={styles.chevron}>�</span>
+          <span className={styles.chevron}>›</span>
         </button>
         {subOpen && (
           <div ref={submenuRef} className={`${styles.submenu} ${submenuPos === 'left' ? styles.submenuLeft : ''}`}>

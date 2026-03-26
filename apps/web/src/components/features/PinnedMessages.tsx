@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import styles from '../../styles/modules/features/PinnedMessages.module.css';
 import { api } from '../../lib/api';
 
@@ -65,7 +65,7 @@ export function PinnedMessages({ channelId, channelName, onClose, onJumpToMessag
         {loading ? (
           <div className={styles.empty}>
             <div className={styles.spinner} />
-            <p>Loading pins�</p>
+            <p>Loading pins…</p>
           </div>
         ) : pins.length === 0 ? (
           <div className={styles.empty}>

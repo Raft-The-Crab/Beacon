@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+ï»¿import React, { useState, useEffect, useRef } from 'react';
 import styles from '../../styles/modules/features/GroupDMModal.module.css';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../config/endpoints';
@@ -156,7 +156,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
             className={styles.searchInput}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search for friends…"
+            placeholder="Search for friendsâ€¦"
           />
         </div>
 
@@ -211,7 +211,7 @@ const GroupDMModal: React.FC<GroupDMModalProps> = ({ friends = [], onClose }) =>
             onClick={handleCreate}
             disabled={selected.length === 0 || creating}
           >
-            {creating ? 'Creating…' : 'Create Group DM'}
+            {creating ? 'Creatingâ€¦' : 'Create Group DM'}
           </button>
         </div>
       </div>

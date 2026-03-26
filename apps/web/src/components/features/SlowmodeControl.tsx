@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import styles from '../../styles/modules/features/SlowmodeControl.module.css';
 import { API_BASE_URL } from '../../config/endpoints';
 
@@ -139,7 +139,7 @@ const SlowmodeControl: React.FC<SlowmodeControlProps> = ({
 
       {error && <div className={styles.error}>?? {error}</div>}
       {saved && <div className={styles.success}>? Slowmode updated</div>}
-      {saving && <div className={styles.saving}>Saving�</div>}
+      {saving && <div className={styles.saving}>Saving…</div>}
     </div>
   );
 };

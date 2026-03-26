@@ -1,4 +1,4 @@
-import React from 'react';
+ï»¿import React from 'react';
 import { BarChart2, Check, User, Info } from 'lucide-react';
 import styles from '../../styles/modules/features/Poll.module.css';
 
@@ -43,8 +43,8 @@ export const PollRenderer: React.FC<PollProps> = ({
         <div className={styles.pollInfo}>
           <h3 className={styles.question}>{question}</h3>
           <p className={styles.meta}>
-            {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} • {isExpired ? 'Final Results' : `Ends ${new Date(endsAt).toLocaleString()}`}
-            {isAnonymous && ' • Anonymous'}
+            {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} â€¢ {isExpired ? 'Final Results' : `Ends ${new Date(endsAt).toLocaleString()}`}
+            {isAnonymous && ' â€¢ Anonymous'}
           </p>
         </div>
       </div>
