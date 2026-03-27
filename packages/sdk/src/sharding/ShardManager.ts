@@ -11,6 +11,7 @@ export interface ShardManagerOptions {
   token: string;
   totalShards: number | 'auto';
   gatewayURL?: string;
+  apiURL?: string;
   intents?: number;
   /** ms between spawning each shard to avoid rate limits */
   spawnDelay?: number;
@@ -176,14 +177,26 @@ export class ShardManager extends EventEmitter {
     });
 
     // Forward all events with shard context
-    gateway.on('messageCreate', (msg: any) => this.emit('messageCreate', msg, shard.id));
-    gateway.on('interactionCreate', (interaction: any) => this.emit('interactionCreate', interaction, shard.id));
+    gateway.onAny((event: string, ...args: any[]) => {
+      // Avoid infinite loops if we ever emit on the gateway itself
+      if (['debug', 'packet'].includes(event)) return;
+      this.emit(event, ...args, shard.id);
+    });
   }
 
   private async _fetchRecommendedShardCount(): Promise<number> {
-    // Fallback: return 1 if no gateway API is available
-    this.emit('debug', '[ShardManager] Using 1 shard (auto mode fallback)');
-    return 1;
+    try {
+      const apiURL = this.options.apiURL || 'https://beacon-v1-api.up.railway.app/api';
+      const response = await fetch(`${apiURL}/gateway/bot`, {
+        headers: { 'Authorization': `Bot ${this.options.token}` }
+      });
+      if (!response.ok) throw new Error(`Gateway API returned ${response.status}`);
+      const data = await response.json();
+      return data.shards || 1;
+    } catch (err) {
+      this.emit('debug', `[ShardManager] Failed to fetch recommended shards: ${err instanceof Error ? err.message : String(err)}`);
+      return 1;
+    }
   }
 
   private _sleep(ms: number): Promise<void> {

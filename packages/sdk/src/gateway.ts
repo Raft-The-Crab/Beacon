@@ -92,6 +92,27 @@ export class Gateway extends EventEmitter {
   private _heartbeatsAcked = 0;
   private _totalReconnects = 0;
   private _connectedSince = 0;
+  private _anyListeners = new Set<(event: string, ...args: any[]) => void>();
+
+  /** v3.7.6: Register a listener for all events */
+  public onAny(fn: (event: string, ...args: any[]) => void): this {
+    this._anyListeners.add(fn);
+    return this;
+  }
+
+  public offAny(fn: (event: string, ...args: any[]) => void): this {
+    this._anyListeners.delete(fn);
+    return this;
+  }
+
+  /** Override emit to support onAny */
+  public override emit(event: string | symbol, ...args: any[]): boolean {
+    const eventName = String(event);
+    for (const fn of this._anyListeners) {
+      try { fn(eventName, ...args); } catch (err) { console.error('[Gateway] onAny error:', err); }
+    }
+    return super.emit(event, ...args);
+  }
 
   /** Current connection state */
   get connectionState(): ConnectionState { return this._connectionState; }

@@ -1,6 +1,8 @@
 import type { Client } from '../client';
 import { MessageBuilder } from '../builders/MessageBuilder';
 import { PermissionOverwrite } from './PermissionOverwrite';
+import { MessageCollector, type MessageCollectorOptions } from './MessageCollector';
+import { InteractionCollector, type InteractionCollectorOptions } from './InteractionCollector';
 
 export interface Channel {
   id: string
@@ -103,6 +105,20 @@ export class Channel {
      */
     async clear(limit = 100) {
         return this.bulkDelete(limit);
+    }
+
+    /**
+     * Create a message collector for this channel.
+     */
+    createMessageCollector(options: MessageCollectorOptions = {}): MessageCollector {
+        return new MessageCollector(this.client, this.id, options);
+    }
+
+    /**
+     * Create an interaction collector for this channel.
+     */
+    createInteractionCollector(options: InteractionCollectorOptions = {}): InteractionCollector {
+        return new InteractionCollector(this.client, { ...options, channelId: this.id });
     }
 
     /**

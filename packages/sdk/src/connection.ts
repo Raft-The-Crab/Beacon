@@ -29,8 +29,8 @@ function fallbackApiBaseUrl(): string {
     return `${origin}/api`
   }
 
-  // Use a relative path or local fallback by default to avoid hardcoding dead domains
-  return isProductionLike() ? '/api' : 'http://localhost:8080/api'
+  // Use Railway production as default for Node.js environments
+  return isProductionLike() ? 'https://beacon-v1-api.up.railway.app/api' : 'http://localhost:8080/api'
 }
 
 function fallbackGatewayUrl(): string {
@@ -40,7 +40,7 @@ function fallbackGatewayUrl(): string {
     return `${wsOrigin}/gateway`
   }
 
-  return isProductionLike() ? '/gateway' : 'ws://localhost:8080/gateway'
+  return isProductionLike() ? 'wss://beacon-v1-api.up.railway.app/gateway' : 'ws://localhost:8080/gateway'
 }
 
 export function resolveApiClientBaseUrl(rawUrl?: string): string {

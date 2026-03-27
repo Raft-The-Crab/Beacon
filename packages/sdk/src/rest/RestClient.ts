@@ -4,7 +4,7 @@ import { RequestSigner } from '../security/RequestSigner';
 import { TokenManager } from '../security/TokenManager';
 
 /** SDK version — injected into User-Agent and exported for diagnostics */
-export const SDK_VERSION = '3.0.0-beta.1';
+export const SDK_VERSION = '3.7.9';
 
 /**
  * RestClient — Rate-limit-aware HTTP client for Beacon API
@@ -12,7 +12,7 @@ export const SDK_VERSION = '3.0.0-beta.1';
 
 export interface RestClientOptions {
   token: string;
-  secret?: string; // For request signing
+  secret?: string;
   baseURL?: string;
   version?: string;
   /** Request timeout in ms. Default: 30000 (30s). */
@@ -369,7 +369,7 @@ export class RestClient {
     const params = new URLSearchParams();
     if (options.limit) params.set('limit', String(options.limit));
     if (options.action) params.set('action_type', String(options.action));
-    return this.request<AuditLogEntry[]>('GET', `/audit-logs/${guildId}?${params}`);
+    return this.request<AuditLogEntry[]>('GET', `/guilds/${guildId}/audit-logs?${params}`);
   }
 
   // ─────────────────────────────────────────────────────────────

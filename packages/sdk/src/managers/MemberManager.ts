@@ -36,6 +36,21 @@ export class MemberManager {
         return `${guildId}:${userId}`;
     }
 
+    /** @internal Update cache from gateway event */
+    _updateCache(guildId: string, userId: string, data: Partial<GuildMember> | null) {
+        const key = this._cacheKey(guildId, userId);
+        if (!data) {
+            this.cache.delete(key);
+            return;
+        }
+        const existing = this.cache.get(key);
+        if (existing) {
+            Object.assign(existing, data);
+        } else if (data.joinedAt) { // Only set if it's a "full" enough object
+            this.cache.set(key, data as GuildMember);
+        }
+    }
+
     /** Fetch a single member */
     async fetch(guildId: string, userId: string, force = false): Promise<GuildMember> {
         const key = this._cacheKey(guildId, userId);

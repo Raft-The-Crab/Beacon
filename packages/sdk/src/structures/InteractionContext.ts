@@ -9,6 +9,7 @@ import type { ActionRowData } from '../builders/ActionRowBuilder';
 import type { CardData } from '../builders/CardBuilder';
 import type { RawInteraction, InteractionOption } from '../types/index';
 import { InteractionCollector } from './InteractionCollector';
+import { Message } from './Message';
 
 export interface ReplyOptions {
   content?: string;
@@ -16,6 +17,7 @@ export interface ReplyOptions {
   components?: ActionRowData[];
   cards?: CardData[];
   ephemeral?: boolean;
+  fetchReply?: boolean;
 }
 
 export class InteractionContext {
@@ -26,6 +28,8 @@ export class InteractionContext {
   public readonly channelId: string;
   public readonly commandName: string;
   public readonly commandId: string;
+  public readonly subCommand?: string;
+  public readonly subCommandGroup?: string;
   private readonly _options: Map<string, InteractionOption>;
   private readonly _rest: RestClient;
   private readonly _raw: RawInteraction;
@@ -46,8 +50,20 @@ export class InteractionContext {
     this._raw = raw;
 
     this._options = new Map();
-    for (const opt of raw.data?.options ?? []) {
-      this._options.set(opt.name, opt);
+    this._parseOptions(raw.data?.options ?? []);
+  }
+
+  private _parseOptions(options: InteractionOption[]) {
+    for (const opt of options) {
+      if (opt.type === 1) { // SUB_COMMAND
+        (this as any).subCommand = opt.name;
+        this._parseOptions(opt.options ?? []);
+      } else if (opt.type === 2) { // SUB_COMMAND_GROUP
+        (this as any).subCommandGroup = opt.name;
+        this._parseOptions(opt.options ?? []);
+      } else {
+        this._options.set(opt.name, opt);
+      }
     }
   }
 
@@ -93,8 +109,7 @@ export class InteractionContext {
     return String(opt.value);
   }
 
-  /** Reply to the interaction */
-  async reply(options: ReplyOptions | string | any): Promise<void> {
+  async reply(options: ReplyOptions | string | any): Promise<Message | void> {
     if (this._replied) throw new Error('Already replied to this interaction');
     this._replied = true;
 
@@ -127,6 +142,10 @@ export class InteractionContext {
         flags,
       },
     });
+
+    if (typeof options === 'object' && options?.fetchReply) {
+      return this.fetchReply();
+    }
   }
 
   /** Defer the reply (shows "Bot is thinking...") */
@@ -141,8 +160,7 @@ export class InteractionContext {
     });
   }
 
-  /** Edit the deferred reply or original response */
-  async editReply(options: ReplyOptions | string | any): Promise<void> {
+  async editReply(options: ReplyOptions | string | any): Promise<Message> {
     let data: any = typeof options === 'string' ? { content: options } : options;
     if (typeof options === 'object' && options !== null && 'toJSON' in options) {
       data = options.toJSON();
@@ -160,16 +178,16 @@ export class InteractionContext {
       );
     }
 
-    await this._rest.request('PATCH', `/webhooks/${this.applicationId}/${this.token}/messages/@original`, {
+    const raw = await this._rest.request('PATCH', `/webhooks/${this.applicationId}/${this.token}/messages/@original`, {
       content: data.content,
       embeds: data.embeds,
       components: data.components,
       cards: data.cards,
     });
+    return new Message(this._rest.client, raw);
   }
 
-  /** Follow-up message after a reply */
-  async followUp(options: ReplyOptions | string | any): Promise<void> {
+  async followUp(options: ReplyOptions | string | any): Promise<Message> {
     let data: any = typeof options === 'string' ? { content: options } : options;
     if (typeof options === 'object' && options !== null && 'toJSON' in options) {
       data = options.toJSON();
@@ -188,13 +206,14 @@ export class InteractionContext {
       );
     }
 
-    await this._rest.request('POST', `/webhooks/${this.applicationId}/${this.token}`, {
+    const raw = await this._rest.request('POST', `/webhooks/${this.applicationId}/${this.token}`, {
       content: data.content,
       embeds: data.embeds,
       components: data.components,
       cards: data.cards,
       flags,
     });
+    return new Message(this._rest.client, raw);
   }
 
   /** Delete the original reply. */
@@ -203,8 +222,9 @@ export class InteractionContext {
   }
 
   /** Fetch the original reply message. */
-  async fetchReply(): Promise<any> {
-    return this._rest.request('GET', `/webhooks/${this.applicationId}/${this.token}/messages/@original`);
+  async fetchReply(): Promise<Message> {
+    const raw = await this._rest.request('GET', `/webhooks/${this.applicationId}/${this.token}/messages/@original`);
+    return new Message(this._rest.client, raw);
   }
 
   /** Respond to an autocomplete interaction with choices. */

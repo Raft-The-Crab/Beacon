@@ -24,6 +24,20 @@ export class GuildManager {
         this.cache = new TTLCache<string, Guild>(3600000, 100); // 1 hour TTL
     }
 
+    /** @internal Update cache from gateway event */
+    _updateCache(id: string, data: Partial<Guild> | null) {
+        if (!data) {
+            this.cache.delete(id);
+            return;
+        }
+        const existing = this.cache.get(id);
+        if (existing) {
+            Object.assign(existing, data);
+        } else if ((data as any).name) { // Only set if it's a "full" enough object
+            this.cache.set(id, data as Guild);
+        }
+    }
+
     /** Fetch a guild by ID (hits cache first) */
     async fetch(guildId: string, force = false): Promise<Guild> {
         if (!force) {

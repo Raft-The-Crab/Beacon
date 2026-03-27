@@ -29,6 +29,8 @@ import { TTLCache } from './cache/TTLCache';
 import { resolveApiClientBaseUrl, resolveApiClientGatewayUrl } from './connection';
 import { CommandRegistry, CommandDefinition, AutocompleteContext } from './registry/CommandRegistry';
 import { MiddlewarePipeline, type MiddlewareFn } from './middleware/Middleware';
+import { Logger } from './utils/Logger';
+import { AuditLogMonitor } from './managers/AuditLogMonitor';
 
 export interface ClientOptions {
   token: string;
@@ -71,6 +73,8 @@ export class Client extends EventEmitter {
   public readonly userManager: UserManager;
   public readonly invites: InviteManager;
   public readonly presences: PresenceManager;
+  public readonly auditLogs: AuditLogMonitor;
+  public readonly logger: Logger;
 
   // Caches (Standardized TTLCache for performance & safety)
   public guilds: TTLCache<string, Guild> = new TTLCache<string, Guild>(3600000, 100);
@@ -151,8 +155,13 @@ export class Client extends EventEmitter {
     this.channelManager = new ChannelManager(this.rest);
     this.memberManager = new MemberManager(this.rest);
     this.userManager = new UserManager(this.rest);
-    this.invites = new InviteManager(this);
     this.presences = new PresenceManager();
+    this.invites = new InviteManager(this);
+    this.auditLogs = new AuditLogMonitor(this);
+    this.logger = new Logger();
+
+    // v3.7.9: Auto-configure debug mode for logger
+    if (options.debug) this.logger.level = 0; // DEBUG
 
     if (options.debug) {
       this._gateway.on('debug', (msg: string) => console.debug('[beacon.js]', msg));
@@ -317,6 +326,7 @@ export class Client extends EventEmitter {
       dispatch('guildCreate', rawGuild, (data) => {
         const guild = new Guild(this, data);
         this.guilds.set(guild.id, guild);
+        this.guildManager._updateCache(guild.id, data);
         for (const rawCh of data.channels ?? []) {
           const ch = new Channel(this, rawCh);
           this.channels.set(ch.id, ch);
@@ -329,6 +339,7 @@ export class Client extends EventEmitter {
       dispatch('guildUpdate', rawGuild, (data) => {
         const guild = new Guild(this, data);
         this.guilds.set(guild.id, guild);
+        this.guildManager._updateCache(guild.id, data);
         return guild;
       });
     });
@@ -337,6 +348,7 @@ export class Client extends EventEmitter {
       dispatch('guildDelete', data, (d) => {
         const guild = this.guilds.get(d.id) ?? null;
         this.guilds.delete(d.id);
+        this.guildManager._updateCache(d.id, null);
         return guild ?? d;
       });
     });
@@ -369,12 +381,27 @@ export class Client extends EventEmitter {
         if (data.user) {
           const user = new User(this, data.user);
           this.users.set(user.id, user);
+          this.userManager._updateCache(user.id, data.user);
         }
+        this.memberManager._updateCache(data.guild_id, data.user?.id || data.userId, data);
         return data;
       });
     });
 
-    this._gateway.on('guildMemberRemove', (data: any) => dispatch('guildMemberRemove', data));
+    this._gateway.on('guildMemberUpdate', (member: any) => {
+      dispatch('guildMemberUpdate', member, (data) => {
+        this.memberManager._updateCache(data.guild_id, data.user?.id || data.userId, data);
+        if (data.user) this.userManager._updateCache(data.user.id, data.user);
+        return data;
+      });
+    });
+
+    this._gateway.on('guildMemberRemove', (data: any) => {
+      dispatch('guildMemberRemove', data, (d) => {
+        this.memberManager._updateCache(d.guild_id, d.user?.id || d.userId, null);
+        return d;
+      });
+    });
     this._gateway.on('voiceStateUpdate', (state: any) => dispatch('voiceStateUpdate', state));
     this._gateway.on('typingStart', (data: any) => dispatch('typingStart', data));
     this._gateway.on('presenceUpdate', (presence: any) => dispatch('presenceUpdate', presence));
@@ -572,7 +599,9 @@ export class Client extends EventEmitter {
    */
   async syncCommands(guildId?: string): Promise<void> {
     if (!this.applicationId) throw new Error('Client not ready — wait for "ready" event');
+    this.logger.info(`[Registry] Syncing commands${guildId ? ` for guild ${guildId}` : ' globally'}...`);
     await this.registry.syncWithAPI(this.rest, this.applicationId, guildId);
+    this.logger.info(`[Registry] Commands synced successfully.`);
   }
 
   // ─────────────────────────────────────────────────────────────

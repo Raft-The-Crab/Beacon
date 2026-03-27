@@ -13,6 +13,23 @@ export class UserManager {
         this.cache = new TTLCache<string, User>(3600000, 1000); // 1 hour TTL
     }
 
+    /** @internal Update cache from gateway event */
+    _updateCache(id: string, data: Partial<RawUser> | null) {
+        if (!data) {
+            this.cache.delete(id);
+            return;
+        }
+        const existing = this.cache.get(id);
+        if (existing) {
+            // Update individual fields from raw data
+            if (data.username !== undefined) (existing as any).username = data.username;
+            if (data.avatar !== undefined) (existing as any).avatar = data.avatar;
+            if (data.bio !== undefined) (existing as any).bio = data.bio;
+        } else if (data.username) {
+            this.cache.set(id, new User(this.rest.client, data as RawUser));
+        }
+    }
+
     /** Fetch a user by ID (hits cache first) */
     async fetch(userId: string, force = false): Promise<User> {
         if (!force) {
