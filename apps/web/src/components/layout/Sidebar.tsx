@@ -7,10 +7,12 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useServerStore } from '../../stores/useServerStore'
 import { useUIStore } from '../../stores/useUIStore'
-import { useToast, SkeletonChannel } from '../ui'
+import { useVoiceStore } from '../../stores/useVoiceStore'
+import { useAuthStore } from '../../stores/useAuthStore'
+import { useToast, SkeletonChannel, Avatar } from '../ui'
 import { CurrentUserControls } from '../features/CurrentUserControls'
 import { openCreateChannelModal } from '../../utils/modals'
 
@@ -110,6 +112,42 @@ function ChannelButton({ channel, isActive, onClick, onCreateChannel, onDeleteCh
       {muted && <BellOff size={13} className={styles.mutedIcon} />}
       {hasMention && !muted && <span className={styles.mentionBadge}>{unreadCount}</span>}
     </button>
+  )
+}
+
+
+
+function VoiceMembers({ channelId }: { channelId: string }) {
+  const currentServer = useServerStore(state => state.currentServer)
+  const voiceParticipants = useVoiceStore(state => 
+    Array.from(state.voiceUsers.values()).filter(vu => vu.channelId === channelId)
+  )
+
+  if (voiceParticipants.length === 0) return null
+
+  return (
+    <div className={styles.voiceMembers}>
+      {voiceParticipants.map(participant => {
+        const member = currentServer?.members?.find((m: any) => 
+          (m.user?.id || m.id) === participant.userId
+        ) as any
+        const username = member?.user?.username || member?.username || participant.userId
+        const displayName = member?.user?.displayName || member?.nickname || username
+        const avatar = member?.user?.avatar || member?.avatar || undefined
+
+        return (
+          <div key={participant.userId} className={styles.voiceMember}>
+            <Avatar 
+              size="sm" 
+              src={avatar} 
+              username={username} 
+              speaking={participant.speaking} 
+            />
+            <span className={styles.voiceMemberName}>{displayName}</span>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -241,13 +279,15 @@ function CategorySection({ label, channels, currentChannelId, handleChannelClick
             className={styles.channelList}
           >
             {channels.map((channel: any) => (
-              <ChannelButton
-                key={channel.id}
-                channel={channel}
-                isActive={currentChannelId === channel.id}
-                onClick={() => handleChannelClick(channel.id)}
-                onDeleteChannel={onDeleteChannel}
-              />
+              <React.Fragment key={channel.id}>
+                <ChannelButton
+                  channel={channel}
+                  isActive={currentChannelId === channel.id}
+                  onClick={() => handleChannelClick(channel.id)}
+                  onDeleteChannel={onDeleteChannel}
+                />
+                {isVoiceLike(channel) && <VoiceMembers channelId={channel.id} />}
+              </React.Fragment>
             ))}
           </motion.div>
         )}
@@ -450,14 +490,16 @@ export function Sidebar() {
                         className={styles.channelList}
                       >
                         {catChannels.map((channel: any) => (
-                          <ChannelButton
-                            key={channel.id}
-                            channel={channel}
-                            isActive={currentChannelId === channel.id}
-                            onClick={() => handleChannelClick(channel.id)}
-                            onCreateChannel={() => openCreateChannelModal(undefined, category.id)}
-                            onDeleteChannel={handleDeleteChannel}
-                          />
+                          <React.Fragment key={channel.id}>
+                            <ChannelButton
+                              channel={channel}
+                              isActive={currentChannelId === channel.id}
+                              onClick={() => handleChannelClick(channel.id)}
+                              onCreateChannel={() => openCreateChannelModal(undefined, category.id)}
+                              onDeleteChannel={handleDeleteChannel}
+                            />
+                            {isVoiceLike(channel) && <VoiceMembers channelId={channel.id} />}
+                          </React.Fragment>
                         ))}
                       </motion.div>
                     )}

@@ -183,7 +183,7 @@ export abstract class BaseBot {
         this._cooldowns.set(`${commandName}:${userId}`, Date.now() + durationMs);
     }
 
-    /** Handle a slash command: /name arg1 arg2 */
+    /** Handle a slash command: /name arg1 arg2 or /name key:value */
     async handleSlashCommand(commandStr: string, context: BotContext): Promise<BotResponse | null> {
         const parts = commandStr.trim().split(/\s+/);
         const cmdName = parts[0].replace(/^\//, '');
@@ -198,17 +198,7 @@ export abstract class BaseBot {
             };
         }
 
-        if (cmd.requiredRoleIds?.length) {
-            const memberRoles = new Set(context.memberRoleIds || []);
-            const hasRole = cmd.requiredRoleIds.some(roleId => memberRoles.has(roleId));
-            if (!hasRole) {
-                return {
-                    content: `❌ You are missing the required role to run \`/${cmdName}\`.`,
-                    ephemeral: true,
-                };
-            }
-        }
-
+        // Permission check
         if (cmd.requiredPermissions?.length) {
             const memberPerms = context.memberPermissions ?? 0n;
             const hasAllPerms = cmd.requiredPermissions.every((perm) => {
@@ -231,28 +221,64 @@ export abstract class BaseBot {
             };
         }
 
-        // Parse simple args: /command key:value or positional
+        // ─── Advanced Argument Parsing ───────────────────────────────────────
         const args: Record<string, any> = {};
-        for (let i = 1; i < parts.length; i++) {
-            if (parts[i].includes(':')) {
-                const [key, ...val] = parts[i].split(':');
-                args[key] = val.join(':');
-            } else if (cmd.options && cmd.options[i - 1]) {
-                args[cmd.options[i - 1].name] = parts[i];
+        const options = cmd.options || [];
+        const rawArgs = parts.slice(1);
+
+        for (let i = 0; i < options.length; i++) {
+            const opt = options[i];
+            let value: string | undefined;
+
+            // 1. Look for named argument (e.g., reason:spam)
+            const namedIdx = rawArgs.findIndex(p => p.startsWith(`${opt.name}:`));
+            if (namedIdx !== -1) {
+                value = rawArgs[namedIdx].substring(opt.name.length + 1);
+                rawArgs.splice(namedIdx, 1); // remove from raw pool
+            } 
+            // 2. Fallback to positional (if not already taken by a named arg)
+            else if (rawArgs.length > 0) {
+                value = rawArgs.shift();
+            }
+
+            if (value === undefined) {
+                if (opt.required) {
+                    return { content: `❌ Missing required argument: \`${opt.name}\``, ephemeral: true };
+                }
+                continue;
+            }
+
+            // 3. Resolve Types
+            if (opt.type === 'user') {
+                // Resolve <@123> or ID
+                const match = value.match(/<@!?(\d+)>/);
+                args[opt.name] = match ? match[1] : value;
+            } else if (opt.type === 'channel') {
+                const match = value.match(/<#(\d+)>/);
+                args[opt.name] = match ? match[1] : value;
+            } else if (opt.type === 'integer') {
+                args[opt.name] = parseInt(value, 10);
+            } else if (opt.type === 'boolean') {
+                args[opt.name] = value === 'true' || value === 'yes' || value === '1';
             } else {
-                args[`arg${i}`] = parts[i];
+                // String: use the rest of the message if this is the last option and it's a string
+                if (i === options.length - 1 && rawArgs.length > 0) {
+                    args[opt.name] = [value, ...rawArgs].join(' ');
+                } else {
+                    args[opt.name] = value;
+                }
             }
         }
 
         // Execute
-        const response = await cmd.handler(args, context);
-
-        // Set cooldown
-        if (cmd.cooldownMs) {
-            this.setCooldown(cmdName, context.userId, cmd.cooldownMs);
+        try {
+            const response = await cmd.handler(args, context);
+            if (cmd.cooldownMs) this.setCooldown(cmdName, context.userId, cmd.cooldownMs);
+            return response;
+        } catch (err) {
+            console.error(`[Bot:${this.name}] Execution error:`, err);
+            return { content: `💥 An internal error occurred while running \`/${cmdName}\`.`, ephemeral: true };
         }
-
-        return response;
     }
 
     /** Handle a prefix command: !help */

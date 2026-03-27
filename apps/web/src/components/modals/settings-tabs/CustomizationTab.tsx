@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Palette, Sparkles } from 'lucide-react'
 import { useAuthStore } from '../../../stores/useAuthStore'
 import { useProfileArtStore } from '../../../stores/useProfileArtStore'
+import { Button } from '../../ui'
 import { IdentityPreview } from '../../features/IdentityPreview'
 import { ProfileArtPicker } from '../../features/ProfileArtPicker'
 import { UsernameStyleEditor } from '../../features/UsernameStyleEditor'
@@ -20,7 +21,21 @@ export const CustomizationTab: React.FC = () => {
         color: '',
     })
     const [profileColor, setProfileColor] = useState<string>((user as any)?.profileColor || 'var(--beacon-brand)')
-    const [pronouns] = useState<string>((user as any)?.pronouns || '')
+    const [pronouns, setPronouns] = useState<string>((user as any)?.pronouns || '')
+    const [loading, setLoading] = useState(false)
+
+    const handleSave = async () => {
+        setLoading(true)
+        try {
+            await useAuthStore.getState().updateProfile({
+                profileColor,
+                pronouns,
+                nameDesign
+            } as any)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     return (
         <div className={styles.customizationTab}>
@@ -95,6 +110,17 @@ export const CustomizationTab: React.FC = () => {
                             design={nameDesign} 
                             setDesign={setNameDesign} 
                         />
+                    </div>
+
+                    <div className={styles.saveSection}>
+                        <Button 
+                            variant="primary" 
+                            onClick={handleSave} 
+                            loading={loading}
+                            fullWidth
+                        >
+                            Save Customization
+                        </Button>
                     </div>
                 </div>
             </div>

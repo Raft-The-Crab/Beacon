@@ -14,6 +14,7 @@ interface AvatarProps {
   frameGradient?: string | null
   frameAnimation?: string | null
   avatarDecorationId?: string | null
+  speaking?: boolean
 }
 
 const statusColors: Record<string, string> = {
@@ -61,6 +62,8 @@ export const Avatar = React.memo(function Avatar({
   frameUrl,
   frameGradient,
   frameAnimation,
+  avatarDecorationId,
+  speaking = false,
 }: AvatarProps) {
   const currentUser = useAuthStore(state => state.user)
   const { arts, equippedFrame } = useProfileArtStore()
@@ -83,7 +86,7 @@ export const Avatar = React.memo(function Avatar({
 
   return (
     <div
-      className={`${styles.avatar} ${styles[size]} ${hasFrame ? styles.framed : ''}`}
+      className={`${styles.avatar} ${styles[size]} ${hasFrame ? styles.framed : ''} ${speaking ? styles.speaking : ''}`}
     >
       {/* Profile Art Frame */}
       {hasFrame && (

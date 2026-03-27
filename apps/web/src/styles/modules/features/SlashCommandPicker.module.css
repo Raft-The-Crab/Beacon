@@ -111,6 +111,29 @@
   text-overflow: ellipsis;
 }
 
+.itemOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.optionChip {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.optionChip.required {
+  color: #5865F2;
+  border-color: rgba(88, 101, 242, 0.4);
+}
+
 .footer {
   padding: 8px 14px;
   background: rgba(0, 0, 0, 0.2);
@@ -129,4 +152,18 @@
   margin: 0 2px;
   font-family: inherit;
   color: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 768px) {
+  .picker {
+    width: calc(100vw - 24px) !important;
+    min-width: unset !important;
+    left: 12px !important;
+    bottom: calc(100% + 8px);
+    max-height: 50vh;
+  }
+
+  .footer {
+    display: none;
+  }
 }

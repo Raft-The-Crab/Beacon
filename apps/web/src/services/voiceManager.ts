@@ -254,6 +254,9 @@ class VoiceManagerClass {
     deaf?: boolean;
     video?: boolean;
   } = {}): Promise<void> {
+    const store = useVoiceStore.getState();
+    const finalMute = options.mute ?? store.selfMute;
+    const finalDeaf = options.deaf ?? store.selfDeaf;
 
     if (this.currentGuildId) {
       await this.leaveChannel();
@@ -305,7 +308,7 @@ class VoiceManagerClass {
         const source = this.audioCtx!.createMediaStreamSource(this.localStream);
         source.connect(this.localAnalyzer);
         this.startAnalysisLoop();
-        audioTracks.forEach(t => t.enabled = !options.mute);
+        audioTracks.forEach(t => t.enabled = !finalMute);
       }
 
       const hasVideoTrack = this.localStream.getVideoTracks().length > 0;
@@ -332,7 +335,11 @@ class VoiceManagerClass {
         speaking: false,
       });
 
-      wsClient.sendVoiceStateUpdate(guildId, channelId, options);
+      wsClient.sendVoiceStateUpdate(guildId, channelId, { 
+        mute: finalMute, 
+        deaf: finalDeaf, 
+        video: !!options.video 
+      });
       this.emit('connected', { guildId, channelId });
 
     } catch (error) {
@@ -348,14 +355,14 @@ class VoiceManagerClass {
 
       this.syncLocalVoiceState({
         selfMute: true,
-        selfDeaf: !!options.deaf,
+        selfDeaf: finalDeaf,
         selfVideo: false,
         selfStream: false,
         selfScreen: false,
         speaking: false,
       });
 
-      wsClient.sendVoiceStateUpdate(guildId, channelId, { mute: true, deaf: !!options.deaf, video: false });
+      wsClient.sendVoiceStateUpdate(guildId, channelId, { mute: true, deaf: finalDeaf, video: false });
       this.emit('connected', { guildId, channelId });
     }
   }

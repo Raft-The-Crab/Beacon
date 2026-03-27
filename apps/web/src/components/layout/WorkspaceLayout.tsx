@@ -1,5 +1,6 @@
 import React from 'react'
 import { ServerList } from './ServerList'
+import { MobileTabNavigation } from './MobileTabNavigation'
 import { useUIStore } from '../../stores/useUIStore'
 import styles from '../../styles/modules/layout/WorkspaceLayout.module.css'
 
@@ -34,15 +35,19 @@ export function WorkspaceLayout({
                 />
             )}
 
-            <div className={`${styles.leftNav} ${showMobileSidebar ? styles.mobileOpen : ''}`}>
+            <div className={`${styles.leftNav} ${showMobileSidebar ? styles.mobileOpen : ''} glass`}>
                 <div className={styles.drawerContent}>
+                    {/* Integrated Server Rail for Mobile */}
+                    <div className={styles.mobileServerRail}>
+                        <ServerList />
+                    </div>
                     <div className={styles.sidebarWrapper}>
                         {sidebar}
                     </div>
                 </div>
             </div>
 
-            <div className={styles.mainContent}>
+            <div className={`${styles.mainContent} glass`}>
                 {children}
             </div>
 
@@ -51,6 +56,8 @@ export function WorkspaceLayout({
                     {rightPanel}
                 </div>
             )}
+
+            <MobileTabNavigation />
         </div>
     )
 }

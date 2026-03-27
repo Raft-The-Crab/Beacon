@@ -10,6 +10,8 @@ import { validateUsername } from '../middleware/validation';
 import { serializeBigInt } from '../utils/serializeBigInt';
 import * as node2fa from 'node-2fa';
 import QRCode from 'qrcode';
+import { AccountDataService } from '../services/account-data';
+
 
 function ensurePrisma(res: Response) {
   if (!prisma) {
@@ -113,6 +115,7 @@ const UpdateProfileSchema = z.object({
   avatarDecorationId: z.string().optional().nullable(),
   profileEffectId: z.string().optional().nullable(),
   nameDesign: z.record(z.any()).optional().nullable(),
+  systemSettings: z.record(z.any()).optional().nullable(),
 });
 
 // PATCH /users/me
@@ -179,6 +182,7 @@ export async function updateMe(req: Request, res: Response) {
         ...(data.avatarDecorationId !== undefined && { avatarDecorationId: data.avatarDecorationId }),
         ...(data.profileEffectId !== undefined && { profileEffectId: data.profileEffectId }),
         ...(data.nameDesign !== undefined && { nameDesign: data.nameDesign || {} }),
+        ...(data.systemSettings !== undefined && { systemSettings: data.systemSettings || {} }),
       },
       select: {
         id: true,
@@ -200,6 +204,7 @@ export async function updateMe(req: Request, res: Response) {
         avatarDecorationId: true,
         profileEffectId: true,
         nameDesign: true,
+        systemSettings: true,
         bot: true,
         isOfficial: true,
         createdAt: true,
@@ -668,6 +673,23 @@ export async function getBlockedUsers(req: Request, res: Response) {
 
     return res.json(blocked.map(b => b.blocked));
   } catch (err) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function exportAccountData(req: Request, res: Response) {
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const data = await AccountDataService.exportUserData(userId);
+    if (!data) return res.status(404).json({ error: 'User not found' });
+    
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="beacon-account-data-${userId}.json"`);
+    return res.json(data);
+  } catch (err) {
+    console.error('exportAccountData error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

@@ -217,11 +217,25 @@ model Channel {
   messages         Message[]
   threads          Thread[]
   webhooks         Webhook[]
+  permissionOverwrites PermissionOverwrite[]
   recipients       User[]      @relation("ChannelRecipients")
   invites          Invite[]
 
   @@index([guildId])
   @@index([parentId])
+}
+
+model PermissionOverwrite {
+  id        String   @id @default(cuid())
+  channelId String
+  targetId  String   // Either Role ID or User ID
+  type      String   // 'role' or 'member'
+  allow     BigInt   @default(0)
+  deny      BigInt   @default(0)
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@index([targetId])
 }
 
 model Sound {

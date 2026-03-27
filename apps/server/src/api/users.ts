@@ -3,7 +3,7 @@
  */
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { getMe, updateMe, getUser, getMyGuilds, getMyFriends, deleteMe, updateE2EEKeys, getE2EEKeys, updateEmail, updatePassword, getMutuals, blockUser, unblockUser, getBlockedUsers } from '../controllers/user.controller';
+import { getMe, updateMe, getUser, getMyGuilds, getMyFriends, deleteMe, updateE2EEKeys, getE2EEKeys, updateEmail, updatePassword, getMutuals, blockUser, unblockUser, getBlockedUsers, exportAccountData } from '../controllers/user.controller';
 import { cacheResponse } from '../middleware/performance';
 
 const router = Router();
@@ -16,6 +16,7 @@ router.patch('/me', updateMe);
 router.delete('/me', deleteMe);
 router.get('/me/guilds', cacheResponse(60), getMyGuilds);
 router.get('/me/friends', getMyFriends);
+router.get('/me/export', exportAccountData);
 router.patch('/me/e2ee', updateE2EEKeys);
 
 // Security

@@ -28,7 +28,7 @@ import { InviteManager } from './managers/InviteManager';
 import { TTLCache } from './cache/TTLCache';
 import { resolveApiClientBaseUrl, resolveApiClientGatewayUrl } from './connection';
 import { CommandRegistry, CommandDefinition, AutocompleteContext } from './registry/CommandRegistry';
-import { MiddlewarePipeline } from './middleware/Middleware';
+import { MiddlewarePipeline, type MiddlewareFn } from './middleware/Middleware';
 
 export interface ClientOptions {
   token: string;
@@ -162,6 +162,19 @@ export class Client extends EventEmitter {
   }
 
   /**
+   * Register a middleware function or another pipeline for gateway events.
+   * Shortcut for client.middleware.use()
+   */
+  public use(fn: MiddlewareFn | MiddlewarePipeline): this {
+    if (fn instanceof MiddlewarePipeline) {
+        (fn as any).fns.forEach((f: any) => this.middleware.use(f));
+    } else {
+        this.middleware.use(fn);
+    }
+    return this;
+  }
+
+  /**
    * Installs a plugin into the client.
    * @param plugin The plugin instance to install
    */
@@ -243,196 +256,217 @@ export class Client extends EventEmitter {
   // Gateway wiring
   // ─────────────────────────────────────────────────────────────
   private _setupGatewayEvents() {
+    // Helper for running middleware and emitting
+    const dispatch = async (event: string, raw: any, wrap?: (data: any) => any) => {
+      try {
+        const allowed = await this.middleware.run(event, raw);
+        if (!allowed) return;
+        const data = wrap ? wrap(raw) : raw;
+        this.emit(event, data);
+      } catch (err) {
+        this.emit('error', err);
+      }
+    };
+
     this._gateway.on('ready', (data: any) => {
-      if (data.user) this.user = new User(this, data.user);
-      this.applicationId = data.application?.id ?? null;
-      this._ready = true;
-      this._readyAt = Date.now();
-      this.emit('ready');
+      dispatch('ready', data, (d) => {
+        if (d.user) this.user = new User(this, d.user);
+        this.applicationId = d.application?.id ?? null;
+        this._ready = true;
+        this._readyAt = Date.now();
+        return d;
+      });
     });
 
     // Forward connection lifecycle events
-    this._gateway.on('reconnecting', () => this.emit('reconnecting'));
-    this._gateway.on('reconnected', () => this.emit('reconnected'));
-    this._gateway.on('disconnect', (data: any) => this.emit('disconnect', data));
-    this._gateway.on('connectionStateChange', (data: any) => this.emit('connectionStateChange', data));
-    // v3: Forward health change events
-    this._gateway.on('healthChange', (data: any) => this.emit('healthChange', data));
+    this._gateway.on('reconnecting', () => dispatch('reconnecting', {}));
+    this._gateway.on('reconnected', () => dispatch('reconnected', {}));
+    this._gateway.on('disconnect', (data: any) => dispatch('disconnect', data));
+    this._gateway.on('connectionStateChange', (data: any) => dispatch('connectionStateChange', data));
+    this._gateway.on('healthChange', (data: any) => dispatch('healthChange', data));
 
     this._gateway.on('messageCreate', (rawMsg: RawMessage) => {
-      const msg = new Message(this, rawMsg);
-      this.messages.set(msg.id, msg);
-      this.emit('messageCreate', msg);
+      dispatch('messageCreate', rawMsg, (data) => {
+        const msg = new Message(this, data);
+        this.messages.set(msg.id, msg);
+        return msg;
+      });
     });
 
     this._gateway.on('messageUpdate', (rawMsg: Partial<RawMessage> & { id: string; channel_id: string }) => {
-      const old = this.messages.get(rawMsg.id) ?? null;
-      if (old) {
-        if (rawMsg.content !== undefined) old.content = rawMsg.content;
-        if (rawMsg.edited_timestamp) old.editedTimestamp = new Date(rawMsg.edited_timestamp);
-        if (rawMsg.pinned !== undefined) old.pinned = rawMsg.pinned;
-      }
-      this.emit('messageUpdate', old, rawMsg);
+      dispatch('messageUpdate', rawMsg, (data) => {
+        const old = this.messages.get(data.id) ?? null;
+        if (old) {
+          if (data.content !== undefined) old.content = data.content;
+          if (data.edited_timestamp) old.editedTimestamp = new Date(data.edited_timestamp);
+          if (data.pinned !== undefined) old.pinned = data.pinned;
+        }
+        return old ?? data; // Emit the updated message structure or the raw data if not cached
+      });
     });
 
     this._gateway.on('messageDelete', (data: { id: string; channel_id: string }) => {
-      const msg = this.messages.get(data.id) ?? null;
-      this.messages.delete(data.id);
-      this.emit('messageDelete', msg ?? data);
+      dispatch('messageDelete', data, (d) => {
+        const msg = this.messages.get(d.id) ?? null;
+        this.messages.delete(d.id);
+        return msg ?? d;
+      });
     });
 
     this._gateway.on('guildCreate', (rawGuild: RawGuild) => {
-      const guild = new Guild(this, rawGuild);
-      this.guilds.set(guild.id, guild);
-      for (const rawCh of rawGuild.channels ?? []) {
-        const ch = new Channel(this, rawCh);
-        this.channels.set(ch.id, ch);
-      }
-      this.emit('guildCreate', guild);
+      dispatch('guildCreate', rawGuild, (data) => {
+        const guild = new Guild(this, data);
+        this.guilds.set(guild.id, guild);
+        for (const rawCh of data.channels ?? []) {
+          const ch = new Channel(this, rawCh);
+          this.channels.set(ch.id, ch);
+        }
+        return guild;
+      });
     });
 
     this._gateway.on('guildUpdate', (rawGuild: RawGuild) => {
-      const guild = new Guild(this, rawGuild);
-      this.guilds.set(guild.id, guild);
-      this.emit('guildUpdate', guild);
+      dispatch('guildUpdate', rawGuild, (data) => {
+        const guild = new Guild(this, data);
+        this.guilds.set(guild.id, guild);
+        return guild;
+      });
     });
 
     this._gateway.on('guildDelete', (data: { id: string }) => {
-      const guild = this.guilds.get(data.id) ?? null;
-      this.guilds.delete(data.id);
-      this.emit('guildDelete', guild ?? data);
+      dispatch('guildDelete', data, (d) => {
+        const guild = this.guilds.get(d.id) ?? null;
+        this.guilds.delete(d.id);
+        return guild ?? d;
+      });
     });
 
     this._gateway.on('channelCreate', (rawCh: RawChannel) => {
-      const ch = new Channel(this, rawCh);
-      this.channels.set(ch.id, ch);
-      this.emit('channelCreate', ch);
+      dispatch('channelCreate', rawCh, (data) => {
+        const ch = new Channel(this, data);
+        this.channels.set(ch.id, ch);
+        return ch;
+      });
     });
 
     this._gateway.on('channelUpdate', (rawCh: RawChannel) => {
-      const ch = new Channel(this, rawCh);
-      this.channels.set(ch.id, ch);
-      this.emit('channelUpdate', ch);
+      dispatch('channelUpdate', rawCh, (data) => {
+        const ch = new Channel(this, data);
+        this.channels.set(ch.id, ch);
+        return ch;
+      });
     });
 
     this._gateway.on('channelDelete', (rawCh: RawChannel) => {
-      this.channels.delete(rawCh.id);
-      this.emit('channelDelete', rawCh);
+      dispatch('channelDelete', rawCh, (data) => {
+        this.channels.delete(data.id);
+        return data;
+      });
     });
 
     this._gateway.on('guildMemberAdd', (member: any) => {
-      if (member.user) {
-        const user = new User(this, member.user);
-        this.users.set(user.id, user);
-      }
-      this.emit('guildMemberAdd', member);
+      dispatch('guildMemberAdd', member, (data) => {
+        if (data.user) {
+          const user = new User(this, data.user);
+          this.users.set(user.id, user);
+        }
+        return data;
+      });
     });
 
-    this._gateway.on('guildMemberRemove', (data: any) => {
-      this.emit('guildMemberRemove', data);
-    });
-
-    this._gateway.on('voiceStateUpdate', (state: any) => {
-      this.emit('voiceStateUpdate', state);
-    });
-
-    this._gateway.on('typingStart', (data: any) => {
-      this.emit('typingStart', data);
-    });
-
-    this._gateway.on('presenceUpdate', (presence: any) => {
-      this.emit('presenceUpdate', presence);
-    });
-
-    // Helper for running middleware and emitting
-    const dispatch = async (event: string, raw: any, wrap: (data: any) => any) => {
-      const allowed = await this.middleware.run(event, raw);
-      if (!allowed) return;
-      this.emit(event, wrap(raw));
-    };
-
-    this._gateway.on('messageCreate', (rawMsg: RawMessage) => {
-        dispatch('messageCreate', rawMsg, (data) => {
-            const msg = new Message(this, data);
-            this.messages.set(msg.id, msg);
-            return msg;
-        });
-    });
+    this._gateway.on('guildMemberRemove', (data: any) => dispatch('guildMemberRemove', data));
+    this._gateway.on('voiceStateUpdate', (state: any) => dispatch('voiceStateUpdate', state));
+    this._gateway.on('typingStart', (data: any) => dispatch('typingStart', data));
+    this._gateway.on('presenceUpdate', (presence: any) => dispatch('presenceUpdate', presence));
+    this._gateway.on('messageReactionAdd', (data: any) => dispatch('messageReactionAdd', data));
+    this._gateway.on('messageReactionRemove', (data: any) => dispatch('messageReactionRemove', data));
 
     this._gateway.on('interactionCreate', async (raw: RawInteraction) => {
-      const allowed = await this.middleware.run('interactionCreate', raw);
-      if (!allowed) return;
+      await dispatch('interactionCreate', raw, async (data) => {
+        const ctx = new InteractionContext(data, this.rest);
+        
+        const safeRun = (fn: () => Promise<any>) =>
+          Promise.resolve(fn()).catch((err) => this.emit('error', err));
 
-      const ctx = new InteractionContext(raw, this.rest);
-      this.emit('interactionCreate', ctx);
+        // Type 2 — APPLICATION_COMMAND (slash commands & context menus)
+        if (data.type === 2 && data.data) {
+          safeRun(async () => {
+            const dispatched = await this.registry.dispatch(ctx);
+            if (!dispatched) {
+              const handler = this._commands.get(data.data!.name);
+              if (handler) await handler(ctx);
+            }
+          });
+        }
+        // Type 3 — MESSAGE_COMPONENT
+        else if (data.type === 3) {
+          this.emit('componentInteraction', ctx);
+          safeRun(async () => {
+            const prefix = ctx.customId.split(':')[0];
+            const def = this.registry.get(prefix);
+            if (def?.handler) await def.handler(ctx);
+            else {
+              const handler = this._commands.get(prefix);
+              if (handler) await handler(ctx);
+            }
+          });
+        }
+        // Type 4 — AUTOCOMPLETE
+        else if (data.type === 4 && data.data) {
+          safeRun(async () => {
+            const def = this.registry.get(data.data!.name);
+            if (def?.autocomplete) {
+              const focused = data.data!.options?.find((o: any) => o.focused);
+              const autocompleteCtx: AutocompleteContext = {
+                interactionId: data.id,
+                guildId: data.guild_id,
+                channelId: data.channel_id,
+                commandName: data.data!.name,
+                focusedOption: focused?.name ?? '',
+                focusedValue: String(focused?.value ?? ''),
+                respond: (choices) => ctx.autocomplete(choices),
+              };
+              await def.autocomplete(autocompleteCtx);
+            } else {
+              this.emit('autocomplete', ctx);
+            }
+          });
+        }
+        // Type 5 — MODAL_SUBMIT
+        else if (data.type === 5) {
+          this.emit('modalSubmit', ctx);
+        }
 
-      const safeRun = (fn: () => Promise<any>) =>
-        Promise.resolve(fn()).catch((err) => this.emit('error', err));
-
-      // Type 2 — APPLICATION_COMMAND (slash commands & context menus)
-      if (raw.type === 2 && raw.data) {
-        safeRun(async () => {
-          const dispatched = await this.registry.dispatch(ctx);
-          if (!dispatched) {
-            // Fall back to quick-registered handlers
-            const handler = this._commands.get(raw.data!.name);
-            if (handler) await handler(ctx);
-          }
-        });
-      }
-
-      // Type 3 — MESSAGE_COMPONENT (buttons, select menus)
-      else if (raw.type === 3) {
-        this.emit('componentInteraction', ctx);
-        // Route modular component handlers registered on registry via customId prefix
-        safeRun(async () => {
-          const customId = ctx.customId;
-          // Search for a component handler registered as <commandName>:<...>
-          const prefix = customId.split(':')[0];
-          const def = this.registry.get(prefix);
-          if (def?.handler) await def.handler(ctx);
-          else {
-            const handler = this._commands.get(prefix);
-            if (handler) await handler(ctx);
-          }
-        });
-      }
-
-      // Type 4 — APPLICATION_COMMAND_AUTOCOMPLETE
-      else if (raw.type === 4 && raw.data) {
-        safeRun(async () => {
-          const def = this.registry.get(raw.data!.name);
-          if (def?.autocomplete) {
-            const focused = raw.data!.options?.find((o: any) => o.focused);
-            const autocompleteCtx: AutocompleteContext = {
-              interactionId: raw.id,
-              guildId: raw.guild_id,
-              channelId: raw.channel_id,
-              commandName: raw.data!.name,
-              focusedOption: focused?.name ?? '',
-              focusedValue: String(focused?.value ?? ''),
-              respond: (choices) => ctx.autocomplete(choices),
-            };
-            await def.autocomplete(autocompleteCtx);
-          } else {
-            // Emit for manual handling
-            this.emit('autocomplete', ctx);
-          }
-        });
-      }
-
-      // Type 5 — MODAL_SUBMIT
-      else if (raw.type === 5) {
-        this.emit('modalSubmit', ctx);
-      }
+        return ctx;
+      });
     });
 
-    this._gateway.on('messageReactionAdd', (data: any) => this.emit('messageReactionAdd', data));
-    this._gateway.on('messageReactionRemove', (data: any) => this.emit('messageReactionRemove', data));
-
-    this._gateway.on('disconnect', (event: any) => this.emit('disconnect', event));
     this._gateway.on('error', (err: Error) => this.emit('error', err));
     this._gateway.on('packet', (pkt: any) => this.emit('raw', pkt));
+  }
+
+  /**
+   * Manually handle an interaction (Serverless/HTTP mode).
+   * Passes the interaction through the middleware pipeline and dispatches to registry.
+   */
+  public async handleInteraction(interaction: RawInteraction): Promise<void> {
+    const allowed = await this.middleware.run('interactionCreate', interaction);
+    if (!allowed) return;
+
+    const ctx = new InteractionContext(interaction, this.rest);
+    this.emit('interactionCreate', ctx);
+
+    if (interaction.type === 2 && interaction.data) {
+      const dispatched = await this.registry.dispatch(ctx);
+      if (!dispatched) {
+        const handler = this._commands.get(interaction.data.name);
+        if (handler) await handler(ctx);
+      }
+    } else if (interaction.type === 3) {
+      this.emit('componentInteraction', ctx);
+    } else if (interaction.type === 5) {
+      this.emit('modalSubmit', ctx);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────

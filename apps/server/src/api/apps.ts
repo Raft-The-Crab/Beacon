@@ -162,8 +162,17 @@ router.post('/:id/bot/join', localAuthenticate, async (req: AuthRequest, res: Re
         if (!guildId) return res.status(400).json({ error: 'guildId is required' })
 
         // 1. Check if user has permission to manage the guild
+        const guild = await prisma.guild.findUnique({ where: { id: guildId } })
+        if (!guild) return res.status(404).json({ error: 'Guild not found' })
+
         const hasPerm = await PermissionService.hasPermission(userId, guildId, PermissionFlags.MANAGE_GUILD)
         if (!hasPerm) return res.status(403).json({ error: 'Missing permission: MANAGE_GUILD' })
+
+        // 2. Enforce Community Mode prerequisite for bots
+        const settings = (guild.settings as any) || {}
+        if (!settings.communityModeEnabled) {
+            return res.status(403).json({ error: 'Community Mode must be enabled on this server to add bots.' })
+        }
 
         const app = await AppsService.getApp(id)
         if (!app) return res.status(404).json({ error: 'Application not found' })

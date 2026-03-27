@@ -7,6 +7,7 @@ import { BotTag } from '../ui/UserBadges'
 import { CustomUsername } from '../ui/CustomUsername'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useUIStore } from '../../stores/useUIStore'
+import { useInteractionStore } from '../../stores/useInteractionStore'
 import { MarkdownRenderer } from '../ui/MarkdownRenderer'
 import { useProfileArtStore } from '../../stores/useProfileArtStore'
 import { CustomVideoPlayer, CustomAudioPlayer } from './MediaPlayers'
@@ -347,8 +348,17 @@ export const MessageItem = React.memo(function MessageItem({
                 key={i}
                 className={styles.botActionBtn}
                 onClick={() => {
-                  console.log('[Bot Action]', action.type, action.payload)
-                  // Dispatch slash command or open link  
+                  if (action.type === 'link' && action.payload?.url) {
+                    window.open(action.payload.url, '_blank', 'noopener,noreferrer')
+                  } else if (action.type === 'slash' && action.payload?.command) {
+                    const [cmdName, ...args] = action.payload.command.split(' ')
+                    useInteractionStore.getState().executeCommand(
+                      useUIStore.getState().currentChannelId || '',
+                      cmdName,
+                      args.join(' '),
+                      authorId
+                    )
+                  }
                 }}
               >
                 {action.label || action.type}

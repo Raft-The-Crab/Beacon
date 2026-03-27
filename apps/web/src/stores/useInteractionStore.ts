@@ -1,12 +1,20 @@
 import { create } from 'zustand'
 import { apiClient } from '../services/apiClient'
 
-interface SlashCommand {
+export interface SlashOption {
+    name: string
+    description: string
+    type: 'string' | 'user' | 'channel' | 'integer' | 'boolean'
+    required?: boolean
+    choices?: { name: string; value: any }[]
+}
+
+export interface SlashCommand {
     name: string
     description: string
     usage?: string
     category: string
-    options?: any[]
+    options?: SlashOption[]
 }
 
 interface InteractionStore {
@@ -14,7 +22,7 @@ interface InteractionStore {
     loading: boolean
     error: string | null
     fetchCommands: (guildId?: string) => Promise<void>
-    executeCommand: (channelId: string, name: string, args: string, applicationId?: string) => Promise<boolean>
+    executeCommand: (channelId: string, name: string, options: Record<string, any>, applicationId?: string) => Promise<boolean>
     getAutocompleteChoices: (channelId: string, name: string, focusedOption: string, value: string) => Promise<any[]>
 }
 
@@ -38,7 +46,8 @@ export const useInteractionStore = create<InteractionStore>((set) => ({
                                     name: cmd.name,
                                     description: cmd.description,
                                     usage: cmd.usage || `/${cmd.name}`,
-                                    category: cmd.category || 'bot'
+                                    category: cmd.category || 'bot',
+                                    options: cmd.options || []
                                 })
                             })
                         }
@@ -53,7 +62,7 @@ export const useInteractionStore = create<InteractionStore>((set) => ({
         }
     },
 
-    executeCommand: async (channelId, name, args, applicationId) => {
+    executeCommand: async (channelId, name, options, applicationId) => {
         try {
             const res = await apiClient.executeInteraction({
                 type: 2, // APPLICATION_COMMAND
@@ -61,7 +70,7 @@ export const useInteractionStore = create<InteractionStore>((set) => ({
                 applicationId,
                 data: {
                     name,
-                    options: [{ name: 'input', value: args }]
+                    options: Object.entries(options).map(([name, value]) => ({ name, value }))
                 }
             })
             return res.success

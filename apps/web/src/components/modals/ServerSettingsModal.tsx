@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Settings, Users, Shield, Hash, Volume2, X, Trash2, Edit2, History, Zap, Smile } from 'lucide-react'
+import { Plus, Settings, Users, Shield, Hash, Volume2, X, Trash2, Edit2, History, Zap, Smile, Compass, Lock } from 'lucide-react'
+import { apiClient } from '../../services/apiClient'
 import { useServerStore } from '../../stores/useServerStore'
 import { Button, Input, Modal, AvatarUpload } from '../ui'
 import { useToast } from '../ui'
@@ -19,7 +20,7 @@ interface ServerSettingsModalProps {
   onClose: () => void
 }
 
-type SettingsTab = 'overview' | 'channels' | 'members' | 'roles' | 'moderation' | 'audit_logs' | 'webhooks' | 'assets' | 'soundboard'
+type SettingsTab = 'overview' | 'channels' | 'members' | 'roles' | 'moderation' | 'audit_logs' | 'webhooks' | 'assets' | 'soundboard' | 'community'
 
 interface EditableChannel {
   id: string
@@ -28,6 +29,7 @@ interface EditableChannel {
   topic?: string | null
   slowmode?: number | null
   nsfw?: boolean | null
+  permissionOverwrites?: any[]
 }
 
 export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProps) {
@@ -42,6 +44,7 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
   const [channelTopic, setChannelTopic] = useState('')
   const [channelSlowmode, setChannelSlowmode] = useState('0')
   const [channelNsfw, setChannelNsfw] = useState(false)
+  const [channelTab, setChannelTab] = useState<'overview' | 'permissions'>('overview')
   const [channelSaving, setChannelSaving] = useState(false)
   const toast = useToast()
 
@@ -200,6 +203,13 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
               <Volume2 size={18} />
               Soundboard
             </button>
+            <button
+              className={`${styles.sidebarItem} ${activeTab === 'community' ? styles.active : ''}`}
+              onClick={() => setActiveTab('community')}
+            >
+              <Users size={18} />
+              Community
+            </button>
 
             <div className={styles.sidebarSeparator} />
             <div className={styles.sidebarCategory}>User Management</div>
@@ -345,51 +355,138 @@ export function ServerSettingsModal({ isOpen, onClose }: ServerSettingsModalProp
                 <SoundManager guildId={currentServer.id} />
               </div>
             )}
+            
+            {activeTab === 'community' && (
+              <div className={styles.section}>
+                <h2 className={styles.headerTitle}>Community Settings</h2>
+                <div className={styles.communityBox}>
+                  {currentServer.settings?.communityModeEnabled ? (
+                    <div className={styles.communityActive}>
+                      <div className={styles.communityStatus}>
+                        <div className={styles.statusBadge}>Enabled</div>
+                        <p>Your server is public and discoverable.</p>
+                      </div>
+                      <div className={styles.communityFeatures}>
+                        <h4>Included Features:</h4>
+                        <ul>
+                          <li>Server Discovery listing</li>
+                          <li>Automatic #rules and #admin-logs channels</li>
+                          <li>Beacon Bot system notifications</li>
+                          <li>Advanced moderation toolkit</li>
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={styles.communityHero}>
+                      <div className={styles.communityIcon}><Compass size={48} /></div>
+                      <h3>Ready to grow your community?</h3>
+                      <p>Enable Community Mode to make your server public, unlock discovery, and get specialized tools for moderation and onboarding.</p>
+                      <Button 
+                        variant="primary" 
+                        onClick={async () => {
+                          try {
+                            const res = await apiClient.request('POST', `/guilds/${currentServer.id}/community/enable`);
+                            if (res.success) {
+                              toast.success('Community Mode enabled!');
+                              await fetchGuild(currentServer.id);
+                            }
+                          } catch (err) {
+                            toast.error('Failed to enable Community Mode');
+                          }
+                        }}
+                      >
+                        Enable Community Mode
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <Modal isOpen={!!editingChannel} onClose={handleCloseEditChannel} title="Edit Channel" size="md">
+      <Modal isOpen={!!editingChannel} onClose={handleCloseEditChannel} title={`Edit #${channelName}`} size="md">
+        <div className={styles.channelEditTabs}>
+          <button 
+            className={`${styles.channelTab} ${channelTab === 'overview' ? styles.active : ''}`}
+            onClick={() => setChannelTab('overview')}
+          >
+            Overview
+          </button>
+          <button 
+            className={`${styles.channelTab} ${channelTab === 'permissions' ? styles.active : ''}`}
+            onClick={() => setChannelTab('permissions')}
+          >
+            Permissions
+          </button>
+        </div>
+
         <div className={styles.channelForm}>
-          <div className={styles.formGroup}>
-            <label>Channel Name</label>
-            <Input
-              value={channelName}
-              onChange={(e) => setChannelName(e.target.value)}
-              placeholder="general"
-            />
-          </div>
+          {channelTab === 'overview' ? (
+            <>
+              <div className={styles.formGroup}>
+                <label>Channel Name</label>
+                <Input
+                  value={channelName}
+                  onChange={(e) => setChannelName(e.target.value)}
+                  placeholder="general"
+                />
+              </div>
 
-          <div className={styles.formGroup}>
-            <label>Topic</label>
-            <Input
-              value={channelTopic}
-              onChange={(e) => setChannelTopic(e.target.value)}
-              placeholder="What belongs in this channel?"
-            />
-          </div>
+              <div className={styles.formGroup}>
+                <label>Topic</label>
+                <Input
+                  value={channelTopic}
+                  onChange={(e) => setChannelTopic(e.target.value)}
+                  placeholder="What belongs in this channel?"
+                />
+              </div>
 
-          <div className={styles.channelMetaGrid}>
-            <div className={styles.formGroup}>
-              <label>Slowmode Seconds</label>
-              <Input
-                type="number"
-                min="0"
-                max="21600"
-                value={channelSlowmode}
-                onChange={(e) => setChannelSlowmode(e.target.value)}
-              />
+              <div className={styles.channelMetaGrid}>
+                <div className={styles.formGroup}>
+                  <label>Slowmode Seconds</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="21600"
+                    value={channelSlowmode}
+                    onChange={(e) => setChannelSlowmode(e.target.value)}
+                  />
+                </div>
+
+                <label className={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={channelNsfw}
+                    onChange={(e) => setChannelNsfw(e.target.checked)}
+                  />
+                  Mark channel as NSFW
+                </label>
+              </div>
+            </>
+          ) : (
+            <div className={styles.permissionsList}>
+              <div className={styles.permissionInfo}>
+                <Lock size={32} />
+                <p>Advanced permission overwrites allow you to control exactly who can view, send, and manage messages in this specific channel.</p>
+              </div>
+              
+              <div className={styles.overwritesGrid}>
+                {/* Simplified list for now as per user request to avoid clutter */}
+                <div className={styles.overwriteItem}>
+                   <span>@everyone</span>
+                   <div className={styles.overwriteActions}>
+                      <button className={styles.statusBadge}>Read Only</button>
+                   </div>
+                </div>
+              </div>
+              
+              <div className={styles.tipBox}>
+                <p><strong>Pro Tip:</strong> Use roles to manage permissions globally. Channel overwrites should only be used for exceptions.</p>
+              </div>
             </div>
-
-            <label className={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={channelNsfw}
-                onChange={(e) => setChannelNsfw(e.target.checked)}
-              />
-              Mark channel as NSFW
-            </label>
-          </div>
+          )}
 
           <div className={styles.channelActions}>
             <Button variant="ghost" onClick={handleCloseEditChannel} disabled={channelSaving}>Cancel</Button>

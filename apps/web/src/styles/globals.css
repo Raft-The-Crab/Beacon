@@ -302,10 +302,19 @@ body.glass-theme-active .glass,
 body.glass-theme-active .glass-card,
 body.glass-theme-active .glass-panel,
 body.glass-theme-active .glass-interactive,
-body.glass-theme-active .premium-glass-card {
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+body.glass-theme-active .premium-glass-card,
+body.glass-theme-active [data-glass="true"] .sidebar,
+body.glass-theme-active [data-glass="true"] .chat-container,
+body.glass-theme-active [data-glass="true"] .modal {
+  backdrop-filter: blur(var(--backdrop-blur, 20px)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--backdrop-blur, 20px)) saturate(160%);
 }
+
+/* UI Stability & Break-out Prevention */
+.min-w-0 { min-width: 0; }
+.break-words { overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; }
+.content-shift { transition: padding 0.3s var(--ease-out); }
+
 
 /* Selection */
 ::selection {

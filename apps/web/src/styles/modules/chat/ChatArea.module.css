@@ -283,6 +283,12 @@
   user-select: none;
 }
 
+@media (max-width: 768px) {
+  .dateSeparator {
+    padding: 16px 12px 6px;
+  }
+}
+
 .dateLine {
   flex: 1;
   height: 1px;

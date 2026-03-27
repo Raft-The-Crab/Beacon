@@ -440,7 +440,7 @@ export function App() {
                   {/* Developer Features (Windows Only) */}
                   {!isMobilePlatform && (
                     <>
-                      <Route path="/developer" element={<DeveloperPortal />} />
+                      <Route path="/developer" element={user?.developerMode ? <DeveloperPortal /> : <Navigate to="/channels/@me" replace />} />
                       <Route path="/admin" element={user ? (hasAdminAccess ? <AdminDashboard /> : <Navigate to="/channels/@me" replace />) : <Navigate to="/login" replace />} />
                     </>
                   )}

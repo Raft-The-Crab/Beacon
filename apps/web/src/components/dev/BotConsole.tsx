@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { Plus, RefreshCw, Trash2, Copy, Check, Shield, Zap, Terminal, ExternalLink, AlertTriangle, Info, Bot as BotIcon, UserPlus } from 'lucide-react'
 import { botsApi, Bot as BotModel } from '../../api/bots'
 import { useServerStore } from '../../stores/useServerStore'
-import { Button } from '../ui/Button'
-import { useToast } from '../ui/Toast'
+import { useToast, Button, Input } from '../ui'
+import { fileUploadService } from '../../services/fileUpload'
 import { apiClient } from '../../services/apiClient'
 import { WEB_SDK_ENDPOINTS } from '../../lib/beaconSdk'
 import styles from '../../styles/modules/dev/BotConsole.module.css'
@@ -30,6 +30,7 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
     const [editDescription, setEditDescription] = useState('')
     const [editBanner, setEditBanner] = useState('')
     const [editAccentColor, setEditAccentColor] = useState('')
+    const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [updating, setUpdating] = useState(false)
     
     const myServers = useServerStore(state => state.servers || [])
@@ -376,13 +377,45 @@ export function BotConsole({ applicationId }: { applicationId: string }) {
                                 />
                             </div>
                             <div className={styles.field}>
-                                <label>Avatar URL</label>
-                                <input 
-                                    type="text" 
-                                    value={editAvatar} 
-                                    onChange={e => setEditAvatar(e.target.value)}
-                                    placeholder="https://..."
-                                />
+                                <label>Bot Avatar</label>
+                                <div className={styles.avatarUpload}>
+                                    <Input 
+                                        type="text" 
+                                        value={editAvatar} 
+                                        onChange={e => setEditAvatar(e.target.value)}
+                                        placeholder="Avatar URL or upload..."
+                                        className={styles.avatarInput}
+                                    />
+                                    <Button 
+                                        variant="secondary" 
+                                        size="sm" 
+                                        onClick={() => document.getElementById('bot-avatar-upload')?.click()}
+                                        disabled={uploadingAvatar}
+                                    >
+                                        {uploadingAvatar ? '...' : <Plus size={14} />}
+                                    </Button>
+                                    <input 
+                                        id="bot-avatar-upload"
+                                        type="file" 
+                                        accept="image/*" 
+                                        style={{ display: 'none' }} 
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) {
+                                                setUploadingAvatar(true)
+                                                try {
+                                                    const res = await fileUploadService.uploadFile(file)
+                                                    setEditAvatar(res.url)
+                                                    showToast('Avatar uploaded successfully', 'success')
+                                                } catch {
+                                                    showToast('Avatar upload failed', 'error')
+                                                } finally {
+                                                    setUploadingAvatar(false)
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </div>
                             </div>
                             <div className={styles.field}>
                                 <label>Description</label>

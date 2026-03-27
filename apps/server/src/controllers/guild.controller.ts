@@ -133,22 +133,10 @@ export class GuildController {
                 return fullGuild;
             }, { maxWait: 5000, timeout: 15000 });
 
-            // BACKGROUND: Step 5: Auto-adding Official Beacon Bot (Outside transaction to prevent abortion)
-            const SYSTEM_BOT_ID = 'BEACON_SYSTEM_BOT';
-            prisma.user.findUnique({ where: { id: SYSTEM_BOT_ID } }).then(bot => {
-                if (bot) {
-                    const everyoneRole = (newGuild as any).roles.find((r: any) => r.name === '@everyone');
-                    prisma.guildMember.create({
-                        data: {
-                            userId: SYSTEM_BOT_ID,
-                            guildId: newGuild.id,
-                            nickname: 'Beacon Bot',
-                            roles: everyoneRole ? { connect: [{ id: everyoneRole.id }] } : undefined
-                        }
-                    }).catch(e => logger.warn(`GUILD_CREATE Background bot add failed: ` + e.message));
-                }
-            }).catch(() => { });
-
+            // BACKGROUND: Step 5: Official Beacon Bot - Silent membership (Optional/Manual)
+            // Removed automatic add to every server as per user request to avoid clutter.
+            // The bot can still be added via invitations or if community features are enabled later.
+            
             await AuditLogService.log(newGuild.id, userId, AuditLogAction.GUILD_UPDATE, { name: 'Guild Created' });
 
             const serializedGuild = serializeBigInt(newGuild);
@@ -276,14 +264,107 @@ export class GuildController {
         }
     }
 
+    static async enableCommunityMode(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            const userId = req.user?.id;
+
+            const guild = await prisma.guild.findUnique({
+                where: { id },
+                include: { channels: true, roles: true }
+            });
+
+            if (!guild) return res.status(404).json({ error: 'Guild not found' });
+            if (guild.ownerId !== userId) return res.status(403).json({ error: 'Only the server owner can enable Community Mode' });
+
+            const settings = (guild.settings as any) || {};
+            if (settings.communityModeEnabled) {
+                return res.status(400).json({ error: 'Community Mode is already enabled' });
+            }
+
+            // 1. Update settings
+            const updatedSettings = { ...settings, communityModeEnabled: true };
+
+            await prisma.$transaction(async (tx: any) => {
+                const everyoneRole = guild.roles.find(r => r.name === '@everyone');
+                if (!everyoneRole) throw new Error('Everyone role not found');
+
+                // 2. Create #rules and #admin-logs if they don't exist
+                const rulesExists = guild.channels.some(c => c.name.toLowerCase() === 'rules');
+                const adminLogsExists = guild.channels.some(c => c.name.toLowerCase() === 'admin-logs');
+
+                if (!rulesExists) {
+                    const rulesId = generateShortId('c', 12);
+                    await tx.channel.create({
+                        data: {
+                            id: rulesId,
+                            name: 'rules',
+                            type: 'TEXT',
+                            guildId: id,
+                            position: 0,
+                            topic: 'Official server rules and guidelines.',
+                            permissionOverwrites: {
+                                create: [{
+                                    targetId: everyoneRole.id,
+                                    type: 'role',
+                                    deny: Permissions.SEND_MESSAGES
+                                }]
+                            }
+                        }
+                    });
+                }
+
+                if (!adminLogsExists) {
+                    const adminLogsId = generateShortId('c', 12);
+                    await tx.channel.create({
+                        data: {
+                            id: adminLogsId,
+                            name: 'admin-logs',
+                            type: 'TEXT',
+                            guildId: id,
+                            position: 1,
+                            topic: 'Private logs for server administrators.',
+                            permissionOverwrites: {
+                                create: [{
+                                    targetId: everyoneRole.id,
+                                    type: 'role',
+                                    deny: Permissions.VIEW_CHANNELS
+                                }]
+                            }
+                        }
+                    });
+                }
+
+                // 3. Update Guild settings
+                await tx.guild.update({
+                    where: { id },
+                    data: { settings: updatedSettings }
+                });
+            });
+
+            // Trigger onboarding flow
+            require('../services/systemBot').SystemBotService.sendOnboardingMessage(id);
+
+            await AuditLogService.log(id, userId || 'system', AuditLogAction.GUILD_UPDATE, { communityMode: true });
+            
+            res.json({ success: true, message: 'Community Mode enabled successfully. Rules and admin channels have been generated.' });
+        } catch (error: any) {
+            logger.error('Enable Community Mode Error: ' + error.message);
+            res.status(500).json({ error: 'Failed to enable Community Mode' });
+        }
+    }
+
     static async discoverGuilds(req: Request, res: Response): Promise<void> {
         try {
             const { query, category } = req.query;
 
-            // Build where clause based on tags/name and verified status
+            // Build where clause based on tags/name and community status
             const whereClause: any = {
-                // In a real app we might only want public/verified servers in discovery
-                // verified: true 
+                // Guild must have community mode enabled for discovery
+                settings: {
+                    path: ['communityModeEnabled'],
+                    equals: true
+                }
             };
 
             if (query) {

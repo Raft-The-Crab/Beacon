@@ -500,9 +500,11 @@ function ParticipantTile({
               className={p.isSpeaking && !p.isMuted ? styles.avatarSpeaking : ''}
             />
           ) : (
-            <div className={p.isSpeaking && !p.isMuted ? styles.avatarSpeaking : ''}>
-              <Avatar username={p.username} size="lg" />
-            </div>
+            <Avatar 
+              username={p.username} 
+              size="lg" 
+              speaking={p.isSpeaking && !p.isMuted} 
+            />
           )}
         </div>
       )}
@@ -564,13 +566,14 @@ function MembersPanel({ participants }: { participants: VoiceParticipant[] }) {
                 <img
                   src={p.avatar}
                   alt={p.username}
-                  className={styles.memberAvatar}
+                  className={`${styles.memberAvatar} ${p.isSpeaking && !p.isMuted ? styles.avatarSpeaking : ''}`}
                 />
               ) : (
-                <Avatar username={p.username} size="sm" />
-              )}
-              {p.isSpeaking && !p.isMuted && (
-                <div className={styles.memberSpeakRing} />
+                <Avatar 
+                  username={p.username} 
+                  size="sm" 
+                  speaking={p.isSpeaking && !p.isMuted}
+                />
               )}
             </div>
             <div className={styles.memberName}>{p.username}</div>

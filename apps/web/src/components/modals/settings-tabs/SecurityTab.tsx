@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Lock } from 'lucide-react'
+import { Lock, Download } from 'lucide-react'
 import { useAuthStore } from '../../../stores/useAuthStore'
 import { useToast, Button, Input } from '../../ui'
 import { apiClient } from '../../../services/apiClient'
@@ -21,7 +21,7 @@ export const SecurityTab: React.FC = () => {
 
     const handleUpdateEmail = async () => {
         setSecurityLoading(true)
-        const res = await apiClient.updateEmail({ email: newEmail, password: oldPassword })
+        const res = await (apiClient as any).updateEmail({ email: newEmail, password: oldPassword })
         if (res.success) {
             setUser({ ...user!, email: newEmail } as any)
             setShowEmailForm(false)
@@ -40,7 +40,7 @@ export const SecurityTab: React.FC = () => {
             return
         }
         setSecurityLoading(true)
-        const res = await apiClient.updatePassword({ oldPassword, newPassword })
+        const res = await (apiClient as any).updatePassword({ oldPassword, newPassword })
         if (res.success) {
             setShowPasswordForm(false)
             setOldPassword('')
@@ -55,7 +55,7 @@ export const SecurityTab: React.FC = () => {
 
     const handleEnable2FA = async () => {
         setSecurityLoading(true)
-        const res = await apiClient.enable2FA()
+        const res = await (apiClient as any).enable2FA()
         if (res.success) {
             setTwoFASecret(res.data)
             setShow2FAForm(true)
@@ -67,7 +67,7 @@ export const SecurityTab: React.FC = () => {
 
     const handleVerify2FA = async () => {
         setSecurityLoading(true)
-        const res = await apiClient.verify2FA(twoFACode, twoFASecret?.secret)
+        const res = await apiClient.request('POST', '/users/me/2fa/verify', { token: twoFACode, secret: twoFASecret?.secret })
         if (res.success) {
             setUser({ ...user!, twoFactorEnabled: true } as any)
             setShow2FAForm(false)
@@ -76,6 +76,28 @@ export const SecurityTab: React.FC = () => {
             toast.success('2FA enabled successfully!')
         } else {
             toast.error(res.error || 'Invalid 2FA code')
+        }
+        setSecurityLoading(false)
+    }
+
+    const handleDownloadData = async () => {
+        setSecurityLoading(true)
+        try {
+            const res = await apiClient.get('/users/@me/export')
+            if (res.success) {
+                const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' })
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `beacon-account-data-${user?.id}.json`
+                a.click()
+                window.URL.revokeObjectURL(url)
+                toast.success('Your account data has been exported successfully')
+            } else {
+                toast.error(res.error || 'Failed to export data')
+            }
+        } catch (err) {
+            toast.error('An error occurred while exporting data')
         }
         setSecurityLoading(false)
     }
@@ -150,6 +172,17 @@ export const SecurityTab: React.FC = () => {
                 {!show2FAForm && !user?.twoFactorEnabled && (
                     <Button variant="secondary" size="sm" onClick={handleEnable2FA}>Enable 2FA</Button>
                 )}
+            </div>
+
+            <div className={styles.securityItem}>
+                <div className={styles.securityInfo}>
+                    <h3>Data Portability</h3>
+                    <p className={styles.muted}>Download a copy of your personal data and account information.</p>
+                </div>
+                <Button variant="secondary" size="sm" onClick={handleDownloadData} loading={securityLoading}>
+                    <Download size={16} />
+                    Download My Information
+                </Button>
             </div>
         </div>
     )

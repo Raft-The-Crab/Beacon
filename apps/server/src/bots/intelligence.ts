@@ -1,5 +1,6 @@
 import { BaseBot, BotContext, BotResponse, BotEmbed } from './bots.js';
-import { MusicPlugin, ModerationPlugin } from './plugins.js';
+import { MusicPlugin } from './plugins.js';
+import { SystemCommands } from './system.js';
 
 export class OfficialBeaconBot extends BaseBot {
     constructor() {
@@ -8,7 +9,9 @@ export class OfficialBeaconBot extends BaseBot {
 
         // Load system-level plugins
         this.addPlugin(new MusicPlugin());
-        this.addPlugin(new ModerationPlugin());
+        
+        // Register Built-in System Commands
+        SystemCommands.forEach(cmd => this.registerCommand(cmd));
 
         // ─── Register Slash Commands ──────────────────────────────
         this.registerCommand({

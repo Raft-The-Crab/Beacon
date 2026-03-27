@@ -37,6 +37,18 @@ export class SystemBotService {
   /** Send a system DM to a user */
   static async sendSystemDM(userId: string, content: string, embeds: any[] = []) {
     try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { systemSettings: true }
+      });
+      if (!user) return null;
+
+      const settings = (user.systemSettings || {}) as any;
+      if (settings.systemNotificationsEnabled === false) {
+        logger.info(`[SystemBot] Skipping system DM to ${userId} (notifications disabled)`);
+        return null;
+      }
+
       // 1. Find or create DM channel
       let channel = await prisma.channel.findFirst({
         where: {
@@ -80,6 +92,62 @@ export class SystemBotService {
     } catch (err) {
       logger.error(`[SystemBot] Failed to send DM to ${userId}:`, err);
       return null;
+    }
+  }
+
+  /** Send a system message to a guild channel (bypassing membership) */
+  static async sendGuildSystemMessage(guildId: string, channelId: string, content: string, embeds: any[] = []) {
+    try {
+      const message = await (prisma.message as any).create({
+        data: {
+          content,
+          channelId,
+          authorId: this.SYSTEM_BOT_ID,
+          embeds: embeds,
+        },
+        include: {
+          author: { select: { id: true, username: true, isOfficial: true, bot: true, avatar: true } }
+        }
+      });
+
+      await publishGatewayEvent('MESSAGE_CREATE', message);
+      return message;
+    } catch (err) {
+      logger.error(`[SystemBot] Failed to send guild message to ${channelId}:`, err);
+      return null;
+    }
+  }
+
+  /** Send onboarding flow to a new community server */
+  static async sendOnboardingMessage(guildId: string) {
+    try {
+      const guild = await prisma.guild.findUnique({
+        where: { id: guildId },
+        include: { channels: true }
+      });
+      if (!guild) return;
+
+      const adminChannel = guild.channels.find(c => c.name.toLowerCase() === 'admin-logs');
+      const rulesChannel = guild.channels.find(c => c.name.toLowerCase() === 'rules');
+
+      if (adminChannel) {
+        await this.sendGuildSystemMessage(guildId, adminChannel.id, 
+          `🛡️ **Community Mode Enabled!**\n\nWelcome to your new Community Server. I've automatically generated this channel for your administrative logs. Only you and your moderators should have access here.\n\n**Next Steps:**\n1. Set up your rules in <#${rulesChannel?.id || 'rules'}>\n2. Configure your discovery tags\n3. Start inviting members!`,
+          [{
+            title: "Beacon Community Guidelines",
+            description: "Please ensure your server follows our community standards to remain discoverable.",
+            color: 0x23A559
+          }]
+        );
+      }
+
+      if (rulesChannel) {
+        await this.sendGuildSystemMessage(guildId, rulesChannel.id, 
+          `📜 **Welcome to the Rules Channel**\n\nPlease post your server's rules here. By default, I've restricted this channel so only admins can post, but everyone can read.`,
+        );
+      }
+    } catch (err) {
+      logger.error(`[SystemBot] Onboarding failed for ${guildId}:`, err);
     }
   }
 

@@ -110,14 +110,16 @@ export class NotificationService {
       port,
       secure: port === 465,
       auth: { user, pass },
-      pool: true,
-      maxConnections: 3,
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 5000,
       tls: {
         rejectUnauthorized: process.env.NODE_ENV === 'production',
+        minVersion: 'TLSv1.2'
       },
+      pool: true,
+      maxConnections: 5,
+      connectionTimeout: 10000, // Increased for Railway latency
+      greetingTimeout: 5000,
+      debug: true, // Enable debug output
+      logger: true, // Log to console
     });
   }
 

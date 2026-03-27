@@ -78,6 +78,15 @@ export function SlashCommandPicker({ query, guildId, onSelect, onClose }: SlashC
                         <div className={styles.itemContent}>
                             <div className={styles.itemName}>/{cmd.name}</div>
                             <div className={styles.itemDesc}>{cmd.description}</div>
+                            {cmd.options && cmd.options.length > 0 && (
+                                <div className={styles.itemOptions}>
+                                    {cmd.options.map((opt: any) => (
+                                        <span key={opt.name} className={`${styles.optionChip} ${opt.required ? styles.required : ''}`}>
+                                            {opt.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         {cmd.usage && (
                             <div className={styles.itemUsage}>{cmd.usage}</div>

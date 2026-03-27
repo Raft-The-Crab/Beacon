@@ -86,3 +86,29 @@ export function ignoreBotMessagesMiddleware(): MiddlewareFn {
     await next();
   };
 }
+
+/** 
+ * AI Context Guard Middleware
+ * Sanitizes user input before it reaches AI models to prevent prompt injection.
+ */
+export function aiContextGuardMiddleware(options: { maxLength?: number; blockLevel?: number } = {}): MiddlewareFn {
+    return async (event, payload, next) => {
+        if (event === 'messageCreate' || event === 'interactionCreate') {
+            const content = payload?.content || payload?.data?.options?.find((o: any) => o.name === 'input')?.value;
+            if (typeof content === 'string') {
+                // Simple sanitization: block system-like prompt triggers
+                const forbidden = ['ignore all previous instructions', 'system:', 'admin:'];
+                const lowContent = content.toLowerCase();
+                if (forbidden.some(f => lowContent.includes(f))) {
+                    console.warn(`[beacon.js] AI Context Guard blocked potentially malicious input: ${content}`);
+                    return; // Drop the event
+                }
+                
+                if (options.maxLength && content.length > options.maxLength) {
+                    payload.content = content.substring(0, options.maxLength);
+                }
+            }
+        }
+        await next();
+    };
+}

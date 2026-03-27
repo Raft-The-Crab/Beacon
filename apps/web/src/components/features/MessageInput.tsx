@@ -59,6 +59,9 @@ export function MessageInput({
   // Slash command state
   const [showSlashCommandPicker, setShowSlashCommandPicker] = useState(false)
   const [slashCommandQuery, setSlashCommandQuery] = useState('')
+  const [activeCommand, setActiveCommand] = useState<any | null>(null)
+  const [commandArgs, setCommandArgs] = useState<Record<string, string>>({})
+  const [currentOptionIndex, setCurrentOptionIndex] = useState(0)
 
   const { currentServerId } = useServerStore()
 
@@ -158,15 +161,44 @@ export function MessageInput({
     }, 3000)
   }
 
+  const cancelActiveCommand = () => {
+      setActiveCommand(null)
+      setCommandArgs({})
+      setCurrentOptionIndex(0)
+      setMessage('')
+      if (textareaRef.current) textareaRef.current.focus()
+  }
+
   const handleSend = () => {
+    if (activeCommand) {
+        // Execute active command with current args
+        const guildId = currentServerId || ''
+        const channelId = useUIStore.getState().currentChannelId || ''
+        
+        // Finalize current message as the last argument if needed
+        const options = { ...commandArgs }
+        const currentOpt = activeCommand.options?.[currentOptionIndex]
+        if (currentOpt && message.trim()) {
+            options[currentOpt.name] = message.trim()
+        }
+
+        useInteractionStore.getState().executeCommand(channelId, activeCommand.name, options)
+        cancelActiveCommand()
+        return
+    }
+
     if (message.trim() || attachments.length > 0) {
-      // Handle Slash Command Execution
-      if (message.startsWith('/') && !message.includes('\n')) {
+      // Legacy Slash Command Execution (fallback)
+      if (message.startsWith('/') && !message.includes('\n') && !activeCommand) {
         const parts = message.slice(1).split(' ')
         const cmdName = parts[0]
-        const args = parts.slice(1).join(' ')
+        const argsStr = parts.slice(1).join(' ')
         
-        useInteractionStore.getState().executeCommand(useUIStore.getState().currentChannelId || '', cmdName, args)
+        useInteractionStore.getState().executeCommand(
+            useUIStore.getState().currentChannelId || '', 
+            cmdName, 
+            {} 
+        )
         
         setMessage('')
         setAttachments([])
@@ -213,7 +245,14 @@ export function MessageInput({
   }, [message])
 
   const handleSlashCommandSelect = useCallback((cmd: any) => {
-    setMessage(`/${cmd.name} `)
+    if (cmd.options?.length > 0) {
+        setActiveCommand(cmd)
+        setMessage('')
+        setCommandArgs({})
+        setCurrentOptionIndex(0)
+    } else {
+        setMessage(`/${cmd.name} `)
+    }
     setShowSlashCommandPicker(false)
     setTimeout(() => {
       textareaRef.current?.focus()
@@ -247,6 +286,38 @@ export function MessageInput({
         useUIStore.getState().setEditingMessage(lastUserMsg.id, lastUserMsg.content)
       }
       return
+    }
+
+    if (e.key === 'Backspace' && message === '' && activeCommand) {
+        if (currentOptionIndex > 0) {
+            const prevOpt = activeCommand.options[currentOptionIndex - 1]
+            const prevVal = commandArgs[prevOpt.name]
+            setMessage(prevVal)
+            setCurrentOptionIndex(currentOptionIndex - 1)
+            const newArgs = { ...commandArgs }
+            delete newArgs[prevOpt.name]
+            setCommandArgs(newArgs)
+        } else {
+            cancelActiveCommand()
+        }
+        return
+    }
+
+    if (e.key === 'Tab' || e.key === 'Enter') {
+        if (activeCommand) {
+            const currentOpt = activeCommand.options[currentOptionIndex]
+            if (currentOpt && message.trim()) {
+                e.preventDefault()
+                setCommandArgs({ ...commandArgs, [currentOpt.name]: message.trim() })
+                setMessage('')
+                if (currentOptionIndex < activeCommand.options.length - 1) {
+                    setCurrentOptionIndex(currentOptionIndex + 1)
+                } else {
+                    handleSend()
+                }
+                return
+            }
+        }
     }
 
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -391,10 +462,28 @@ export function MessageInput({
         <input ref={fileInputRef} type="file" multiple onChange={handleFileSelect} style={{ display: 'none' }} />
 
         <div className={styles.textareaWrapper}>
+          {activeCommand && (
+              <div className={styles.commandModeLayer}>
+                  <div className={styles.commandChip}>
+                      /{activeCommand.name}
+                  </div>
+                  {Object.entries(commandArgs).map(([name, val]) => (
+                      <div key={name} className={styles.argChip}>
+                          <span className={styles.argName}>{name}:</span>
+                          <span className={styles.argValue}>{val}</span>
+                      </div>
+                  ))}
+                  {activeCommand.options?.[currentOptionIndex] && (
+                      <div className={styles.activeArgHint}>
+                          {activeCommand.options[currentOptionIndex].name}:
+                      </div>
+                  )}
+              </div>
+          )}
           <textarea
             ref={textareaRef}
-            className={styles.textarea}
-            placeholder={uploading ? 'Uploading...' : placeholder}
+            className={`${styles.textarea} ${activeCommand ? styles.commandModeTextarea : ''}`}
+            placeholder={activeCommand ? '' : (uploading ? 'Uploading...' : placeholder)}
             value={message}
             onChange={handleInput}
             onKeyDown={handleKeyDown}

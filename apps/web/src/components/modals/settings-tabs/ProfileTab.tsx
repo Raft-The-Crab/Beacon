@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react'
-import { ImageIcon, Trash2 } from 'lucide-react'
+import { ImageIcon, Trash2, Sparkles } from 'lucide-react'
 import { useAuthStore } from '../../../stores/useAuthStore'
 import { useToast, Button, Input, AvatarUpload } from '../../ui'
+import { UsernameStyleEditor } from '../../features/UsernameStyleEditor'
 import { apiClient } from '../../../services/apiClient'
 import { fileUploadService, type UploadedFile } from '../../../services/fileUpload'
 import styles from '../../../styles/modules/modals/SettingsModal.module.css'
@@ -13,6 +14,7 @@ export const ProfileTab: React.FC = () => {
     const [loading, setLoading] = useState(false)
     const [username, setUsername] = useState(user?.username || '')
     const [displayName, setDisplayName] = useState((user as any)?.displayName || user?.username || '')
+    const [nameDesign, setNameDesign] = useState((user as any)?.nameDesign || { font: 'default', glow: 'none', animation: 'none' })
     const [bio, setBio] = useState(user?.bio || '')
     const [bannerUrl, setBannerUrl] = useState((user as any)?.banner || '')
     const [pronouns, setPronouns] = useState<string>((user as any)?.pronouns || '')
@@ -130,7 +132,7 @@ export const ProfileTab: React.FC = () => {
                         onUpload={handleAvatarUpload}
                         size={120}
                         type="user"
-                        showButton={false}
+                        showButton={true}
                         username={user?.username}
                     />
                 </div>
@@ -149,7 +151,18 @@ export const ProfileTab: React.FC = () => {
                             placeholder="How people see your name"
                             autoComplete="off"
                         />
-                        {/* Restriction removed: basic display name changes now free */}
+                        {hasBeaconPlus && (
+                            <div style={{ marginTop: 20 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: 'var(--beacon-brand)', fontSize: 13, fontWeight: 700 }}>
+                                    <Sparkles size={14} />
+                                    <span>Premium Username Customization</span>
+                                </div>
+                                <UsernameStyleEditor 
+                                    design={nameDesign} 
+                                    setDesign={setNameDesign} 
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className={styles.formGroup}>
@@ -182,6 +195,40 @@ export const ProfileTab: React.FC = () => {
                             multiline
                             rows={6}
                         />
+                    </div>
+                </div>
+
+                <div className={styles.formSection}>
+                    <h4 className={styles.formSectionTitle}>Privacy & Data</h4>
+                    <div className={styles.formGroup}>
+                        <p className={styles.inputDescription} style={{ marginBottom: 16, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            Export a copy of all your personal data stored on Beacon, including messages, friends, and server memberships.
+                        </p>
+                        <Button 
+                            variant="secondary" 
+                            onClick={async () => {
+                                try {
+                                    const response = await apiClient.exportAccountData();
+                                    if (response.success && response.data) {
+                                        const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+                                        const url = window.URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `beacon-account-data-${user?.id}.json`;
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        window.URL.revokeObjectURL(url);
+                                        toast.success('Account data exported successfully');
+                                    } else {
+                                        toast.error(response.error || 'Failed to export data');
+                                    }
+                                } catch (error) {
+                                    toast.error('Export failed');
+                                }
+                            }}
+                        >
+                            Download My Data
+                        </Button>
                     </div>
                 </div>
             </div>

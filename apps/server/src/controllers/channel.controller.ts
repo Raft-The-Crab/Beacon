@@ -47,8 +47,9 @@ export async function createChannel(req: Request, res: Response) {
         type: type || 'TEXT',
         guildId,
         parentId,
-        position: 0 // In real app, we'd find highest position
-      }
+        position: 0,
+      },
+      include: { permissionOverwrites: true }
     });
 
     await publishGatewayEvent('CHANNEL_CREATE', channel);
@@ -65,7 +66,7 @@ export async function getChannel(req: Request, res: Response) {
   try {
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
-      include: { guild: true },
+      include: { guild: true, permissionOverwrites: true },
     });
     if (!channel) return res.status(404).json({ error: 'Channel not found' });
     return res.json(serializeBigInt(channel));
@@ -97,6 +98,7 @@ export async function updateChannel(req: Request, res: Response) {
         ...(slowmode !== undefined && { slowmode: Math.max(0, Math.min(21600, Number(slowmode))) }),
         ...(position !== undefined && { position }),
       },
+      include: { permissionOverwrites: true }
     });
 
     await publishGatewayEvent('CHANNEL_UPDATE', updated);

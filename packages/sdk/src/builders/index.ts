@@ -15,3 +15,6 @@ export * from './TableBuilder';
 export * from './DropdownBuilder';
 export * from './ContextMenuBuilder';
 export * from './EmbedPresets';
+export * from './EventCalendarBuilder';
+export * from './ImageBuilder';
+export * from './ProgressBarBuilder';

@@ -109,40 +109,6 @@ interface KanbanCard {
   labels?: string[]
 }
 
-// 4. CALENDAR BUILDER
-export class CalendarBuilder {
-  private data: { events: CalendarEvent[]; view: 'month' | 'week' | 'day' }
-
-  constructor() {
-    this.data = { events: [], view: 'month' }
-  }
-
-  addEvent(title: string, start: Date, end: Date, color?: string) {
-    this.data.events.push({ title, start, end, color })
-    return this
-  }
-
-  setView(view: 'month' | 'week' | 'day') {
-    this.data.view = view
-    return this
-  }
-
-  build() {
-    return this.toJSON()
-  }
-
-  toJSON() {
-    return { type: 'calendar', ...this.data }
-  }
-}
-
-interface CalendarEvent {
-  title: string
-  start: Date
-  end: Date
-  color?: string
-}
-
 // 5. PROGRESS TRACKER BUILDER
 export class ProgressTrackerBuilder {
   private data: { steps: ProgressStep[]; current: number }

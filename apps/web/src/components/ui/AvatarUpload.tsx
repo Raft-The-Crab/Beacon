@@ -65,10 +65,10 @@ export function AvatarUpload({ currentAvatar, onUpload, size = 128, type = 'user
           </div>
         ) : (
           <>
-            <img 
-              src={preview || currentAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`} 
-              alt="Avatar" 
-              className={styles.avatar} 
+            <Avatar 
+              src={preview || currentAvatar} 
+              username={username}
+              size={size > 100 ? 'huge' : size > 64 ? 'xl' : 'lg'}
             />
             <div className={styles.overlay}>
               <Camera size={size / 4} />

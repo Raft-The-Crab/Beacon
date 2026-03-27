@@ -194,7 +194,7 @@ export function MessagingHome() {
 
   // ─── Sidebar ─────────────────────────────────────────────────────
   const sidebar = (
-    <div className={styles.sideNavContent}>
+    <div className={`${styles.sideNavContent} sidebar glass`}>
       {/* Search / Quick Switcher */}
       <div className={styles.searchBar}>
         <button

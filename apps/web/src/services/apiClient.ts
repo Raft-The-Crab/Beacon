@@ -208,6 +208,10 @@ class ApiClient {
         }
     }
 
+    public async get<T = any>(endpoint: string) {
+        return this.request<T>('GET', endpoint);
+    }
+
     public async uploadFile(
         endpoint: string,
         file: File,
@@ -501,6 +505,10 @@ class ApiClient {
 
     async enable2FA() {
         return this.request('POST', '/users/me/2fa/enable');
+    }
+
+    async exportAccountData() {
+        return this.request('GET', '/users/me/export');
     }
 
     async verify2FA(code: string, secret?: string) {
