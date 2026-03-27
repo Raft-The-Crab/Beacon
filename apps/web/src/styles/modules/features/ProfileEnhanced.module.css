@@ -80,6 +80,28 @@
   transform: scale(1.1) rotate(-2deg);
 }
 
+.editable {
+  cursor: pointer;
+}
+
+.avatarOverlay {
+  position: absolute;
+  inset: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.editable:hover .avatarOverlay {
+  opacity: 1;
+}
+
 .avatar {
   width: 100%;
   height: 100%;

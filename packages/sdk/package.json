@@ -1,6 +1,6 @@
 {
   "name": "beacon-sdk",
-  "version": "3.7.9",
+  "version": "3.7.10",
   "type": "commonjs",
   "description": "Official TypeScript SDK for the Beacon platform, bots, apps, gateway clients, and rich interactions",
   "main": "./dist/index.js",

@@ -12,12 +12,20 @@ router.use(authenticate);
 
 // Current user
 router.get('/me', getMe);
+router.get('/@me', getMe);
 router.patch('/me', updateMe);
+router.patch('/@me', updateMe);
+router.patch('/profile', updateMe);
 router.delete('/me', deleteMe);
+router.delete('/@me', deleteMe);
 router.get('/me/guilds', cacheResponse(60), getMyGuilds);
+router.get('/@me/guilds', cacheResponse(60), getMyGuilds);
 router.get('/me/friends', getMyFriends);
+router.get('/@me/friends', getMyFriends);
 router.get('/me/export', exportAccountData);
+router.get('/@me/export', exportAccountData);
 router.patch('/me/e2ee', updateE2EEKeys);
+router.patch('/@me/e2ee', updateE2EEKeys);
 
 // Security
 router.post('/me/email', updateEmail);

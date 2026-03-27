@@ -4,7 +4,7 @@ import { RequestSigner } from '../security/RequestSigner';
 import { TokenManager } from '../security/TokenManager';
 
 /** SDK version — injected into User-Agent and exported for diagnostics */
-export const SDK_VERSION = '3.7.9';
+export const SDK_VERSION = '3.7.10';
 
 /**
  * RestClient — Rate-limit-aware HTTP client for Beacon API

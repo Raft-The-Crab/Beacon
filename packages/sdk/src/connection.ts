@@ -29,8 +29,8 @@ function fallbackApiBaseUrl(): string {
     return `${origin}/api`
   }
 
-  // Use Railway production as default for Node.js environments
-  return isProductionLike() ? 'https://beacon-v1-api.up.railway.app/api' : 'http://localhost:8080/api'
+  // Default to Railway production to ensure out-of-the-box connectivity
+  return 'https://beacon-v1-api.up.railway.app/api'
 }
 
 function fallbackGatewayUrl(): string {
@@ -40,7 +40,7 @@ function fallbackGatewayUrl(): string {
     return `${wsOrigin}/gateway`
   }
 
-  return isProductionLike() ? 'wss://beacon-v1-api.up.railway.app/gateway' : 'ws://localhost:8080/gateway'
+  return 'wss://beacon-v1-api.up.railway.app/gateway'
 }
 
 export function resolveApiClientBaseUrl(rawUrl?: string): string {

@@ -18,6 +18,10 @@
     isolation: isolate;
 }
 
+.mobileServerRail {
+    display: none;
+}
+
 .container::before {
     content: '';
     position: absolute;

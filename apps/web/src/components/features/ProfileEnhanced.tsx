@@ -12,17 +12,47 @@ interface ProfileTheme {
 export const ProfileEnhanced: React.FC<{ user: any; isOwn?: boolean }> = ({ user, isOwn }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [bio, setBio] = useState(user.bio || "No bio set yet. It's quiet here...");
+  const [avatar, setAvatar] = useState(user.avatar);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [customTheme, setCustomTheme] = useState<ProfileTheme>({
     accentColor: user.accentColor || 'var(--beacon-brand)'
   });
+
+  const handleAvatarClick = () => {
+    if (isEditing) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await apiClient.request('POST', '/upload/avatar', formData);
+      if (response.url) {
+        setAvatar(response.url);
+        toast.success('Avatar uploaded! Save changes to finalize.');
+      }
+    } catch (error) {
+      toast.error('Failed to upload image');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     setLoading(true);
     try {
       await apiClient.request('PATCH', '/users/profile', {
         bio,
+        avatar,
         accentColor: customTheme.accentColor
       });
       setIsEditing(false);
@@ -42,9 +72,24 @@ export const ProfileEnhanced: React.FC<{ user: any; isOwn?: boolean }> = ({ user
       {/* Profile Info Overlay */}
       <div className={styles.content}>
         <div className={styles.header}>
-          <div className={styles.avatarWrapper}>
-            <img src={user.avatar} alt={user.username} className={styles.avatar} />
+          <div 
+            className={`${styles.avatarWrapper} ${isEditing ? styles.editable : ''}`}
+            onClick={handleAvatarClick}
+          >
+            <img src={avatar || user.avatar} alt={user.username} className={styles.avatar} />
             <div className={`${styles.statusDot} ${styles[user.status || 'online']}`} />
+            {isEditing && (
+              <div className={styles.avatarOverlay}>
+                <Edit3 size={20} />
+              </div>
+            )}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              accept="image/*"
+              onChange={handleFileChange}
+            />
           </div>
 
           <div className={styles.actions}>

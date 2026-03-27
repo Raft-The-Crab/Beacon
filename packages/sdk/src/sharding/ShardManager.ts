@@ -185,15 +185,22 @@ export class ShardManager extends EventEmitter {
   }
 
   private async _fetchRecommendedShardCount(): Promise<number> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
     try {
       const apiURL = this.options.apiURL || 'https://beacon-v1-api.up.railway.app/api';
       const response = await fetch(`${apiURL}/gateway/bot`, {
-        headers: { 'Authorization': `Bot ${this.options.token}` }
+        headers: { 'Authorization': `Bot ${this.options.token}` },
+        signal: controller.signal as any
       });
+      clearTimeout(timeout);
+
       if (!response.ok) throw new Error(`Gateway API returned ${response.status}`);
-      const data = await response.json();
+      const data = await response.json() as any;
       return data.shards || 1;
     } catch (err) {
+      clearTimeout(timeout);
       this.emit('debug', `[ShardManager] Failed to fetch recommended shards: ${err instanceof Error ? err.message : String(err)}`);
       return 1;
     }
